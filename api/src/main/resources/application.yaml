@@ -1,0 +1,51 @@
+# Bahçeden API: temel yapılandırma.
+#
+# Secret ve bağlantı bilgisi burada YOKTUR; yalnızca ortam değişkeni referansı
+# vardır (AGENTS.md K10). Değişken tanımsızsa uygulama açılışta hata verir:
+# yanlış yapılandırma çalışma zamanında değil ayağa kalkarken görünür.
+# Değişkenlerin anlamı ve örnek değerleri: api/.env.example
+
+spring:
+  application:
+    name: bahceden-api
+
+  datasource:
+    url: ${BAHCEDEN_DB_URL}
+    username: ${BAHCEDEN_DB_USERNAME}
+    password: ${BAHCEDEN_DB_PASSWORD}
+
+  jpa:
+    hibernate:
+      # Şema yalnızca Flyway ile değişir; entity ile şema uyuşmazsa uygulama
+      # ayağa kalkmaz (ADR-004). update / create-drop yasaktır.
+      ddl-auto: validate
+    # İstek bitince oturum kapanır: view katmanında lazy yükleme sürprizi olmaz.
+    open-in-view: false
+    properties:
+      hibernate.jdbc.time_zone: UTC
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+server:
+  port: 8080
+  error:
+    # Hata gövdesi tek yerden üretilir (GlobalExceptionHandler, AGENTS.md §11.5):
+    # Spring'in varsayılan gövdesi iç detay sızdırabilir.
+    include-message: never
+    include-stacktrace: never
+    include-exception: false
+
+springdoc:
+  # Sözleşme bu uçtan üretilir (ADR-009). Swagger UI paketi alınmadığı için
+  # yalnızca spec uçları vardır.
+  api-docs:
+    path: /v3/api-docs
+
+bahceden:
+  web-origin: ${BAHCEDEN_WEB_ORIGIN}
+
+logging:
+  level:
+    com.bahceden: INFO

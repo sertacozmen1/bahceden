@@ -81,6 +81,8 @@ nav:
   - Ana Sayfa: README.md
   - Referans:
     - Güncel Durum ve Sınırlamalar: reference/00-current-state.md
+    - Domain Modeli ve Şema: reference/01-domain-model.md
+    - API Referansı: reference/02-api-reference.md
   - ADR:
     - Genel Bakış: adr/index.md
     - "ADR-001 · Spring API + Next.js web": adr/001-spring-api-and-next-web.md
@@ -92,15 +94,23 @@ nav:
     - "ADR-007 · Satıcı veri izolasyonu": adr/007-query-level-ownership-scoping.md
     - "ADR-008 · Kimlik: JWT + iptal edilebilir yenileme": adr/008-jwt-auth-with-opaque-refresh.md
     - "ADR-009 · Sözleşme Spring'den üretilir": adr/009-contract-generated-from-spring.md
+    - "ADR-010 · Ürün durumu enum": adr/010-product-status-as-enum.md
+    - "ADR-011 · Fetch join + sorgu sayısı testi": adr/011-fetch-join-with-query-count-test.md
+    - "ADR-012 · Sayfa boyutu sınırı": adr/012-page-size-capped-on-server.md
+    - "ADR-013 · Minimum sellers tablosu": adr/013-minimal-seller-table-ahead-of-onboarding.md
+    - "ADR-014 · Dev seed": adr/014-dev-seed-via-profiled-repeatable-migration.md
+    - "ADR-015 · Sözleşme tazelik testi": adr/015-contract-freshness-enforced-by-test.md
   - Nasıl Yapılır (How-to):
     - Genel Bakış: how-to/index.md
     - Yerel Geliştirme Ortamı: how-to/yerel-gelistirme.md
+    - Yeni API Ucu Ekleme: how-to/yeni-api-ucu-ekleme.md
   - Ürün & Strateji: product/index.md
   - Araştırma (Research): research/index.md
   - Eğitimler (Tutorials): tutorials/index.md
   - Açıklamalar (Explanation): explanation/index.md
   - Feature Kayıtları:
     - Genel Bakış: features/index.md
+    - Vitrin ve Arama: features/vitrin-ve-arama.md
     - "Genel (feature dışı işler)": features/_genel.md
 
 copyright: Bahçeden Internal Documentation

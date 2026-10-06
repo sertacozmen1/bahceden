@@ -1,0 +1,28 @@
+# Test profili.
+#
+# Buradaki veritabanı değerleri yalnızca ortam değişkeni YER TUTUCULARININ
+# çözülmesi için vardır; gerçek bağlantı Testcontainers tarafından
+# @ServiceConnection ile sağlanır ve bu değerleri ezer. Böylece testler
+# geliştirici makinesindeki .env dosyasından ve yerel veritabanından bağımsız
+# kalır (AGENTS.md §8 test izolasyonu, K10).
+#
+# Geliştirme seed'i YÜKLENMEZ: dev seed yalnızca `dev` profiline bağlıdır
+# (design.md D5). Her test kendi verisini kurar.
+
+spring:
+  datasource:
+    url: jdbc:postgresql://testcontainers-tarafindan-ezilir/bahceden
+    username: test
+    password: test
+  jpa:
+    properties:
+      # Sorgu sayısı iddialarını ölçebilmek için (design.md D2).
+      hibernate.generate_statistics: true
+
+bahceden:
+  web-origin: http://localhost:3000
+
+logging:
+  level:
+    org.testcontainers: WARN
+    com.github.dockerjava: WARN

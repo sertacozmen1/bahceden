@@ -29,8 +29,14 @@ Architecture Decision Records, projedeki önemli mimari kararları ve bu kararla
 | 007 | [Satıcı veri izolasyonu sorgu seviyesinde; varsayılan deny](007-query-level-ownership-scoping.md) | Accepted | 2026-10-06 |
 | 008 | [Kimlik: JWT erişim + iptal edilebilir yenileme token'ı, tek hesap tablosu, zorunlu e-posta doğrulaması](008-jwt-auth-with-opaque-refresh.md) | Accepted | 2026-10-06 |
 | 009 | [Sözleşme Spring kodundan üretilir; `openapi.yaml` commit'lenen çıktıdır](009-contract-generated-from-spring.md) | Accepted | 2026-10-06 |
+| 010 | [Ürün yayın durumu enum'dur, boolean bayrak değil](010-product-status-as-enum.md) | Accepted | 2026-10-06 |
+| 011 | [Liste sorguları fetch join; sorgu sayısı testle sabit](011-fetch-join-with-query-count-test.md) | Accepted | 2026-10-06 |
+| 012 | [Sayfa boyutu üst sınırı sunucuda; aşan istek sınıra çekilir](012-page-size-capped-on-server.md) | Accepted | 2026-10-06 |
+| 013 | [`sellers` tablosu onboarding kararından önce minimum doğar](013-minimal-seller-table-ahead-of-onboarding.md) | Accepted | 2026-10-06 |
+| 014 | [Geliştirme verisi dev profilli tekrarlanabilir migration ile](014-dev-seed-via-profiled-repeatable-migration.md) | Accepted | 2026-10-06 |
+| 015 | [Sözleşme tazeliği testle zorunlu; dosya testten üretilir](015-contract-freshness-enforced-by-test.md) | Accepted | 2026-10-06 |
 
-**Sıradaki numara: 010.**
+**Sıradaki numara: 016.**
 
 **Durum değerleri:** `Proposed` (öneri, henüz bağlayıcı değil) · `Accepted` (yürürlükte, bağlayıcı) · `Deprecated` (artık geçerli değil, yerine bir şey gelmedi) · `Superseded by [ADR-XXX]` (yerini başka bir karara bıraktı).
 

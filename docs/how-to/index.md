@@ -13,7 +13,7 @@ Bu bölüm, Bahçeden'de **belirli bir görevi tamamlamak** isteyen geliştirici
 | 1 | [Yerel geliştirme ortamını kurma](yerel-gelistirme.md) | Geliştirme | Hazır |
 | 2 | AI asistanla Bahçeden'de geliştirme | Geliştirme | Planlanıyor |
 | 3 | Testleri çalıştırma | Geliştirme | İlk dilimle |
-| 4 | Yeni API ucu ekleme (sözleşmeden ekrana) | Geliştirme | İlk dilimle |
+| 4 | [Yeni API ucu ekleme (sözleşmeden ekrana)](yeni-api-ucu-ekleme.md) | Geliştirme | Hazır |
 | 5 | Veritabanı migration'ı yazma ve geri alma | Veri | İlk dilimle |
 | 6 | Yeni ortam değişkeni ekleme | Operasyon | İlk dilimle |
 | 7 | Üretim ortam değişkenleri ve güvenlik | Operasyon | Planlanıyor |

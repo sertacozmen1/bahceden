@@ -1,0 +1,78 @@
+# Bahçeden: geliştirme ortamı.
+#
+# Buradaki kimlik bilgileri yalnızca YEREL GELİŞTİRME içindir ve bilinçli olarak
+# depoya girer: üretimde bu değerler ortamdan / secret yöneticisinden gelir ve
+# asla commit'lenmez (AGENTS.md K10). Gerçek müşteri verisi bu ortama konmaz.
+#
+# Servisler:
+#   db       PostgreSQL 17  (ADR-004)
+#   api      Spring Boot 3  (ADR-001) http://localhost:8080
+#   mailpit  e-posta yakalayıcı       http://localhost:8025
+#
+# web servisi (Next.js) dilimin 4. fazında eklenir; o faza kadar bu dosya
+# tek başına çalışır durumdadır (AGENTS.md K5).
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: bahceden
+      POSTGRES_USER: bahceden
+      POSTGRES_PASSWORD: bahceden-dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bahceden -d bahceden"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ./api
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      BAHCEDEN_DB_URL: jdbc:postgresql://db:5432/bahceden
+      BAHCEDEN_DB_USERNAME: bahceden
+      BAHCEDEN_DB_PASSWORD: bahceden-dev
+      BAHCEDEN_WEB_ORIGIN: http://localhost:3000
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O- http://localhost:8080/api/v1/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+
+  web:
+    build:
+      # Bağlam depo köküdür: imaj sözleşmeyi (shared/contracts) okuyup tipleri
+      # kendi üretir, çünkü üretilen tipler commit'lenmez (ADR-009).
+      context: .
+      dockerfile: web/Dockerfile
+    environment:
+      # Konteyner ağı içinde api servis adıyla çözülür; bu değer yalnızca
+      # sunucu tarafında okunur, tarayıcıya gönderilmez (AGENTS.md §12.3).
+      BAHCEDEN_API_BASE_URL: http://api:8080
+    ports:
+      - "3000:3000"
+    depends_on:
+      api:
+        condition: service_healthy
+
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    environment:
+      MP_MAX_MESSAGES: 500
+
+volumes:
+  db-data:

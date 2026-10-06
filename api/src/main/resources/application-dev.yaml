@@ -1,0 +1,13 @@
+# Geliştirme profili.
+#
+# Tek farkı geliştirme verisidir: dev seed betiği yalnızca bu profilde Flyway
+# konumlarına eklenir (design.md D5). Üretim profilinde çalışmaz, dolayısıyla
+# üretim verisine sahte kayıt girmez.
+
+spring:
+  flyway:
+    locations: classpath:db/migration,classpath:db/dev
+
+logging:
+  level:
+    com.bahceden: DEBUG

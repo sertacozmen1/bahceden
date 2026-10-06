@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Bahçeden API: Spring Boot 3 REST API (ADR-001).
+
+  Bağımlılıklar ADR-002 bütçesiyle sınırlıdır; bütçe dışına çıkan her paket
+  kullanıcı onayı ve ADR gerektirir. Sürümler Spring Boot BOM'u tarafından
+  yönetilir, BOM dışındakiler açık sürümle pin'lenir.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>3.5.16</version>
+    <relativePath/>
+  </parent>
+
+  <groupId>com.bahceden</groupId>
+  <artifactId>bahceden-api</artifactId>
+  <version>0.1.0-SNAPSHOT</version>
+  <name>bahceden-api</name>
+  <description>Bahçeden REST API: üreticiden tüketiciye pazaryeri</description>
+
+  <properties>
+    <java.version>21</java.version>
+    <!-- BOM dışı bağımlılıklar: açık ve pin'li (ADR-002). -->
+    <springdoc.version>2.9.1</springdoc.version>
+  </properties>
+
+  <dependencies>
+    <!-- ── Çalışma zamanı (ADR-002 bütçesi) ───────────────────── -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-jpa</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-validation</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-security</artifactId>
+    </dependency>
+    <!-- JWT imzalama/doğrulama: üçüncü parti JWT kütüphanesi alınmaz (ADR-008 §6). -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+    </dependency>
+    <!-- Sözleşme üretimi; Swagger UI paketi bilinçli olarak alınmaz (ADR-009). -->
+    <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-starter-webmvc-api</artifactId>
+      <version>${springdoc.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.flywaydb</groupId>
+      <artifactId>flyway-core</artifactId>
+    </dependency>
+    <!-- Flyway 10+ veritabanı desteğini modüllere böldü: PostgreSQL için
+         zorunlu eşlikçi, yeni bir yetenek değil (ADR-004). -->
+    <dependency>
+      <groupId>org.flywaydb</groupId>
+      <artifactId>flyway-database-postgresql</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.postgresql</groupId>
+      <artifactId>postgresql</artifactId>
+      <scope>runtime</scope>
+    </dependency>
+
+    <!-- ── Test (ADR-005) ─────────────────────────────────────── -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-test</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <!-- Testler gerçek PostgreSQL'e karşı koşar; H2 ile sapma kabul edilmez. -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-testcontainers</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>postgresql</artifactId>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.testcontainers</groupId>
+      <artifactId>junit-jupiter</artifactId>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-maven-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <!-- Sözleşme dosyasını güncellemek için: ./mvnw test -Dopenapi.write=true -->
+          <systemPropertyVariables>
+            <openapi.write>${openapi.write}</openapi.write>
+          </systemPropertyVariables>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <profiles>
+    <!-- Varsayılan olarak sözleşme dosyası yazılmaz, yalnızca doğrulanır. -->
+    <profile>
+      <id>default-openapi-mode</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <properties>
+        <openapi.write>false</openapi.write>
+      </properties>
+    </profile>
+  </profiles>
+</project>

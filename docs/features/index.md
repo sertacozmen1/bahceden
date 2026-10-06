@@ -24,9 +24,8 @@ Feature dosyası içerik üretmez; yukarıdakilere **link verir** ve zaman için
 
 | Feature | Durum | İlk sürüm | Son değişiklik | Kapsadığı capability'ler |
 |---|---|---|---|---|
+| [Vitrin ve Arama](vitrin-ve-arama.md) | Geliştirmede | 2026-10-06 | 2026-10-06 | storefront-catalog |
 | [Genel: feature'a bağlı olmayan işler](_genel.md) | - | - | 2026-10-06 | (dokümantasyon, araçlar, altyapı, AI kuralları) |
-
-Henüz ürün feature'ı yok: kod yazılmadı, ilk dikey dilim açık kararlara bağlı (`openspec/KALANLAR.md`).
 
 **Planlanan feature'lar** (ilk dilimlerle birlikte dosyaları açılacak):
 
@@ -35,7 +34,6 @@ Henüz ürün feature'ı yok: kod yazılmadı, ilk dikey dilim açık kararlara 
 | Hesap ve Oturum | Kayıt, giriş, parola sıfırlama, roller | KALANLAR B1 |
 | Satıcı Kaydı ve Onayı | Üretici başvurusu, belge doğrulama, onay akışı | KALANLAR A3 |
 | Ürün İlanları | Ürün ekleme/düzenleme, fotoğraf, stok, fiyat | KALANLAR B3 |
-| Vitrin ve Arama | Kategori, listeleme, ürün detayı, SEO | - |
 | Sepet ve Sipariş | Sepet, adres, sipariş oluşturma, durum makinesi | KALANLAR A1 |
 | Ödeme ve Hakediş | Tahsilat, komisyon, satıcı ödemesi, iade | KALANLAR A1 |
 | Kargo ve Teslimat | Gönderi oluşturma, takip, teslim bildirimi | KALANLAR A2 |
