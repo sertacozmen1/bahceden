@@ -49,8 +49,11 @@ plugins:
       minify_html: true
 
 # Şablonlar portalda görünmez: kopyalanmak için vardır, okunmak için değil.
+# .tools/ portalın kendi araçları (venv dahil): site çıktısına girmez ve
+# git-revision eklentisinin gürültüsünü kesmek için açıkça dışlanır.
 exclude_docs: |
   */template.md
+  .tools/
 
 markdown_extensions:
   - admonition

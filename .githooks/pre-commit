@@ -75,9 +75,11 @@ if [ "$docs" = 1 ]; then
   fi
 fi
 
-# ── Her commit: secret ve yarım iş taraması (AGENTS.md K6, K10) ──
-# Yalnızca eklenen satırlara bakar; mevcut dosyaların geçmişini taramaz.
-ADDED=$(git diff --cached -U0 --diff-filter=ACMR | grep '^+' | grep -v '^+++' || true)
+# ── Her commit: yarım iş taraması (AGENTS.md K6) ──
+# Yalnızca eklenen satırlara ve yalnızca KAYNAK dizinlerine bakar. Depo
+# genelini taramak yanlış pozitif üretir: kural dosyaları bu kelimeleri kural
+# metni olarak içerir ve bu hook ile CI iş akışı desenlerin kendisini barındırır.
+ADDED=$(git diff --cached -U0 --diff-filter=ACMR -- api web shared | grep '^+' | grep -v '^+++' || true)
 
 if printf '%s' "$ADDED" | grep -nEi '(TODO|FIXME|XXX|HACK)[:( ]' >/dev/null 2>&1; then
   echo "pre-commit: UYARI - eklenen satırlarda TODO/FIXME/XXX/HACK var (AGENTS.md K6)" >&2
@@ -90,7 +92,8 @@ if printf '%s' "$ADDED" | grep -nE '(console\.log|System\.out\.println|debugger;
   fail "console.log / System.out.println / debugger bırakılmaz"
 fi
 
-# .env ve anahtar dosyaları hiçbir koşulda commit'e girmez (K10).
+# ── Her commit: secret taraması (AGENTS.md K10) ──
+# Bu kontrol depo genelindedir: .env veya anahtar dosyası nerede olursa olsun yanlıştır.
 if printf '%s\n' "$STAGED" | grep -nE '(^|/)\.env($|\.)|\.pem$|\.p12$|\.jks$|id_rsa' >/dev/null 2>&1; then
   printf '%s\n' "$STAGED" | grep -nE '(^|/)\.env($|\.)|\.pem$|\.p12$|\.jks$|id_rsa' >&2
   fail "secret taşıyabilecek dosya staged (AGENTS.md K10); .gitignore kontrol edin"

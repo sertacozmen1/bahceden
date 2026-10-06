@@ -128,23 +128,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Tarama YALNIZCA kaynak dizinlerinde yapılır. Depo kökünü taramak iki
+      # yanlış pozitif üretir: kural dosyaları bu kelimeleri kural metni olarak
+      # içerir ve bu iş akışının kendisi de deseni barındırır.
       - name: Yarım iş işaretleri (K6)
         run: |
-          # Kural dosyaları ve dokümanlar bu kelimeleri kural metni olarak içerir: hariç tutuluyor.
-          if grep -rnE '(TODO|FIXME|XXX|HACK)[:( ]' \
-               --include='*.java' --include='*.ts' --include='*.tsx' \
-               --include='*.js' --include='*.sql' --include='*.yaml' --include='*.yml' \
-               . ; then
-            echo "::error::Kodda TODO/FIXME/XXX/HACK var (AGENTS.md K6)"
+          set -eu
+          dirs=""
+          for d in api/src web/src shared; do [ -d "$d" ] && dirs="$dirs $d"; done
+          if [ -z "$dirs" ]; then echo "Kaynak dizini yok, tarama atlandı."; exit 0; fi
+          if grep -rnE '(TODO|FIXME|XXX|HACK)[:( ]' $dirs; then
+            echo "::error::Kodda yarım iş işareti var (AGENTS.md K6)"
             exit 1
           fi
           echo "Temiz."
 
       - name: Debug çıktısı (K6)
         run: |
-          if grep -rnE '(System\.out\.println|console\.log|debugger;)' \
-               --include='*.java' --include='*.ts' --include='*.tsx' --include='*.js' \
-               . ; then
+          set -eu
+          dirs=""
+          for d in api/src web/src shared; do [ -d "$d" ] && dirs="$dirs $d"; done
+          if [ -z "$dirs" ]; then echo "Kaynak dizini yok, tarama atlandı."; exit 0; fi
+          if grep -rnE '(System\.out\.println|console\.log|debugger;)' $dirs; then
             echo "::error::Debug çıktısı bırakılmış (AGENTS.md K6)"
             exit 1
           fi
