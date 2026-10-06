@@ -14,3 +14,6 @@ databaseChangeLog:
   - include:
       file: 002-dev-seed-catalog.sql
       relativeToChangelogFile: true
+  - include:
+      file: 003-create-account.sql
+      relativeToChangelogFile: true

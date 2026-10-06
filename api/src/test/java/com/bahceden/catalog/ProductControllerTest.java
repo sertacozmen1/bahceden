@@ -42,7 +42,10 @@ import org.springframework.test.web.servlet.MockMvc;
 // Gerçek SecurityConfig yüklenir: ucun kimlik doğrulaması olmadan erişilebildiği
 // (permitAll) de bu testin doğruladığı sözleşmenin parçasıdır.
 @Import({GlobalExceptionHandler.class, SecurityConfig.class})
-@TestPropertySource(properties = "bahceden.web-origin=http://localhost:3000")
+@TestPropertySource(properties = {
+        "bahceden.web-origin=http://localhost:3000",
+        "bahceden.mail-from=bahceden@ornek.test"
+})
 @DisplayName("GET /api/v1/products sözleşmesi")
 class ProductControllerTest {
 

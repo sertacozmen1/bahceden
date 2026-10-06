@@ -65,6 +65,13 @@
       <groupId>org.liquibase</groupId>
       <artifactId>liquibase-core</artifactId>
     </dependency>
+    <!-- E-posta gönderimi: doğrulama bağlantısı ve ikinci faktör kodu.
+         Sağlayıcıdan bağımsız SMTP; bütçeye kullanıcı onayıyla eklendi
+         (ADR-017, ADR-002 değişim tablosu). -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-mail</artifactId>
+    </dependency>
     <dependency>
       <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>

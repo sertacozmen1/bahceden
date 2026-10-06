@@ -38,11 +38,17 @@ services:
       BAHCEDEN_DB_USERNAME: bahceden
       BAHCEDEN_DB_PASSWORD: bahceden-dev
       BAHCEDEN_WEB_ORIGIN: http://localhost:3000
+      # E-posta mailpit'e gider; gerçek gönderim yapılmaz (AGENTS.md K10).
+      BAHCEDEN_SMTP_HOST: mailpit
+      BAHCEDEN_SMTP_PORT: 1025
+      BAHCEDEN_MAIL_FROM: bahceden@ornek.test
     ports:
       - "8080:8080"
     depends_on:
       db:
         condition: service_healthy
+      mailpit:
+        condition: service_started
     healthcheck:
       test: ["CMD-SHELL", "wget -q -O- http://localhost:8080/api/v1/health || exit 1"]
       interval: 10s

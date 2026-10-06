@@ -19,8 +19,15 @@ spring:
       # Sorgu sayısı iddialarını ölçebilmek için (design.md D2).
       hibernate.generate_statistics: true
 
+  mail:
+    # Testler gerçek SMTP'ye çıkmaz (K10): MailSender taklit edilir, bu değerler
+    # yalnızca yer tutucuların çözülmesi için var.
+    host: localhost
+    port: 1025
+
 bahceden:
   web-origin: http://localhost:3000
+  mail-from: bahceden@ornek.test
 
 logging:
   level:

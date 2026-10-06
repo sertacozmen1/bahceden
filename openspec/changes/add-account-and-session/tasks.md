@@ -7,15 +7,21 @@
 
 ## Faz 1 · Hesap şeması, e-posta altyapısı ve kayıt
 
-- [ ] 1.1 `003-create-account.sql`: `accounts` (`email` tekil, `password_hash`, `status` enum metni + `CHECK`, **`email_verified boolean not null default false`**, **`two_factor_enabled boolean not null default false`**, zaman damgaları), `account_roles` (`account_id` + `role`, bileşik tekil), `email_verification_tokens` (`token_hash` tekil, `account_id`, `expires_at`, `used_at`), `refresh_tokens` (`token_hash` tekil, `account_id`, `family_id`, `expires_at`, `used_at`, `revoked_at`), `login_challenges` (`code_hash` tekil, `account_id`, `expires_at`, `used_at`, `attempt_count`); `expires_at` indeksleri. `--rollback` satırları.
-- [ ] 1.2 `account/domain/`: `Account` (`emailVerified`, `twoFactorEnabled` dahil), `AccountRole`, `AccountStatus` (bugün tek değer: `ACTIVE`), `EmailVerificationToken`, `RefreshToken`, `LoginChallenge` entity'leri.
-- [ ] 1.3 `common/security/`: `PasswordHasher` (BCrypt, Spring Security `PasswordEncoder` üzerinden) ve `SecureTokens` (256 bit üretim + SHA-256 hash; D1/D3 tek yardımcıda).
-- [ ] 1.4 `common/mail/`: `MailSender` sarmalayıcı — düz metin + tek bağlantı; gönderim hatası `WARN` loglanır ve akışı kesmez (D2). Ortam değişkenleri `api/.env.example`'a eklenir; `docker-compose.yml` `api` servisine `mailpit` SMTP ayarları.
-- [ ] 1.5 `AccountService.register(...)`: D4 tablosundaki iki durumu uygular; hesap **`ACTIVE`** açılır (ADR-017), `ROLE_CUSTOMER` verilir, doğrulama token'ı üretilir ve e-posta gönderilir.
-- [ ] 1.6 `POST /api/v1/accounts` ucu + DTO'lar (`RegisterRequest` Bean Validation ile: e-posta biçimi, parola en az 10 karakter) + `@Schema` açıklamaları. Uç `permitAll`, açıkça işaretli.
-- [ ] 1.7 **Test (`critical`):** kayıt iki durumda da **202 ve aynı gövde** döner (enumeration, D4); var olan e-postayla kayıt ikinci hesap açmaz; **kayıt sonrası doğrulama yapılmadan giriş çalışır** (ADR-017); parola düz metin hiçbir yere yazılmaz; e-posta log'a maskeli düşer (K10).
-- [ ] 1.8 **Test (`integration`):** bellek içi gönderici ile doğrulama bağlantısının üretildiği ve token'ın **hash'li** saklandığı doğrulanır (düz token DB'de yok); **gönderim hatası kaydı başarısız kılmaz** (ADR-017 §4).
-- [ ] 1.9 **Doğrulama:** `./mvnw -B verify` temiz; `docker compose up` ile kayıt isteği atılıp e-posta `mailpit` arayüzünde (http://localhost:8025) görülür.
+- [x] 1.1 `003-create-account.sql`: `accounts` (`email` tekil, `password_hash`, `status` enum metni + `CHECK`, **`email_verified boolean not null default false`**, **`two_factor_enabled boolean not null default false`**, zaman damgaları), `account_roles` (`account_id` + `role`, bileşik tekil), `email_verification_tokens` (`token_hash` tekil, `account_id`, `expires_at`, `used_at`), `refresh_tokens` (`token_hash` tekil, `account_id`, `family_id`, `expires_at`, `used_at`, `revoked_at`), `login_challenges` (`code_hash` tekil, `account_id`, `expires_at`, `used_at`, `attempt_count`); `expires_at` indeksleri. `--rollback` satırları.
+- [x] 1.2 `account/domain/`: `Account` (`emailVerified`, `twoFactorEnabled` dahil), `AccountRole`, `AccountStatus` (bugün tek değer: `ACTIVE`), `EmailVerificationToken`. **Sapma (S12):** `RefreshToken` ve `LoginChallenge` entity'leri kendi fazlarında yazılır; tabloları `003` ile oluştu ama kullanılmayan entity ölü kod olurdu (K6). `ddl-auto: validate` eşlenmemiş tabloyu sorun saymaz.
+- [x] 1.3 `common/security/`: `PasswordHasher` (BCrypt, Spring Security `PasswordEncoder` üzerinden) ve `SecureTokens` (256 bit üretim + SHA-256 hash; D1/D3 tek yardımcıda).
+- [x] 1.4 `common/mail/`: `MailSender` sarmalayıcı — düz metin + tek bağlantı; gönderim hatası `WARN` loglanır ve akışı kesmez (D2). Ortam değişkenleri `api/.env.example`'a eklenir; `docker-compose.yml` `api` servisine `mailpit` SMTP ayarları.
+- [x] 1.5 `AccountService.register(...)`: D4 tablosundaki iki durumu uygular; hesap **`ACTIVE`** açılır (ADR-017), `ROLE_CUSTOMER` verilir, doğrulama token'ı üretilir ve e-posta gönderilir.
+- [x] 1.6 `POST /api/v1/accounts` ucu + DTO'lar (`RegisterRequest` Bean Validation ile: e-posta biçimi, parola en az 10 karakter) + `@Schema` açıklamaları. Uç `permitAll`, açıkça işaretli.
+- [x] 1.7 **Test (`critical`):** kayıt iki durumda da **202 ve aynı gövde** döner (enumeration, D4); var olan e-postayla kayıt ikinci hesap açmaz; hesap `ACTIVE` + `email_verified=false` + ikinci faktör kapalı açılır (ADR-017 değişmezi); parola düz metin hiçbir yere yazılmaz ve hata gövdesine sızmaz. **Sapma (S13):** "doğrulama yapılmadan giriş çalışır" iddiası Faz 2'ye taşındı — giriş ucu henüz yok, test edilemezdi.
+- [x] 1.8 **Test (`integration`):** bellek içi gönderici ile doğrulama bağlantısının üretildiği ve token'ın **hash'li** saklandığı doğrulanır (düz token DB'de yok); **gönderim hatası kaydı başarısız kılmaz** (ADR-017 §4).
+- [x] 1.9 **Doğrulama:** `./mvnw -B verify` temiz; `docker compose up` ile kayıt isteği atılıp e-posta `mailpit` arayüzünde (http://localhost:8025) görülür.
+
+> **Faz 1 tamamlandı (2026-10-07).** 31 `api` testi yeşil (11'i kayıt). Uçtan uca doğrulandı:
+> `003-create-account` uygulandı; kayıt 202 + standart gövde; aynı e-postayla ikinci kayıt
+> **birebir aynı** yanıtı döndü ve "hesabınız zaten var" e-postası gitti; geçersiz parola ortak
+> hata gövdesiyle reddedildi; `mailpit` iki e-postayı aldı; veritabanında hesap
+> `ACTIVE / email_verified=f / two_factor_enabled=f` ve parola `$2a$12$` hash'i olarak duruyor.
 
 ## Faz 2 · E-posta doğrulama (engellemeyen) ve giriş
 

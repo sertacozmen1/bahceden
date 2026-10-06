@@ -46,6 +46,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Vitrin: alıcı giriş yapmadan ürünleri görebilir (storefront-catalog spec'i).
                         .requestMatchers(HttpMethod.GET, "/api/v1/products").permitAll()
+                        // Kimlik: hesap açma girişten önce gelir, doğal olarak açıktır.
+                        .requestMatchers(HttpMethod.POST, "/api/v1/accounts").permitAll()
                         // Operasyon: konteyner sağlık kontrolü ve sözleşme çıktısı.
                         .requestMatchers(HttpMethod.GET, "/api/v1/health").permitAll()
                         .requestMatchers(HttpMethod.GET, "/v3/api-docs", "/v3/api-docs/**", "/v3/api-docs.yaml").permitAll()

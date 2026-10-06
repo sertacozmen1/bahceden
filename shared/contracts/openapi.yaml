@@ -9,11 +9,42 @@ servers:
 - url: http://localhost
   description: Generated server url
 tags:
+- name: Hesap
+  description: Hesap açma ve e-posta doğrulama
 - name: Sağlık
   description: Operasyonel sağlık kontrolü
 - name: Ürünler
   description: Vitrindeki ürünlerin listelenmesi
 paths:
+  /api/v1/accounts:
+    post:
+      tags:
+      - Hesap
+      summary: Hesap açar
+      description: |
+        Hesap doğrudan etkin açılır ve e-posta adresine bir doğrulama bağlantısı
+        gönderilir; doğrulama girişi engellemez. Yanıt, e-posta adresinin sistemde
+        kayıtlı olup olmadığını açığa çıkarmaz: her durumda aynı gövde döner.
+      operationId: register
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+        required: true
+      responses:
+        "202":
+          description: İstek alındı
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegistrationAccepted"
+        "400":
+          description: E-posta veya parola geçersiz
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
   /api/v1/products:
     get:
       tags:
@@ -74,6 +105,26 @@ paths:
                 $ref: "#/components/schemas/HealthResponse"
 components:
   schemas:
+    RegisterRequest:
+      type: object
+      description: Hesap açma isteği
+      properties:
+        email:
+          type: string
+          format: email
+          description: E-posta adresi
+          example: alici@ornek.test
+          maxLength: 320
+          minLength: 0
+        password:
+          type: string
+          description: Parola; en az 10 karakter
+          example: cok-gizli-parola
+          maxLength: 200
+          minLength: 10
+      required:
+      - email
+      - password
     ApiError:
       type: object
       description: Hata yanıtı
@@ -109,6 +160,16 @@ components:
           example: 0 değerinden küçük olamaz
       required:
       - field
+      - message
+    RegistrationAccepted:
+      type: object
+      description: Kayıt isteği alındı bilgisi
+      properties:
+        message:
+          type: string
+          description: Kullanıcıya gösterilebilir bilgilendirme
+          example: E-posta adresinize bir bağlantı gönderdik.
+      required:
       - message
     Money:
       type: object

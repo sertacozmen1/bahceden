@@ -24,6 +24,21 @@ spring:
     properties:
       hibernate.jdbc.time_zone: UTC
 
+  mail:
+    # SMTP sağlayıcıdan bağımsızdır (ADR-017): geliştirmede mailpit, üretimde
+    # gerçek sunucu. Kimlik bilgileri yalnızca ortamdan gelir (K10).
+    host: ${BAHCEDEN_SMTP_HOST}
+    port: ${BAHCEDEN_SMTP_PORT}
+    username: ${BAHCEDEN_SMTP_USERNAME:}
+    password: ${BAHCEDEN_SMTP_PASSWORD:}
+    properties:
+      mail.smtp.auth: ${BAHCEDEN_SMTP_AUTH:false}
+      mail.smtp.starttls.enable: ${BAHCEDEN_SMTP_STARTTLS:false}
+      # Gönderim kullanıcıyı bekletmemeli: hata zaten akışı kesmiyor.
+      mail.smtp.connectiontimeout: 5000
+      mail.smtp.timeout: 5000
+      mail.smtp.writetimeout: 5000
+
   liquibase:
     enabled: true
     change-log: classpath:db/changelog/db.changelog-master.yaml
@@ -50,6 +65,7 @@ springdoc:
 
 bahceden:
   web-origin: ${BAHCEDEN_WEB_ORIGIN}
+  mail-from: ${BAHCEDEN_MAIL_FROM}
 
 logging:
   level:
