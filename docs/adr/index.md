@@ -27,7 +27,7 @@ Architecture Decision Records, projedeki önemli mimari kararları ve bu kararla
 | 005 | [Test stratejisi: Testcontainers, `critical` etiketi, sınırlı tarayıcı testi](005-test-strategy.md) | Accepted | 2026-10-06 |
 | 006 | [Para minor unit tamsayı olarak taşınır; hesap sunucuda](006-money-as-minor-unit.md) | Accepted | 2026-10-06 |
 | 007 | [Satıcı veri izolasyonu sorgu seviyesinde; varsayılan deny](007-query-level-ownership-scoping.md) | Accepted | 2026-10-06 |
-| 008 | [Kimlik: JWT erişim + iptal edilebilir yenileme token'ı, tek hesap tablosu, zorunlu e-posta doğrulaması](008-jwt-auth-with-opaque-refresh.md) | Accepted | 2026-10-06 |
+| 008 | [Kimlik: JWT erişim + iptal edilebilir yenileme token'ı, tek hesap tablosu](008-jwt-auth-with-opaque-refresh.md) | Accepted · §4 [017](017-email-verification-non-blocking-and-2fa-switch.md) ile değişti | 2026-10-06 |
 | 009 | [Sözleşme Spring kodundan üretilir; `openapi.yaml` commit'lenen çıktıdır](009-contract-generated-from-spring.md) | Accepted | 2026-10-06 |
 | 010 | [Ürün yayın durumu enum'dur, boolean bayrak değil](010-product-status-as-enum.md) | Accepted | 2026-10-06 |
 | 011 | [Liste sorguları fetch join; sorgu sayısı testle sabit](011-fetch-join-with-query-count-test.md) | Accepted | 2026-10-06 |
@@ -36,8 +36,9 @@ Architecture Decision Records, projedeki önemli mimari kararları ve bu kararla
 | 014 | [Geliştirme verisi dev profilli tekrarlanabilir migration ile](014-dev-seed-via-profiled-repeatable-migration.md) | Accepted | 2026-10-06 |
 | 015 | [Sözleşme tazeliği testle zorunlu; dosya testten üretilir](015-contract-freshness-enforced-by-test.md) | Accepted | 2026-10-06 |
 | 016 | [Şema değişiklikleri Liquibase ile yönetilir](016-liquibase-for-schema-migrations.md) | Accepted | 2026-10-06 |
+| 017 | [E-posta doğrulaması girişi engellemez; 2FA hesap anahtarıyla açılır](017-email-verification-non-blocking-and-2fa-switch.md) | Accepted | 2026-10-06 |
 
-**Sıradaki numara: 017.**
+**Sıradaki numara: 018.**
 
 **Durum değerleri:** `Proposed` (öneri, henüz bağlayıcı değil) · `Accepted` (yürürlükte, bağlayıcı) · `Deprecated` (artık geçerli değil, yerine bir şey gelmedi) · `Superseded by [ADR-XXX]` (yerini başka bir karara bıraktı).
 

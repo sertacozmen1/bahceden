@@ -1,7 +1,16 @@
 # [ADR-008] Kimlik doğrulama: JWT erişim token'ı + iptal edilebilir yenileme token'ı, tek hesap tablosu, zorunlu e-posta doğrulaması
 
 **Tarih:** 2026-10-06
-**Durum:** Accepted
+**Durum:** Accepted · §4'ün "doğrulanmadan giriş yapılamaz" kuralı [ADR-017](017-email-verification-non-blocking-and-2fa-switch.md) ile değiştirildi (2026-10-06)
+
+> [!WARNING]
+> Bu ADR'nin token modeli, hesap modeli, parola ve BFF kararları **aynen
+> yürürlüktedir.** Yalnızca §4'teki **zorunlu e-posta doğrulaması** kuralı
+> değişti: [ADR-017](017-email-verification-non-blocking-and-2fa-switch.md)
+> uyarınca hesap doğrudan `ACTIVE` açılır, doğrulama bağlantısı gönderilir ama
+> girişi engellemez; e-postanın kimlik akışına girmesi hesap üzerindeki
+> `two_factor_enabled` anahtarına bağlıdır ve o anahtar varsayılan olarak
+> kapalıdır.
 
 ---
 

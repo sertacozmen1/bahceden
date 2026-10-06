@@ -105,6 +105,7 @@ nav:
     - "ADR-014 · Dev seed": adr/014-dev-seed-via-profiled-repeatable-migration.md
     - "ADR-015 · Sözleşme tazelik testi": adr/015-contract-freshness-enforced-by-test.md
     - "ADR-016 · Liquibase ile şema takibi": adr/016-liquibase-for-schema-migrations.md
+    - "ADR-017 · Doğrulama engellemez, 2FA anahtarı": adr/017-email-verification-non-blocking-and-2fa-switch.md
   - Nasıl Yapılır (How-to):
     - Genel Bakış: how-to/index.md
     - Yerel Geliştirme Ortamı: how-to/yerel-gelistirme.md

@@ -3,6 +3,7 @@
 > **Durum:** Proposed — kullanıcı onayı bekliyor (`AGENTS.md` §5.3).
 > **Not:** `openspec` CLI bu makinede kurulu değil; artefaktlar `AGENTS.md` §5.2'deki yapıya göre elle yazıldı.
 > **Bu change bütçe dışı bir paket gerektiriyor** (K7): aşağıdaki "Bağımlılık talebi" bölümü ayrıca onay ister.
+> **Güncelleme (2026-10-06):** proje sahibinin yönlendirmesiyle e-posta doğrulaması **girişi engellemez** ve e-postanın kimlik akışına girmesi hesap bazlı `two_factor_enabled` anahtarına bağlanır ([ADR-017](../../../docs/adr/017-email-verification-non-blocking-and-2fa-switch.md), ADR-008 §4'ü değiştirir). Artefaktlar bu karara göre güncellendi.
 
 ## Why
 
@@ -18,10 +19,11 @@ Bu dilim kimliği uçtan uca ayağa kaldırır: **kayıt → e-posta doğrulama 
 
 **`api/` (yeni `account` domaini):**
 
-- `accounts` + `account_roles` + `email_verification_tokens` + `refresh_tokens` tabloları (Liquibase `003`).
-- `POST /api/v1/accounts` — kayıt. Hesap `PENDING_VERIFICATION` açılır, doğrulama e-postası gider. Yanıt, e-postanın kayıtlı olup olmadığını **açığa çıkarmaz**.
-- `POST /api/v1/accounts/verifications` — doğrulama token'ını tüketir, hesabı `ACTIVE` yapar.
-- `POST /api/v1/sessions` — giriş. JWT erişim token'ı (15 dk) + opak yenileme token'ı döner.
+- `accounts` (`email_verified`, `two_factor_enabled` dahil) + `account_roles` + `email_verification_tokens` + `refresh_tokens` + `login_challenges` tabloları (Liquibase `003`).
+- `POST /api/v1/accounts` — kayıt. Hesap doğrudan **`ACTIVE`** açılır; doğrulama e-postası gider ama **girişi engellemez** ([ADR-017](../../../docs/adr/017-email-verification-non-blocking-and-2fa-switch.md)). Yanıt, e-postanın kayıtlı olup olmadığını **açığa çıkarmaz**.
+- `POST /api/v1/accounts/verifications` — doğrulama token'ını tüketir ve `email_verified` işaretler (giriş koşulu değildir).
+- `POST /api/v1/sessions` — giriş. İkinci faktör kapalıysa (varsayılan) JWT erişim token'ı (15 dk) + opak yenileme token'ı döner; açıksa token dönmez ve e-posta ile tek kullanımlık kod gönderilir.
+- `POST /api/v1/sessions/challenge` — ikinci faktör kodunu doğrular ve token'ları verir. Anahtar kapalı olduğu sürece bu yol kullanılmaz ama **uygulanmış ve testlidir** (K6: uygulanmamış dal bırakılmaz).
 - `POST /api/v1/sessions/refresh` — yenileme (rotasyonlu, tekrar kullanım tespitli).
 - `DELETE /api/v1/sessions/current` — çıkış; yenileme token'ı iptal edilir.
 - `GET /api/v1/accounts/me` — oturum sahibinin kimliği ve rolleri. **Korunan ilk uç.**
@@ -30,11 +32,11 @@ Bu dilim kimliği uçtan uca ayağa kaldırır: **kayıt → e-posta doğrulama 
 **`web/` (ince BFF + ekranlar):**
 
 - Route Handler'lar: `/api/auth/login`, `/api/auth/logout`, `/api/auth/refresh`. Token'lar `HttpOnly` + `Secure` + `SameSite=Lax` çerezlere yazılır; tarayıcı JavaScript'ine **hiç** verilmez.
-- Ekranlar: `/kayit`, `/giris`, `/dogrulama` (e-postadaki bağlantının indiği sayfa), `/hesabim` (korunan).
+- Ekranlar: `/kayit`, `/giris` (ikinci faktör açıksa kod adımı aynı ekranda), `/dogrulama` (e-postadaki bağlantının indiği sayfa), `/hesabim` (korunan; doğrulama durumunu gösterir).
 - `AppShell` oturum durumunu gösterir (giriş yapılmışsa e-posta + çıkış, değilse giriş bağlantısı).
 - Sunucu tarafı render çerezi okur ve `api`'ye `Bearer` ile gider; erişim token'ı süresi dolmuşsa sessizce yenilenir.
 
-**Sözleşme:** yeni DTO'lar ve yeni hata kodları (`AUTH_INVALID_CREDENTIALS`, `AUTH_EMAIL_NOT_VERIFIED`, `AUTH_TOKEN_INVALID`, `RATE_LIMITED`) sözleşmeye yansır; `openapi.yaml` yeniden üretilir.
+**Sözleşme:** yeni DTO'lar ve yeni hata kodları (`AUTH_INVALID_CREDENTIALS`, `AUTH_TOKEN_INVALID`, `AUTH_CODE_INVALID`, `RATE_LIMITED`) sözleşmeye yansır; `openapi.yaml` yeniden üretilir. "Doğrulanmamış hesap" diye bir giriş hatası **yoktur** ([ADR-017](../../../docs/adr/017-email-verification-non-blocking-and-2fa-switch.md)).
 
 ## Capabilities
 
@@ -46,11 +48,11 @@ Bu dilim kimliği uçtan uca ayağa kaldırır: **kayıt → e-posta doğrulama 
 
 | Katman | Etki |
 |---|---|
-| `api/` | Yeni `account` domaini; `SecurityConfig` JWT resource server olarak yapılandırılır ve `permitAll` listesi genişler; `ApiErrorCode` dört yeni kod alır; `common` altına e-posta gönderici ve hız sınırlayıcı |
+| `api/` | Yeni `account` domaini (ikinci faktör anahtarı ve e-posta kod akışı dahil); `SecurityConfig` JWT resource server olarak yapılandırılır ve `permitAll` listesi genişler; `ApiErrorCode` dört yeni kod alır; `common` altına e-posta gönderici ve hız sınırlayıcı |
 | `web/` | Yeni `(account)` rota grubu + üç Route Handler; `apiClient` oturum başlığı ve 401 → yenileme akışını öğrenir; `AppShell` oturum bilgisini gösterir; `texts.ts` genişler |
 | `shared/` | `openapi.yaml` yeniden üretilir: yedi yeni uç, yeni şemalar, yeni hata kodları |
-| DB | Liquibase `003`: dört tablo + indeksler (`accounts.email` tekil, token hash'leri tekil, süre dolum sorguları için indeks) |
-| `docs/` | ADR-017…023 (D1–D7), `01-domain-model.md` ER güncellemesi, `02-api-reference.md`, yeni how-to (korunan uç ekleme), yeni feature dosyası (`hesap-ve-oturum.md`), `00-current-state.md` |
+| DB | Liquibase `003`: beş tablo + indeksler (`accounts.email` tekil, token ve kod hash'leri tekil, süre dolum sorguları için indeks) |
+| `docs/` | ADR-018…025 (D1–D8), `01-domain-model.md` ER güncellemesi, `02-api-reference.md`, yeni how-to (korunan uç ekleme), yeni feature dosyası (`hesap-ve-oturum.md`), `00-current-state.md` |
 | CI | Değişiklik yok; mevcut dört job yeni testleri kapsar |
 
 ## Bağımlılık talebi (K7 — onay gerekiyor)
@@ -79,6 +81,7 @@ Bu change **kapsam dışı** bırakır:
 - **Hesap silme / KVKK veri dışa aktarma.** Yasal gereklilik; ayrı bir dilim ve karar konusu.
 - **Yönetici ekranları** (kullanıcı listesi, rol atama).
 - **SMS ve diğer bildirim kanalları** (`KALANLAR` B4).
+- **İkinci faktörü açan uç veya ekran.** `two_factor_enabled` yalnızca veritabanından (veya dev seed'inden) açılır; kullanıcı tercihi olarak sunulması ayrı bir dilim.
 - **Dağıtık hız sınırlama.** Tek örnek varsayımıyla bellek içi sınırlayıcı; ADR-008 bu sınırlamayı zaten kaydetti.
 
 ## Riskler
@@ -86,7 +89,7 @@ Bu change **kapsam dışı** bırakır:
 | Risk | Karşılık |
 |---|---|
 | Güvenlik yüzeyi bu dilimde en geniş: yanlış bir ayrıntı hesap devralmaya kadar gider | Her kural `critical` testle sabitlenir (enumeration, doğrulanmamış hesapla giriş, token tekrar kullanımı, iptal sonrası yenileme, hız sınırı). Testler kuralın kendisini korur |
-| E-posta teslim edilemezse kullanıcı kaybı: doğrulama zorunlu | Geliştirmede `mailpit` ile görünür; üretim teslim izlemesi `KALANLAR` B5 kapsamında. Gönderim hatası kayda yazılır ve kullanıcıya "bağlantı gönderildi" mesajı yine gösterilir (enumeration güvenliği) |
+| E-posta teslim edilemezse | **Kullanıcı kilitlenmiyor** ([ADR-017](../../../docs/adr/017-email-verification-non-blocking-and-2fa-switch.md)): doğrulama girişi engellemiyor. Gönderim hatası kayda yazılır, kullanıcı aynı yanıtı alır. Bedeli: doğrulanmamış e-postayla hesap açılabiliyor; sipariş dilimi `email_verified` kapısını değerlendirmek zorunda |
 | JWT imza anahtarının yönetimi | Ortam değişkeni, açılışta fail-fast doğrulama (K10). Anahtar rotasyonu en fazla 15 dk erişim token'ı geçersizliği demek; ADR-008'de kayıtlı |
 | `web` BFF katmanı sunum katmanını kalınlaştırıyor | Üç Route Handler ve tek çerez yardımcısıyla sınırlı; iş kuralı taşımaz, yalnızca token taşır |
 | Dilim büyük: dört tablo, yedi uç, dört ekran | `tasks.md` beş faza bölündü ve her faz tek başına çalışır durumda bırakılıyor (K5). Parola sıfırlama bilinçli olarak dışarıda tutuldu |

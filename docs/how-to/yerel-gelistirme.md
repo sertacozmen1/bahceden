@@ -79,7 +79,39 @@ docker compose version
 > [!TIP]
 > Docker Desktop kapalıysa `docker info` şu hatayı verir: `failed to connect to the docker API at npipe:...`. Docker Desktop'ı başlatıp birkaç saniye bekleyin.
 
-### 5. Dokümantasyon portalını başlatın (isteğe bağlı)
+### 5. Veritabanını IntelliJ'den görün
+
+Ortam ayaktayken PostgreSQL `localhost:5432` üzerinden erişilebilir. IntelliJ'in **Database** aracıyla şemayı, tabloları ve Liquibase geçmişini doğrudan görebilirsiniz.
+
+**Bağlantı değerleri** (yalnızca yerel geliştirme; `docker-compose.yml` içinde tanımlı):
+
+| Alan | Değer |
+|---|---|
+| Host | `localhost` |
+| Port | `5432` |
+| Database | `bahceden` |
+| User | `bahceden` |
+| Password | `bahceden-dev` |
+
+**IntelliJ'de ekleme:** `View → Tool Windows → Database` → `+` → `Data Source` → `PostgreSQL` → yukarıdaki değerler → `Test Connection` → `OK`. Sürücü ilk seferde indirilir.
+
+Bağlantı eklendikten sonra `public` şemasına sağ tıklayıp **Refresh** ile tabloları yükleyin. Göreceğiniz tablolar:
+
+| Tablo | İçerik |
+|---|---|
+| `sellers`, `products` | Katalog ([domain modeli](../reference/01-domain-model.md)) |
+| `databasechangelog` | Uygulanmış Liquibase changeset'leri: hangi değişiklik ne zaman koştu, hangi bağlamla ([ADR-016](../adr/016-liquibase-for-schema-migrations.md)) |
+| `databasechangeloglock` | Liquibase kilit tablosu; elle dokunulmaz |
+
+> [!TIP]
+> `databasechangelog` tablosundaki `contexts` kolonu, geliştirme seed'inin yalnızca `dev` bağlamında uygulandığını gösterir. Bir changeset'in neden koşmadığını anlamak için önce buraya bakın.
+
+> [!WARNING]
+> Bu kimlik bilgileri **yalnızca yerel geliştirme** içindir ve bilinçli olarak depodadır. Üretim veritabanına bağlanmak için aynı yöntemi kullanmayın: üretim kimlik bilgileri ne depoya ne de AI asistanının bağlamına girer (`AGENTS.md` K10).
+
+Şema değişikliği **elle yapılmaz**: tabloyu IDE üzerinden değiştirmek Liquibase geçmişiyle veritabanını ayrıştırır ve uygulama bir sonraki açılışta şema doğrulamasında durur. Değişiklik yeni bir changeset ile gelir ([yeni API ucu ekleme](yeni-api-ucu-ekleme.md) 1. adım).
+
+### 6. Dokümantasyon portalını başlatın (isteğe bağlı)
 
 ```bash
 ./docs/.tools/serve.sh            # http://localhost:8888
@@ -88,7 +120,7 @@ docker compose version
 
 Betik ilk çalıştırmada `docs/.tools/.venv` altında bir Python sanal ortamı kurar ve MkDocs bağımlılıklarını indirir. Python 3.11+ gerekir. Bu portal yalnızca dokümantasyon içindir; uygulamanın bağımlılık bütçesine dahil değildir.
 
-### 6. Uygulamayı çalıştırma
+### 7. Uygulamayı çalıştırma
 
 İlk dikey dilim yazıldığında bu bölüm şu komutlarla doldurulacaktır (`AGENTS.md` §7):
 

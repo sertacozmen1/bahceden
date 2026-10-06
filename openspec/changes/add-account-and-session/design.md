@@ -41,11 +41,10 @@ Token parola **değildir**: tahmin edilemez ve sözlük saldırısına açık de
 
 | Durum | Davranış |
 |---|---|
-| E-posta kayıtlı değil | Hesap açılır, doğrulama bağlantısı gönderilir |
-| Kayıtlı ama doğrulanmamış | Yeni hesap açılmaz; doğrulama bağlantısı **yeniden** gönderilir |
-| Kayıtlı ve doğrulanmış | Hesap açılmaz; "hesabınız zaten var, giriş yapın / parolanızı mı unuttunuz" e-postası gönderilir |
+| E-posta kayıtlı değil | Hesap `ACTIVE` açılır, doğrulama bağlantısı gönderilir |
+| E-posta kayıtlı | Yeni hesap açılmaz; mevcut hesabın sahibine "hesabınız zaten var, giriş yapın" e-postası gönderilir |
 
-Giriş hatalarında tek ve genel mesaj döner (`AUTH_INVALID_CREDENTIALS`): hangi alanın hatalı olduğu belirtilmez. **İstisna:** kimlik bilgileri **doğru** ama hesap doğrulanmamışsa `AUTH_EMAIL_NOT_VERIFIED` döner — bu bilgi yalnızca parolayı bilen kişiye verilir, dolayısıyla enumeration yüzeyi açmaz ve kullanıcıya ne yapacağını söyler.
+Giriş hatalarında tek ve genel mesaj döner (`AUTH_INVALID_CREDENTIALS`): hangi alanın hatalı olduğu belirtilmez. [ADR-017](../../../docs/adr/017-email-verification-non-blocking-and-2fa-switch.md) sonrası "doğrulanmamış hesap" diye bir giriş hatası **yoktur**; dolayısıyla böyle bir hata kodu da tanımlanmaz.
 
 **Gerekçe:** Kayıt ucu, bir e-postanın sistemde olup olmadığını öğrenmek için en kolay yüzeydir. Farklı yanıt kodları veya mesajlar bu bilgiyi bedava verir.
 
@@ -75,6 +74,18 @@ Sunucu tarafı render erişim çerezini okuyup `api`'ye `Bearer` ile gider; `api
 
 **Reddedilen alternatifler:** (a) Çift gönderim (double submit) CSRF token'ı — her formda ek alan ve senkron yükü; `SameSite=Lax` + başlık kontrolü aynı saldırıyı kapatıyor. (b) `SameSite=Strict` — e-postadaki doğrulama bağlantısından dönen kullanıcı oturumsuz görünür, kötü deneyim. (c) Token'ları tek çerezde taşımak — yenileme token'ını her istekte göndermek gereksiz yüzey.
 
+### D8 · İkinci faktör anahtarı hesap üzerindedir ve açık yolu da uygulanır
+
+`accounts.two_factor_enabled boolean not null default false`. Kapalıyken giriş tek adım; açıkken iki adım: e-posta ile 6 haneli tek kullanımlık kod, 10 dakika geçerli, hash'li saklanır, denemeler hız sınırlı. Kod için ayrı mekanizma kurulmaz; D3'teki token altyapısı `login_challenges` tablosunda yeniden kullanılır.
+
+Anahtarı değiştiren **uç veya ekran yoktur**: yalnızca veritabanından ya da dev bağlamındaki seed'den açılır.
+
+**Gerekçe:** [ADR-017](../../../docs/adr/017-email-verification-non-blocking-and-2fa-switch.md). Açık yolun da uygulanması iki kuralın sonucudur: hiçbir yerde okunmayan bir kolon `AGENTS.md` §3 ihlalidir ("ileride lazım olur" gerekçe değildir); uygulanmamış dalı olan bir anahtar ise K6 ihlali ve bir mayındır — veritabanından açan biri girişi kırar.
+
+**Reddedilen alternatifler:** (a) Yalnızca kolonu eklemek, akışı yazmamak — §3 ve K6 ihlali. (b) Anahtarı ortam değişkeni yapmak — hesap bazlı tercih kapısını kapatır ve "bu hesapta açık" senaryosu test edilemez. (c) TOTP (authenticator uygulaması) — e-posta altyapısı zaten kuruluyor; TOTP yeni paket (QR üretimi, gizli anahtar yönetimi) ve ayrı bir karar demek.
+
+**Kabul edilen maliyet:** ürün yüzeyinde kapalı ama bakımı yapılan bir akış. `00-current-state.md` bunu açıkça kaydeder.
+
 ### D7 · Roller JWT iddiasında; oturum sahibi `GET /accounts/me` ile okunur
 
 Erişim token'ı `sub` (hesap kimliği), `email` ve `roles` iddialarını taşır. Yetkilendirme kararı **yalnızca** token doğrulamasından gelen bu iddialarla verilir; `api` her istekte veritabanına gitmez.
@@ -90,8 +101,9 @@ Arayüzün ihtiyaç duyduğu "kim bağlı?" bilgisi `GET /api/v1/accounts/me` il
 | Detay | Dayanak |
 |---|---|
 | Erişim token'ı JWT, 15 dk; `spring-boot-starter-oauth2-resource-server` ile imzalama/doğrulama | [ADR-008](../../../docs/adr/008-jwt-auth-with-opaque-refresh.md) |
+| Kayıt hesabı `ACTIVE` açar; doğrulama girişi engellemez; 2FA hesap anahtarına bağlı | [ADR-017](../../../docs/adr/017-email-verification-non-blocking-and-2fa-switch.md) |
 | Tek `accounts` tablosu + `account_roles`; aynı kişi hem alıcı hem satıcı | ADR-008 §3 |
-| Parola BCrypt; e-posta doğrulanmadan giriş yok | ADR-008 §3, §4 |
+| Parola BCrypt; tek `accounts` tablosu + roller | ADR-008 §3 |
 | Şema yalnızca Liquibase changeset'i ile; `--rollback` zorunlu | [ADR-016](../../../docs/adr/016-liquibase-for-schema-migrations.md) |
 | Ortak hata gövdesi, durum kodları, sözleşme testleri | `AGENTS.md` §11.5 |
 | Sözleşme DTO'lardan üretilir; tazelik testi | [ADR-009](../../../docs/adr/009-contract-generated-from-spring.md), [ADR-015](../../../docs/adr/015-contract-freshness-enforced-by-test.md) |
@@ -104,14 +116,14 @@ Arayüzün ihtiyaç duyduğu "kim bağlı?" bilgisi `GET /api/v1/accounts/me` il
 |---|---|
 | Hız sınırlamanın tek örneğe bağlı olması | D5'te gerekçeli; bilinen sınırlama olarak kaydedilir |
 | E-posta teslim edilemezse kayıt tamamlanamaz | Zorunlu doğrulama ADR-008 kararı; `mailpit` ile geliştirmede görünür, üretim izlemesi B5'e bağlı |
-| Parola sıfırlama yok | Bilinçli non-goal; token altyapısı bu dilimde kurulduğu için sonraki dilim küçük olacak |
+| Parola sıfırlama yok | Bilinçli non-goal; token altyapısı bu dilimde kurulduğu için sonraki dilim küçük olacak. [ADR-017](../../../docs/adr/017-email-verification-non-blocking-and-2fa-switch.md) sonrası kritik değil: doğrulama e-postası ulaşmayan kullanıcı kilitlenmiyor |
 | JWT iddialarının bayatlığı (en fazla 15 dk) | D7'de kabul edildi; askıya alma ihtiyacı doğarsa kara liste ayrı bir karar |
 | Güvenlik kurallarının testle korunması | Her kural için `critical` test zorunlu; `tasks.md` bunları ayrı görev olarak sayıyor |
 
 ## Migration Plan
 
-1. Liquibase `003-create-account.sql`: `accounts`, `account_roles`, `email_verification_tokens`, `refresh_tokens`; `accounts.email` tekil indeks, token `token_hash` tekil indeks, `expires_at` indeksleri. `--rollback` satırları tabloları düşürür.
-2. Geliştirme verisi: `004-dev-seed-account.sql`, `contextFilter:dev` — doğrulanmış bir alıcı hesabı (sahte e-posta, bilinen parola yalnızca dev). Parola hash'i changeset'e **sabit** yazılır ve bunun yalnızca dev bağlamında çalıştığı yorumda belirtilir.
+1. Liquibase `003-create-account.sql`: `accounts` (`email_verified`, `two_factor_enabled` dahil), `account_roles`, `email_verification_tokens`, `refresh_tokens`, `login_challenges`; `accounts.email` tekil indeks, token ve kod hash tekil indeksleri, `expires_at` indeksleri. `--rollback` satırları tabloları düşürür.
+2. Geliştirme verisi: `004-dev-seed-account.sql`, `contextFilter:dev` — iki sahte hesap: ikinci faktörü **kapalı** bir alıcı (olağan akış) ve ikinci faktörü **açık** bir alıcı (anahtarın açık yolunu elle denemek için). Parola hash'leri changeset'e sabit yazılır ve yalnızca dev bağlamında çalıştığı yorumda belirtilir.
 3. Geri alma: üretim veritabanı henüz yok; yine de her changeset geri alınabilir yazılır.
 4. Mevcut `catalog` şeması etkilenmez: `products.seller_id` ile `accounts` arasında ilişki **kurulmaz** (satıcı-hesap bağı `KALANLAR` A3'e bağlı, [ADR-013](../../../docs/adr/013-minimal-seller-table-ahead-of-onboarding.md)).
 
@@ -119,6 +131,6 @@ Arayüzün ihtiyaç duyduğu "kim bağlı?" bilgisi `GET /api/v1/accounts/me` il
 
 Bu dilimi bloke **etmeyen**, sonraki dilimlere bırakılan sorular:
 
-- Hesap askıya alma / kapatma durumu (`SUSPENDED`) gerekecek mi? Bugün `PENDING_VERIFICATION` ve `ACTIVE` yeterli; üçüncü durum ihtiyaç doğduğunda enum'a eklenir ([ADR-010](../../../docs/adr/010-product-status-as-enum.md) deseni).
+- Hesap askıya alma / kapatma durumu (`SUSPENDED`) gerekecek mi? Bugün tek değer `ACTIVE`; enum olarak tutulmasının sebebi ikinci durumun şema göçü gerektirmemesi ([ADR-010](../../../docs/adr/010-product-status-as-enum.md) deseni).
 - Erişim token'ı ömrü 15 dk doğru değer mi? Ölçüm yapılmadan değiştirilmeyecek; ADR-008'de sabit.
 - `web` tarafında oturum bilgisi her sayfada `me` çağrısıyla mı alınacak, yoksa düzende bir kez mi? İlk uygulamada düzende bir kez; ölçüm sonrası gözden geçirilir.

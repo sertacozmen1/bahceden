@@ -1,24 +1,25 @@
 # account-identity Specification (delta)
 
 > Bu bir **delta spec**'tir: yalnızca bu change'in getirdiği davranışı tanımlar. Onaylanıp uygulandıktan sonra `openspec/specs/account-identity/spec.md` ana spec'ine sync edilir (`AGENTS.md` §5.3).
+> E-posta doğrulamasının girişi **engellememesi** ve ikinci faktörün hesap bazlı bir anahtara bağlı olması [ADR-017](../../../../docs/adr/017-email-verification-non-blocking-and-2fa-switch.md) kararıdır.
 
 ## ADDED Requirements
 
 ### Requirement: E-posta ve parola ile hesap açma
 
-Sistem, e-posta ve parola ile hesap açmayı SHALL sağlar. Hesap doğrulanmamış durumda açılır ve kullanıcıya `ROLE_CUSTOMER` rolü verilir. Kayıt yanıtı, girilen e-postanın sistemde kayıtlı olup olmadığını **açığa çıkarmaz**: her durumda aynı durum kodu ve aynı gövde döner.
+Sistem, e-posta ve parola ile hesap açmayı SHALL sağlar. Hesap doğrudan etkin durumda açılır ve kullanıcıya `ROLE_CUSTOMER` rolü verilir. Kayıt yanıtı, girilen e-postanın sistemde kayıtlı olup olmadığını **açığa çıkarmaz**: her durumda aynı durum kodu ve aynı gövde döner.
 
 #### Scenario: Yeni e-posta ile kayıt
 - **WHEN** kullanıcı sistemde bulunmayan bir e-posta ve geçerli bir parola ile kayıt olur
-- **THEN** doğrulanmamış bir hesap açılır, e-posta adresine tek kullanımlık ve süreli bir doğrulama bağlantısı gönderilir ve genel bir "bağlantı gönderildi" yanıtı döner
+- **THEN** etkin bir hesap açılır, e-posta adresine tek kullanımlık ve süreli bir doğrulama bağlantısı gönderilir ve genel bir "bağlantı gönderildi" yanıtı döner
 
-#### Scenario: Doğrulanmamış bir hesabın e-postasıyla tekrar kayıt
-- **WHEN** kullanıcı daha önce kaydolmuş ama henüz doğrulanmamış bir e-posta ile yeniden kayıt olur
-- **THEN** ikinci bir hesap açılmaz, doğrulama bağlantısı yeniden gönderilir ve ilk kayıtla **aynı** yanıt döner
+#### Scenario: Kayıt sonrası giriş e-postaya bağlı değildir
+- **WHEN** kullanıcı kayıt olduktan hemen sonra, doğrulama bağlantısını hiç kullanmadan giriş yapar
+- **THEN** oturum açılır; doğrulama bağlantısının kullanılmamış olması girişi engellemez
 
-#### Scenario: Doğrulanmış bir hesabın e-postasıyla kayıt
-- **WHEN** kullanıcı doğrulanmış bir hesaba ait e-posta ile kayıt olur
-- **THEN** yeni hesap açılmaz, mevcut hesabın sahibine durumu bildiren bir e-posta gönderilir ve diğer durumlarla **aynı** yanıt döner
+#### Scenario: Var olan bir hesabın e-postasıyla kayıt
+- **WHEN** kullanıcı sistemde kayıtlı bir e-posta ile kayıt olmayı dener
+- **THEN** ikinci bir hesap açılmaz, mevcut hesabın sahibine durumu bildiren bir e-posta gönderilir ve yeni kayıtla **aynı** yanıt döner
 
 #### Scenario: Geçersiz kayıt bilgisi
 - **WHEN** kullanıcı geçersiz biçimde bir e-posta veya kuralları karşılamayan bir parola gönderir
@@ -28,32 +29,36 @@ Sistem, e-posta ve parola ile hesap açmayı SHALL sağlar. Hesap doğrulanmamı
 - **WHEN** bir hesap açılır
 - **THEN** parola yalnızca hash'lenmiş olarak saklanır; hiçbir uç, log kaydı veya hata mesajı parolayı düz metin olarak içermez
 
-### Requirement: Zorunlu e-posta doğrulaması
+#### Scenario: E-posta gönderilemezse kayıt yine tamamlanır
+- **WHEN** kayıt sırasında doğrulama e-postası gönderilemez
+- **THEN** hesap yine açılır, kullanıcı diğer durumlarla aynı yanıtı alır ve gönderim hatası sunucu kaydına yazılır
 
-Hesap, e-posta adresi doğrulanmadan kullanılamaz. Doğrulama token'ı tek kullanımlıktır, süre sınırlıdır ve veritabanında yalnızca hash'i saklanır.
+### Requirement: E-posta doğrulama (girişi engellemeyen)
+
+Sistem, e-posta adresinin doğrulanmasını SHALL sağlar. Doğrulama token'ı tek kullanımlıktır, süre sınırlıdır ve veritabanında yalnızca hash'i saklanır. Doğrulanmış olmak bir **bilgidir**, giriş koşulu değildir.
 
 #### Scenario: Geçerli token ile doğrulama
 - **WHEN** kullanıcı süresi geçmemiş ve daha önce kullanılmamış bir doğrulama token'ı gönderir
-- **THEN** hesap etkin duruma geçer, token tüketilir ve kullanıcı giriş yapabilir
+- **THEN** hesap doğrulanmış olarak işaretlenir ve token tüketilir
 
 #### Scenario: Token iki kez kullanılamaz
 - **WHEN** kullanıcı daha önce kullanılmış bir doğrulama token'ını yeniden gönderir
-- **THEN** istek reddedilir ve hesabın durumu değişmez
+- **THEN** istek reddedilir ve hesabın doğrulama durumu değişmez
 
 #### Scenario: Süresi dolmuş token
 - **WHEN** kullanıcı süresi dolmuş bir doğrulama token'ı gönderir
 - **THEN** istek reddedilir ve kullanıcıya yeni bir bağlantı talep etmesi gerektiği bildirilir
 
-#### Scenario: Doğrulanmamış hesapla giriş
-- **WHEN** kullanıcı doğru parolayla ama henüz doğrulanmamış bir hesapla giriş yapmaya çalışır
-- **THEN** oturum açılmaz ve kullanıcıya e-postasını doğrulaması gerektiği bildirilir
+#### Scenario: Doğrulama durumu kullanıcıya görünür
+- **WHEN** oturum açmış kullanıcı kendi kimlik bilgisini talep eder
+- **THEN** yanıt, e-postasının doğrulanmış olup olmadığını içerir
 
 ### Requirement: Oturum açma
 
-Sistem, doğrulanmış bir hesap için e-posta ve parola ile oturum açmayı SHALL sağlar. Oturum, kısa ömürlü bir erişim token'ı ve iptal edilebilir bir yenileme token'ı ile temsil edilir. Kimlik bilgileri hatalı olduğunda hangi bilginin hatalı olduğunu açığa çıkarmayan tek ve genel bir hata döner.
+Sistem, e-posta ve parola ile oturum açmayı SHALL sağlar. Oturum, kısa ömürlü bir erişim token'ı ve iptal edilebilir bir yenileme token'ı ile temsil edilir. Kimlik bilgileri hatalı olduğunda hangi bilginin hatalı olduğunu açığa çıkarmayan tek ve genel bir hata döner.
 
 #### Scenario: Geçerli kimlik bilgileri
-- **WHEN** kullanıcı doğrulanmış bir hesabın doğru e-posta ve parolasını gönderir
+- **WHEN** kullanıcı doğru e-posta ve parolasını gönderir ve hesabında ikinci faktör kapalıdır
 - **THEN** kısa ömürlü bir erişim token'ı ve bir yenileme token'ı döner
 
 #### Scenario: Hatalı parola ile hatalı e-posta aynı yanıtı döner
@@ -63,6 +68,34 @@ Sistem, doğrulanmış bir hesap için e-posta ve parola ile oturum açmayı SHA
 #### Scenario: Hız sınırı
 - **WHEN** aynı kaynaktan kısa sürede izin verilenden fazla giriş denemesi yapılır
 - **THEN** sonraki istekler hız sınırı hatasıyla reddedilir ve pencere dolduğunda yeniden kabul edilir
+
+### Requirement: E-posta ile ikinci faktör, hesap bazlı anahtarla
+
+Hesap üzerinde ikinci faktör anahtarı SHALL bulunur. Anahtar kapalıyken giriş tek adımlıdır. Anahtar açıkken giriş iki adımlıdır: birinci adım token döndürmez, e-posta ile tek kullanımlık bir kod gönderir; token'lar ancak bu kod doğrulandığında verilir. Anahtarı değiştiren bir uç bulunmaz; varsayılan değeri kapalıdır.
+
+#### Scenario: Anahtar kapalı (varsayılan)
+- **WHEN** ikinci faktörü kapalı bir hesapla doğru kimlik bilgileriyle giriş yapılır
+- **THEN** token'lar tek adımda döner ve e-posta gönderilmez
+
+#### Scenario: Anahtar açık, birinci adım
+- **WHEN** ikinci faktörü açık bir hesapla doğru kimlik bilgileriyle giriş yapılır
+- **THEN** token döndürülmez; ikinci adımın beklendiği bildirilir ve e-posta ile tek kullanımlık bir kod gönderilir
+
+#### Scenario: Anahtar açık, geçerli kod
+- **WHEN** kullanıcı birinci adımın ardından gönderilen geçerli kodu sunar
+- **THEN** erişim ve yenileme token'ları döner ve kod tüketilir
+
+#### Scenario: Kod iki kez kullanılamaz
+- **WHEN** kullanıcı daha önce kullanılmış bir ikinci faktör kodunu yeniden sunar
+- **THEN** istek reddedilir ve oturum açılmaz
+
+#### Scenario: Süresi dolmuş kod
+- **WHEN** kullanıcı süresi dolmuş bir ikinci faktör kodu sunar
+- **THEN** istek reddedilir ve kullanıcı yeniden giriş yapmaya yönlendirilir
+
+#### Scenario: Kod denemeleri sınırlıdır
+- **WHEN** aynı oturum girişimi için izin verilenden fazla hatalı kod denemesi yapılır
+- **THEN** sonraki denemeler hız sınırı hatasıyla reddedilir
 
 ### Requirement: Oturum yenileme ve sonlandırma
 
@@ -86,11 +119,11 @@ Yenileme token'ı tek kullanımlıktır ve her kullanımda yenisiyle değiştiri
 
 ### Requirement: Oturum sahibinin kimliği
 
-Sistem, oturum açmış kullanıcının kimliğini ve rollerini bildiren bir uç SHALL sunar. Bu uç kimlik doğrulaması gerektirir ve bilgiyi güncel kaynaktan okur.
+Sistem, oturum açmış kullanıcının kimliğini, rollerini ve e-posta doğrulama durumunu bildiren bir uç SHALL sunar. Bu uç kimlik doğrulaması gerektirir ve bilgiyi güncel kaynaktan okur.
 
 #### Scenario: Oturumlu erişim
 - **WHEN** geçerli bir erişim token'ı ile kimlik bilgisi talep edilir
-- **THEN** hesabın e-postası ve rolleri döner
+- **THEN** hesabın e-postası, rolleri ve e-posta doğrulama durumu döner
 
 #### Scenario: Kimliksiz erişim
 - **WHEN** erişim token'ı olmadan ya da geçersiz bir token ile kimlik bilgisi talep edilir
