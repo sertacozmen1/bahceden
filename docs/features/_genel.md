@@ -23,7 +23,7 @@ Dokümantasyon altyapısı, geliştirme araçları, AI kural dosyaları, CI ve t
 - **Kod henüz yazılmadı.** `api/`, `web/` ve `shared/` dizinleri boş; ilk dikey dilim `openspec/KALANLAR.md` B1 (kimlik doğrulama modeli) ve B2 (sözleşme kaynağı) kararlarına bağlı.
 - `docs/.tools/` MkDocs portalı kuruldu ve `mkdocs build --strict` çalıştırıldı: ilk koşuda 18 uyarı (docs dışına verilen markdown linkler ve git-revision eklentisi) düzeltildi, derleme temiz.
 - `.githooks/pre-commit` yazıldı ve `git config core.hooksPath .githooks` ile devreye alındı.
-- `.github/workflows/ci.yml` yazıldı ama henüz hiç koşmadı (ilk push'ta `api/` ve `web/` olmadığı için adımlar atlanır).
+- `.github/workflows/ci.yml` ilk kez koştu ve 4/4 yeşil (run `37491677164`); `api` ve `web` job'ları kod olmadığı için atlandı, gerçek derleme/test yolu ilk dilimde doğrulanacak.
 - A1–A4 ve B1–B5 maddeleri ekip/ticari karar bekliyor; tam liste `openspec/KALANLAR.md` dosyasında.
 
 ## Tarihçe

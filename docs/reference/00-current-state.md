@@ -25,7 +25,7 @@ Depoda bugün **kural ve dokümantasyon apparatus'u** var; **uygulama kodu yoktu
 | `web/` (Next.js) | ❌ Yok | Dizin oluşturulmadı |
 | `docker-compose.yml` | ❌ Yok | Servisler ilk dilimde tanımlanacak |
 | `.githooks/pre-commit` | ✅ Devrede | `git config core.hooksPath .githooks` çalıştırıldı |
-| `.github/workflows/ci.yml` | ⚠️ Yazıldı, **hiç koşmadı** | `api/`/`web/` olmadığı için o adımlar atlanır; `docs` ve kural denetimi adımları ilk push'ta koşar |
+| `.github/workflows/ci.yml` | ✅ Koştu, **4/4 yeşil** | Run `37491677164`: `api` ve `web` job'ları kod olmadığı için atlandı; `docs` strict derleme ve K6/K10 kural denetimi geçti |
 | MkDocs portalı | ✅ Strict derleme temiz | `./docs/.tools/serve.sh --build`: ilk koşuda 18 uyarı (docs dışına link + git-revision eklentisi) düzeltildi |
 
 ## 3. Ortam (doğrulanmış)
@@ -48,7 +48,7 @@ Geliştirme makinesinde 2026-10-06'da doğrulanan sürümler:
 | L1 | Uygulama kodu yok | Hiçbir uçtan uca akış çalışmıyor; `AGENTS.md` §7 komutlarının hiçbiri bugün koşulamaz |
 | L2 | `openspec` CLI kurulu değil | `/opsx:propose` ve diğer komutlar CLI gelene kadar çalışmaz; change'ler elle de yazılabilir (`AGENTS.md` §5.2 artefakt kuralları geçerli) |
 | L3 | Portal yalnızca yerelde derlendi | Strict derleme yerel makinede temiz; CI üzerinde (Linux, Python 3.12) henüz koşmadı |
-| L4 | CI hiç koşmadı | İş akışı dosyası yazıldı ama yeşil/kırmızı olduğu bilinmiyor |
+| L4 | CI yalnızca kodsuz yolda doğrulandı | 4/4 yeşil, ama `api` ve `web` job'ları atlandı: Maven ve npm adımlarının gerçekten çalıştığı ilk dilimde görülecek |
 | L5 | `pre-commit` hook'u yalnızca bu makinede devrede | `core.hooksPath` klon başına ayarlanır; yeni klonda tekrar çalıştırılmalı. Bootstrap commit'i `--no-verify` ile atıldı (dosyalar commit'lenmeden `git-revision` eklentisi strict derlemeyi kırıyordu) |
 | L6 | Açık kararlar ilk dilimi blokluyor | Kimlik doğrulama (B1) ve sözleşme kaynağı (B2) kararı olmadan `api/` ve `web/` iskeleti yazılmıyor (`AGENTS.md` §0, §15) |
 

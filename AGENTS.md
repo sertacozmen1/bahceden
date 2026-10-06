@@ -34,7 +34,7 @@ Bu anayasa **kod yazılmadan önce** yazıldı. Kural, doküman ve planlama appa
 | `openspec/` | Spec-driven change **çalışma alanı**: `specs/` (geçerli davranış), `changes/` (açık planlar), `changes/archive/`, [`KALANLAR.md`](openspec/KALANLAR.md) (ekip kararı bekleyenler). **Kalıcı araçtır.** | ✅ Kurulu (`specs/` boş: henüz change yok) |
 | `.claude/` | `/opsx:*` komutları (`commands/opsx/`) ve openspec skill'leri (`skills/`). Karar ve konvansiyonların tek kaynağı bu dosya ve `docs/adr/`'dir; branch notu tutulmaz. | ✅ Kurulu |
 | `.githooks/pre-commit` | Değişen katmanın doğrulamasını commit öncesi koşar + K6/K10 taraması (`git config core.hooksPath .githooks`). | ✅ Kurulu |
-| `.github/workflows/ci.yml` | CI: `api` testleri, `web` lint + typecheck + test + build, `docs` strict derleme, K6/K10 kural denetimi. | ✅ Kurulu (henüz koşmadı) |
+| `.github/workflows/ci.yml` | CI: `api` testleri, `web` lint + typecheck + test + build, `docs` strict derleme, K6/K10 kural denetimi. | ✅ Kurulu, 4/4 yeşil |
 | `docker-compose.yml` | Geliştirme ortamı: `db` (PostgreSQL 17), `api`, `web`, `mailpit` (e-posta yakalama). | Hedef |
 
 **Yeni üst seviye dizin açmak mimari karardır** (ADR + kullanıcı onayı). "Ortak kod" için üçüncü bir modül (`common/`, `core-lib/`) açmak §3'ü ihlal eder; paylaşılan tek şey sözleşmedir.
