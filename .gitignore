@@ -1,0 +1,42 @@
+# Ortam dosyalari ve secret'lar (AGENTS.md K10) — asla commit edilmez
+.env
+.env.*
+!.env.example
+api/.env
+api/.env.*
+!api/.env.example
+web/.env
+web/.env.*
+!web/.env.example
+
+# Uretilmis ciktilar (AGENTS.md K8) — kaynaktan yeniden uretilir, elle duzenlenmez
+shared/generated/
+
+# api/ (Maven)
+api/target/
+*.class
+*.jar
+*.war
+
+# web/ (Next.js)
+web/node_modules/
+web/.next/
+web/out/
+web/coverage/
+web/playwright-report/
+web/test-results/
+web/tsconfig.tsbuildinfo
+web/next-env.d.ts
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+
+# Isletim sistemi ve log
+Thumbs.db
+Desktop.ini
+.DS_Store
+*.log
