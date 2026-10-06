@@ -18,7 +18,7 @@
 | `AGENTS.md` (anayasa) | ✅ Yazıldı, yürürlükte | Depo kökü, 460 satır |
 | `docs/adr/` | ✅ ADR-001…016 (004 superseded) | [ADR index](../adr/index.md) |
 | `docs/` (Diátaxis) | ✅ İskelet + şablonlar + bir how-to | `docs/` ağacı |
-| `openspec/` | ✅ İlk change **uygulandı** | `changes/add-storefront-product-listing/` (tasks dürüst: açık kalanlar notlu); `specs/storefront-catalog/spec.md` sync edildi; archive onay bekliyor |
+| `openspec/` | ✅ İlk change **archive edildi** | `changes/archive/2026-10-06-add-storefront-product-listing/`; `specs/storefront-catalog/spec.md` geçerli davranış sözleşmesi; açık change yok |
 | `.claude/` (opsx komutları + skill'ler) | ✅ Kurulu | `.claude/commands/opsx/`, `.claude/skills/` |
 | `shared/contracts/openapi.yaml` | ✅ Üretildi ve commit'lendi | 159 satır; `api` DTO'larından üretilir, tazeliği `OpenApiContractTest` ile zorunlu ([ADR-009](../adr/009-contract-generated-from-spring.md), [ADR-015](../adr/015-contract-freshness-enforced-by-test.md)) |
 | `api/` (Spring Boot 3.5.16) | ✅ Çalışıyor | `catalog` domaini, `GET /api/v1/products`, `GET /api/v1/health`; **Liquibase** changelog'ları ([ADR-016](../adr/016-liquibase-for-schema-migrations.md)); 20 test yeşil (`./mvnw -B verify`) |
@@ -69,5 +69,4 @@ Kural (`AGENTS.md` §5.4): kod ile ADR birbirine aykırıysa bu bir **sapma**dı
 ## 6. Sıradaki adım
 
 1. Vitrinin iki ekran genişliği ve iki temada gözle doğrulanması (L3, insan işi).
-2. `add-storefront-product-listing` change'inin archive edilmesi — **kullanıcı onayı ister** (`AGENTS.md` §9).
-3. Sonraki dilim adayı: [ADR-008](../adr/008-jwt-auth-with-opaque-refresh.md)'in uygulanması (kayıt, e-posta doğrulama, giriş, token yenileme) — en çok şeyin üzerine oturduğu katman.
+2. Sonraki dilim adayı: [ADR-008](../adr/008-jwt-auth-with-opaque-refresh.md)'in uygulanması (kayıt, e-posta doğrulama, giriş, token yenileme) — en çok şeyin üzerine oturduğu katman.

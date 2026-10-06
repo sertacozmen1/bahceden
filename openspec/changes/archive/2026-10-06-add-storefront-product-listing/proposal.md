@@ -17,7 +17,7 @@ Seçilen davranış rastgele değil: ürünün değer önerisinin görünür old
 
 - `docker-compose.yml`: `db` (PostgreSQL 17), `api`, `web`, `mailpit`.
 - `api/`: Spring Boot 3 iskeleti (Maven wrapper, Dockerfile, profiller), Flyway `V1`, `catalog` domaini (ürün + üretici), `GET /api/v1/products` (sayfalı, filtresiz), ortak hata gövdesi ve sayfalama şekli, sözleşme üretimi + tazelik testi.
-- `shared/contracts/openapi.yaml`: ilk üretilmiş sözleşme (commit'lenir, [ADR-009](../../../docs/adr/009-contract-generated-from-spring.md)).
+- `shared/contracts/openapi.yaml`: ilk üretilmiş sözleşme (commit'lenir, [ADR-009](../../../../docs/adr/009-contract-generated-from-spring.md)).
 - `web/`: Next.js iskeleti (App Router, TypeScript strict), `shared/generated` tip üretimi, `(shop)` rota grubu, vitrin liste sayfası ve dört durumu, tasarım token'ları, tek `apiClient`, `money` yardımcısı.
 - Testler: `api` birim + Testcontainers + `MockMvc` sözleşme testi + sözleşme tazelik testi; `web` Vitest bileşen testi.
 - Dokümanlar: `docs/features/vitrin-ve-arama.md` (yeni feature dosyası), `docs/how-to/yeni-api-ucu-ekleme.md`, `docs/reference/01-domain-model.md`, `docs/reference/02-api-reference.md`, güncellenen `00-current-state.md`, `mkdocs.yml` nav.
@@ -45,7 +45,7 @@ Seçilen davranış rastgele değil: ürünün değer önerisinin görünür old
 
 Bu change **kapsam dışı** bırakır; her biri ayrı bir dilimdir:
 
-- **Kimlik doğrulama ve oturum.** Uç nokta herkese açıktır; `ROLE_*` kontrolü ve giriş akışı bu dilimde yok ([ADR-008](../../../docs/adr/008-jwt-auth-with-opaque-refresh.md) uygulanmıyor, yalnızca ileride oturacak yer bırakılıyor).
+- **Kimlik doğrulama ve oturum.** Uç nokta herkese açıktır; `ROLE_*` kontrolü ve giriş akışı bu dilimde yok ([ADR-008](../../../../docs/adr/008-jwt-auth-with-opaque-refresh.md) uygulanmıyor, yalnızca ileride oturacak yer bırakılıyor).
 - **Satıcı kaydı, doğrulaması ve onayı** (KALANLAR A3). `sellers` tablosu bu dilimde yalnızca görüntülenen bir ad ve şehirdir; hesapla ilişkisi, başvuru ve onay durumu yok.
 - **Ürün ekleme/düzenleme ekranı ve fotoğraf yükleme** (KALANLAR B3). Liste yalnızca okuma; görsel alanı sözleşmede yer almaz.
 - **Sepet, sipariş, ödeme, kargo** (KALANLAR A1, A2).

@@ -51,7 +51,7 @@ Parametreler `page` (0'dan başlar) ve `size` (varsayılan 20, **üst sınır 50
 
 `api` test paketinde bir test `/v3/api-docs.yaml` çıktısını üretir ve `shared/contracts/openapi.yaml` ile **birebir** karşılaştırır; fark varsa kırmızıdır. Aynı test `-Dopenapi.write=true` ile çalıştırıldığında dosyayı günceller.
 
-**Gerekçe:** [ADR-009](../../../docs/adr/009-contract-generated-from-spring.md) sözleşmenin üretildiğini ve commit'lendiğini söylüyor; ikisinin ayrışmasını engelleyen tek mekanizma bu testtir. SafeZone'daki `generate_config_docs.py --check` deseninin karşılığıdır.
+**Gerekçe:** [ADR-009](../../../../docs/adr/009-contract-generated-from-spring.md) sözleşmenin üretildiğini ve commit'lendiğini söylüyor; ikisinin ayrışmasını engelleyen tek mekanizma bu testtir. SafeZone'daki `generate_config_docs.py --check` deseninin karşılığıdır.
 
 **Reddedilen alternatif:** Sözleşmeyi her derlemede sessizce üzerine yazmak. Reddedildi: değişiklik PR diff'inde fark edilmeden geçer, kırıcı değişiklik gözden kaçar.
 
@@ -59,12 +59,12 @@ Parametreler `page` (0'dan başlar) ve `size` (varsayılan 20, **üst sınır 50
 
 | Detay | Dayanak |
 |---|---|
-| Para `{"amount": <kuruş>, "currency": "TRY"}`; tutar sunucuda hesaplanır | [ADR-006](../../../docs/adr/006-money-as-minor-unit.md) |
-| Şema yalnızca Flyway ile; `ddl-auto: validate` | [ADR-004](../../../docs/adr/004-postgresql-with-flyway.md) |
-| Repository testleri Testcontainers PostgreSQL ile; iş kuralı testleri `critical` etiketli | [ADR-005](../../../docs/adr/005-test-strategy.md) |
+| Para `{"amount": <kuruş>, "currency": "TRY"}`; tutar sunucuda hesaplanır | [ADR-006](../../../../docs/adr/006-money-as-minor-unit.md) |
+| Şema yalnızca Flyway ile; `ddl-auto: validate` | [ADR-004](../../../../docs/adr/004-postgresql-with-flyway.md) |
+| Repository testleri Testcontainers PostgreSQL ile; iş kuralı testleri `critical` etiketli | [ADR-005](../../../../docs/adr/005-test-strategy.md) |
 | Tek hata gövdesi (`code`, `message`, `fieldErrors`), liste yanıt şekli, durum kodları | `AGENTS.md` §11.5 |
 | Paket düzeni domain'e göre (`com.bahceden.catalog`), controller ince, iş kuralı service'te | `AGENTS.md` §11.2 |
-| `web` tipleri `shared/generated` üretiminden; API tipi elle yazılmaz | [ADR-003](../../../docs/adr/003-openapi-as-single-contract.md), [ADR-009](../../../docs/adr/009-contract-generated-from-spring.md) |
+| `web` tipleri `shared/generated` üretiminden; API tipi elle yazılmaz | [ADR-003](../../../../docs/adr/003-openapi-as-single-contract.md), [ADR-009](../../../../docs/adr/009-contract-generated-from-spring.md) |
 | Dört durum (yükleniyor/boş/hata/yetkisiz), mobil önce, CSS Modules + token | `AGENTS.md` §12.4, §12.5 |
 
 ## Risks / Trade-offs
@@ -72,7 +72,7 @@ Parametreler `page` (0'dan başlar) ve `size` (varsayılan 20, **üst sınır 50
 | Konu | Değerlendirme |
 |---|---|
 | `sellers` tablosunun erken doğması | D4'te gerekçeli; `V2` genişletmesi kabul edilmiş maliyet |
-| Testcontainers CI süresi | İlk dilimde tek repository testi; süre artarsa `critical` / `integration` ayrımı devreye girer ([ADR-005](../../../docs/adr/005-test-strategy.md)) |
+| Testcontainers CI süresi | İlk dilimde tek repository testi; süre artarsa `critical` / `integration` ayrımı devreye girer ([ADR-005](../../../../docs/adr/005-test-strategy.md)) |
 | Üretilen sözleşmenin şema adları | `@Schema(name = ...)` ile domain adlarına sabitlenir; sözleşme testi alan adlarını kilitler |
 | Kimlik olmadan açık uç nokta | Vitrin zaten herkese açık olacak; uç nokta `permitAll` olarak **açıkça** işaretlenir (varsayılan deny korunur, `AGENTS.md` §11.6) |
 
@@ -80,7 +80,7 @@ Parametreler `page` (0'dan başlar) ve `size` (varsayılan 20, **üst sınır 50
 
 1. `V1__create_catalog.sql`: `sellers` ve `products` tabloları, `products.status` üzerinde kısmi indeks (`status = 'PUBLISHED'`), `products.slug` ve `sellers.slug` üzerinde tekil indeks.
 2. `R__dev_seed_catalog.sql`: yalnızca `dev` profilinde, idempotent (D5).
-3. Geri alma: bu dilim yeni tablo eklediği için geri alma `V1`'i düşürmek değil, tabloları bırakan yeni bir migration yazmaktır ([ADR-004](../../../docs/adr/004-postgresql-with-flyway.md)); pilot öncesi veri olmadığı için pratik risk yok.
+3. Geri alma: bu dilim yeni tablo eklediği için geri alma `V1`'i düşürmek değil, tabloları bırakan yeni bir migration yazmaktır ([ADR-004](../../../../docs/adr/004-postgresql-with-flyway.md)); pilot öncesi veri olmadığı için pratik risk yok.
 
 ## Open Questions
 

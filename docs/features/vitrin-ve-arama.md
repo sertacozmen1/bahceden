@@ -1,6 +1,6 @@
 # Vitrin ve Arama
 
-**Durum:** Geliştirmede
+**Durum:** Yayında
 **İlk sürüm:** 2026-10-06
 **Son değişiklik:** 2026-10-06
 
@@ -9,7 +9,7 @@
 | **Ürün belgesi** | [product/index.md](../product/index.md) |
 | **Kararlar** | [ADR-010](../adr/010-product-status-as-enum.md), [ADR-011](../adr/011-fetch-join-with-query-count-test.md), [ADR-012](../adr/012-page-size-capped-on-server.md), [ADR-013](../adr/013-minimal-seller-table-ahead-of-onboarding.md), [ADR-014](../adr/014-dev-seed-via-profiled-repeatable-migration.md), [ADR-015](../adr/015-contract-freshness-enforced-by-test.md) |
 | **Spec (capability)** | `openspec/specs/storefront-catalog` |
-| **Change'ler** | `openspec/changes/add-storefront-product-listing` (uygulandı, archive onay bekliyor) |
+| **Change'ler** | `openspec/changes/archive/2026-10-06-add-storefront-product-listing` (archive edildi) |
 | **Rehberler** | [Yeni API ucu ekleme](../how-to/yeni-api-ucu-ekleme.md) |
 | **Kod** | `api/src/main/java/com/bahceden/catalog/`, `web/src/app/(shop)/`, `web/src/features/catalog/` |
 
@@ -37,4 +37,5 @@ Alıcı, giriş yapmadan vitrine girer ve üreticilerin yayınladığı ürünle
 
 ## Tarihçe
 
+- 2026-10-06: `add-storefront-product-listing` change'i archive edildi; delta spec ana spec'e (`openspec/specs/storefront-catalog/spec.md`) sync edildi. Açık kalan tek iş vitrinin iki ekran genişliği ve iki temada gözle doğrulanması.
 - 2026-10-06: İlk sürüm. Yürüyen iskelet olarak vitrin ürün listesi uçtan uca kuruldu: `docker-compose` (db, api, web, mailpit), Spring Boot 3.5.16 `api` (Liquibase `001` katalog changeset'i, `catalog` domaini, `GET /api/v1/products`, ortak sayfalama ve hata gövdesi, üretilen OpenAPI sözleşmesi + tazelik testi), Next.js 16 `web` (vitrin listesi, dört durum, tasarım token'ları, tek HTTP katmanı). 18 `api` testi ve 6 `web` testi yeşil; D1–D6 kararları ADR-010…015 olarak yazıldı (`add-storefront-product-listing`).

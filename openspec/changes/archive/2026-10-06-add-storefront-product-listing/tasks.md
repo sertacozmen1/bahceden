@@ -1,12 +1,16 @@
 # Tasks: add-storefront-product-listing
 
+> **ARCHIVE EDİLDİ: 2026-10-06.** Bu artefakt tamamlanmış bir change'in kaydıdır;
+> değiştirilmez. Tek açık kalan görev 4.9'daki gözle doğrulamadır (insan işi) ve
+> feature dosyasının *Açık konular* bölümünde izlenir.
+>
 > Her faz **tek başına çalışır durumda** bırakılır (`AGENTS.md` K5). Kutu yalnızca gerçekten biten iş için işaretlenir; dış/insan işi açık kalır ve notlanır (K6).
 > Faz sonlarında `AGENTS.md` §7 doğrulama komutları koşulur ve çıktılar raporlanır.
 
 ## Faz 1 · Ortam ve `api` iskeleti ayağa kalkar
 
 - [x] 1.1 `docker-compose.yml`: `db` (postgres:17, named volume, healthcheck), `api` (8080), `web` (3000), `mailpit` (8025). Ortam değişkenleri `.env.example` dosyalarında belgelenir; gerçek değer commit'lenmez (K10).
-- [x] 1.2 `api/pom.xml`: Java 21, Spring Boot 3.5.x BOM, [ADR-002](../../../docs/adr/002-dependency-budget.md) bütçesindeki bağımlılıklar (web, data-jpa, validation, security, oauth2-resource-server, postgresql, flyway-core, springdoc-webmvc-api) ve test bağımlılıkları. Sürümler pin'li.
+- [x] 1.2 `api/pom.xml`: Java 21, Spring Boot 3.5.x BOM, [ADR-002](../../../../docs/adr/002-dependency-budget.md) bütçesindeki bağımlılıklar (web, data-jpa, validation, security, oauth2-resource-server, postgresql, flyway-core, springdoc-webmvc-api) ve test bağımlılıkları. Sürümler pin'li.
 - [x] 1.3 Maven wrapper üretimi (`mvn wrapper:wrapper`, IntelliJ bundle'ı ile bir kez) → `api/mvnw` depoya girer.
 - [x] 1.4 `api/Dockerfile` (çok aşamalı: build + jre), `.dockerignore`.
 - [x] 1.5 `BahcedenApplication` + `application.yaml` (`ddl-auto: validate`, Flyway açık) + `application-dev.yaml`; `Clock` bean'i (`AGENTS.md` §11.3).
@@ -16,7 +20,7 @@
 ## Faz 2 · Veri modeli ve repository
 
 - [x] 2.1 `V1__create_catalog.sql`: `sellers` (D4 kapsamı), `products` (`status` enum'u metin + `CHECK`, `price_amount BIGINT`, `currency`, `unit`, `stock`, `published_at`), indeksler (`slug` tekil, `status = 'PUBLISHED'` kısmi).
-- [x] 2.2 `catalog/domain/`: `Seller`, `Product` entity'leri, `ProductStatus` ve `ProductUnit` enum'ları, `Money` değer nesnesi (minor unit, [ADR-006](../../../docs/adr/006-money-as-minor-unit.md)).
+- [x] 2.2 `catalog/domain/`: `Seller`, `Product` entity'leri, `ProductStatus` ve `ProductUnit` enum'ları, `Money` değer nesnesi (minor unit, [ADR-006](../../../../docs/adr/006-money-as-minor-unit.md)).
 - [x] 2.3 `ProductRepository`: `findPublished(Pageable)` — `join fetch seller` (D2).
 - [x] 2.4 `R__dev_seed_catalog.sql`: dev profiline bağlı, idempotent, sahte veri (D5, K10).
 - [x] 2.5 **Test:** Testcontainers PostgreSQL ile repository testi — yalnızca `PUBLISHED` ürünler döner, sıralama doğru, **sorgu sayısı sabit** (D2). `@Tag("integration")`.
@@ -55,11 +59,11 @@
 - [x] 5.8 D1–D6 kararları için ADR'ler yazılır (`docs/adr/010…`) ve `adr/index.md` güncellenir — **archive ön koşulu** (`AGENTS.md` §5.3).
 - [x] 5.9 Delta spec ana spec'e sync edildi: `openspec/specs/storefront-catalog/spec.md`. `openspec` CLI kurulu olmadığı için elle yapıldı (artefakt yapısı `AGENTS.md` §5.2'ye uygun).
 - [x] 5.10 CI 4/4 yeşil, `api` ve `web` job'ları gerçekten koşarak: run `37520245480` (`api` 1m9s, `web` 46s, `docs` 20s, kural denetimi 4s). Yolda iki CI hatası düzeltildi: K10 taramasının `.env.example` yanlış pozitifi ve `api/mvnw` dosyasının çalıştırma biti eksikliği (`Permission denied`).
-- [ ] 5.11 Rapor `AGENTS.md` §14 formatında; insan review'una sunulur. Archive **kullanıcı onayı** ister (§9).
+- [x] 5.11 Rapor `AGENTS.md` §14 formatında sunuldu; kullanıcı onayı alındı ve change **archive edildi** (2026-10-06): `openspec/changes/archive/2026-10-06-add-storefront-product-listing/`. Archive sırasında artefaktlardaki 14 göreli doküman linki bir seviye derinleştiği için güncellendi.
 
 ## Bu changeın kapsamadığı, sıradaki dilim adayları
 
-- Kimlik ve oturum ([ADR-008](../../../docs/adr/008-jwt-auth-with-opaque-refresh.md) uygulaması).
+- Kimlik ve oturum ([ADR-008](../../../../docs/adr/008-jwt-auth-with-opaque-refresh.md) uygulaması).
 - Ürün detay sayfası ve slug ile tek ürün ucu.
 - Arama, filtre, kategori.
 
@@ -80,6 +84,6 @@ Artefakt ile kod ayrışmasın diye buraya yazıldı (`AGENTS.md` §5.3.2):
 | S6 | `flyway-database-postgresql` | Flyway 10+ veritabanı desteğini modüllere böldü; `flyway-core`'un zorunlu eşlikçisi, yeni yetenek değil |
 | S7 | Hata gövdesinde alan adı | `@Validated` sınıf seviyesinde kullanılınca alan adı `list.page` olarak sızıyordu (metot adı). Kaldırıldı; Spring 6.1 yerleşik parametre doğrulaması `page` veriyor |
 | S8 | `ConstraintViolationException` işleyicisi | S7 sonrası hiçbir yoldan tetiklenmediği için silindi (ölü kod, K6) |
-| S10 | **Migration aracı** | Uygulama sırasında proje sahibi Liquibase istedi; ADR-004 (Flyway) **superseded** edildi ve [ADR-016](../../../docs/adr/016-liquibase-for-schema-migrations.md) yazıldı. `V1`/`R__` dosyaları formatted SQL changelog'lara taşındı, bütçede `flyway-core` + `flyway-database-postgresql` → `liquibase-core`. İki Liquibase tuzağı gerçek hataya dönüştü ve düzeltildi: yorumdaki `changeset ... context:dev` ifadesi fantom changeset üretti; `contextFilter` etiketi bağlam bildirilmediği için filtrelemedi (dev seed testte çalıştı). İkincisi `DevSeedIsolationTest` ile sabitlendi |
+| S10 | **Migration aracı** | Uygulama sırasında proje sahibi Liquibase istedi; ADR-004 (Flyway) **superseded** edildi ve [ADR-016](../../../../docs/adr/016-liquibase-for-schema-migrations.md) yazıldı. `V1`/`R__` dosyaları formatted SQL changelog'lara taşındı, bütçede `flyway-core` + `flyway-database-postgresql` → `liquibase-core`. İki Liquibase tuzağı gerçek hataya dönüştü ve düzeltildi: yorumdaki `changeset ... context:dev` ifadesi fantom changeset üretti; `contextFilter` etiketi bağlam bildirilmediği için filtrelemedi (dev seed testte çalıştı). İkincisi `DevSeedIsolationTest` ile sabitlendi |
 | S11 | Next.js kabuğu | Proje sahibinin isteğiyle `AppShell` (üst başlık + alt bilgi) eklendi; gezinme menüsü ve arama çubuğu bilinçli olarak **yok** (arkasında ekran yok, boş menü çıkmaz sokak demek) |
 | S9 | Sözleşme kalitesi | springdoc varsayılanları zayıf spec üretti (başlık `OpenAPI definition`, etiket `product-controller`, içerik tipi `*/*`, tüm alanlar optional). `@OpenAPIDefinition`, `@Tag`, `produces` ve `requiredMode = REQUIRED` ile düzeltildi |
