@@ -1,9 +1,17 @@
 # [ADR-002] Bağımlılık bütçesi: Spring starters, Flyway, Next.js çekirdeği
 
 **Tarih:** 2026-10-06
-**Durum:** Accepted
+**Durum:** Accepted · bütçe [ADR-009](009-contract-generated-from-spring.md) ile bir kalem genişletildi (2026-10-06)
 
 ---
+
+> [!NOTE]
+> **Bütçe değişiklikleri** (ADR superseded edilmeden, "ihtiyaç kanıtlandığında ADR ile büyür" maddesi işletilerek):
+>
+> | Tarih | Eklenen | Karar |
+> |---|---|---|
+> | 2026-10-06 | `api/` runtime: `springdoc-openapi-starter-webmvc-api` | [ADR-009](009-contract-generated-from-spring.md) |
+> | 2026-10-06 | `api/` runtime: `spring-boot-starter-oauth2-resource-server` (JWT; Nimbus JOSE dahil) | [ADR-008](008-jwt-auth-with-opaque-refresh.md) §6 |
 
 ## Context
 

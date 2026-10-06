@@ -1,9 +1,12 @@
 # [ADR-003] `api/` ile `web/` arasındaki tek sözleşme OpenAPI dosyasıdır
 
 **Tarih:** 2026-10-06
-**Durum:** Accepted
+**Durum:** Accepted · açık bırakılan soru [ADR-009](009-contract-generated-from-spring.md) ile cevaplandı (2026-10-06)
 
 ---
+
+> [!NOTE]
+> Bu ADR sözleşmenin **ne olduğunu** sabitler (tek arayüz OpenAPI dosyasıdır). Dosyanın **nereden geldiği** sorusu bilinçli olarak açık bırakılmıştı; [ADR-009](009-contract-generated-from-spring.md) bunu cevapladı: sözleşme Spring kodundan **üretilir** ve `openapi.yaml` üretilmiş ama commit'lenen bir çıktıdır. Aşağıdaki "elle yazılmaz" ifadeleri `web` tipleri içindir; sözleşme dosyasının kendisi de artık elle yazılmaz.
 
 ## Context
 

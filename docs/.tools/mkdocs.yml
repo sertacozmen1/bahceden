@@ -90,6 +90,8 @@ nav:
     - "ADR-005 · Test stratejisi": adr/005-test-strategy.md
     - "ADR-006 · Para minor unit": adr/006-money-as-minor-unit.md
     - "ADR-007 · Satıcı veri izolasyonu": adr/007-query-level-ownership-scoping.md
+    - "ADR-008 · Kimlik: JWT + iptal edilebilir yenileme": adr/008-jwt-auth-with-opaque-refresh.md
+    - "ADR-009 · Sözleşme Spring'den üretilir": adr/009-contract-generated-from-spring.md
   - Nasıl Yapılır (How-to):
     - Genel Bakış: how-to/index.md
     - Yerel Geliştirme Ortamı: how-to/yerel-gelistirme.md

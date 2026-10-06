@@ -27,8 +27,10 @@ Architecture Decision Records, projedeki önemli mimari kararları ve bu kararla
 | 005 | [Test stratejisi: Testcontainers, `critical` etiketi, sınırlı tarayıcı testi](005-test-strategy.md) | Accepted | 2026-10-06 |
 | 006 | [Para minor unit tamsayı olarak taşınır; hesap sunucuda](006-money-as-minor-unit.md) | Accepted | 2026-10-06 |
 | 007 | [Satıcı veri izolasyonu sorgu seviyesinde; varsayılan deny](007-query-level-ownership-scoping.md) | Accepted | 2026-10-06 |
+| 008 | [Kimlik: JWT erişim + iptal edilebilir yenileme token'ı, tek hesap tablosu, zorunlu e-posta doğrulaması](008-jwt-auth-with-opaque-refresh.md) | Accepted | 2026-10-06 |
+| 009 | [Sözleşme Spring kodundan üretilir; `openapi.yaml` commit'lenen çıktıdır](009-contract-generated-from-spring.md) | Accepted | 2026-10-06 |
 
-**Sıradaki numara: 008.**
+**Sıradaki numara: 010.**
 
 **Durum değerleri:** `Proposed` (öneri, henüz bağlayıcı değil) · `Accepted` (yürürlükte, bağlayıcı) · `Deprecated` (artık geçerli değil, yerine bir şey gelmedi) · `Superseded by [ADR-XXX]` (yerini başka bir karara bıraktı).
 
@@ -40,8 +42,6 @@ Aşağıdaki konular henüz karara bağlanmadı ve ilgili alanda kod yazılması
 
 | Konu | Kaynak madde | Karara bağlanınca |
 |---|---|---|
-| Kimlik doğrulama modeli (oturum çerezi / JWT, hesap tablosu, e-posta doğrulama) | KALANLAR B1 | ADR-008 adayı |
-| Sözleşme kaynağı: `openapi.yaml` elle mi yazılır, Spring'den mi üretilir | KALANLAR B2 | [ADR-003](003-openapi-as-single-contract.md)'ü tamamlar |
 | Ödeme sağlayıcısı, payout modeli, komisyon ve iade kuralı | KALANLAR A1 | ADR adayı |
 | Kargo entegrasyonu ve ücret sahipliği | KALANLAR A2 | ADR adayı |
 | Satıcı doğrulama ve ilan ön onayı | KALANLAR A3 | ADR adayı |

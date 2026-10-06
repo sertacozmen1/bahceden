@@ -17,7 +17,7 @@ Bu anayasa **kod yazılmadan önce** yazıldı. Kural, doküman ve planlama appa
 ## 1. Proje Kimliği
 
 - **Ürün:** Bahçeden, meyve-sebze üreticisini son tüketiciyle **doğrudan** buluşturan çok satıcılı pazaryeri. Manisa'daki bir üretici, bir hırdavatçının Hepsiburada'ya kaydolduğu kolaylıkla kaydolur, ürününü listeler ve **kargo ile** gönderir. Hal, komisyoncu ve aradaki fiyat katmanları zincirden çıkar.
-- **Felsefe:** **Contract-First.** Sistemin dış davranışı tek bir API sözleşmesiyle (`shared/contracts/openapi.yaml`) belirlenir; `web/` bu sözleşmeden türetilen tiplerle konuşur, sözleşmeyi tahmin etmez. Veritabanı ve iş kuralları tek otorite olan `api/`'de yaşar.
+- **Felsefe:** **Tek sözleşme, tek otorite.** `api/` ile `web/` arasındaki tüm arayüz `shared/contracts/openapi.yaml` dosyasıdır ([ADR-003](docs/adr/003-openapi-as-single-contract.md)); `web/` bu sözleşmeden **türetilen** tiplerle konuşur, sözleşmeyi tahmin etmez ve API tipi elle yazmaz. Sözleşme `api/` içindeki DTO ve anotasyonlardan **üretilir** ([ADR-009](docs/adr/009-contract-generated-from-spring.md)): tasarım kararı DTO'da alınır, dosya onu yansıtır ve tazeliği CI'da zorunludur. Veritabanı ve iş kuralları tek otorite olan `api/`'de yaşar.
 - **Çok satıcılı ve kişisel veri taşıyan bir sistemdir.** Her sorgu satıcı/kullanıcı kapsamında yetkilendirilir (§11.6); kişisel veri (ad, adres, telefon, IBAN, kargo takip) KVKK kapsamındadır ve K10 ile korunur. Bu, tek tenant bir panelden **temel farktır**: "tüm kayıtları getir" tipi bir sorgu güvenlik açığıdır.
 - **Durum:** Doğrulanmış güncel durum ve bilinen sınırlamalar **tek yerde** tutulur: [`docs/reference/00-current-state.md`](docs/reference/00-current-state.md). Sunum, araştırma notu ve yol haritası belgelerindeki ifadeler production gerçeği sayılmaz; şüphede kod ve o dosya esastır.
 - **Dokümantasyon:** Diátaxis (`docs/`): `product/`, `research/`, `adr/`, `reference/`, `how-to/`, `tutorials/`, `explanation/`, `features/`.
@@ -29,7 +29,7 @@ Bu anayasa **kod yazılmadan önce** yazıldı. Kural, doküman ve planlama appa
 |---|---|---|
 | `api/` | Spring Boot 3 (Java 21, Maven) REST API: domain modeli, iş kuralları, persistence (JPA + Flyway), kimlik doğrulama/yetkilendirme, sipariş & kargo akışı, bildirimler. **Tek yazma otoritesi.** | Hedef |
 | `web/` | Next.js (App Router, TypeScript) — alıcı vitrini **ve** satıcı paneli. Yalnızca HTTP ile `api/`'ye konuşur. | Hedef |
-| `shared/` | Sözleşmeler: `contracts/openapi.yaml` (commit'lenir, tek doğruluk kaynağı). Üretilen TS tipleri (`shared/generated/`) ve `.env` türevleri **gitignore'dadır.** | Hedef |
+| `shared/` | Sözleşme: `contracts/openapi.yaml` — `api/` DTO'larından **üretilir**, commit'lenir, elle düzenlenmez ([ADR-009](docs/adr/009-contract-generated-from-spring.md)). Üretilen TS tipleri (`shared/generated/`) ve `.env` türevleri **gitignore'dadır.** | Hedef |
 | `docs/` | Diátaxis dokümantasyonu + [`adr/`](docs/adr/index.md) (mimari kararlar) + [`features/`](docs/features/index.md) (iş kayıtları: ne yapar, ne zaman ne değişti) + `.tools/` (MkDocs portalı). | ✅ Kurulu |
 | `openspec/` | Spec-driven change **çalışma alanı**: `specs/` (geçerli davranış), `changes/` (açık planlar), `changes/archive/`, [`KALANLAR.md`](openspec/KALANLAR.md) (ekip kararı bekleyenler). **Kalıcı araçtır.** | ✅ Kurulu (`specs/` boş: henüz change yok) |
 | `.claude/` | `/opsx:*` komutları (`commands/opsx/`) ve openspec skill'leri (`skills/`). Karar ve konvansiyonların tek kaynağı bu dosya ve `docs/adr/`'dir; branch notu tutulmaz. | ✅ Kurulu |
@@ -88,9 +88,13 @@ Yeni bir özellik, davranış değişikliği veya mimari karar için **ilk adım
 
 **Feature dosyası kuralı:** `docs/features/` içerik üretmez; ADR/spec/change/how-to'ya link verir ve değişimi kronolojik tutar. Dosya başlığında Durum (`Fikir` · `Geliştirmede` · `Yayında` · `Kaldırıldı`), ilk sürüm ve son değişiklik tarihi; gövdede *Ne yapar* (3–6 cümle, kullanıcı dili), *Bilinçli sınırlar*, *Açık konular*, *Tarihçe*. *Tarihçe* **append-only**'dir (yeni satır en üste; eski satır düzenlenmez, geri alma da yeni satırdır). Feature'lar **ürün seviyesinde** tanımlanır (örn. "Satıcı Kaydı ve Onayı", "Ürün İlanları", "Sipariş ve Ödeme", "Kargo ve Teslimat"); teknik capability'ler dosyanın içinde listelenir, ayrı dosya olmaz. OpenSpec'ten geçmeyen küçük bir iş bile satırını bırakır; bu, küçük işlerin iz bırakmaması boşluğunu kapatan tek mekanizmadır.
 
-### K2: Contract-First & Shared Sync (Monorepo Bilinci)
+### K2: Sözleşme Senkronu (Monorepo Bilinci)
 
-İstemciye görünen davranışı etkileyen her geliştirme **daima** `shared/contracts/openapi.yaml` ile başlar. Yeni/değişen her alanda zorunlu: `type`/`format`, `description` (Türkçe), `example`; uygunsa `enum`, `minimum`/`maximum`, `maxLength`, `required`, `nullable`. Para alanları minor unit tamsayı (kuruş) + `currency`; tarih/saat `date-time` (UTC, ISO-8601); sayfalama, sıralama ve hata gövdesi tüm uçlarda **aynı** şekli kullanır (§11.5).
+İstemciye görünen davranışı etkileyen her geliştirme **sözleşmeyi değiştirir** ve sözleşme `api/` içindeki DTO ile anotasyonlardan üretilir ([ADR-009](docs/adr/009-contract-generated-from-spring.md)). Akış: **DTO + `@Schema` → `openapi.yaml` (üretilir, commit'lenir) → `web` tipleri (üretilir, commit'lenmez) → ekran.**
+
+Yeni/değişen her alanda zorunlu: tip, Türkçe `description` ve `example` (`@Schema` ile DTO'da verilir); uygunsa `enum`, Bean Validation kısıtları (`@Size`, `@Positive`, `@NotBlank` — bunlar spec'e yansır), zorunluluk. Para alanları minor unit tamsayı (kuruş) + `currency` ([ADR-006](docs/adr/006-money-as-minor-unit.md)); tarih/saat `date-time` (UTC, ISO-8601); sayfalama, sıralama ve hata gövdesi tüm uçlarda **aynı** şekli kullanır (§11.5).
+
+**Sözleşme kalitesi kodun sorumluluğudur:** açıklamasız veya örneksiz bir alan, üretilmiş spec'i zayıflatır. Review bu noktaya bakar. `openapi.yaml` **elle düzenlenmez** (K8); çıktı yanlışsa DTO düzeltilir ve yeniden üretilir.
 
 Kırıcı değişiklikte geriye dönük uyum düşünülür: alan silmek / yeniden adlandırmak / tipini değiştirmek **onay gerektirir** (§9); önce yeni alan eklenir, eski alan `deprecated` işaretlenir, istemci geçtikten sonra silinir.
 
@@ -109,13 +113,16 @@ Kırıcı değişiklikte geriye dönük uyum düşünülür: alan silmek / yenid
 
 ### K4: Docs-as-Code
 
-Sözleşme ve veri modeli her değiştiğinde üretilmiş çıktılar **yeniden üretilir**, elle yazılmaz:
+Kaynak her değiştiğinde üretilmiş çıktılar **yeniden üretilir**, elle yazılmaz:
 
-- `shared/contracts/openapi.yaml` → `web` için TypeScript tipleri (`shared/generated/`) ve `docs/reference/` API referansı.
-- Flyway migration'ları → `docs/reference/` ER diyagramı (kaynak: migration'lar, elle çizilen şema değil).
+| Kaynak | Üretilen | Tazelik kontrolü |
+|---|---|---|
+| `api/` DTO + controller anotasyonları | `shared/contracts/openapi.yaml` (commit'lenir) | `api` testi: üretilen spec commit'lenenden farklıysa **kırmızı** ([ADR-009](docs/adr/009-contract-generated-from-spring.md)) |
+| `shared/contracts/openapi.yaml` | `web` TypeScript tipleri (`shared/generated/`, commit'lenmez) | `npm run typecheck`; CI'da her koşuda yeniden üretilir |
+| Flyway migration'ları | `docs/reference/` ER diyagramı | Elle güncellenir (migration ile aynı commit'te) |
 
 > [!NOTE]
-> Üreteç betikleri **ilk dilimde kurulur** ve biçimi [KALANLAR B2](openspec/KALANLAR.md) kararına bağlıdır. Kurulana kadar `docs/reference/` içindeki API ve ER sayfaları aynı commit'te **elle** güncellenir; üreteç kurulduktan sonra bu dosyaların üretilen bölümlerini elle düzenlemek K8 ihlalidir. Dokümantasyon portalının strict derlemesi CI'da zorunludur (`.github/workflows/ci.yml` → `docs`).
+> Üreteç ve tazelik testi **ilk dilimde kurulur**. Kurulana kadar `docs/reference/` içindeki API sayfaları aynı commit'te elle güncellenir; kurulduktan sonra üretilmiş dosyaları elle düzenlemek K8 ihlalidir. Dokümantasyon portalının strict derlemesi CI'da zorunludur (`.github/workflows/ci.yml` → `docs`).
 
 ### K5: Dikey Dilim (Vertical Slice)
 
@@ -133,7 +140,7 @@ Bağımlılık bütçesi bir ADR'dir: [ADR-002](docs/adr/002-dependency-budget.m
 
 | Katman | İzinli | Not |
 |---|---|---|
-| `api/` runtime | `spring-boot-starter-web`, `spring-boot-starter-data-jpa`, `spring-boot-starter-validation`, `spring-boot-starter-security`, `postgresql` sürücüsü, `flyway-core` | Java 21, Maven, Spring Boot 3.x |
+| `api/` runtime | `spring-boot-starter-web`, `spring-boot-starter-data-jpa`, `spring-boot-starter-validation`, `spring-boot-starter-security`, `postgresql` sürücüsü, `flyway-core`, `springdoc-openapi-starter-webmvc-api` (spec üretimi; UI paketi **değil**), `spring-boot-starter-oauth2-resource-server` (JWT imzalama/doğrulama; Nimbus JOSE dahil) | Java 21, Maven, Spring Boot 3.x. Üçüncü parti JWT kütüphanesi (jjwt vb.) **alınmaz**: Spring'in kendi paketi yeterli |
 | `api/` test | `spring-boot-starter-test` (JUnit 5 + AssertJ + MockMvc), `spring-security-test`, Testcontainers (PostgreSQL) | Test gerçek PostgreSQL'e karşı koşar; H2 ile sapma kabul edilmez |
 | `web/` runtime | `next`, `react`, `react-dom` | TypeScript, App Router |
 | `web/` dev | `typescript`, `eslint` (+ `eslint-config-next`), `vitest` + `@testing-library/react`, `@playwright/test`, OpenAPI → TS tip üreteci | |
@@ -331,11 +338,13 @@ Kullanıcıya sormadan yapma:
 
 ## 10. `shared/` Kuralları (Sözleşme)
 
-- `contracts/openapi.yaml` OpenAPI 3.1; `info.title`, `info.version`, `servers` korunur. Yeniden kullanılan yapılar `components/schemas` altında; `$ref` ile paylaşılır, kopyalanmaz.
-- Her şema alanında Türkçe `description` ve `example` zorunludur; `enum` değerleri İngilizce `SCREAMING_SNAKE_CASE` sabitlerdir ve `api` enum'ları ile birebir aynıdır (testle sabitlenir).
-- Sözleşme hiçbir katmana özgü bilgi içermez: Java sınıf adı, tablo adı, dosya yolu, React bileşeni, CSS sınıfı sözleşmede geçmez.
+`contracts/openapi.yaml` **üretilmiş ama commit'lenen** bir dosyadır ([ADR-009](docs/adr/009-contract-generated-from-spring.md)): kaynağı `api/` içindeki DTO ve anotasyonlardır, depoda tutulma sebebi sözleşme değişikliğinin PR diff'inde görünmesidir.
+
+- **Elle düzenlenmez** (K8). Çıktı yanlışsa DTO / anotasyon düzeltilir ve dosya yeniden üretilir. Tazeliği `api` testiyle zorunludur: üretilen spec commit'lenenden farklıysa test kırmızıdır.
+- Her şema alanında Türkçe `description` ve `example` **zorunludur**; bunlar `@Schema` anotasyonuyla DTO'da verilir. `enum` değerleri İngilizce `SCREAMING_SNAKE_CASE` sabitlerdir ve `api` enum'larından üretildiği için zaten birebir aynıdır.
+- **Sözleşmeye katman detayı sızdırılmaz:** şema adları domain kavramını anlatır, Java sarmalayıcı sınıf adını değil; tablo adı, dosya yolu, React bileşeni veya CSS sınıfı sözleşmede geçmez. Üretilen ad anlamsızsa `@Schema(name = ...)` ile düzeltilir.
 - Sözleşmenin kopyası başka dizinde tutulmaz; `web` tiplerini `shared/generated/` altına üretir ve bu dizin **gitignore'dadır** (CI'da üretilir).
-- Sürümleme: kırıcı değişiklik `v2` yolu veya `deprecated` geçişi gerektirir (§9); `info.version` her kırıcı değişiklikte artar.
+- Sürümleme: kırıcı değişiklik `v2` yolu veya `deprecated` geçişi gerektirir (§9); kırıcı değişiklik her zaman kullanıcı onayına tabidir ve diff'te görünür olmak zorundadır.
 
 ## 11. `api/` Kuralları (Spring Boot)
 
@@ -387,7 +396,8 @@ Kullanıcıya sormadan yapma:
 
 - Roller: `ROLE_CUSTOMER`, `ROLE_SELLER`, `ROLE_ADMIN`. Varsayılan **deny**: her endpoint açıkça yetkilendirilir; herkese açık uçlar (vitrin, ürün detayı, kayıt, giriş) açıkça işaretlenir.
 - **Sahiplik kontrolü zorunludur ve sorgu seviyesindedir** ([ADR-007](docs/adr/007-query-level-ownership-scoping.md)): satıcı yalnızca kendi ürün / sipariş / gönderimini görür ve değiştirir. Bu kontrol `findById` sonrası `if` ile değil, **repository sorgusunda** (`findByIdAndSellerId`) yapılır; her sahiplik kuralının `critical` testi vardır (başkasının kaydına erişim → 404).
-- Kimlik doğrulama mekanizması [KALANLAR B1](openspec/KALANLAR.md) ile sabitlenir; karar verilmeden iki ayrı kimlik yolu yazılmaz.
+- **Kimlik doğrulama ([ADR-008](docs/adr/008-jwt-auth-with-opaque-refresh.md)):** kısa ömürlü (15 dk) JWT erişim token'ı + opak, hash'li saklanan, rotasyonlu ve iptal edilebilir yenileme token'ı. JWT imzalama/doğrulama `spring-boot-starter-oauth2-resource-server` ile; imza anahtarı ortamdan okunur. `api` tarafında **tek** kimlik yolu vardır: `web` çerezleri kendi taşıma detayıdır, `api` yalnızca `Authorization: Bearer` görür.
+- **Hesap modeli ([ADR-008](docs/adr/008-jwt-auth-with-opaque-refresh.md)):** tek `accounts` tablosu + `account_roles`; aynı kişi hem alıcı hem satıcı olabilir. Parola BCrypt ile hash'lenir. Hesap `PENDING_VERIFICATION` açılır; **e-posta doğrulanmadan giriş yapılamaz.** Doğrulama ve sıfırlama token'ları tek kullanımlık, süreli ve hash'li saklanır; yanıtlar e-postanın kayıtlı olup olmadığını açığa çıkarmaz.
 - Parolalar yalnızca güçlü bir hash ile (BCrypt / Argon2) saklanır; şifre sıfırlama token'ları tek kullanımlık, kısa ömürlü ve hash'li saklanır. Giriş, kayıt ve sıfırlama uçları hız sınırlıdır.
 - Dosya yükleme (ürün fotoğrafı): tip ve boyut sunucuda doğrulanır, dosya adı yeniden üretilir, içerik uygulama kökünden servis edilmez.
 - CORS yalnızca bilinen `web` kaynağına açılır (ortam değişkeni); `*` **yasaktır**. Çerez tabanlı oturum kullanılıyorsa `HttpOnly`, `Secure`, `SameSite` ayarlanır ve CSRF korunur.
@@ -419,6 +429,7 @@ Kullanıcıya sormadan yapma:
 - `strict: true`; `any` ve `as` ile tip zorlaması **yasaktır** (bilinmeyen veri `unknown` + daraltma). `@ts-ignore` yasak, `@ts-expect-error` yalnızca gerekçeli yorumla.
 - API tipleri **elle yazılmaz**: `shared/generated` üretilen tiplerinden import edilir (K8). Sözleşmede olmayan alan UI'da olamaz; ihtiyaç varsa önce sözleşme (K2).
 - Tüm HTTP çağrıları tek `lib/apiClient.ts` üzerinden: base URL ortamdan, kimlik bilgisi tek yerde, §11.5 hata gövdesi tek yerde çözülür (`code` → kullanıcı mesajı, `fieldErrors` → form alanları). İkinci bir `fetch` sarmalayıcı yazılmaz.
+- **Token'lar ince bir BFF katmanında yaşar ([ADR-008](docs/adr/008-jwt-auth-with-opaque-refresh.md)):** giriş/çıkış/yenileme `web`'in kendi Route Handler'larından geçer; erişim ve yenileme token'ı `HttpOnly` + `Secure` + `SameSite=Lax` çerezlere yazılır. Token tarayıcı JavaScript'ine **hiç** verilmez: `localStorage`, `sessionStorage` ve istemci state'inde token tutmak **yasaktır**. Sunucu tarafı render çerezi okur ve `api`'ye `Authorization: Bearer` ile gider; durum değiştiren Route Handler çağrıları CSRF token'ı taşır.
 - Gizli değer tarayıcıya gitmez: sunucu tarafı `process.env`, istemciye yalnızca `NEXT_PUBLIC_` ile açıkça işaretlenmiş ve gizli olmayan değerler (K10).
 - Form doğrulaması **erken geri bildirimdir**; otorite `api/`'dir. Sunucunun döndürdüğü hata mesajı olduğu gibi gösterilir ve ilgili alana bağlanır.
 - Para ve tarih biçimlendirmesi tek yardımcıda (`money.ts`, `datetime.ts`), `Intl` ile; bileşen içinde elle biçimlendirme yapılmaz.
@@ -471,8 +482,6 @@ Bugün bloke eden maddeler (özet; gerekçeler KALANLAR dosyasında):
 
 | Kod | Konu | Neyi blokluyor |
 |---|---|---|
-| B1 | Kimlik doğrulama modeli (oturum çerezi / JWT, hesap tablosu, e-posta doğrulama) | Tüm endpoint yetkilendirmesi, `web` oturum akışı — **ilk dilim** |
-| B2 | Sözleşme kaynağı: `openapi.yaml` elle mi yazılır, Spring'den mi üretilir | K2/K4 üreteçleri, §7 komutları — **ilk dilim** |
 | A1 | Ödeme sağlayıcısı, payout modeli, komisyon ve iade kuralı | `order` durum makinesi, `payment` domaini |
 | A2 | Kargo firması, entegrasyon biçimi, ücret sahipliği | `shipping` domaini, satıcı akışı |
 | A3 | Satıcı doğrulaması ve ilan ön onayı | `seller` / `catalog` durum makineleri, yasal sorumluluk |
@@ -481,7 +490,7 @@ Bugün bloke eden maddeler (özet; gerekçeler KALANLAR dosyasında):
 | B4 | Bildirim kanalları (e-posta / SMS) | `notification`, K7 bütçesi |
 | B5 | Üretim barındırma ve yedekleme | CI/CD, üretim compose varyantı |
 
-**Karara bağlananlar:** [ADR-001](docs/adr/001-spring-api-and-next-web.md) (iki birim) · [ADR-002](docs/adr/002-dependency-budget.md) (bağımlılık bütçesi) · [ADR-003](docs/adr/003-openapi-as-single-contract.md) (tek sözleşme) · [ADR-004](docs/adr/004-postgresql-with-flyway.md) (PostgreSQL + Flyway) · [ADR-005](docs/adr/005-test-strategy.md) (test stratejisi) · [ADR-006](docs/adr/006-money-as-minor-unit.md) (para temsili) · [ADR-007](docs/adr/007-query-level-ownership-scoping.md) (satıcı izolasyonu).
+**Karara bağlananlar:** [ADR-001](docs/adr/001-spring-api-and-next-web.md) (iki birim) · [ADR-002](docs/adr/002-dependency-budget.md) (bağımlılık bütçesi) · [ADR-003](docs/adr/003-openapi-as-single-contract.md) (tek sözleşme) · [ADR-004](docs/adr/004-postgresql-with-flyway.md) (PostgreSQL + Flyway) · [ADR-005](docs/adr/005-test-strategy.md) (test stratejisi) · [ADR-006](docs/adr/006-money-as-minor-unit.md) (para temsili) · [ADR-007](docs/adr/007-query-level-ownership-scoping.md) (satıcı izolasyonu) · [ADR-008](docs/adr/008-jwt-auth-with-opaque-refresh.md) (kimlik: JWT + iptal edilebilir yenileme, tek hesap tablosu, zorunlu doğrulama) · [ADR-009](docs/adr/009-contract-generated-from-spring.md) (sözleşme Spring'den üretilir).
 
 > [!NOTE]
 > Bu dosya değiştiğinde `docs/features/_genel.md` *Tarihçe*'sine bir satır düşer (K1).

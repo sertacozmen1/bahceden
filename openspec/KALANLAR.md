@@ -38,18 +38,6 @@
 
 ## B. Teknik Kararlar
 
-### B1 · Kimlik doğrulama modeli
-**Soru:** `HttpOnly` oturum çerezi mi, JWT mi? Satıcı ve alıcı aynı hesap tablosunda mı yoksa ayrı mı? E-posta doğrulaması kayıt için zorunlu mu? Sosyal giriş (Google) MVP'de var mı?
-**Neden bloklayıcı:** Her endpoint'in yetkilendirmesi, `web` oturum akışı ve CSRF/CORS yapılandırması buna bağlı. İlk dilimden önce karara bağlanmalı.
-**Öneri (tartışmaya açık):** Tek `account` tablosu + rol; `HttpOnly` + `Secure` + `SameSite=Lax` oturum çerezi (tarayıcıda token tutmamak XSS yüzeyini küçültür); e-posta doğrulaması satıcı için zorunlu, alıcı için ilk siparişe kadar erteli.
-**Durum:** UNDECIDED.
-
-### B2 · Sözleşme kaynağı (contract-first yönü)
-**Soru:** `shared/contracts/openapi.yaml` elle mi yazılır (sözleşme kaynak, kod ona uyar) yoksa Spring anotasyonlarından mı üretilir (kod kaynak, sözleşme çıktı)?
-**Neden bloklayıcı:** AGENTS.md K2/K4 ve §7 komutları buna bağlı; K8 "üretilmiş dosyaya dokunma" kuralının hangi dosyaya uygulandığını bu karar belirler.
-**Öneri (tartışmaya açık):** Elle yazılan `openapi.yaml` (AGENTS.md §1 felsefesiyle tutarlı: sözleşme tek doğruluk kaynağı); `api` tarafında sözleşmeye karşı doğrulama testi, `web` tarafında tip üretimi.
-**Durum:** UNDECIDED — karar verilince ADR-008 yazılır.
-
 ### B3 · Ürün fotoğrafı depolama
 **Soru:** Fotoğraflar nerede saklanır: yerel disk + volume mi, S3 uyumlu nesne depolama mı? Yeniden boyutlandırma sunucuda mı yapılır? CDN var mı?
 **Neden bloklayıcı:** `catalog` domaini ve K7 bağımlılık bütçesi (nesne depolama istemcisi yeni paket demektir).
@@ -79,3 +67,5 @@ Bu bölüm boş kaldıkça iyidir: karara bağlanan madde buradan **silinir**, A
 | 2026-10-06 | Test stratejisi | [ADR-005](../docs/adr/005-test-strategy.md) |
 | 2026-10-06 | Para birimi temsili | [ADR-006](../docs/adr/006-money-as-minor-unit.md) |
 | 2026-10-06 | Satıcı veri izolasyonu | [ADR-007](../docs/adr/007-query-level-ownership-scoping.md) |
+| 2026-10-06 | **B1** Kimlik doğrulama modeli: JWT erişim + opak/iptal edilebilir yenileme token'ı, tek hesap tablosu + roller, herkes için zorunlu e-posta doğrulaması, sosyal giriş kapsam dışı | [ADR-008](../docs/adr/008-jwt-auth-with-opaque-refresh.md) |
+| 2026-10-06 | **B2** Sözleşme kaynağı: Spring kodundan üretilir; `openapi.yaml` üretilmiş ama commit'lenen çıktı, tazeliği CI'da zorunlu | [ADR-009](../docs/adr/009-contract-generated-from-spring.md) |
