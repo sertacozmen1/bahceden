@@ -27,7 +27,7 @@ Bu anayasa **kod yazılmadan önce** yazıldı. Kural, doküman ve planlama appa
 
 | Yol | Sorumluluk | Durum |
 |---|---|---|
-| `api/` | Spring Boot 3 (Java 21, Maven) REST API: domain modeli, iş kuralları, persistence (JPA + Flyway), kimlik doğrulama/yetkilendirme, sipariş & kargo akışı, bildirimler. **Tek yazma otoritesi.** | Hedef |
+| `api/` | Spring Boot 3 (Java 21, Maven) REST API: domain modeli, iş kuralları, persistence (JPA + Liquibase), kimlik doğrulama/yetkilendirme, sipariş & kargo akışı, bildirimler. **Tek yazma otoritesi.** | Hedef |
 | `web/` | Next.js (App Router, TypeScript) — alıcı vitrini **ve** satıcı paneli. Yalnızca HTTP ile `api/`'ye konuşur. | Hedef |
 | `shared/` | Sözleşme: `contracts/openapi.yaml` — `api/` DTO'larından **üretilir**, commit'lenir, elle düzenlenmez ([ADR-009](docs/adr/009-contract-generated-from-spring.md)). Üretilen TS tipleri (`shared/generated/`) ve `.env` türevleri **gitignore'dadır.** | Hedef |
 | `docs/` | Diátaxis dokümantasyonu + [`adr/`](docs/adr/index.md) (mimari kararlar) + [`features/`](docs/features/index.md) (iş kayıtları: ne yapar, ne zaman ne değişti) + `.tools/` (MkDocs portalı). | ✅ Kurulu |
@@ -102,9 +102,9 @@ Kırıcı değişiklikte geriye dönük uyum düşünülür: alan silmek / yenid
 
 | Katman | Etkilenir mi? | Ne değişir? |
 |---|---|---|
-| `api/` | Evet / Hayır | controller, DTO, mapper, service, entity, Flyway migration, yetkilendirme kuralı, sözleşme doğrulama testi |
+| `api/` | Evet / Hayır | controller, DTO, mapper, service, entity, Liquibase changeset, yetkilendirme kuralı, sözleşme doğrulama testi |
 | `web/` | Evet / Hayır | üretilen tipler, veri çekme katmanı, form ve doğrulama, liste/detay ekranı, boş/hata durumu, metinler |
-| DB | Evet / Hayır | tablo/kolon/indeks, migration, geri alma planı, mevcut veri dönüşümü |
+| DB | Evet / Hayır | tablo/kolon/indeks, changeset, `--rollback` planı, mevcut veri dönüşümü |
 | `docs/` | **Her zaman** | `docs/reference/` API ve ER sayfaları; etkilenen `docs/features/` *Tarihçe* satırı |
 
 ### K3: Top-Down Bağımlılık
@@ -119,18 +119,18 @@ Kaynak her değiştiğinde üretilmiş çıktılar **yeniden üretilir**, elle y
 |---|---|---|
 | `api/` DTO + controller anotasyonları | `shared/contracts/openapi.yaml` (commit'lenir) | `api` testi: üretilen spec commit'lenenden farklıysa **kırmızı** ([ADR-009](docs/adr/009-contract-generated-from-spring.md)) |
 | `shared/contracts/openapi.yaml` | `web` TypeScript tipleri (`shared/generated/`, commit'lenmez) | `npm run typecheck`; CI'da her koşuda yeniden üretilir |
-| Flyway migration'ları | `docs/reference/` ER diyagramı | Elle güncellenir (migration ile aynı commit'te) |
+| Liquibase changelog'ları | `docs/reference/` ER diyagramı | Elle güncellenir (changeset ile aynı commit'te) |
 
 > [!NOTE]
 > Üreteç ve tazelik testi **ilk dilimde kurulur**. Kurulana kadar `docs/reference/` içindeki API sayfaları aynı commit'te elle güncellenir; kurulduktan sonra üretilmiş dosyaları elle düzenlemek K8 ihlalidir. Dokümantasyon portalının strict derlemesi CI'da zorunludur (`.github/workflows/ci.yml` → `docs`).
 
 ### K5: Dikey Dilim (Vertical Slice)
 
-İş, uçtan uca çalışan **tek bir akış** olarak kesilir: doküman → sözleşme → docs üretimi → migration → entity/repository → service (iş kuralı) → controller → üretilen tipler → `web` ekranı → test → doğrulama. "Önce tüm entity'ler, sonra tüm controller'lar" gibi yatay yığınlar **yasaktır.** Bir openspec change'in `tasks.md`'si de bu mantıkla fazlanır: her faz tek başına çalışır durumda bırakılır.
+İş, uçtan uca çalışan **tek bir akış** olarak kesilir: doküman → sözleşme → docs üretimi → changeset → entity/repository → service (iş kuralı) → controller → üretilen tipler → `web` ekranı → test → doğrulama. "Önce tüm entity'ler, sonra tüm controller'lar" gibi yatay yığınlar **yasaktır.** Bir openspec change'in `tasks.md`'si de bu mantıkla fazlanır: her faz tek başına çalışır durumda bırakılır.
 
 ### K6: Yarım İş Bırakma
 
-Kodda `TODO`, `FIXME`, `XXX`, `HACK`, placeholder metin, hardcode mock/sahte veri, `System.out.println`, `console.log`, `debugger`, boş `catch`, yorum satırına alınmış ölü kod, `@Disabled` / `it.skip` ile susturulmuş test **bırakılmaz.** Geliştirme verisi gerekiyorsa idempotent seed (dev profiline bağlı seed veya Flyway `R__` betiği) veya belgelenmiş bir geliştirme komutu kullanılır.
+Kodda `TODO`, `FIXME`, `XXX`, `HACK`, placeholder metin, hardcode mock/sahte veri, `System.out.println`, `console.log`, `debugger`, boş `catch`, yorum satırına alınmış ölü kod, `@Disabled` / `it.skip` ile susturulmuş test **bırakılmaz.** Geliştirme verisi gerekiyorsa idempotent seed (dev bağlamına bağlı Liquibase changeset'i) veya belgelenmiş bir geliştirme komutu kullanılır.
 
 Bir dilimi bitiremiyorsan durur ve **açıkça raporlarsın**: ne bitti, ne bitmedi, hangi dosyada / adımda kaldın, neden, sıradaki adım ne. `tasks.md` kutuları yalnızca gerçekten biten iş için işaretlenir; dış/insan işi olan görev (kargo sözleşmesi, ödeme sağlayıcı başvurusu, domain satın alma) açık bırakılıp notlanır.
 
@@ -140,7 +140,7 @@ Bağımlılık bütçesi bir ADR'dir: [ADR-002](docs/adr/002-dependency-budget.m
 
 | Katman | İzinli | Not |
 |---|---|---|
-| `api/` runtime | `spring-boot-starter-web`, `spring-boot-starter-data-jpa`, `spring-boot-starter-validation`, `spring-boot-starter-security`, `postgresql` sürücüsü, `flyway-core`, `springdoc-openapi-starter-webmvc-api` (spec üretimi; UI paketi **değil**), `spring-boot-starter-oauth2-resource-server` (JWT imzalama/doğrulama; Nimbus JOSE dahil) | Java 21, Maven, Spring Boot 3.x. Üçüncü parti JWT kütüphanesi (jjwt vb.) **alınmaz**: Spring'in kendi paketi yeterli |
+| `api/` runtime | `spring-boot-starter-web`, `spring-boot-starter-data-jpa`, `spring-boot-starter-validation`, `spring-boot-starter-security`, `postgresql` sürücüsü, `liquibase-core`, `springdoc-openapi-starter-webmvc-api` (spec üretimi; UI paketi **değil**), `spring-boot-starter-oauth2-resource-server` (JWT imzalama/doğrulama; Nimbus JOSE dahil) | Java 21, Maven, Spring Boot 3.x. Üçüncü parti JWT kütüphanesi (jjwt vb.) **alınmaz**: Spring'in kendi paketi yeterli |
 | `api/` test | `spring-boot-starter-test` (JUnit 5 + AssertJ + MockMvc), `spring-security-test`, Testcontainers (PostgreSQL) | Test gerçek PostgreSQL'e karşı koşar; H2 ile sapma kabul edilmez |
 | `web/` runtime | `next`, `react`, `react-dom` | TypeScript, App Router |
 | `web/` dev | `typescript`, `eslint` (+ `eslint-config-next`), `vitest` + `@testing-library/react`, `@playwright/test`, OpenAPI → TS tip üreteci | |
@@ -157,7 +157,7 @@ Onay gelirse ADR yazılır ve paket **pin'li** sürümle eklenir (Maven'da açı
 
 ### K8: Otomatik Üretilmiş Dosyalara Dokunma
 
-Elle düzenlenmez: `shared/generated/*` · `docs/reference/` içindeki üretilmiş bloklar · `web/.next/`, `web/node_modules/` · `api/target/` · paket yöneticisi lock dosyalarının içeriği (sürüm değişikliği yalnızca paket yöneticisi komutuyla, K7 onayından sonra) · **uygulanmış** Flyway migration'ları (yeni migration yazılır, eskisi düzenlenmez). Çıktı yanlışsa kaynağı (sözleşme, migration, betik) düzelt ve yeniden üret.
+Elle düzenlenmez: `shared/generated/*` · `docs/reference/` içindeki üretilmiş bloklar · `web/.next/`, `web/node_modules/` · `api/target/` · paket yöneticisi lock dosyalarının içeriği (sürüm değişikliği yalnızca paket yöneticisi komutuyla, K7 onayından sonra) · **uygulanmış** Liquibase changeset'leri (yeni changeset yazılır, eskisi düzenlenmez). Çıktı yanlışsa kaynağı (sözleşme, changeset, betik) düzelt ve yeniden üret.
 
 ### K9: Önce Mevcut Kod, Sonra Minimum Değişiklik
 
@@ -235,7 +235,7 @@ Bir task'a başlarken bağlam **bu sırayla** toplanır; sonraki adım öncekine
 2. **Etkiyi belirle.** Etkilenen bileşenler; test etkisi (§6.3); doküman etkisi (§6.4); `shared/` değişiyorsa K2 etki matrisi; bağımlılık yönü (K3); yeni paket gerekiyor mu (K7); kişisel veri / yetkilendirme etkisi var mı (K10, §11.6).
 3. **Küçük plan yaz ve onay al (K1).** OpenSpec change ya da doğrudan doküman; kabul kriterleri; **en küçük güvenli değişiklik** (K9). Kullanıcı onayı gelmeden kod yazılmaz.
 4. **Sözleşme (K2)** ve **docs üretimi (K4)**, gerekiyorsa.
-5. **Dilimi uygula (K5).** `shared` → `api` (migration → entity → repository → service → controller → DTO) → üretilen tipler → `web` (veri çekme → ekran → durumlar); her adımda test.
+5. **Dilimi uygula (K5).** `shared` → `api` (changeset → entity → repository → service → controller → DTO) → üretilen tipler → `web` (veri çekme → ekran → durumlar); her adımda test.
 6. **Testleri koştur.** §7 komutlarının tamamı; çıktıyı olduğu gibi raporla; kırmızı test "sonra" diye geçilmez. Başlangıçta başarısız testler ayrı kaydedilir; beklentiler sırf yeşil sonuç için gevşetilmez veya silinmez.
 7. **Diff'i gözden geçir.** `git diff --stat` ile dokunulan her dosya task'la eşleştirilir; task dışı değişiklik ya geri alınır ya gerekçelendirilir (K9); K6 (TODO, debug, mock), K8 (üretilmiş dosya), K10 (secret, kişisel veri) taraması yapılır; `.gitignore`'a takılması gereken dosya (`.env`, `target/`, `node_modules/`, `.next/`, geçici betik, ekran görüntüsü) diff'te yoktur.
 8. **Doküman kontrolü.** §6.4 listesi; ADR'ler, how-to, `docs/how-to/index.md`, **`docs/features/` Tarihçe satırı** (her iş; feature'sız iş `_genel.md`); güncel durum değiştiyse `00-current-state.md`. Change bittiyse sync + archive: ön koşullar §5.3; ADR'ler yazılmadan archive **yapılmaz.**
@@ -275,7 +275,8 @@ docker compose up                       # api http://localhost:8080, web http://
 # api/ doğrulama (her dilim sonunda, tamamı)
 docker compose exec -T api ./mvnw -B verify             # derleme + birim/entegrasyon testleri
 docker compose exec -T api ./mvnw -B test -Dgroups=critical
-docker compose exec -T api ./mvnw -B flyway:validate    # migration zinciri tutarlı mı
+# Şema doğrulaması ayrı bir komut değildir: Liquibase changelog checksum'larını
+# ve Hibernate şemayı uygulama AÇILIŞINDA doğrular (ADR-016).
 
 # web/ doğrulama (her dilim sonunda, tamamı)
 npm --prefix web ci
@@ -314,7 +315,7 @@ openspec validate --specs               # ana spec'ler geçerli mi
 - [ ] Dilim uçtan uca çalışıyor; testi var; §7'deki tüm komutlar temiz (K5).
 - [ ] TODO / placeholder / mock / debug çıktısı / susturulmuş test yok; `tasks.md` dürüst (K6).
 - [ ] Yeni bağımlılık yoksa "yok" yazıldı; varsa onay + ADR + pin'li sürüm (K7).
-- [ ] Üretilmiş dosyalara ve uygulanmış migration'lara dokunulmadı (K8).
+- [ ] Üretilmiş dosyalara ve uygulanmış changeset'lere dokunulmadı (K8).
 - [ ] Mevcut kod arandı ve genişletildi; diff task kapsamında, task dışı değişiklik gerekçeli (K9).
 - [ ] Diff'te ve raporda secret / gerçek kişisel veri yok; `.env`, dökümler, geçici betik commit'te değil; log'lar maskeli (K10).
 - [ ] Yetkilendirme: yeni/değişen her endpoint ve sorgu için sahiplik/rol kontrolü var ve testle sabitlendi (§11.6).
@@ -327,7 +328,7 @@ Kullanıcıya sormadan yapma:
 
 - Yeni kütüphane / paket / servis / Docker imajı; sürüm yükseltmesi (Spring Boot, Next.js, Java, Node ana sürümü) (K7).
 - Sözleşmede kırıcı değişiklik: alan silme, yeniden adlandırma, tip değiştirme, `required` değişikliği, endpoint kaldırma.
-- Veri kaybı riski taşıyan migration: kolon/tablo silme, tip daraltma, `NOT NULL` ekleme, geri alınamaz veri dönüşümü. (Uygulanmış migration **düzenlenmez**; yeni migration yazılır.)
+- Veri kaybı riski taşıyan şema değişikliği: kolon/tablo silme, tip daraltma, `NOT NULL` ekleme, geri alınamaz veri dönüşümü. (Uygulanmış changeset **düzenlenmez**; yeni changeset yazılır.)
 - Dependency yönünü etkileyen tasarım; ADR'ye aykırı uygulama (önce ADR'yi *superseded* etmeyi öner).
 - Kimlik doğrulama / yetkilendirme modelinde, ödeme veya kargo akışında değişiklik; fiyat, komisyon, iade kuralı gibi ticari mantık.
 - `.github/workflows/` ve `docker-compose.yml` servis yapısı değişikliği.
@@ -371,14 +372,16 @@ Kullanıcıya sormadan yapma:
 - Hata yönetimi: boş `catch` **yasak**; istisna yutulmaz. İş kuralı ihlali kendi istisna tipiyle fırlatılır ve tek bir `@RestControllerAdvice` ile §11.5 hata gövdesine çevrilir. Beklenen durumlar `RuntimeException` yakalanarak değil, açıkça modellenir.
 - Sabit listeler ve varsayılanlar kodda iki kez yazılmaz: enum veya tek bir sabit sınıfı. Sihirli sayı (`10`, `0.18`, `3`) **yasaktır**; adlandırılmış sabit veya yapılandırma olur.
 
-### 11.4 Persistence ve migration
+### 11.4 Persistence ve şema değişiklikleri
 
-- Şema **yalnızca** Flyway ile değişir ([ADR-004](docs/adr/004-postgresql-with-flyway.md)): `api/src/main/resources/db/migration/V<n>__<kebab_case>.sql`. `ddl-auto` her ortamda `validate`; `update` / `create-drop` **yasaktır**.
-- Uygulanmış migration düzenlenmez veya yeniden adlandırılmaz (K8); düzeltme yeni migration'dır. Veri migration'ları idempotent ve geri alma planı dokümanlıdır.
+- Şema **yalnızca** Liquibase ile değişir ([ADR-016](docs/adr/016-liquibase-for-schema-migrations.md)): changelog'lar `api/src/main/resources/db/changelog/` altında **formatted SQL** (`NNN-kebab-case.sql`), master changelog yalnızca `include` listesi tutar. `ddl-auto` her ortamda `validate`; `update` / `create-drop` **yasaktır**.
+- Her changeset `--rollback` satırları taşır ve kimliği dosya adıyla aynıdır (`--changeset bahceden:NNN-kebab-case`).
+- **Bağlam her ortamda açıkça bildirilir** (`spring.liquibase.contexts`): Liquibase, bağlam verilmezse bağlam etiketli changeset'leri de uygular, yani `contextFilter` tek başına koruma sağlamaz. Geliştirme verisi `contextFilter:dev` ile işaretlenir ve bu izolasyon testle sabitlenir.
+- Uygulanmış changeset düzenlenmez veya yeniden adlandırılmaz (K8); düzeltme yeni bir changeset'tir. Liquibase checksum doğrular: değiştirilen changeset uygulamayı açılışta düşürür. Veri changeset'leri idempotenttir.
 - Entity: `@Id` `BIGSERIAL`; iş anahtarları (sipariş numarası gibi) ayrı ve indeksli; her tabloda `created_at` / `updated_at`. Tablo ve kolon adları `snake_case`, tablo adı çoğul.
 - Silme davranışı **bilinçli seçilir ve ADR'ye bağlanır**: sipariş ve gönderim kayıtları **silinmez** (yasal kayıt; iptal/iade bir durum geçişidir); satıcı veya ürün kaldırıldığında geçmiş siparişler korunur (soft delete / arşiv alanı). `CascadeType.REMOVE` ve `orphanRemoval` yalnızca gerçek sahiplik ilişkisinde.
 - N+1 sorgu **kabul edilmez**: liste uçları için `@EntityGraph` / `join fetch`; iddialar sorgu sayısı testiyle sabitlenir. Sayfalama her liste ucunda zorunludur, üst sınır sunucuda sabittir.
-- Ham SQL yalnızca migration'da; uygulama kodunda ORM / Specification kullanılır. Kullanıcı girdisi asla sorgu metnine birleştirilmez.
+- Ham SQL yalnızca changeset'lerde; uygulama kodunda ORM / Specification kullanılır. Kullanıcı girdisi asla sorgu metnine birleştirilmez.
 - Para, stok ve sipariş durumu değiştiren akışlar tek transaction içinde ve yarış koşuluna karşı korumalıdır (iyimser kilit `@Version` veya `SELECT … FOR UPDATE`); bu davranış `critical` testle sabitlenir.
 
 ### 11.5 HTTP sözleşmesi
@@ -458,7 +461,7 @@ Her ekranın dört durumu vardır ve tasarlanır: **yükleniyor** (iskelet) · *
 ## 13. Git ve PR
 
 - Branch: `<TICKET>-kisa-aciklama` veya `hotfix/…`, `docs/…`. `main`'e doğrudan commit **yok**.
-- Commit mesajı **İngilizce**, emir kipi, tek satır özet: `type(scope): summary`; `type` ∈ {`feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `ci`}; `scope` isteğe bağlı ∈ {`api`, `web`, `shared`, `docs`, `adr`, `infra`}. Gövde gerekiyorsa kısa ve madde madde. Migration, model değişikliğiyle **aynı** commit'te.
+- Commit mesajı **İngilizce**, emir kipi, tek satır özet: `type(scope): summary`; `type` ∈ {`feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `ci`}; `scope` isteğe bağlı ∈ {`api`, `web`, `shared`, `docs`, `adr`, `infra`}. Gövde gerekiyorsa kısa ve madde madde. Changeset, model değişikliğiyle **aynı** commit'te.
 - PR açıklaması zorunlu başlıklar: **Doküman / ADR** · **Sözleşme değişikliği** · **Etki matrisi** · **Doğrulama** (komutlar + gerçek sonuç) · **Güvenlik / kişisel veri etkisi** · **Bitmeyen işler / açık sorular.**
 
 ## 14. Rapor Formatı

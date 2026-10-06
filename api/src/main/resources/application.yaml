@@ -16,17 +16,22 @@ spring:
 
   jpa:
     hibernate:
-      # Şema yalnızca Flyway ile değişir; entity ile şema uyuşmazsa uygulama
-      # ayağa kalkmaz (ADR-004). update / create-drop yasaktır.
+      # Şema yalnızca Liquibase ile değişir; entity ile şema uyuşmazsa uygulama
+      # ayağa kalkmaz (ADR-016). update / create-drop yasaktır.
       ddl-auto: validate
     # İstek bitince oturum kapanır: view katmanında lazy yükleme sürprizi olmaz.
     open-in-view: false
     properties:
       hibernate.jdbc.time_zone: UTC
 
-  flyway:
+  liquibase:
     enabled: true
-    locations: classpath:db/migration
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    # Bağlam AÇIKÇA bildirilir. Liquibase, çalışma anında hiç bağlam
+    # verilmezse bağlam etiketli changeset'leri de uygular; yani
+    # "contextFilter:dev" tek başına koruma sağlamaz. Taban bağlam `default`
+    # olduğu için dev seed'i burada uygulanmaz (ADR-016).
+    contexts: default
 
 server:
   port: 8080

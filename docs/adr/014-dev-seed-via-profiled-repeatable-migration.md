@@ -1,7 +1,21 @@
-# [ADR-014] Geliştirme verisi, dev profiline bağlı tekrarlanabilir bir Flyway betiğiyle gelir
+# [ADR-014] Geliştirme verisi, dev bağlamına bağlı tekrarlanabilir bir changeset ile gelir
 
 **Tarih:** 2026-10-06
-**Durum:** Accepted
+**Durum:** Accepted · mekanizma [ADR-016](016-liquibase-for-schema-migrations.md) ile güncellendi (2026-10-06)
+
+> [!NOTE]
+> Kararın özü değişmedi: geliştirme verisi, üretime asla bulaşmayan,
+> idempotent ve tekrarlanabilir bir veritabanı betiğiyle gelir. Yalnızca
+> **mekanizma** değişti ([ADR-016](016-liquibase-for-schema-migrations.md)):
+> Flyway `R__` betiği + profile bağlı `locations` yerine, `contextFilter:dev`
+> ile işaretli ve `runOnChange:true` taşıyan bir **Liquibase changeset'i**.
+>
+> Uygulamada bir tuzak çıktı ve kurala dönüştü: Liquibase çalışma anında hiç
+> bağlam verilmezse bağlam etiketli changeset'leri **de** uygular. Bu yüzden
+> her ortam bağlamını açıkça bildirir (taban `default`, geliştirme
+> `default,dev`) ve izolasyon bir testle sabitlenmiştir
+> (`DevSeedIsolationTest`).
+
 **Kaynak:** `add-storefront-product-listing` change, `design.md` D5
 
 ---
@@ -14,7 +28,7 @@
 
 ## Decision
 
-Geliştirme verisi bir **tekrarlanabilir** Flyway betiğiyle (`R__dev_seed_catalog.sql`) gelir ve bu betik yalnızca `dev` profilinde Flyway konumlarına eklenir (`application-dev.yaml` içinde `spring.flyway.locations`). Üretim profilinde dosya hiç görülmez.
+Geliştirme verisi bir **tekrarlanabilir** changeset ile (`db/changelog/002-dev-seed-catalog.sql`) gelir; `contextFilter:dev` ile işaretlidir ve yalnızca aktif bağlamlar arasında `dev` varsa uygulanır. Taban yapılandırma bağlamı `default` olduğu için üretim ve test ortamlarında **uygulanmaz**.
 
 Kurallar:
 
@@ -27,8 +41,8 @@ Kurallar:
 | Alternatif | Neden reddedildi |
 |---|---|
 | Bileşen veya servis içinde sabit kodlanmış örnek dizi | K6 ihlali: mock veri üretim koduna karışır ve silinmesi unutulur. |
-| Sürümlenmiş (`V__`) migration ile seed | Üretim veritabanına da uygulanır; sahte kayıt üretim verisine girer. |
-| Profil kontrolü olmadan `R__` betiği | Aynı sorun: Flyway tüm ortamlarda çalıştırır. |
+| Bağlamsız (her ortamda çalışan) changeset ile seed | Üretim veritabanına da uygulanır; sahte kayıt üretim verisine girer. |
+| Bağlam etiketi koyup çalışma anında bağlam bildirmemek | Sessiz başarısızlık: Liquibase bağlam verilmediğinde etiketli changeset'i de uygular. Bu hata bir kez yapıldı ve testle kapatıldı. |
 | Uygulama açılışında Java tabanlı seed (`ApplicationRunner`) | Veri kurulumu uygulama koduna taşınır ve koşul kontrolü (`@Profile`) unutulduğunda üretime sızar; SQL betiği hem daha okunabilir hem profil ayrımı yapılandırmada. |
 | Testlerin seed verisine dayanması | Testler kendi verisini kurar; paylaşılan seed'e dayanan test, seed değişince kırılır ve neden kırıldığı anlaşılmaz. |
 
@@ -40,8 +54,8 @@ Kurallar:
 - Seed, süzgeç davranışının canlı belgesi: yayınlanmamış kayıtlar bilinçli olarak orada.
 
 ### Olumsuz
-- Seed ile şema birlikte değişmek zorunda: tabloya zorunlu bir kolon eklendiğinde betik de güncellenmeli, yoksa dev ortamı kırılır.
-- Tekrarlanabilir betik her Flyway çalışmasında (checksum değiştiğinde) yeniden koşar; ağır bir seed ileride açılışı yavaşlatabilir.
+- Seed ile şema birlikte değişmek zorunda: tabloya zorunlu bir kolon eklendiğinde changeset de güncellenmeli, yoksa dev ortamı kırılır.
+- `runOnChange:true` taşıyan changeset, dosya her değiştiğinde yeniden koşar; ağır bir seed ileride açılışı yavaşlatabilir.
 
 ### Nötr / Trade-off
 - Testler seed'den bağımsız olduğu için seed yalnızca insan doğrulaması içindir; otomatik testlerde hiçbir güvence sağlamaz.

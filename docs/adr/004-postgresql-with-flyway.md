@@ -1,7 +1,13 @@
 # [ADR-004] PostgreSQL ve şema değişikliği yalnızca Flyway ile
 
 **Tarih:** 2026-10-06
-**Durum:** Accepted
+**Durum:** **Superseded by [ADR-016](016-liquibase-for-schema-migrations.md)** (migration aracı kısmı; 2026-10-06)
+
+> [!WARNING]
+> Bu ADR'nin **PostgreSQL** kararı aynen yürürlüktedir. **Flyway** kararı
+> [ADR-016](016-liquibase-for-schema-migrations.md) ile değiştirilmiştir: şema
+> artık Liquibase ile yönetilir. Aşağıdaki Flyway'e özgü kurallar (dosya adı,
+> `R__` betikleri) geçerli değildir; ADR-016'daki karşılıkları geçerlidir.
 
 ---
 

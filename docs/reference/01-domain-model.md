@@ -1,8 +1,8 @@
 # Domain Modeli ve Veritabanı Şeması
 
-**Son doğrulama:** 2026-10-06 · Kaynak: `api/src/main/resources/db/migration/`
+**Son doğrulama:** 2026-10-06 · Kaynak: `api/src/main/resources/db/changelog/`
 
-> Bu sayfa şemanın **mevcut halini** anlatır, hedefini değil. Şema yalnızca Flyway ile değişir ([ADR-004](../adr/004-postgresql-with-flyway.md)); migration değiştiğinde bu sayfa aynı commit'te güncellenir (`AGENTS.md` K4).
+> Bu sayfa şemanın **mevcut halini** anlatır, hedefini değil. Şema yalnızca Liquibase ile değişir ([ADR-016](../adr/016-liquibase-for-schema-migrations.md)); changeset değiştiğinde bu sayfa aynı commit'te güncellenir (`AGENTS.md` K4).
 
 ---
 

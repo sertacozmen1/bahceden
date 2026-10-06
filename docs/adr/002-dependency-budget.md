@@ -1,4 +1,4 @@
-# [ADR-002] Bağımlılık bütçesi: Spring starters, Flyway, Next.js çekirdeği
+# [ADR-002] Bağımlılık bütçesi: Spring starters, Liquibase, Next.js çekirdeği
 
 **Tarih:** 2026-10-06
 **Durum:** Accepted · bütçe [ADR-009](009-contract-generated-from-spring.md) ile bir kalem genişletildi (2026-10-06)
@@ -12,6 +12,7 @@
 > |---|---|---|
 > | 2026-10-06 | `api/` runtime: `springdoc-openapi-starter-webmvc-api` | [ADR-009](009-contract-generated-from-spring.md) |
 > | 2026-10-06 | `api/` runtime: `spring-boot-starter-oauth2-resource-server` (JWT; Nimbus JOSE dahil) | [ADR-008](008-jwt-auth-with-opaque-refresh.md) §6 |
+> | 2026-10-06 | **Değişim:** `flyway-core` + `flyway-database-postgresql` → `liquibase-core` | [ADR-016](016-liquibase-for-schema-migrations.md) |
 
 ## Context
 
@@ -25,7 +26,7 @@ Aynı zamanda sıfır bağımlılık da gerçekçi değil: kimlik doğrulama, mi
 
 | Katman | İzinli |
 |---|---|
-| `api/` runtime | `spring-boot-starter-web`, `spring-boot-starter-data-jpa`, `spring-boot-starter-validation`, `spring-boot-starter-security`, `postgresql` sürücüsü, `flyway-core` |
+| `api/` runtime | `spring-boot-starter-web`, `spring-boot-starter-data-jpa`, `spring-boot-starter-validation`, `spring-boot-starter-security`, `postgresql` sürücüsü, `liquibase-core` |
 | `api/` test | `spring-boot-starter-test` (JUnit 5 + AssertJ + MockMvc), `spring-security-test`, Testcontainers (PostgreSQL) |
 | `web/` runtime | `next`, `react`, `react-dom` |
 | `web/` dev | `typescript`, `eslint` + `eslint-config-next`, `vitest` + `@testing-library/react`, `@playwright/test`, OpenAPI'den TypeScript tip üreteci |

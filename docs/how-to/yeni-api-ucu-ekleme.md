@@ -24,11 +24,26 @@ Ters yönde çalışmak (önce ekranı yazıp sonra alanı uydurmak) sözleşmed
 
 ### 1. Gerekiyorsa şemayı değiştirin
 
-Yeni bir kolon gerekiyorsa **yeni** bir Flyway migration yazın; uygulanmış migration düzenlenmez ([ADR-004](../adr/004-postgresql-with-flyway.md)):
+Yeni bir kolon gerekiyorsa **yeni** bir Liquibase changeset yazın; uygulanmış changeset düzenlenmez ([ADR-016](../adr/016-liquibase-for-schema-migrations.md)):
 
 ```bash
-# api/src/main/resources/db/migration/V<sıradaki>__<kebab_case>.sql
+# 1) api/src/main/resources/db/changelog/<NNN>-<kebab-case>.sql  (formatted SQL)
+# 2) db.changelog-master.yaml dosyasına include satırı ekleyin
 ```
+
+Changeset başlığı ve geri alma satırları zorunludur:
+
+```sql
+--changeset bahceden:003-add-harvested-on
+--comment: Ürüne hasat tarihi eklenir
+alter table products add column harvested_on date;
+--rollback alter table products drop column harvested_on;
+```
+
+> [!WARNING]
+> Changelog dosyalarındaki **yorumlarda** `changeset` kelimesinin ardından
+> `ad:değer` biçimi kullanmayın: formatted SQL ayrıştırıcısı bunu gerçek bir
+> değişiklik bildirimi sanıp fantom bir kayıt üretir (bu hata bir kez yapıldı).
 
 Entity'yi de aynı commit'te güncelleyin. `ddl-auto: validate` olduğu için uyumsuzluk uygulamayı **açılışta** düşürür; bu bir koruma, engel değil.
 
@@ -131,6 +146,9 @@ Sözleşme güncellenmemişse `OpenApiContractTest` kırmızı olur ve ne yapıl
 - **Hata:** Yeni uç 403 dönüyor
   **Çözüm:** `SecurityConfig` varsayılan deny uygular; ucu açıkça yetkilendirin.
 
+- **Hata:** Dev seed verisi test veya üretim ortamında görünüyor
+  **Çözüm:** `spring.liquibase.contexts` o ortamda tanımlı mı kontrol edin. Liquibase, bağlam verilmezse bağlam etiketli changeset'leri **de** uygular; `contextFilter:dev` tek başına koruma sağlamaz ([ADR-016](../adr/016-liquibase-for-schema-migrations.md)).
+
 - **Hata:** `Schema-validation: wrong column type encountered`
   **Çözüm:** Migration ile entity tipi uyuşmuyor. PostgreSQL `char(n)` tipini `bpchar` olarak raporlar; `varchar(n)` kullanın.
 
@@ -143,5 +161,6 @@ Sözleşme güncellenmemişse `OpenApiContractTest` kırmızı olur ve ne yapıl
 
 - [ADR-009](../adr/009-contract-generated-from-spring.md) — sözleşme Spring kodundan üretilir
 - [ADR-015](../adr/015-contract-freshness-enforced-by-test.md) — tazelik testle zorunlu
+- [ADR-016](../adr/016-liquibase-for-schema-migrations.md) — şema değişiklikleri Liquibase ile
 - [ADR-012](../adr/012-page-size-capped-on-server.md) — sayfalama sınırı
 - [ADR-006](../adr/006-money-as-minor-unit.md) — para temsili

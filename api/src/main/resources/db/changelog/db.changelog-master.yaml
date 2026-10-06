@@ -1,0 +1,16 @@
+# Bahçeden: Liquibase master changelog (ADR-016).
+#
+# Bu dosya YALNIZCA include listesi tutar; SQL içermez. Değişiklikler
+# formatted SQL dosyalarında yaşar, çünkü düz SQL ekibin okuduğu dildir ve
+# PostgreSQL'e özgü ifadeleri (kısmi indeks gibi) doğrudan yazmaya izin verir.
+#
+# Yeni changeset eklerken: NNN-kebab-case.sql dosyası oluştur, numarayı
+# atlamadan sırala ve buraya include satırı ekle.
+
+databaseChangeLog:
+  - include:
+      file: 001-create-catalog.sql
+      relativeToChangelogFile: true
+  - include:
+      file: 002-dev-seed-catalog.sql
+      relativeToChangelogFile: true

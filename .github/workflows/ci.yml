@@ -157,7 +157,9 @@ jobs:
 
       - name: Secret taşıyabilecek dosyalar (K10)
         run: |
-          if git ls-files | grep -nE '(^|/)\.env($|\.)|\.pem$|\.p12$|\.jks$|id_rsa'; then
+          # .env.example bilinçli olarak depodadır ve yalnızca placeholder taşır;
+          # taramadan çıkarılır, geri kalan tüm .env türevleri yakalanır.
+          if git ls-files                | grep -vE '(^|/)\.env\.example$'                | grep -nE '(^|/)\.env($|\.)|\.pem$|\.p12$|\.jks$|id_rsa'; then
             echo "::error::Secret taşıyabilecek dosya depoda (AGENTS.md K10)"
             exit 1
           fi

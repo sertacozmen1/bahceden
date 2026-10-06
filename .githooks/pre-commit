@@ -94,8 +94,13 @@ fi
 
 # ── Her commit: secret taraması (AGENTS.md K10) ──
 # Bu kontrol depo genelindedir: .env veya anahtar dosyası nerede olursa olsun yanlıştır.
-if printf '%s\n' "$STAGED" | grep -nE '(^|/)\.env($|\.)|\.pem$|\.p12$|\.jks$|id_rsa' >/dev/null 2>&1; then
-  printf '%s\n' "$STAGED" | grep -nE '(^|/)\.env($|\.)|\.pem$|\.p12$|\.jks$|id_rsa' >&2
+# .env.example bilinçli olarak depodadır ve yalnızca placeholder taşır: taramadan
+# çıkarılır, geri kalan tüm .env türevleri yakalanır.
+SECRETISH=$(printf '%s\n' "$STAGED" \
+  | grep -vE '(^|/)\.env\.example$' \
+  | grep -E '(^|/)\.env($|\.)|\.pem$|\.p12$|\.jks$|id_rsa' || true)
+if [ -n "$SECRETISH" ]; then
+  printf '%s\n' "$SECRETISH" >&2
   fail "secret taşıyabilecek dosya staged (AGENTS.md K10); .gitignore kontrol edin"
 fi
 

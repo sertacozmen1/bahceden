@@ -1,12 +1,14 @@
 # Geliştirme profili.
 #
-# Tek farkı geliştirme verisidir: dev seed betiği yalnızca bu profilde Flyway
-# konumlarına eklenir (design.md D5). Üretim profilinde çalışmaz, dolayısıyla
-# üretim verisine sahte kayıt girmez.
+# Tek farkı geliştirme verisidir: seed changeset'i `context:dev` ile işaretli
+# ve bu bağlam yalnızca burada etkinleştirilir (ADR-014, ADR-016). Üretim
+# profilinde çalışmaz, dolayısıyla üretim verisine sahte kayıt girmez.
 
 spring:
-  flyway:
-    locations: classpath:db/migration,classpath:db/dev
+  liquibase:
+    # Taban bağlama dev eklenir: şema değişiklikleri (bağlamsız) ve dev seed'i
+    # birlikte uygulanır.
+    contexts: default,dev
 
 logging:
   level:

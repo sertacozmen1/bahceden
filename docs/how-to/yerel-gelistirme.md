@@ -123,5 +123,5 @@ Bugün bu komut çalışmaz: `docker-compose.yml` ve servisler henüz yok.
 
 - [ADR-001](../adr/001-spring-api-and-next-web.md) — iki dağıtılabilir birim (`api/` + `web/`)
 - [ADR-002](../adr/002-dependency-budget.md) — bağımlılık bütçesi: neden ek araç kurulmuyor
-- [ADR-004](../adr/004-postgresql-with-flyway.md) — PostgreSQL ve Flyway
+- [ADR-016](../adr/016-liquibase-for-schema-migrations.md) — PostgreSQL ve Liquibase (ADR-004'ün Flyway kararını superseded eder)
 - [ADR-005](../adr/005-test-strategy.md) — Testcontainers neden Docker gerektiriyor

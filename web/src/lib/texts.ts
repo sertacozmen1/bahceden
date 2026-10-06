@@ -40,6 +40,11 @@ export const texts = {
     retry: "Yeniden dene",
   },
 
+  footer: {
+    copyright: "Bahçeden",
+    note: "Üreticiden doğrudan gönderim",
+  },
+
   notFound: {
     title: "Sayfa bulunamadı",
     body: "Aradığınız sayfa taşınmış veya hiç var olmamış olabilir.",

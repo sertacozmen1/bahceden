@@ -53,7 +53,7 @@
 - [x] 5.6 `docs/features/_genel.md` *Tarihçe*: tek satır (K1).
 - [x] 5.7 `./docs/.tools/serve.sh --build` strict temiz; `mkdocs.yml` nav tam.
 - [x] 5.8 D1–D6 kararları için ADR'ler yazılır (`docs/adr/010…`) ve `adr/index.md` güncellenir — **archive ön koşulu** (`AGENTS.md` §5.3).
-- [ ] 5.9 Delta spec ana spec'e sync edilir. **AÇIK:** `openspec` CLI kurulu değil; sync elle yapılacak (delta spec hazır).
+- [x] 5.9 Delta spec ana spec'e sync edildi: `openspec/specs/storefront-catalog/spec.md`. `openspec` CLI kurulu olmadığı için elle yapıldı (artefakt yapısı `AGENTS.md` §5.2'ye uygun).
 - [ ] 5.10 CI'ın `api` ve `web` job'ları gerçekten koşarak yeşil. **AÇIK:** push sonrası sonuç beklenecek.
 - [ ] 5.11 Rapor `AGENTS.md` §14 formatında; insan review'una sunulur. Archive **kullanıcı onayı** ister (§9).
 
@@ -80,4 +80,6 @@ Artefakt ile kod ayrışmasın diye buraya yazıldı (`AGENTS.md` §5.3.2):
 | S6 | `flyway-database-postgresql` | Flyway 10+ veritabanı desteğini modüllere böldü; `flyway-core`'un zorunlu eşlikçisi, yeni yetenek değil |
 | S7 | Hata gövdesinde alan adı | `@Validated` sınıf seviyesinde kullanılınca alan adı `list.page` olarak sızıyordu (metot adı). Kaldırıldı; Spring 6.1 yerleşik parametre doğrulaması `page` veriyor |
 | S8 | `ConstraintViolationException` işleyicisi | S7 sonrası hiçbir yoldan tetiklenmediği için silindi (ölü kod, K6) |
+| S10 | **Migration aracı** | Uygulama sırasında proje sahibi Liquibase istedi; ADR-004 (Flyway) **superseded** edildi ve [ADR-016](../../../docs/adr/016-liquibase-for-schema-migrations.md) yazıldı. `V1`/`R__` dosyaları formatted SQL changelog'lara taşındı, bütçede `flyway-core` + `flyway-database-postgresql` → `liquibase-core`. İki Liquibase tuzağı gerçek hataya dönüştü ve düzeltildi: yorumdaki `changeset ... context:dev` ifadesi fantom changeset üretti; `contextFilter` etiketi bağlam bildirilmediği için filtrelemedi (dev seed testte çalıştı). İkincisi `DevSeedIsolationTest` ile sabitlendi |
+| S11 | Next.js kabuğu | Proje sahibinin isteğiyle `AppShell` (üst başlık + alt bilgi) eklendi; gezinme menüsü ve arama çubuğu bilinçli olarak **yok** (arkasında ekran yok, boş menü çıkmaz sokak demek) |
 | S9 | Sözleşme kalitesi | springdoc varsayılanları zayıf spec üretti (başlık `OpenAPI definition`, etiket `product-controller`, içerik tipi `*/*`, tüm alanlar optional). `@OpenAPIDefinition`, `@Tag`, `produces` ve `requiredMode = REQUIRED` ile düzeltildi |

@@ -37,4 +37,4 @@ Alıcı, giriş yapmadan vitrine girer ve üreticilerin yayınladığı ürünle
 
 ## Tarihçe
 
-- 2026-10-06: İlk sürüm. Yürüyen iskelet olarak vitrin ürün listesi uçtan uca kuruldu: `docker-compose` (db, api, web, mailpit), Spring Boot 3.5.16 `api` (Flyway `V1` katalog şeması, `catalog` domaini, `GET /api/v1/products`, ortak sayfalama ve hata gövdesi, üretilen OpenAPI sözleşmesi + tazelik testi), Next.js 16 `web` (vitrin listesi, dört durum, tasarım token'ları, tek HTTP katmanı). 18 `api` testi ve 6 `web` testi yeşil; D1–D6 kararları ADR-010…015 olarak yazıldı (`add-storefront-product-listing`).
+- 2026-10-06: İlk sürüm. Yürüyen iskelet olarak vitrin ürün listesi uçtan uca kuruldu: `docker-compose` (db, api, web, mailpit), Spring Boot 3.5.16 `api` (Liquibase `001` katalog changeset'i, `catalog` domaini, `GET /api/v1/products`, ortak sayfalama ve hata gövdesi, üretilen OpenAPI sözleşmesi + tazelik testi), Next.js 16 `web` (vitrin listesi, dört durum, tasarım token'ları, tek HTTP katmanı). 18 `api` testi ve 6 `web` testi yeşil; D1–D6 kararları ADR-010…015 olarak yazıldı (`add-storefront-product-listing`).

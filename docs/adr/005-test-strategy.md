@@ -16,7 +16,7 @@ Aynı zamanda test paketi hızlı kalmalı; her commit'te dakikalar süren bir p
 **`api/` tarafı:**
 
 - JUnit 5 + AssertJ; web katmanı `MockMvc`; güvenlik testleri `spring-security-test`.
-- Repository ve akış testleri **Testcontainers PostgreSQL** ile gerçek veritabanına karşı koşar. H2 kullanılmaz ([ADR-004](004-postgresql-with-flyway.md)).
+- Repository ve akış testleri **Testcontainers PostgreSQL** ile gerçek veritabanına karşı koşar. H2 kullanılmaz ([ADR-004](004-postgresql-with-flyway.md), [ADR-016](016-liquibase-for-schema-migrations.md)).
 - Etiketler: **`critical`** (para, stok, sipariş durumu, yetkilendirme, sözleşme uyumu — hızlı, her zaman koşar) ve **`integration`** (veritabanı ve dış sınır).
 - **Yeni iş kuralı = `critical` etiketli test.** Para, stok, sipariş durumu ve yetkilendirme her zaman bu kapsamdadır.
 - Her yeni endpoint için asgari dört test: mutlu yol, doğrulama hatası, kimliksiz erişim (401), **başkasının kaydına erişim** (404/403) ([ADR-007](007-query-level-ownership-scoping.md)).

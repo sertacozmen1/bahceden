@@ -59,15 +59,11 @@
       <artifactId>springdoc-openapi-starter-webmvc-api</artifactId>
       <version>${springdoc.version}</version>
     </dependency>
+    <!-- Şema değişiklikleri Liquibase ile yönetilir (ADR-016; ADR-004'ün
+         Flyway kararını superseded eder). Changelog'lar formatted SQL. -->
     <dependency>
-      <groupId>org.flywaydb</groupId>
-      <artifactId>flyway-core</artifactId>
-    </dependency>
-    <!-- Flyway 10+ veritabanı desteğini modüllere böldü: PostgreSQL için
-         zorunlu eşlikçi, yeni bir yetenek değil (ADR-004). -->
-    <dependency>
-      <groupId>org.flywaydb</groupId>
-      <artifactId>flyway-database-postgresql</artifactId>
+      <groupId>org.liquibase</groupId>
+      <artifactId>liquibase-core</artifactId>
     </dependency>
     <dependency>
       <groupId>org.postgresql</groupId>

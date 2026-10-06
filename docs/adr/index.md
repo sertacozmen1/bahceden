@@ -21,9 +21,9 @@ Architecture Decision Records, projedeki önemli mimari kararları ve bu kararla
 | # | Başlık | Durum | Tarih |
 |---|--------|-------|-------|
 | 001 | [İki dağıtılabilir birim: Spring Boot REST API + Next.js web](001-spring-api-and-next-web.md) | Accepted | 2026-10-06 |
-| 002 | [Bağımlılık bütçesi: Spring starters, Flyway, Next.js çekirdeği](002-dependency-budget.md) | Accepted | 2026-10-06 |
+| 002 | [Bağımlılık bütçesi: Spring starters, Liquibase, Next.js çekirdeği](002-dependency-budget.md) | Accepted | 2026-10-06 |
 | 003 | [`api/` ile `web/` arasındaki tek sözleşme OpenAPI dosyasıdır](003-openapi-as-single-contract.md) | Accepted | 2026-10-06 |
-| 004 | [PostgreSQL ve şema değişikliği yalnızca Flyway ile](004-postgresql-with-flyway.md) | Accepted | 2026-10-06 |
+| 004 | [PostgreSQL ve şema değişikliği yalnızca Flyway ile](004-postgresql-with-flyway.md) | Superseded by [016](016-liquibase-for-schema-migrations.md) | 2026-10-06 |
 | 005 | [Test stratejisi: Testcontainers, `critical` etiketi, sınırlı tarayıcı testi](005-test-strategy.md) | Accepted | 2026-10-06 |
 | 006 | [Para minor unit tamsayı olarak taşınır; hesap sunucuda](006-money-as-minor-unit.md) | Accepted | 2026-10-06 |
 | 007 | [Satıcı veri izolasyonu sorgu seviyesinde; varsayılan deny](007-query-level-ownership-scoping.md) | Accepted | 2026-10-06 |
@@ -35,8 +35,9 @@ Architecture Decision Records, projedeki önemli mimari kararları ve bu kararla
 | 013 | [`sellers` tablosu onboarding kararından önce minimum doğar](013-minimal-seller-table-ahead-of-onboarding.md) | Accepted | 2026-10-06 |
 | 014 | [Geliştirme verisi dev profilli tekrarlanabilir migration ile](014-dev-seed-via-profiled-repeatable-migration.md) | Accepted | 2026-10-06 |
 | 015 | [Sözleşme tazeliği testle zorunlu; dosya testten üretilir](015-contract-freshness-enforced-by-test.md) | Accepted | 2026-10-06 |
+| 016 | [Şema değişiklikleri Liquibase ile yönetilir](016-liquibase-for-schema-migrations.md) | Accepted | 2026-10-06 |
 
-**Sıradaki numara: 016.**
+**Sıradaki numara: 017.**
 
 **Durum değerleri:** `Proposed` (öneri, henüz bağlayıcı değil) · `Accepted` (yürürlükte, bağlayıcı) · `Deprecated` (artık geçerli değil, yerine bir şey gelmedi) · `Superseded by [ADR-XXX]` (yerini başka bir karara bıraktı).
 
