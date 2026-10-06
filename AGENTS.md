@@ -6,19 +6,20 @@
 
 ## 0. Bu Dosyanın Durumu (2026-10-06)
 
-Bu anayasa **kod yazılmadan önce** yazıldı; depo bugün boş. Dolayısıyla:
+Bu anayasa **kod yazılmadan önce** yazıldı. Kural, doküman ve planlama apparatus'u **kuruldu**; uygulama kodu (`api/`, `web/`, `shared/contracts/`) **henüz yok.** Dolayısıyla:
 
-- Aşağıda **"Hedef"** olarak işaretlenen yapı, komut ve betikler henüz **kurulmadı**; ilk dikey dilimde (K5) kurulur.
+- Doğrulanmış güncel durum tek yerdedir: [`docs/reference/00-current-state.md`](docs/reference/00-current-state.md). Bu dosyadaki "Hedef" işaretleri oradan teyit edilir.
+- Aşağıda **"Hedef"** olarak işaretlenen yapı, komut ve betikler henüz kurulmadı; ilk dikey dilimde (K5) kurulur.
 - Hiçbir kural "henüz kurulmadı" diye gevşemez: bir şey kurulmadıysa o işi yapan dilim onu kurmakla yükümlüdür.
-- Asistan bu dosyada yazılı bir dosyaya (`docs/adr/index.md`, `openspec/specs/…`) atıf görüp dosyayı bulamazsa **uydurmaz**: ya o dilimin parçası olarak K1'e uygun şekilde oluşturur, ya da eksik olduğunu raporlar (§14).
-- §15'teki **Açık Kararlar** listesi karara bağlanmadan ilgili alanda kod yazılmaz.
+- Asistan bu dosyada yazılı bir dosyaya atıf görüp dosyayı bulamazsa **uydurmaz**: ya o dilimin parçası olarak K1'e uygun şekilde oluşturur, ya da eksik olduğunu raporlar (§14).
+- **Karar bekleyen konular ilgili alanda kod yazılmasını bloke eder.** Tam liste tek yerdedir: [`openspec/KALANLAR.md`](openspec/KALANLAR.md) (§15 bu listeye işaret eder, kopyasını tutmaz).
 
 ## 1. Proje Kimliği
 
 - **Ürün:** Bahçeden, meyve-sebze üreticisini son tüketiciyle **doğrudan** buluşturan çok satıcılı pazaryeri. Manisa'daki bir üretici, bir hırdavatçının Hepsiburada'ya kaydolduğu kolaylıkla kaydolur, ürününü listeler ve **kargo ile** gönderir. Hal, komisyoncu ve aradaki fiyat katmanları zincirden çıkar.
 - **Felsefe:** **Contract-First.** Sistemin dış davranışı tek bir API sözleşmesiyle (`shared/contracts/openapi.yaml`) belirlenir; `web/` bu sözleşmeden türetilen tiplerle konuşur, sözleşmeyi tahmin etmez. Veritabanı ve iş kuralları tek otorite olan `api/`'de yaşar.
 - **Çok satıcılı ve kişisel veri taşıyan bir sistemdir.** Her sorgu satıcı/kullanıcı kapsamında yetkilendirilir (§11.6); kişisel veri (ad, adres, telefon, IBAN, kargo takip) KVKK kapsamındadır ve K10 ile korunur. Bu, tek tenant bir panelden **temel farktır**: "tüm kayıtları getir" tipi bir sorgu güvenlik açığıdır.
-- **Durum:** Doğrulanmış güncel durum ve bilinen sınırlamalar **tek yerde** tutulur: `docs/reference/00-current-state.md` (Hedef: ilk dilimde oluşturulur). Sunum, araştırma notu ve yol haritası belgelerindeki ifadeler production gerçeği sayılmaz; şüphede kod ve o dosya esastır.
+- **Durum:** Doğrulanmış güncel durum ve bilinen sınırlamalar **tek yerde** tutulur: [`docs/reference/00-current-state.md`](docs/reference/00-current-state.md). Sunum, araştırma notu ve yol haritası belgelerindeki ifadeler production gerçeği sayılmaz; şüphede kod ve o dosya esastır.
 - **Dokümantasyon:** Diátaxis (`docs/`): `product/`, `research/`, `adr/`, `reference/`, `how-to/`, `tutorials/`, `explanation/`, `features/`.
 - **Dil:** Dokümanlar, kod yorumları, Javadoc/JSDoc, doğrulama mesajları, kullanıcı metinleri **Türkçe** (kaynak dil `tr`). Kod tanımlayıcıları (paket, sınıf, metot, değişken, bileşen, dosya adı, CSS sınıfı), API alanları, DB tablo/kolon adları, enum değerleri **İngilizce**; JSON alanları `camelCase`, DB `snake_case`, ortam değişkenleri `SCREAMING_SNAKE_CASE`. Commit mesajları **İngilizce** (§13).
 
@@ -29,11 +30,12 @@ Bu anayasa **kod yazılmadan önce** yazıldı; depo bugün boş. Dolayısıyla:
 | `api/` | Spring Boot 3 (Java 21, Maven) REST API: domain modeli, iş kuralları, persistence (JPA + Flyway), kimlik doğrulama/yetkilendirme, sipariş & kargo akışı, bildirimler. **Tek yazma otoritesi.** | Hedef |
 | `web/` | Next.js (App Router, TypeScript) — alıcı vitrini **ve** satıcı paneli. Yalnızca HTTP ile `api/`'ye konuşur. | Hedef |
 | `shared/` | Sözleşmeler: `contracts/openapi.yaml` (commit'lenir, tek doğruluk kaynağı). Üretilen TS tipleri (`shared/generated/`) ve `.env` türevleri **gitignore'dadır.** | Hedef |
-| `docs/` | Diátaxis dokümantasyonu + `adr/` (mimari kararlar) + `features/` (iş kayıtları: ne yapar, ne zaman ne değişti). | Hedef |
-| `openspec/` | Spec-driven change **çalışma alanı**: `specs/` (geçerli davranış), `changes/` (açık planlar), `changes/archive/`, `KALANLAR.md` (ekip kararı bekleyenler). **Kalıcı araçtır.** | Hedef |
+| `docs/` | Diátaxis dokümantasyonu + [`adr/`](docs/adr/index.md) (mimari kararlar) + [`features/`](docs/features/index.md) (iş kayıtları: ne yapar, ne zaman ne değişti) + `.tools/` (MkDocs portalı). | ✅ Kurulu |
+| `openspec/` | Spec-driven change **çalışma alanı**: `specs/` (geçerli davranış), `changes/` (açık planlar), `changes/archive/`, [`KALANLAR.md`](openspec/KALANLAR.md) (ekip kararı bekleyenler). **Kalıcı araçtır.** | ✅ Kurulu (`specs/` boş: henüz change yok) |
+| `.claude/` | `/opsx:*` komutları (`commands/opsx/`) ve openspec skill'leri (`skills/`). Karar ve konvansiyonların tek kaynağı bu dosya ve `docs/adr/`'dir; branch notu tutulmaz. | ✅ Kurulu |
+| `.githooks/pre-commit` | Değişen katmanın doğrulamasını commit öncesi koşar + K6/K10 taraması (`git config core.hooksPath .githooks`). | ✅ Kurulu |
+| `.github/workflows/ci.yml` | CI: `api` testleri, `web` lint + typecheck + test + build, `docs` strict derleme, K6/K10 kural denetimi. | ✅ Kurulu (henüz koşmadı) |
 | `docker-compose.yml` | Geliştirme ortamı: `db` (PostgreSQL 17), `api`, `web`, `mailpit` (e-posta yakalama). | Hedef |
-| `.github/workflows/` | CI: `api` testleri, `web` lint + test + build, sözleşme ↔ doküman senkron kontrolü. | Hedef |
-| `.githooks/pre-commit` | Değişen katmanın testlerini commit öncesi koşar (`git config core.hooksPath .githooks`). | Hedef |
 
 **Yeni üst seviye dizin açmak mimari karardır** (ADR + kullanıcı onayı). "Ortak kod" için üçüncü bir modül (`common/`, `core-lib/`) açmak §3'ü ihlal eder; paylaşılan tek şey sözleşmedir.
 
@@ -113,7 +115,7 @@ Sözleşme ve veri modeli her değiştiğinde üretilmiş çıktılar **yeniden 
 - Flyway migration'ları → `docs/reference/` ER diyagramı (kaynak: migration'lar, elle çizilen şema değil).
 
 > [!NOTE]
-> Üreteç betikleri ve CI kontrolü **ilk dilimde kurulur** (§15 / Açık Karar 6). Kurulana kadar `docs/reference/` içindeki API ve ER sayfaları aynı commit'te **elle** güncellenir; üreteç kurulduktan sonra bu dosyaların üretilen bölümlerini elle düzenlemek K8 ihlalidir.
+> Üreteç betikleri **ilk dilimde kurulur** ve biçimi [KALANLAR B2](openspec/KALANLAR.md) kararına bağlıdır. Kurulana kadar `docs/reference/` içindeki API ve ER sayfaları aynı commit'te **elle** güncellenir; üreteç kurulduktan sonra bu dosyaların üretilen bölümlerini elle düzenlemek K8 ihlalidir. Dokümantasyon portalının strict derlemesi CI'da zorunludur (`.github/workflows/ci.yml` → `docs`).
 
 ### K5: Dikey Dilim (Vertical Slice)
 
@@ -127,7 +129,7 @@ Bir dilimi bitiremiyorsan durur ve **açıkça raporlarsın**: ne bitti, ne bitm
 
 ### K7: Bağımlılık (Dependency) Kararları
 
-Bağımlılık bütçesi bir ADR'dir. **Başlangıç bütçesi** (ilk dilimde ADR ile onaylanır):
+Bağımlılık bütçesi bir ADR'dir: [ADR-002](docs/adr/002-dependency-budget.md) (Accepted). Bütçe:
 
 | Katman | İzinli | Not |
 |---|---|---|
@@ -280,6 +282,22 @@ npm --prefix web run test:e2e           # Playwright (ortam ayakta olmalı)
 npm --prefix web run gen:api            # openapi.yaml → shared/generated (K8: çıktı elle düzenlenmez)
 ```
 
+Bugün çalışan komutlar (apparatus kurulu, kod yok):
+
+```bash
+# Dokümantasyon (her doküman değişikliğinde strict derleme)
+./docs/.tools/serve.sh                  # portal http://localhost:8888
+./docs/.tools/serve.sh --build          # strict derleme; CI'daki docs job ile aynı kontrol
+
+# Git hook'u (klon başına bir kez)
+git config core.hooksPath .githooks
+
+# OpenSpec (CLI; /opsx:* komutları bunları çağırır — CLI henüz kurulu değil)
+openspec list --json                    # açık change'ler
+openspec status --change "<ad>" --json  # artefakt / görev durumu
+openspec validate --specs               # ana spec'ler geçerli mi
+```
+
 ## 8. Definition of Done
 
 - [ ] Doküman yazıldı; ADR'ler `docs/adr/` + `index.md`; gerekiyorsa how-to + `how-to/index.md` (K1).
@@ -337,7 +355,7 @@ Kullanıcıya sormadan yapma:
 - Java 21: `record` (DTO ve değer nesneleri), sealed hiyerarşiler (durum/sonuç tipleri), `switch` pattern matching, `Optional` (alan olarak değil, dönüş tipinde).
 - Constructor injection (`final` alanlar); `@Autowired` ile alan/field injection **yasaktır**.
 - `null` yerine `Optional` / boş koleksiyon; koleksiyonlar dışa dönerken değiştirilemez (`List.copyOf`).
-- Para: minor unit `long` (kuruş) + açık `Currency`; yuvarlama tek bir yardımcıda ve `critical` testle sabit. `double` ile para hesabı **yasaktır**.
+- Para: minor unit `long` (kuruş) + açık `Currency` ([ADR-006](docs/adr/006-money-as-minor-unit.md)); yuvarlama tek bir yardımcıda ve `critical` testle sabit. `double` ile para hesabı **yasaktır**.
 - Zaman: UTC `Instant` ile saklanır; "şimdi" doğrudan `Instant.now()` ile değil, enjekte edilen `Clock` ile alınır (test edilebilirlik). Kullanıcıya gösterim zaman dilimi `web`'in işidir.
 - Ayarlar yalnızca `@ConfigurationProperties` ile tip güvenli okunur; dağınık `@Value` ve kodda sabit host/secret **yasaktır** (K10). Her yeni değişken `api/.env.example`'a açıklamasıyla eklenir ve açılışta doğrulanır (`@Validated`).
 - Logger `org.slf4j.Logger`; `System.out.println` **yasak**. Kişisel veri maskeli loglanır (K10). Beklenen iş hatası `WARN`/`INFO`, beklenmeyen `ERROR` + stack trace.
@@ -346,7 +364,7 @@ Kullanıcıya sormadan yapma:
 
 ### 11.4 Persistence ve migration
 
-- Şema **yalnızca** Flyway ile değişir: `api/src/main/resources/db/migration/V<n>__<kebab_case>.sql`. `ddl-auto` her ortamda `validate`; `update` / `create-drop` **yasaktır**.
+- Şema **yalnızca** Flyway ile değişir ([ADR-004](docs/adr/004-postgresql-with-flyway.md)): `api/src/main/resources/db/migration/V<n>__<kebab_case>.sql`. `ddl-auto` her ortamda `validate`; `update` / `create-drop` **yasaktır**.
 - Uygulanmış migration düzenlenmez veya yeniden adlandırılmaz (K8); düzeltme yeni migration'dır. Veri migration'ları idempotent ve geri alma planı dokümanlıdır.
 - Entity: `@Id` `BIGSERIAL`; iş anahtarları (sipariş numarası gibi) ayrı ve indeksli; her tabloda `created_at` / `updated_at`. Tablo ve kolon adları `snake_case`, tablo adı çoğul.
 - Silme davranışı **bilinçli seçilir ve ADR'ye bağlanır**: sipariş ve gönderim kayıtları **silinmez** (yasal kayıt; iptal/iade bir durum geçişidir); satıcı veya ürün kaldırıldığında geçmiş siparişler korunur (soft delete / arşiv alanı). `CascadeType.REMOVE` ve `orphanRemoval` yalnızca gerçek sahiplik ilişkisinde.
@@ -368,15 +386,15 @@ Kullanıcıya sormadan yapma:
 ### 11.6 Güvenlik ve yetkilendirme (çok satıcılı sistem)
 
 - Roller: `ROLE_CUSTOMER`, `ROLE_SELLER`, `ROLE_ADMIN`. Varsayılan **deny**: her endpoint açıkça yetkilendirilir; herkese açık uçlar (vitrin, ürün detayı, kayıt, giriş) açıkça işaretlenir.
-- **Sahiplik kontrolü zorunludur ve sorgu seviyesindedir:** satıcı yalnızca kendi ürün / sipariş / gönderimini görür ve değiştirir. Bu kontrol `findById` sonrası `if` ile değil, **repository sorgusunda** (`findByIdAndSellerId`) yapılır; her sahiplik kuralının `critical` testi vardır (başkasının kaydına erişim → 404).
-- Kimlik doğrulama mekanizması §15 / Açık Karar 1 ile sabitlenir; karar verilmeden iki ayrı kimlik yolu yazılmaz.
+- **Sahiplik kontrolü zorunludur ve sorgu seviyesindedir** ([ADR-007](docs/adr/007-query-level-ownership-scoping.md)): satıcı yalnızca kendi ürün / sipariş / gönderimini görür ve değiştirir. Bu kontrol `findById` sonrası `if` ile değil, **repository sorgusunda** (`findByIdAndSellerId`) yapılır; her sahiplik kuralının `critical` testi vardır (başkasının kaydına erişim → 404).
+- Kimlik doğrulama mekanizması [KALANLAR B1](openspec/KALANLAR.md) ile sabitlenir; karar verilmeden iki ayrı kimlik yolu yazılmaz.
 - Parolalar yalnızca güçlü bir hash ile (BCrypt / Argon2) saklanır; şifre sıfırlama token'ları tek kullanımlık, kısa ömürlü ve hash'li saklanır. Giriş, kayıt ve sıfırlama uçları hız sınırlıdır.
 - Dosya yükleme (ürün fotoğrafı): tip ve boyut sunucuda doğrulanır, dosya adı yeniden üretilir, içerik uygulama kökünden servis edilmez.
 - CORS yalnızca bilinen `web` kaynağına açılır (ortam değişkeni); `*` **yasaktır**. Çerez tabanlı oturum kullanılıyorsa `HttpOnly`, `Secure`, `SameSite` ayarlanır ve CSRF korunur.
 
 ### 11.7 Test (api)
 
-- Araç: JUnit 5 + AssertJ, `@SpringBootTest` / `MockMvc`, repository testleri **Testcontainers PostgreSQL** ile (H2 ile sapma kabul edilmez).
+- Araç ([ADR-005](docs/adr/005-test-strategy.md)): JUnit 5 + AssertJ, `@SpringBootTest` / `MockMvc`, repository testleri **Testcontainers PostgreSQL** ile (H2 ile sapma kabul edilmez).
 - Etiketler: `critical` (para, stok, sipariş durumu, yetkilendirme, sözleşme — hızlı ve her zaman koşar), `integration` (DB / dış sınır). Yeni iş kuralı **mutlaka** `critical`.
 - Test adı cümle gibi (`satici_baskasinin_siparisini_goremez`); `@DisplayName` senaryonun spec/ADR karşılığını söyler. Ortak kurulum için küçük fabrikalar (`aSeller()`, `anOrder()`); sabit `Clock`.
 - Testler **dış dünyaya çıkmaz**: e-posta mailpit/bellek, ödeme ve kargo `fake` / sandbox sağlayıcı. Gerçek SMTP / ödeme / kargo'ya giden test **yasaktır** (K10).
@@ -410,7 +428,7 @@ Kullanıcıya sormadan yapma:
 - Stil yöntemi: CSS Modules + global token dosyası (renk, aralık, tipografi, yarıçap, gölge CSS değişkenleri). CSS framework'ü, UI kütüphanesi, ikon seti ve CDN **ADR gerektirir** (K7); ihtiyaç mimari kararı yeniden değerlendirme tetikleyicisidir, `npm install` değil.
 - Mobil önce; tek ek kırılım (`min-width: 1024px`). Satıcılar sahada telefonla çalışır: satıcı paneli mobilde eksiksiz çalışır, "masaüstünde kullanın" uyarısı kabul edilmez.
 - `[hidden] { display: none !important }` globaldir; görünürlük `hidden` / koşullu render ile sağlanır. Inline `style` ve `onclick` yasak; JS'in belirlediği düzen değerleri CSS özel özelliği olarak geçirilir.
-- Kullanıcıya görünen metinler tek bir metin modülünden gelir (Türkçe, kaynak dil); bileşen içine serpiştirilmiş hardcode metin **yasaktır**. Çoklu dil bugün kapsam dışıdır (§15 / Açık Karar 5); metinlerin tek yerde olması bu kapıyı açık tutar.
+- Kullanıcıya görünen metinler tek bir metin modülünden gelir (Türkçe, kaynak dil); bileşen içine serpiştirilmiş hardcode metin **yasaktır**. Çoklu dil bugün kapsam dışıdır ([KALANLAR A4](openspec/KALANLAR.md)); metinlerin tek yerde olması bu kapıyı açık tutar.
 - Erişilebilirlik: her input etiketli; akış klavyeyle tamamlanır; odak görünür; renk tek başına anlam taşımaz; kontrast WCAG AA. 375 ve 1440 px'de doğrulanır.
 - Görseller `next/image` ile, boyut ve `alt` zorunlu; ürün fotoğraflarında `alt` ürün adından türetilir.
 
@@ -443,18 +461,27 @@ Her ekranın dört durumu vardır ve tasarlanır: **yükleniyor** (iskelet) · *
 7. Onay bekleyen kararlar; `KALANLAR.md`'ye eklenen açık sorular.
 8. Bitmeyen işler ve kaldığın nokta (K6).
 
-## 15. Açık Kararlar (ilk dilimden önce karara bağlanır)
+## 15. Açık Kararlar
 
-Bu konular **karar bekliyor**; ilgili alanda kod yazılmadan önce kullanıcıya sorulur, karar ADR olur ve bu listeden düşer. Karar verilmeden iki alternatifi birlikte uygulamak (iki kimlik yolu, iki ödeme akışı) **yasaktır**.
+**Tek liste: [`openspec/KALANLAR.md`](openspec/KALANLAR.md).** Bu bölüm o listenin kopyasını tutmaz; iki yerde tutulan liste iki farklı gerçeğe dönüşür.
 
-| # | Konu | Neden şimdi karar gerekiyor |
+Kural: bir madde karara bağlanmadan ilgili alanda **kod yazılmaz**; karar verilmeden iki alternatifi birlikte uygulamak (iki kimlik yolu, iki ödeme akışı) **yasaktır**. Karara bağlanan madde `docs/adr/` altına ADR olur, `KALANLAR.md`'den silinir ve `docs/features/_genel.md` *Tarihçe*'sine satır düşer.
+
+Bugün bloke eden maddeler (özet; gerekçeler KALANLAR dosyasında):
+
+| Kod | Konu | Neyi blokluyor |
 |---|---|---|
-| 1 | **Kimlik doğrulama modeli:** `HttpOnly` oturum çerezi mi, JWT mi; satıcı ve alıcı aynı hesap tablosunda mı; e-posta doğrulaması zorunlu mu | Tüm endpoint'lerin yetkilendirmesi ve `web` oturum akışı buna bağlı |
-| 2 | **Ödeme:** sanal POS / ödeme sağlayıcısı seçimi, pazaryeri alt üye işyeri (payout) modeli, komisyon oranı ve iade kuralı | Sipariş akışının durum makinesi ve para alanları buna bağlı; ticari karar |
-| 3 | **Kargo:** anlaşmalı firma(lar), entegrasyon (API mi, barkod/manuel mi), kargo ücretini kim öder, bozulabilir ürün için teslim süresi taahhüdü | Gönderim modeli ve satıcı akışı buna bağlı; ticari karar |
-| 4 | **Satıcı onboarding:** üretici doğrulaması (vergi / çiftçi belgesi), onayı kim verir, ürün ilanı ön onaydan geçer mi | Satıcı ve ürün durum makineleri buna bağlı; yasal etki |
-| 5 | **Kapsam:** bölge / teslimat alanı sınırı, çoklu dil, mobil uygulama — MVP'de var mı yok mu | §3 "over-engineering yapılmaz" ilkesinin sınırını çizer |
-| 6 | **Araç zinciri:** sözleşme kaynağı (elle yazılan `openapi.yaml` mı, Spring'den üretilen mi), formatter / linter seçimi, CI iş akışları, dokümantasyon portalı kurulacak mı | K4 ve §7 komutları buna bağlı |
+| B1 | Kimlik doğrulama modeli (oturum çerezi / JWT, hesap tablosu, e-posta doğrulama) | Tüm endpoint yetkilendirmesi, `web` oturum akışı — **ilk dilim** |
+| B2 | Sözleşme kaynağı: `openapi.yaml` elle mi yazılır, Spring'den mi üretilir | K2/K4 üreteçleri, §7 komutları — **ilk dilim** |
+| A1 | Ödeme sağlayıcısı, payout modeli, komisyon ve iade kuralı | `order` durum makinesi, `payment` domaini |
+| A2 | Kargo firması, entegrasyon biçimi, ücret sahipliği | `shipping` domaini, satıcı akışı |
+| A3 | Satıcı doğrulaması ve ilan ön onayı | `seller` / `catalog` durum makineleri, yasal sorumluluk |
+| A4 | MVP kapsamı: bölge sınırı, çoklu dil, mobil | §3 over-engineering sınırı, adres ve metin modeli |
+| B3 | Ürün fotoğrafı depolama | `catalog`, K7 bütçesi |
+| B4 | Bildirim kanalları (e-posta / SMS) | `notification`, K7 bütçesi |
+| B5 | Üretim barındırma ve yedekleme | CI/CD, üretim compose varyantı |
+
+**Karara bağlananlar:** [ADR-001](docs/adr/001-spring-api-and-next-web.md) (iki birim) · [ADR-002](docs/adr/002-dependency-budget.md) (bağımlılık bütçesi) · [ADR-003](docs/adr/003-openapi-as-single-contract.md) (tek sözleşme) · [ADR-004](docs/adr/004-postgresql-with-flyway.md) (PostgreSQL + Flyway) · [ADR-005](docs/adr/005-test-strategy.md) (test stratejisi) · [ADR-006](docs/adr/006-money-as-minor-unit.md) (para temsili) · [ADR-007](docs/adr/007-query-level-ownership-scoping.md) (satıcı izolasyonu).
 
 > [!NOTE]
 > Bu dosya değiştiğinde `docs/features/_genel.md` *Tarihçe*'sine bir satır düşer (K1).

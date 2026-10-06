@@ -1,0 +1,99 @@
+#!/usr/bin/env sh
+# Pre-commit: commit'lenen değişikliğin katmanına göre doğrulama koşar.
+#
+# Kurulum (klon başına bir kez):  git config core.hooksPath .githooks
+# Atlamak için:                   git commit --no-verify
+#
+# Ne koşar:
+#   - api/ değiştiyse   → ./mvnw -B -q test   (yoksa atlanır)
+#   - web/ değiştiyse   → npm run lint, npm run typecheck, npm test (script varsa)
+#   - shared/ değiştiyse → sözleşme ile üretilen tiplerin tazeliği (gen:api) ve api testleri
+#   - docs/ değiştiyse  → mkdocs build --strict (venv kuruluysa)
+#
+# Tasarım notu: hook, var olmayan komutu zorlamaz. Depo bugün kod içermiyor
+# (docs/reference/00-current-state.md); ilgili dizin ve script geldiğinde
+# kontrol kendiliğinden devreye girer. Sessizce geçmesi değil, "yok" demesi esastır.
+
+set -eu
+
+ROOT=$(git rev-parse --show-toplevel)
+cd "$ROOT"
+
+STAGED=$(git diff --cached --name-only --diff-filter=ACMR || true)
+[ -z "$STAGED" ] && exit 0
+
+touched() { printf '%s\n' "$STAGED" | grep -q "^$1"; }
+
+api=0; web=0; shared=0; docs=0
+touched "api/"    && api=1
+touched "web/"    && web=1
+touched "shared/" && shared=1
+touched "docs/"   && docs=1
+
+# shared/ sözleşmesi değiştiyse api testleri de koşar: sözleşme testleri orada.
+[ "$shared" = 1 ] && api=1
+
+fail() { echo "pre-commit: $1" >&2; exit 1; }
+
+# ── api/ ────────────────────────────────────────────────
+if [ "$api" = 1 ]; then
+  if [ -x api/mvnw ]; then
+    echo "pre-commit: api testleri (./mvnw -B -q test)"
+    (cd api && ./mvnw -B -q test) || fail "api testleri başarısız"
+  elif [ -f api/pom.xml ]; then
+    fail "api/mvnw yok. Wrapper üretin (mvn wrapper:wrapper) veya --no-verify kullanın"
+  else
+    echo "pre-commit: api/ kodu yok, test atlandı"
+  fi
+fi
+
+# ── web/ ────────────────────────────────────────────────
+if [ "$web" = 1 ]; then
+  if [ -f web/package.json ]; then
+    has_script() { node -e "process.exit(require('./web/package.json').scripts?.['$1']?0:1)" 2>/dev/null; }
+    for s in lint typecheck test; do
+      if has_script "$s"; then
+        echo "pre-commit: web $s"
+        npm --prefix web run "$s" --silent || fail "web $s başarısız"
+      fi
+    done
+  else
+    echo "pre-commit: web/ kodu yok, kontrol atlandı"
+  fi
+fi
+
+# ── docs/ ───────────────────────────────────────────────
+if [ "$docs" = 1 ]; then
+  if [ -x docs/.tools/.venv/bin/mkdocs ]; then
+    echo "pre-commit: mkdocs build --strict"
+    (cd docs/.tools && .venv/bin/mkdocs build --strict >/dev/null) || fail "mkdocs strict derleme başarısız"
+  elif [ -x docs/.tools/.venv/Scripts/mkdocs.exe ]; then
+    echo "pre-commit: mkdocs build --strict"
+    (cd docs/.tools && .venv/Scripts/mkdocs.exe build --strict >/dev/null) || fail "mkdocs strict derleme başarısız"
+  else
+    echo "pre-commit: mkdocs venv yok (./docs/.tools/serve.sh --build ile kurulur), doküman derlemesi atlandı"
+  fi
+fi
+
+# ── Her commit: secret ve yarım iş taraması (AGENTS.md K6, K10) ──
+# Yalnızca eklenen satırlara bakar; mevcut dosyaların geçmişini taramaz.
+ADDED=$(git diff --cached -U0 --diff-filter=ACMR | grep '^+' | grep -v '^+++' || true)
+
+if printf '%s' "$ADDED" | grep -nEi '(TODO|FIXME|XXX|HACK)[:( ]' >/dev/null 2>&1; then
+  echo "pre-commit: UYARI - eklenen satırlarda TODO/FIXME/XXX/HACK var (AGENTS.md K6)" >&2
+  printf '%s' "$ADDED" | grep -nEi '(TODO|FIXME|XXX|HACK)[:( ]' >&2
+  fail "yarım iş işareti bırakılmaz; düzeltin veya --no-verify ile gerekçeli geçin"
+fi
+
+if printf '%s' "$ADDED" | grep -nE '(console\.log|System\.out\.println|debugger;)' >/dev/null 2>&1; then
+  echo "pre-commit: UYARI - debug çıktısı eklenmiş (AGENTS.md K6)" >&2
+  fail "console.log / System.out.println / debugger bırakılmaz"
+fi
+
+# .env ve anahtar dosyaları hiçbir koşulda commit'e girmez (K10).
+if printf '%s\n' "$STAGED" | grep -nE '(^|/)\.env($|\.)|\.pem$|\.p12$|\.jks$|id_rsa' >/dev/null 2>&1; then
+  printf '%s\n' "$STAGED" | grep -nE '(^|/)\.env($|\.)|\.pem$|\.p12$|\.jks$|id_rsa' >&2
+  fail "secret taşıyabilecek dosya staged (AGENTS.md K10); .gitignore kontrol edin"
+fi
+
+exit 0

@@ -1,0 +1,55 @@
+# Feature Kayıtları
+
+> **Amaç:** "Bu feature ne yapar, neden böyle, ne zaman ne değişti?" sorusuna **tek dosyadan** cevap vermek.
+> Her feature'ın yaşayan bir dosyası vardır; her iş bittiğinde ilgili dosyanın **Tarihçe** bölümüne bir satır eklenir.
+
+---
+
+## Bu klasör ne değildir?
+
+| Soru | Nereye bakılır |
+|---|---|
+| Bu karar **neden** alındı, alternatifler neydi? | [ADR](../adr/index.md) |
+| Sistem **şu an tam olarak** nasıl davranmalı? (gereksinim + senaryo) | `openspec/specs/<capability>/spec.md` |
+| Bu değişiklik **nasıl planlandı ve uygulandı**? (proposal / design / tasks) | `openspec/changes/archive/<tarih>-<ad>/` |
+| Sistemin **mevcut yapısı** (ER, akış, API, tasarım sistemi) | [Referans](../reference/00-current-state.md) |
+| Bu işi **nasıl yaparım**? | [How-to](../how-to/index.md) |
+| **Bu feature'ın hikâyesi**: ne yapar, hangi kararlara dayanır, zaman içinde ne değişti? | **Burası** |
+
+Feature dosyası içerik üretmez; yukarıdakilere **link verir** ve zaman içindeki değişimi **kronolojik** tutar.
+
+---
+
+## Feature listesi
+
+| Feature | Durum | İlk sürüm | Son değişiklik | Kapsadığı capability'ler |
+|---|---|---|---|---|
+| [Genel: feature'a bağlı olmayan işler](_genel.md) | - | - | 2026-10-06 | (dokümantasyon, araçlar, altyapı, AI kuralları) |
+
+Henüz ürün feature'ı yok: kod yazılmadı, ilk dikey dilim açık kararlara bağlı (`openspec/KALANLAR.md`).
+
+**Planlanan feature'lar** (ilk dilimlerle birlikte dosyaları açılacak):
+
+| Feature | Kapsam | Bloke eden karar |
+|---|---|---|
+| Hesap ve Oturum | Kayıt, giriş, parola sıfırlama, roller | KALANLAR B1 |
+| Satıcı Kaydı ve Onayı | Üretici başvurusu, belge doğrulama, onay akışı | KALANLAR A3 |
+| Ürün İlanları | Ürün ekleme/düzenleme, fotoğraf, stok, fiyat | KALANLAR B3 |
+| Vitrin ve Arama | Kategori, listeleme, ürün detayı, SEO | - |
+| Sepet ve Sipariş | Sepet, adres, sipariş oluşturma, durum makinesi | KALANLAR A1 |
+| Ödeme ve Hakediş | Tahsilat, komisyon, satıcı ödemesi, iade | KALANLAR A1 |
+| Kargo ve Teslimat | Gönderi oluşturma, takip, teslim bildirimi | KALANLAR A2 |
+| Bildirimler | Sipariş/kargo e-postası, satıcı bildirimi | KALANLAR B4 |
+
+**Durum değerleri:** `Fikir` (yalnızca product belgesi var) · `Geliştirmede` (change açık) · `Yayında` (change archive edildi, `main`'de) · `Kaldırıldı`.
+
+---
+
+## Kurallar
+
+1. **Her iş bir satır bırakır.** OpenSpec'ten geçsin geçmesin, büyük küçük her iş bittiğinde ilgili feature dosyasının Tarihçe bölümüne **tek satır** eklenir: `- YYYY-MM-DD: ne değişti (ADR / change / PR referansı)`. Feature'a bağlanmayan işler (araç, doküman, altyapı, kural dosyaları) [`_genel.md`](_genel.md) dosyasına yazılır.
+2. **Tarihçe append-only'dir; yeni satır en üste.** Eski satır düzenlenmez, silinmez. Bir davranış geri alındıysa bu da yeni bir satırdır.
+3. **Feature = ürün seviyesi.** Kullanıcının adlandıracağı büyüklükte; teknik `capability`'ler feature dosyasının içinde listelenir, ayrı dosya olmaz.
+4. **Yeni feature = yeni dosya + tabloya satır.** [`template.md`](template.md) kopyalanır, dosya adı Türkçe kebab-case (`urun-ilanlari.md`), bu tabloya ve `docs/.tools/mkdocs.yml` nav bölümüne eklenir.
+5. **"Ne yapar" bölümü kısa ve kullanıcı diliyle.** Gereksinim listesi değil (o spec'tedir); 3–6 cümle.
+6. **Durum ve "Son değişiklik" bu tabloda da güncellenir.** Feature dosyasındaki başlık alanlarıyla tutarlı olmalıdır.

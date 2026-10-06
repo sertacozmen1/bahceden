@@ -1,0 +1,159 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Aynı dalda biriken koşuları iptal et: son durum yeterli.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ──────────────────────────────────────────────────
+  # api/ — Spring Boot: derleme + testler (ADR-005)
+  # Testcontainers gerçek PostgreSQL kaldırır; runner'da Docker mevcut.
+  # ──────────────────────────────────────────────────
+  api:
+    name: api (Java 21)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: api/ var mı?
+        id: guard
+        run: |
+          if [ -f api/pom.xml ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "api/ henüz yok (docs/reference/00-current-state.md); adımlar atlanıyor."
+          fi
+
+      - uses: actions/setup-java@v4
+        if: steps.guard.outputs.exists == 'true'
+        with:
+          distribution: corretto
+          java-version: '21'
+          cache: maven
+
+      - name: Derle ve test et
+        if: steps.guard.outputs.exists == 'true'
+        working-directory: api
+        run: ./mvnw -B verify
+
+  # ──────────────────────────────────────────────────
+  # web/ — Next.js: lint + tip kontrolü + test + derleme
+  # ──────────────────────────────────────────────────
+  web:
+    name: web (Node 20)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: web/ var mı?
+        id: guard
+        run: |
+          if [ -f web/package.json ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "web/ henüz yok (docs/reference/00-current-state.md); adımlar atlanıyor."
+          fi
+
+      - uses: actions/setup-node@v4
+        if: steps.guard.outputs.exists == 'true'
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Bağımlılıkları kur
+        if: steps.guard.outputs.exists == 'true'
+        run: npm --prefix web ci
+
+      # Sözleşmeden üretilen tipler commit'lenmez (ADR-003, K8): CI üretir.
+      - name: Sözleşme tiplerini üret
+        if: steps.guard.outputs.exists == 'true'
+        run: npm --prefix web run gen:api --if-present
+
+      - name: Lint
+        if: steps.guard.outputs.exists == 'true'
+        run: npm --prefix web run lint --if-present
+
+      - name: Tip kontrolü
+        if: steps.guard.outputs.exists == 'true'
+        run: npm --prefix web run typecheck --if-present
+
+      - name: Test
+        if: steps.guard.outputs.exists == 'true'
+        run: npm --prefix web test --if-present
+
+      - name: Derle
+        if: steps.guard.outputs.exists == 'true'
+        run: npm --prefix web run build --if-present
+
+  # ──────────────────────────────────────────────────
+  # docs/ — MkDocs strict derleme: kırık link veya nav dışı sayfa varsa fail
+  # ──────────────────────────────────────────────────
+  docs:
+    name: docs (MkDocs strict)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # git-revision-date eklentisi geçmişe ihtiyaç duyar
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+          cache-dependency-path: docs/.tools/requirements.txt
+
+      - name: Bağımlılıkları kur
+        run: pip install -r docs/.tools/requirements.txt
+
+      - name: Strict derleme
+        run: mkdocs build --strict -f docs/.tools/mkdocs.yml
+
+  # ──────────────────────────────────────────────────
+  # Kural denetimi: K6 (yarım iş) ve K10 (secret) taraması
+  # Hook'un atlanabildiği durumlar için ikinci savunma hattı.
+  # ──────────────────────────────────────────────────
+  rules:
+    name: kural denetimi (K6, K10)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Yarım iş işaretleri (K6)
+        run: |
+          # Kural dosyaları ve dokümanlar bu kelimeleri kural metni olarak içerir: hariç tutuluyor.
+          if grep -rnE '(TODO|FIXME|XXX|HACK)[:( ]' \
+               --include='*.java' --include='*.ts' --include='*.tsx' \
+               --include='*.js' --include='*.sql' --include='*.yaml' --include='*.yml' \
+               . ; then
+            echo "::error::Kodda TODO/FIXME/XXX/HACK var (AGENTS.md K6)"
+            exit 1
+          fi
+          echo "Temiz."
+
+      - name: Debug çıktısı (K6)
+        run: |
+          if grep -rnE '(System\.out\.println|console\.log|debugger;)' \
+               --include='*.java' --include='*.ts' --include='*.tsx' --include='*.js' \
+               . ; then
+            echo "::error::Debug çıktısı bırakılmış (AGENTS.md K6)"
+            exit 1
+          fi
+          echo "Temiz."
+
+      - name: Secret taşıyabilecek dosyalar (K10)
+        run: |
+          if git ls-files | grep -nE '(^|/)\.env($|\.)|\.pem$|\.p12$|\.jks$|id_rsa'; then
+            echo "::error::Secret taşıyabilecek dosya depoda (AGENTS.md K10)"
+            exit 1
+          fi
+          echo "Temiz."

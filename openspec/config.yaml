@@ -1,0 +1,49 @@
+schema: spec-driven
+
+context: |
+  Bahçeden: meyve-sebze üreticisini son tüketiciyle doğrudan buluşturan çok
+  satıcılı pazaryeri. Hal ve komisyoncu zincirden çıkar; gönderim kargo ile yapılır.
+
+  Stack: Spring Boot 3 (Java 21, Maven) REST API + Next.js (App Router, TypeScript)
+  + PostgreSQL 17. Sözleşme: shared/contracts/openapi.yaml (contract-first).
+
+  Bağlayıcı kurallar: repo kökündeki AGENTS.md (K1-K10) ve docs/adr/ altındaki
+  kabul edilmiş ADR'ler. Dokümanlar ve kullanıcı metinleri Türkçe, kod
+  tanımlayıcıları ve commit mesajları İngilizce.
+
+  Kritik kısıtlar:
+  - api/ ile web/ birbirini import etmez; tek sözleşme openapi.yaml'dır.
+  - web/ veritabanına ve dış servislere doğrudan erişmez.
+  - Çok satıcılı sistem: her sorgu sahiplik kapsamında yetkilendirilir
+    (repository seviyesinde, findByIdAndSellerId deseni).
+  - Para minor unit (kuruş) long + currency; istemci para hesaplamaz.
+  - Bağımlılık bütçesi dışına paket eklemek onay + ADR gerektirir.
+  - MVP ölçeği: tek bölge, az satıcı. Over-engineering yapılmaz.
+
+rules:
+  proposal:
+    - Non-goals bölümü zorunludur; kapsam dışı açıkça yazılır.
+    - docs/product/ altındaki ürün belgesiyle çelişemez.
+  design:
+    - Her karar D1, D2, ... olarak numaralanır; her birinde Gerekçe ve reddedilen
+      Alternatif bulunur. Her D<n> archive öncesi docs/adr/ altına ADR olur.
+    - Kabul edilmiş bir ADR'ye aykırı karar yazılamaz; önce ADR superseded edilir.
+    - Kişisel veri (KVKK) ve yetkilendirme etkisi varsa açıkça bölüm açılır.
+  tasks:
+    - Fazlar dikey dilim mantığıyla kesilir: her faz tek başına çalışır durumda
+      bırakılır. "Önce tüm entity'ler, sonra tüm controller'lar" yasaktır.
+    - Her faz sözleşme -> api -> üretilen tipler -> web -> test sırasını izler.
+    - Dış/insan işi görevler (ödeme başvurusu, kargo sözleşmesi) açık bırakılır ve notlanır.
+
+operations:
+  apply:
+    guidance:
+      - Her dilim sonunda AGENTS.md §7'deki doğrulama komutlarının tamamı koşulur;
+        çıktılar olduğu gibi raporlanır.
+      - Yeni iş kuralı (para, stok, sipariş durumu, yetkilendirme) critical etiketli
+        testle sabitlenir.
+      - İş bitince ilgili docs/features/ dosyasının Tarihçe bölümüne tek satır eklenir.
+  archive:
+    guidance:
+      - design.md'deki her karar docs/adr/ altında ADR olarak yazılmadan archive yapılmaz.
+      - Archive kullanıcı onayı ister (AGENTS.md §9).

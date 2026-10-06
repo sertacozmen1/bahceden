@@ -1,0 +1,101 @@
+site_name: Bahçeden Documentation
+site_description: Bahçeden Teknik Dokümantasyon Portalı (Local)
+docs_dir: '..'
+# site_dir, docs_dir ('..') içinde olamaz: mkdocs build dizinini kendi içine
+# kopyalar. Çıktı depo köküne alınır ('site/' .gitignore'da olmalıdır).
+site_dir: '../../site'
+
+theme:
+  name: material
+  language: tr
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: green
+      accent: deep orange
+      toggle:
+        icon: material/brightness-7
+        name: Karanlık moda geç
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: green
+      accent: deep orange
+      toggle:
+        icon: material/brightness-4
+        name: Aydınlık moda geç
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - navigation.top
+    - navigation.indexes
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - toc.follow
+
+plugins:
+  - search:
+      lang: tr
+  - mermaid2
+  - git-revision-date-localized:
+      enable_creation_date: true
+      type: timeago
+      fallback_to_build_date: true
+      # Yeniden adlandırılan dosyalarda "ilk revizyon son revizyondan eski"
+      # uyarısı strict derlemeyi kırıyor; follow davranışı kapatıldı.
+      enable_git_follow: false
+  - minify:
+      minify_html: true
+
+# Şablonlar portalda görünmez: kopyalanmak için vardır, okunmak için değil.
+exclude_docs: |
+  */template.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:mermaid2.fence_mermaid_custom
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.mark
+  - pymdownx.critic
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Ana Sayfa: README.md
+  - Referans:
+    - Güncel Durum ve Sınırlamalar: reference/00-current-state.md
+  - ADR:
+    - Genel Bakış: adr/index.md
+    - "ADR-001 · Spring API + Next.js web": adr/001-spring-api-and-next-web.md
+    - "ADR-002 · Bağımlılık bütçesi": adr/002-dependency-budget.md
+    - "ADR-003 · Tek sözleşme: OpenAPI": adr/003-openapi-as-single-contract.md
+    - "ADR-004 · PostgreSQL + Flyway": adr/004-postgresql-with-flyway.md
+    - "ADR-005 · Test stratejisi": adr/005-test-strategy.md
+    - "ADR-006 · Para minor unit": adr/006-money-as-minor-unit.md
+    - "ADR-007 · Satıcı veri izolasyonu": adr/007-query-level-ownership-scoping.md
+  - Nasıl Yapılır (How-to):
+    - Genel Bakış: how-to/index.md
+    - Yerel Geliştirme Ortamı: how-to/yerel-gelistirme.md
+  - Ürün & Strateji: product/index.md
+  - Araştırma (Research): research/index.md
+  - Eğitimler (Tutorials): tutorials/index.md
+  - Açıklamalar (Explanation): explanation/index.md
+  - Feature Kayıtları:
+    - Genel Bakış: features/index.md
+    - "Genel (feature dışı işler)": features/_genel.md
+
+copyright: Bahçeden Internal Documentation
