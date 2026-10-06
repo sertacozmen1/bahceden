@@ -54,7 +54,7 @@
 - [x] 5.7 `./docs/.tools/serve.sh --build` strict temiz; `mkdocs.yml` nav tam.
 - [x] 5.8 D1–D6 kararları için ADR'ler yazılır (`docs/adr/010…`) ve `adr/index.md` güncellenir — **archive ön koşulu** (`AGENTS.md` §5.3).
 - [x] 5.9 Delta spec ana spec'e sync edildi: `openspec/specs/storefront-catalog/spec.md`. `openspec` CLI kurulu olmadığı için elle yapıldı (artefakt yapısı `AGENTS.md` §5.2'ye uygun).
-- [ ] 5.10 CI'ın `api` ve `web` job'ları gerçekten koşarak yeşil. **AÇIK:** push sonrası sonuç beklenecek.
+- [x] 5.10 CI 4/4 yeşil, `api` ve `web` job'ları gerçekten koşarak: run `37520245480` (`api` 1m9s, `web` 46s, `docs` 20s, kural denetimi 4s). Yolda iki CI hatası düzeltildi: K10 taramasının `.env.example` yanlış pozitifi ve `api/mvnw` dosyasının çalıştırma biti eksikliği (`Permission denied`).
 - [ ] 5.11 Rapor `AGENTS.md` §14 formatında; insan review'una sunulur. Archive **kullanıcı onayı** ister (§9).
 
 ## Bu changeın kapsamadığı, sıradaki dilim adayları

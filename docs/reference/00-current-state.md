@@ -25,7 +25,7 @@
 | `web/` (Next.js 16.3.8, React 19.3, TS 5.9.3) | ✅ Çalışıyor | Vitrin listesi + dört durum + `AppShell`; tipler sözleşmeden üretilir; 6 Vitest testi; `lint`/`typecheck`/`build` temiz |
 | `docker-compose.yml` | ✅ Çalışıyor | `db` (postgres:17), `api` (8080), `web` (3000), `mailpit` (8025); api healthcheck'li |
 | `.githooks/pre-commit` | ✅ Devrede | `git config core.hooksPath .githooks` çalıştırıldı |
-| `.github/workflows/ci.yml` | ⚠️ Son koşu kırmızıydı, düzeltildi | Run `37507277030`: tek hata K10 taramasının `.env.example` yanlış pozitifi; `web` ve `docs` yeşildi. Tarama CI'da ve hook'ta düzeltildi, sonuç bir sonraki push'ta görülecek |
+| `.github/workflows/ci.yml` | ✅ **4/4 yeşil** | Run `37520245480`: `api` 1m9s (Maven + Testcontainers **gerçekten koştu**), `web` 46s, `docs` 20s, kural denetimi 4s |
 | MkDocs portalı | ✅ Strict derleme temiz | `./docs/.tools/serve.sh --build`: ilk koşuda 18 uyarı (docs dışına link + git-revision eklentisi) düzeltildi |
 
 ## 3. Ortam (doğrulanmış)
@@ -49,7 +49,7 @@ Geliştirme makinesinde 2026-10-06'da doğrulanan sürümler:
 | L1 | Yalnızca okuma akışı var | Vitrin listesi dışında hiçbir kullanıcı akışı yok: kayıt, giriş, ürün ekleme, sepet, sipariş, ödeme, kargo **yok** |
 | L2 | `openspec` CLI kurulu değil | `/opsx:*` komutları çalışmaz; change artefaktları ve spec sync elle yapılıyor (yapı `AGENTS.md` §5.2'ye uygun) |
 | L3 | Vitrin gözle doğrulanmadı | 375 px / 1440 px ve açık / koyu temada insan doğrulaması yapılmadı; CSS mobil önce yazıldı ve iki tema token'ı tanımlı |
-| L4 | CI'ın `api` job'ı henüz yeşil görülmedi | Son koşu K10 yanlış pozitifinde düştü (düzeltildi); `api` ve `web` adımlarının gerçek iş yaparak geçtiği bir koşu bekleniyor |
+| L4 | `pre-commit` hook'u kabuğun JAVA_HOME'unu kullanır | Hook `./mvnw` çağırırken oturumdaki JDK ile koşar; bu makinede Corretto 24 enjekte edildiği için testler yerelde 24, CI'da 21 üzerinde çalıştı. Sürüm farkı bugün soruna yol açmadı ama tek doğru sürüm 21'dir |
 | L5 | `pre-commit` hook'u klon başına ayarlanır | `git config core.hooksPath .githooks` yeni klonda tekrar çalıştırılmalı. Bootstrap commit'leri `--no-verify` ile atıldı (dosyalar commit'lenmeden `git-revision` eklentisi strict derlemeyi kırıyor) |
 | L6 | `sellers` tablosu eksik | Hesap ilişkisi, vergi/belge ve onay alanları yok; satıcı onboarding kararıyla (A3) genişleyecek ([ADR-013](../adr/013-minimal-seller-table-ahead-of-onboarding.md)) |
 | L7 | Üretici kaydı yalnızca seed ile | Üreticiler dev bağlamındaki changeset ile oluşuyor; başvuru/onay akışı yok |
@@ -68,7 +68,6 @@ Kural (`AGENTS.md` §5.4): kod ile ADR birbirine aykırıysa bu bir **sapma**dı
 
 ## 6. Sıradaki adım
 
-1. CI'ın bir sonraki koşusunda `api` ve `web` job'larının gerçekten koşarak yeşil olduğunu doğrulamak (L4).
-2. Vitrinin iki ekran genişliği ve iki temada gözle doğrulanması (L3, insan işi).
-3. `add-storefront-product-listing` change'inin archive edilmesi — **kullanıcı onayı ister** (`AGENTS.md` §9).
-4. Sonraki dilim adayı: [ADR-008](../adr/008-jwt-auth-with-opaque-refresh.md)'in uygulanması (kayıt, e-posta doğrulama, giriş, token yenileme) — en çok şeyin üzerine oturduğu katman.
+1. Vitrinin iki ekran genişliği ve iki temada gözle doğrulanması (L3, insan işi).
+2. `add-storefront-product-listing` change'inin archive edilmesi — **kullanıcı onayı ister** (`AGENTS.md` §9).
+3. Sonraki dilim adayı: [ADR-008](../adr/008-jwt-auth-with-opaque-refresh.md)'in uygulanması (kayıt, e-posta doğrulama, giriş, token yenileme) — en çok şeyin üzerine oturduğu katman.
