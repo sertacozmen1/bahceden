@@ -1,40 +1,20 @@
-import type { components } from "@contract";
+import { ApiUnavailableError, toApiError } from "@/lib/apiError";
 import { apiBaseUrl } from "@/lib/env";
 
 /**
  * `api` ile konuşan TEK HTTP katmanı (AGENTS.md §12.3).
  *
- * İkinci bir `fetch` sarmalayıcı yazılmaz: temel adres, hata gövdesi çözümü ve
- * ileride kimlik başlığı tek yerde durur. Hata gövdesi sözleşmedeki `ApiError`
+ * İkinci bir `fetch` sarmalayıcı yazılmaz: temel adres, kimlik başlığı ve hata
+ * gövdesi çözümü tek yerde durur. Hata gövdesi sözleşmedeki `ApiError`
  * şeklidir; her çağıran bunu kendi başına ayrıştırmaz.
+ *
+ * Yalnızca sunucu tarafında çalışır: tarayıcı `api`'ye hiç konuşmaz, kendi
+ * Route Handler'larımıza konuşur (design.md D6). Token tarayıcıya verilmez.
  *
  * Tipler sözleşmeden üretilir ve elle yazılmaz (ADR-003, ADR-009).
  */
 
-type ApiError = components["schemas"]["ApiError"];
-
-/** `api`'den gelen, sözleşmeye uygun hata. */
-export class ApiRequestError extends Error {
-  readonly status: number;
-  readonly code: string;
-  readonly fieldErrors: ReadonlyArray<{ field: string; message: string }>;
-
-  constructor(status: number, body: ApiError) {
-    super(body.message);
-    this.name = "ApiRequestError";
-    this.status = status;
-    this.code = body.code;
-    this.fieldErrors = body.fieldErrors;
-  }
-}
-
-/** Ağ veya ayrıştırma düzeyinde başarısızlık: sunucu sözleşmeye uygun yanıt vermedi. */
-export class ApiUnavailableError extends Error {
-  constructor(message: string, options?: { cause?: unknown }) {
-    super(message, options);
-    this.name = "ApiUnavailableError";
-  }
-}
+export { ApiRequestError, ApiUnavailableError } from "@/lib/apiError";
 
 type RequestOptions = {
   /** Sorgu parametreleri; tanımsız değerler atlanır. */
@@ -44,7 +24,24 @@ type RequestOptions = {
    * oturuma bağlı veri için bu değer verilmez.
    */
   readonly revalidateSeconds?: number;
+  /** Erişim token'ı: `Authorization: Bearer` olarak gönderilir; oturumlu istek önbelleklenmez. */
+  readonly accessToken?: string;
 };
+
+type SendOptions = {
+  /** JSON olarak gönderilecek gövde. */
+  readonly body?: unknown;
+  readonly accessToken?: string;
+  /**
+   * İstemcinin adres zinciri (`X-Forwarded-For`). `api` hız sınırını istemci
+   * adresine göre uygular; BFF bu başlığı iletmezse tüm kullanıcılar web
+   * sunucusunun adresini paylaşır (design.md D5).
+   */
+  readonly forwardedFor?: string | null;
+};
+
+/** Gönderimin sonucu: başarılı durum kodu ve varsa gövde (204'te yok). */
+export type SendResult<T> = { readonly status: number; readonly data: T | undefined };
 
 export async function apiGet<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const url = new URL(`${apiBaseUrl()}${path}`);
@@ -54,36 +51,89 @@ export async function apiGet<T>(path: string, options: RequestOptions = {}): Pro
     }
   }
 
-  let response: Response;
+  const headers: Record<string, string> = { Accept: "application/json" };
+  if (options.accessToken !== undefined) {
+    headers.Authorization = `Bearer ${options.accessToken}`;
+  }
+
+  const response = await send(url, {
+    headers,
+    ...(options.accessToken !== undefined
+      ? { cache: "no-store" }
+      : options.revalidateSeconds === undefined
+        ? {}
+        : { next: { revalidate: options.revalidateSeconds } }),
+  });
+
+  if (!response.ok) {
+    throw await toApiError(response);
+  }
+  return readJson<T>(response);
+}
+
+/** Durum değiştiren istek (POST, DELETE). Başarısız yanıt {@link ApiRequestError} fırlatır. */
+export async function apiSend<T>(
+  method: "POST" | "DELETE",
+  path: string,
+  options: SendOptions = {},
+): Promise<SendResult<T>> {
+  const headers: Record<string, string> = { Accept: "application/json" };
+  if (options.body !== undefined) {
+    headers["Content-Type"] = "application/json";
+  }
+  if (options.accessToken !== undefined) {
+    headers.Authorization = `Bearer ${options.accessToken}`;
+  }
+  if (options.forwardedFor) {
+    headers["X-Forwarded-For"] = options.forwardedFor;
+  }
+
+  const response = await send(new URL(`${apiBaseUrl()}${path}`), {
+    method,
+    headers,
+    cache: "no-store",
+    body: options.body === undefined ? undefined : JSON.stringify(options.body),
+  });
+
+  if (!response.ok) {
+    throw await toApiError(response);
+  }
+  return { status: response.status, data: await readOptionalJson<T>(response) };
+}
+
+async function send(url: URL, init: RequestInit): Promise<Response> {
   try {
-    response = await fetch(url, {
-      headers: { Accept: "application/json" },
-      next:
-        options.revalidateSeconds === undefined
-          ? undefined
-          : { revalidate: options.revalidateSeconds },
-    });
+    return await fetch(url, init);
   } catch (cause) {
     throw new ApiUnavailableError("Sunucuya ulaşılamadı.", { cause });
   }
+}
 
-  if (!response.ok) {
-    throw await toError(response);
-  }
-
+/**
+ * Gövdesi boş olabilen yanıt: 204 de, gövdesiz 202 de (ör. yeni doğrulama
+ * bağlantısı) "gövde yok" demektir. Boş gövde JSON olarak okunmaya çalışılmaz.
+ */
+async function readOptionalJson<T>(response: Response): Promise<T | undefined> {
+  let text: string;
   try {
-    return (await response.json()) as T;
+    text = await response.text();
+  } catch (cause) {
+    throw new ApiUnavailableError("Sunucu yanıtı okunamadı.", { cause });
+  }
+  if (text.trim() === "") {
+    return undefined;
+  }
+  try {
+    return JSON.parse(text) as T;
   } catch (cause) {
     throw new ApiUnavailableError("Sunucu yanıtı okunamadı.", { cause });
   }
 }
 
-async function toError(response: Response): Promise<Error> {
+async function readJson<T>(response: Response): Promise<T> {
   try {
-    const body = (await response.json()) as ApiError;
-    return new ApiRequestError(response.status, body);
-  } catch {
-    // Sözleşme dışı bir hata gövdesi: ayrıntıyı uydurmak yerine durumu bildir.
-    return new ApiUnavailableError(`Sunucu beklenmeyen bir yanıt verdi (${response.status}).`);
+    return (await response.json()) as T;
+  } catch (cause) {
+    throw new ApiUnavailableError("Sunucu yanıtı okunamadı.", { cause });
   }
 }

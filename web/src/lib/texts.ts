@@ -9,6 +9,7 @@ import type { components } from "@contract";
  */
 
 type ProductUnit = components["schemas"]["ProductSummary"]["unit"];
+type AccountRole = components["schemas"]["AccountView"]["roles"][number];
 
 export const texts = {
   siteName: "Bahçeden",
@@ -40,6 +41,77 @@ export const texts = {
     retry: "Yeniden dene",
   },
 
+  account: {
+    nav: {
+      signIn: "Giriş yap",
+      register: "Kayıt ol",
+      myAccount: "Hesabım",
+      signOut: "Çıkış yap",
+      signingOut: "Çıkış yapılıyor…",
+      signedInAs: (maskedEmail: string) => `${maskedEmail} olarak giriş yapıldı`,
+    },
+    fields: {
+      email: "E-posta adresi",
+      password: "Parola",
+      passwordHint: "En az 10 karakter",
+      code: "Giriş kodu",
+      codeHint: "E-postanıza gelen 6 haneli kod",
+    },
+    register: {
+      title: "Kayıt ol",
+      intro: "E-posta adresiniz ve bir parolayla hesap açın. Hesabınızı hemen kullanabilirsiniz.",
+      submit: "Hesap aç",
+      submitting: "Hesap açılıyor…",
+      successTitle: "Hesabınız hazır",
+      goToSignIn: "Giriş yap",
+      haveAccount: "Zaten hesabınız var mı?",
+    },
+    login: {
+      title: "Giriş yap",
+      intro: "E-posta adresiniz ve parolanızla giriş yapın.",
+      submit: "Giriş yap",
+      submitting: "Giriş yapılıyor…",
+      codeTitle: "Giriş kodunu girin",
+      codeSubmit: "Kodu onayla",
+      codeSubmitting: "Kod doğrulanıyor…",
+      startOver: "Baştan başla",
+      noAccount: "Hesabınız yok mu?",
+      signInRequired: "Bu sayfayı görmek için giriş yapın.",
+    },
+    verification: {
+      title: "E-posta doğrulama",
+      successTitle: "E-posta adresiniz doğrulandı",
+      successBody: "Teşekkürler. Hesabınızı kullanmaya devam edebilirsiniz.",
+      failedTitle: "Bağlantı kullanılamadı",
+      missingToken: "Bağlantı eksik görünüyor. E-postadaki bağlantıyı tam olarak açtığınızdan emin olun.",
+      requestNewLink: "Hesabım sayfasından yeni bir bağlantı isteyebilirsiniz.",
+      goToAccount: "Hesabıma git",
+      goToStorefront: "Vitrine dön",
+    },
+    myAccount: {
+      title: "Hesabım",
+      email: "E-posta",
+      roles: "Roller",
+      verificationStatus: "E-posta doğrulaması",
+      verified: "Doğrulandı",
+      notVerified: "Doğrulanmadı",
+      notVerifiedBody: "E-posta adresinizi doğrulamadınız. Hesabınızı kullanmanız engellenmez.",
+      resend: "Yeni doğrulama bağlantısı gönder",
+      resending: "Gönderiliyor…",
+      resent: "Yeni bağlantıyı e-posta adresinize gönderdik.",
+      loading: "Hesap bilgileri yükleniyor",
+    },
+    errors: {
+      title: "Bir sorun oluştu",
+      body: "İsteğinizi şu anda tamamlayamadık. Biraz sonra yeniden deneyebilirsiniz.",
+      retry: "Yeniden dene",
+      unavailable: "Sunucuya ulaşamadık. Bağlantınızı kontrol edip yeniden deneyin.",
+      crossSite: "Bu istek başka bir siteden geldiği için reddedildi.",
+      invalidRequest: "İstek okunamadı.",
+      formHasErrors: "Formdaki işaretli alanları düzeltin.",
+    },
+  },
+
   footer: {
     copyright: "Bahçeden",
     note: "Üreticiden doğrudan gönderim",
@@ -59,4 +131,11 @@ const unitLabels: Record<NonNullable<ProductUnit>, string> = {
   BUNCH: "demet",
 };
 
-export { unitLabels };
+/** Hesap rolünün kullanıcıya gösterilen karşılığı. */
+const roleLabels: Record<AccountRole, string> = {
+  ROLE_CUSTOMER: "Alıcı",
+  ROLE_SELLER: "Satıcı",
+  ROLE_ADMIN: "Yönetici",
+};
+
+export { roleLabels, unitLabels };

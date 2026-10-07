@@ -1,0 +1,109 @@
+/* Hesap sayfaları: dar, tek sütun; formun okunması kolay olsun.
+   Mobil önce; tek ek kırılım 1024px. */
+
+.page {
+  max-width: 28rem;
+  margin: 0 auto;
+  padding: var(--space-4) var(--space-3) var(--space-5);
+}
+
+.title {
+  margin: 0 0 var(--space-1);
+  font-size: var(--text-xl);
+  line-height: 1.2;
+}
+
+.intro {
+  margin: 0 0 var(--space-4);
+  color: var(--text-muted);
+}
+
+.panel {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.aside {
+  margin: var(--space-3) 0 0;
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.details {
+  margin: 0;
+}
+
+.details dt {
+  font-size: var(--text-sm);
+  color: var(--text-muted);
+}
+
+.details dd {
+  margin: 0 0 var(--space-3);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.statusWarning {
+  color: var(--warning);
+}
+
+/* Birincil eylem büyük ve parmakla kullanılabilir (Fitts). */
+.action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: var(--space-2) var(--space-4);
+  font: inherit;
+  font-weight: 600;
+  color: var(--accent-contrast);
+  background: var(--accent);
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.action:disabled {
+  cursor: progress;
+  opacity: 0.7;
+}
+
+.skeleton {
+  height: 1.25rem;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+.skeletonTall {
+  height: 10rem;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+}
+
+@media (min-width: 1024px) {
+  .page {
+    padding-top: var(--space-5);
+  }
+
+  .panel {
+    padding: var(--space-4);
+  }
+}

@@ -67,15 +67,25 @@
 
 ## Faz 4 · `web` BFF ve ekranlar
 
-- [ ] 4.1 `npm run gen:api` ile tipler yeniden üretilir; `apiClient` POST desteği ve §11.5 hata gövdesi çözümü genişletilir (ikinci sarmalayıcı yazılmaz — K9).
-- [ ] 4.2 `web/src/lib/session.ts`: çerez okuma/yazma/silme (`bahceden_at`, `bahceden_rt`; `HttpOnly` + `Secure` + `SameSite=Lax`, yenileme çerezi `path=/api/auth` — D6).
-- [ ] 4.3 Route Handler'lar: `/api/auth/login`, `/api/auth/logout`, `/api/auth/refresh`. Her biri `Sec-Fetch-Site` / `Origin` doğrular (D6); token'ı istemciye **döndürmez**, yalnızca çereze yazar.
-- [ ] 4.4 Sunucu tarafı veri çekme: erişim çerezi `Bearer` olarak iletilir; 401 alınırsa **bir kez** yenileme denenir, başarısızsa `/giris`e yönlendirilir. **Faz 3'ten not:** iki eşzamanlı yenileme aynı token'ı sunarsa ikincisi tekrar kullanım sayılır ve aile iptal edilir (D1). BFF yenilemeyi istek başına tekilleştirmeli (aynı çerez için tek uçuşta yenileme).
-- [ ] 4.5 Ekranlar: `/kayit`, `/giris` (sunucu ikinci adım beklediğini bildirirse aynı ekranda kod alanı açılır), `/dogrulama` (e-postadaki bağlantının indiği sayfa; token'ı sunucu tarafında tüketir), `/hesabim` (korunan; `me` verisini ve e-posta doğrulama durumunu gösterir). Her biri için **dört durum** (§12.5).
-- [ ] 4.6 `AppShell` oturum durumunu gösterir: girişliyse maskeli e-posta + çıkış, değilse giriş bağlantısı. Oturum bilgisi düzende **bir kez** okunur (design.md Open Questions).
-- [ ] 4.7 Metinler `texts.ts` içine; form hataları sunucudan gelen `fieldErrors` ile alanlara bağlanır (§12.3).
-- [ ] 4.8 **Test (web):** kayıt formu (doğrulama hatası, sunucu hatası eşlemesi, başarı); giriş formu (hatalı kimlik → genel mesaj; ikinci adım beklenince kod alanı açılır); `/hesabim` yetkisiz durumu. Ağ mock'lu (§12.6).
-- [ ] 4.9 **Doğrulama:** `lint`, `typecheck`, `test`, `build` temiz; `docker compose up` ile tarayıcıdan kayıt → giriş → `/hesabim` → çıkış akışı (e-posta gerekmeden) ve ayrıca dev seed'deki **ikinci faktörü açık** hesapla kod adımı elle denenir.
+- [x] 4.1 `npm run gen:api` ile tipler yeniden üretilir; `apiClient` POST desteği ve §11.5 hata gövdesi çözümü genişletilir (ikinci sarmalayıcı yazılmaz — K9).
+- [x] 4.2 `web/src/lib/session.ts`: çerez okuma/yazma/silme (`bahceden_at`, `bahceden_rt`; `HttpOnly` + `Secure` + `SameSite=Lax`, yenileme çerezi `path=/api/auth` — D6).
+- [x] 4.3 Route Handler'lar: `/api/auth/login`, `/api/auth/logout`, `/api/auth/refresh`. Her biri `Sec-Fetch-Site` / `Origin` doğrular (D6); token'ı istemciye **döndürmez**, yalnızca çereze yazar.
+- [x] 4.4 Sunucu tarafı veri çekme: erişim çerezi `Bearer` olarak iletilir; 401 alınırsa **bir kez** yenileme denenir, başarısızsa `/giris`e yönlendirilir. **Faz 3'ten not:** iki eşzamanlı yenileme aynı token'ı sunarsa ikincisi tekrar kullanım sayılır ve aile iptal edilir (D1). BFF yenilemeyi istek başına tekilleştirmeli (aynı çerez için tek uçuşta yenileme).
+- [x] 4.5 Ekranlar: `/kayit`, `/giris` (sunucu ikinci adım beklediğini bildirirse aynı ekranda kod alanı açılır), `/dogrulama` (e-postadaki bağlantının indiği sayfa; token'ı sunucu tarafında tüketir), `/hesabim` (korunan; `me` verisini ve e-posta doğrulama durumunu gösterir). Her biri için **dört durum** (§12.5).
+- [x] 4.6 `AppShell` oturum durumunu gösterir: girişliyse maskeli e-posta + çıkış, değilse giriş bağlantısı. Oturum bilgisi düzende **bir kez** okunur (design.md Open Questions).
+- [x] 4.7 Metinler `texts.ts` içine; form hataları sunucudan gelen `fieldErrors` ile alanlara bağlanır (§12.3).
+- [x] 4.8 **Test (web):** kayıt formu (doğrulama hatası, sunucu hatası eşlemesi, başarı); giriş formu (hatalı kimlik → genel mesaj; ikinci adım beklenince kod alanı açılır); `/hesabim` yetkisiz durumu. Ağ mock'lu (§12.6).
+- [ ] 4.9 **Doğrulama:** `lint`, `typecheck`, `test`, `build` temiz; `docker compose up` ile tarayıcıdan kayıt → giriş → `/hesabim` → çıkış akışı (e-posta gerekmeden) ve ayrıca dev seed'deki **ikinci faktörü açık** hesapla kod adımı elle denenir. **Kısmen (2026-10-07):** `lint`, `typecheck`, `test` (30), `build` temiz. `docker compose` ile BFF akışı curl ile, tarayıcı başlıkları (`Sec-Fetch-*`) taklit edilerek doğrulandı: kayıt → giriş → `/hesabim` → bozulan erişim çereziyle yenileme yönlendirmesi ve geri dönüş → yeni doğrulama bağlantısı → çıkış; seed'deki `iki-adim@ornek.test` ile kod adımı; `/dogrulama` başarı, ikinci açılışta "kullanılmış", eksik token. **Açık kalan:** gerçek tarayıcıda elle deneme ve 375 / 1440 px görsel kontrol (insan işi).
+
+> **Faz 4 uygulama notları (2026-10-07):**
+> - BFF yolları: `/api/auth/{register,login,challenge,logout,verification-request}` (POST, köken denetimli) ve `/api/auth/refresh` (GET, gezinti). Görevde yalnızca login/logout/refresh sayılmıştı; ekranların ihtiyacı olan diğer üçü de aynı desenle eklendi.
+> - Server Component çerez yazamadığı için yenileme yerinde değil, `GET /api/auth/refresh?next=` yönlendirmesiyle yapılır; yenileme çerezi zaten yalnızca bu yolda gider (D6). Tek gezinti = eşzamanlı yenileme yok (Faz 3 notu kapandı).
+> - Erişim çerezi yenileme token'ı kadar yaşar (JWT 15 dk): çerezin varlığı "oturum var" bilgisidir, süresi dolmuş JWT hiçbir şeye yetki vermez.
+> - Korunan sayfanın kapısı `layout.tsx`'te: yükleniyor sınırının dışında çalıştığı için yönlendirme gerçek bir 307 olur.
+> - Konteynerde Next kendi kökenini makine adından kurar: yönlendirmeler göreli `Location`, köken karşılaştırması `Host` başlığıyla yapılır.
+> - `typecheck` betiği `next typegen && tsc --noEmit` oldu: `typedRoutes` tipleri CI'da da üretilir, yerel ile CI aynı sıkılıkta.
+> - `004-dev-seed-account.sql` (dev bağlamı): `alici@ornek.test` (2FA kapalı) ve `iki-adim@ornek.test` (2FA açık), parola `gelistirme-parolasi-1`; izolasyonu `DevSeedIsolationTest` ile sabit.
+> - **Bilinen sınırlama:** Next, istemcinin gönderdiği `X-Forwarded-For`'u korur; Next doğrudan internete açılırsa IP bazlı hız sınırı sahte başlıkla atlatılabilir. Üretimde başlığı kendisi yazan bir reverse proxy gerekir (KALANLAR B5); `00-current-state.md`'ye yazılır.
 
 ## Faz 5 · Doküman ve kapanış
 

@@ -1,12 +1,14 @@
 import Link from "next/link";
+import { SessionNav } from "@/components/SessionNav";
 import { texts } from "@/lib/texts";
 import styles from "./AppShell.module.css";
 
 /**
  * Uygulama kabuğu: her sayfanın paylaştığı üst başlık ve alt bilgi.
  *
- * Bilinçli olarak küçük: gezinme menüsü, arama çubuğu ve hesap menüsü yok,
- * çünkü arkasında duracak ekranlar henüz yok. Olmayan bir şeye bağlanan boş
+ * Bilinçli olarak küçük: gezinme menüsü ve arama çubuğu yok, çünkü arkasında
+ * duracak ekranlar henüz yok. Tek ek, oturum alanıdır ({@link SessionNav}):
+ * giriş, kayıt ve hesap ekranları artık var. Olmayan bir şeye bağlanan boş
  * bir menü, kullanıcıyı çıkmaz sokağa sokar (AGENTS.md §12.5) ve yapılmamış
  * işi yapılmış gibi gösterir (K6).
  *
@@ -22,6 +24,7 @@ export function AppShell({ children }: { readonly children: React.ReactNode }) {
             {texts.siteName}
           </Link>
           <p className={styles.tagline}>{texts.siteTagline}</p>
+          <SessionNav />
         </div>
       </header>
 

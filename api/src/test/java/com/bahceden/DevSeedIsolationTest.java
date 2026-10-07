@@ -55,4 +55,15 @@ class DevSeedIsolationTest {
                 .as("dev seed yalnızca contextFilter:dev etkinken çalışmalı (ADR-014)")
                 .isZero();
     }
+
+    @Test
+    @DisplayName("Dev hesap seed'i test bağlamında uygulanmaz")
+    void dev_hesap_seedi_test_baglaminda_uygulanmaz() {
+        Integer applied = jdbc.queryForObject(
+                "select count(*) from databasechangelog where id = ?", Integer.class, "004-dev-seed-account");
+
+        assertThat(applied)
+                .as("sabit parolalı geliştirme hesapları yalnızca dev bağlamında oluşmalı (ADR-014)")
+                .isZero();
+    }
 }
