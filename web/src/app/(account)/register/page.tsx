@@ -21,7 +21,7 @@ export default function RegisterPage() {
       aside={
         <>
           {t("account.register.haveAccount")}{" "}
-          <Link className="font-medium text-primary underline-offset-4 hover:underline" href="/giris">
+          <Link className="font-medium text-primary underline-offset-4 hover:underline" href="/login">
             {t("account.nav.signIn")}
           </Link>
         </>

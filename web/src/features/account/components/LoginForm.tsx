@@ -80,7 +80,7 @@ export function LoginForm({ returnPath }: LoginFormProps) {
           <FormMessage tone="info">{challenge.message}</FormMessage>
           {alert}
           <FormField
-            id="giris-kod"
+            id="login-code"
             name="code"
             label={t("account.fields.code")}
             type="text"
@@ -116,7 +116,7 @@ export function LoginForm({ returnPath }: LoginFormProps) {
       <FieldGroup>
         {alert}
         <FormField
-          id="giris-eposta"
+          id="login-email"
           name="email"
           label={t("account.fields.email")}
           type="email"
@@ -124,7 +124,7 @@ export function LoginForm({ returnPath }: LoginFormProps) {
           error={errors.fields.email}
         />
         <FormField
-          id="giris-parola"
+          id="login-password"
           name="password"
           label={t("account.fields.password")}
           type="password"

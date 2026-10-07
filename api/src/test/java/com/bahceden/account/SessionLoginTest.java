@@ -73,7 +73,7 @@ class SessionLoginTest {
     private ObjectMapper objectMapper;
 
     @BeforeEach
-    void temizle() {
+    void cleanUp() {
         // Önceki testlerin hız sınırı pencerelerini geride bırakır.
         clock.advance(Duration.ofDays(1));
         jdbc.execute("delete from accounts");
@@ -86,7 +86,7 @@ class SessionLoginTest {
     void dogrulanmamis_hesap_giris_yapabilir() throws Exception {
         assertThat(jdbc.queryForObject("select email_verified from accounts", Boolean.class)).isFalse();
 
-        giris(EMAIL, PASSWORD)
+        postLogin(EMAIL, PASSWORD)
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.accessToken").isNotEmpty())
                 .andExpect(jsonPath("$.accessTokenExpiresAt").isNotEmpty())
@@ -99,8 +99,8 @@ class SessionLoginTest {
     @Test
     @DisplayName("Yenileme token'ı yalnızca hash olarak saklanır ve yeni bir aile başlatır")
     void yenileme_tokeni_hashli_saklanir() throws Exception {
-        var refreshToken = tokenlar(giris(EMAIL, PASSWORD)).refreshToken();
-        tokenlar(giris(EMAIL, PASSWORD));
+        var refreshToken = issuedTokens(postLogin(EMAIL, PASSWORD)).refreshToken();
+        issuedTokens(postLogin(EMAIL, PASSWORD));
 
         assertThat(jdbc.queryForObject(
                 "select count(*) from refresh_tokens where token_hash = ?", Integer.class, secureTokens.hash(refreshToken)))
@@ -117,22 +117,22 @@ class SessionLoginTest {
     @Test
     @DisplayName("E-posta büyük harfli girilse de aynı hesapla giriş yapılır")
     void eposta_buyuk_kucuk_harften_bagimsiz() throws Exception {
-        giris("ALICI@Ornek.Test", PASSWORD).andExpect(status().isOk());
+        postLogin("ALICI@Ornek.Test", PASSWORD).andExpect(status().isOk());
     }
 
     @Test
     @DisplayName("Hatalı parola ile var olmayan e-posta birebir aynı yanıtı alır (enumeration, D4)")
     void hatali_parola_ve_hatali_eposta_ayni_yaniti_doner() throws Exception {
-        var hataliParola = giris(EMAIL, "yanlis-parola-123")
+        var wrongPasswordResponse = postLogin(EMAIL, "yanlis-parola-123")
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value(ApiErrorCode.AUTH_INVALID_CREDENTIALS.name()))
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
 
-        var hataliEposta = giris("kimse@ornek.test", PASSWORD)
+        var unknownEmailResponse = postLogin("kimse@ornek.test", PASSWORD)
                 .andExpect(status().isUnauthorized())
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
 
-        assertThat(hataliEposta).isEqualTo(hataliParola);
+        assertThat(unknownEmailResponse).isEqualTo(wrongPasswordResponse);
         assertThat(jdbc.queryForObject("select count(*) from refresh_tokens", Integer.class)).isZero();
     }
 
@@ -141,7 +141,7 @@ class SessionLoginTest {
     void hata_govdesi_parola_icermez() throws Exception {
         var secret = "gizli-parola-sizmasin";
 
-        giris(EMAIL, secret)
+        postLogin(EMAIL, secret)
                 .andExpect(status().isUnauthorized())
                 .andExpect(content().string(Matchers.not(Matchers.containsString(secret))));
     }
@@ -149,7 +149,7 @@ class SessionLoginTest {
     @Test
     @DisplayName("Eksik alanlar ortak doğrulama gövdesiyle reddedilir")
     void eksik_alanlar_reddedilir() throws Exception {
-        giris("", "")
+        postLogin("", "")
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value(ApiErrorCode.VALIDATION_FAILED.name()))
                 .andExpect(jsonPath("$.fieldErrors.length()").value(2));
@@ -160,7 +160,7 @@ class SessionLoginTest {
     void ikinci_faktor_acikken_token_donmez_kod_gonderilir() throws Exception {
         jdbc.update("update accounts set two_factor_enabled = true where email = ?", EMAIL);
 
-        giris(EMAIL, PASSWORD)
+        postLogin(EMAIL, PASSWORD)
                 .andExpect(status().isAccepted())
                 .andExpect(jsonPath("$.message").isNotEmpty())
                 .andExpect(jsonPath("$.expiresAt").isNotEmpty())
@@ -185,7 +185,7 @@ class SessionLoginTest {
     void ikinci_faktor_acik_parola_yanlis_kod_gonderilmez() throws Exception {
         jdbc.update("update accounts set two_factor_enabled = true where email = ?", EMAIL);
 
-        giris(EMAIL, "yanlis-parola-123").andExpect(status().isUnauthorized());
+        postLogin(EMAIL, "yanlis-parola-123").andExpect(status().isUnauthorized());
 
         assertThat(mail.sent()).isEmpty();
         assertThat(jdbc.queryForObject("select count(*) from login_challenges", Integer.class)).isZero();
@@ -195,24 +195,24 @@ class SessionLoginTest {
     @DisplayName("Aynı istemci ve e-postayla sınırı aşan giriş denemesi 429 alır (D5)")
     void giris_hiz_siniri_asilinca_429() throws Exception {
         for (int i = 0; i < RateLimitPolicy.LOGIN.limit(); i++) {
-            giris(EMAIL, "yanlis-parola-123").andExpect(status().isUnauthorized());
+            postLogin(EMAIL, "yanlis-parola-123").andExpect(status().isUnauthorized());
         }
 
-        giris(EMAIL, PASSWORD)
+        postLogin(EMAIL, PASSWORD)
                 .andExpect(status().isTooManyRequests())
                 .andExpect(jsonPath("$.code").value(ApiErrorCode.RATE_LIMITED.name()));
 
         clock.advance(RateLimitPolicy.LOGIN.window());
-        giris(EMAIL, PASSWORD).andExpect(status().isOk());
+        postLogin(EMAIL, PASSWORD).andExpect(status().isOk());
     }
 
-    private ResultActions giris(String email, String password) throws Exception {
+    private ResultActions postLogin(String email, String password) throws Exception {
         return mockMvc.perform(post("/api/v1/sessions")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(new LoginBody(email, password))));
     }
 
-    private Tokens tokenlar(ResultActions result) throws Exception {
+    private Tokens issuedTokens(ResultActions result) throws Exception {
         var json = result.andExpect(status().isOk()).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
         return objectMapper.readValue(json, Tokens.class);
     }

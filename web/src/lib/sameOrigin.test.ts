@@ -6,23 +6,23 @@ import { isAllowedNavigation, isSameOriginRequest, safeReturnPath } from "./same
  * Güvenlik kuralı olduğu için her dal sabitlenir.
  */
 
-function istek(headers: Record<string, string>): Request {
+function aRequest(headers: Record<string, string>): Request {
   return new Request("http://localhost:3000/api/auth/login", { method: "POST", headers });
 }
 
 describe("isSameOriginRequest", () => {
   it("aynı kökenden gelen isteği kabul eder", () => {
-    expect(isSameOriginRequest(istek({ "sec-fetch-site": "same-origin" }))).toBe(true);
+    expect(isSameOriginRequest(aRequest({ "sec-fetch-site": "same-origin" }))).toBe(true);
   });
 
   it("başka siteden gelen isteği reddeder", () => {
-    expect(isSameOriginRequest(istek({ "sec-fetch-site": "cross-site" }))).toBe(false);
-    expect(isSameOriginRequest(istek({ "sec-fetch-site": "same-site" }))).toBe(false);
+    expect(isSameOriginRequest(aRequest({ "sec-fetch-site": "cross-site" }))).toBe(false);
+    expect(isSameOriginRequest(aRequest({ "sec-fetch-site": "same-site" }))).toBe(false);
   });
 
   it("Sec-Fetch-Site yoksa Origin karşılaştırılır", () => {
-    expect(isSameOriginRequest(istek({ origin: "http://localhost:3000", host: "localhost:3000" }))).toBe(true);
-    expect(isSameOriginRequest(istek({ origin: "https://saldirgan.test", host: "localhost:3000" }))).toBe(false);
+    expect(isSameOriginRequest(aRequest({ origin: "http://localhost:3000", host: "localhost:3000" }))).toBe(true);
+    expect(isSameOriginRequest(aRequest({ origin: "https://saldirgan.test", host: "localhost:3000" }))).toBe(false);
   });
 
   it("Origin, isteğin URL'sine değil Host başlığına göre karşılaştırılır (konteyner adı)", () => {
@@ -34,23 +34,23 @@ describe("isSameOriginRequest", () => {
   });
 
   it("iki başlık da yoksa reddeder", () => {
-    expect(isSameOriginRequest(istek({}))).toBe(false);
+    expect(isSameOriginRequest(aRequest({}))).toBe(false);
   });
 });
 
 describe("isAllowedNavigation", () => {
   it("başka siteden gelen üst düzey gezintiye izin verir", () => {
-    expect(isAllowedNavigation(istek({ "sec-fetch-site": "cross-site", "sec-fetch-mode": "navigate" }))).toBe(true);
+    expect(isAllowedNavigation(aRequest({ "sec-fetch-site": "cross-site", "sec-fetch-mode": "navigate" }))).toBe(true);
   });
 
   it("başka siteden gelen alt kaynak isteğini reddeder", () => {
-    expect(isAllowedNavigation(istek({ "sec-fetch-site": "cross-site", "sec-fetch-mode": "no-cors" }))).toBe(false);
+    expect(isAllowedNavigation(aRequest({ "sec-fetch-site": "cross-site", "sec-fetch-mode": "no-cors" }))).toBe(false);
   });
 });
 
 describe("safeReturnPath", () => {
   it("kendi sitemizdeki yolu kabul eder", () => {
-    expect(safeReturnPath("/hesabim", "/")).toBe("/hesabim");
+    expect(safeReturnPath("/account", "/")).toBe("/account");
   });
 
   it("açık yönlendirmeye yol açacak değerleri reddeder", () => {
@@ -60,7 +60,7 @@ describe("safeReturnPath", () => {
   });
 
   it("değer yoksa varsayılana döner", () => {
-    expect(safeReturnPath(null, "/hesabim")).toBe("/hesabim");
-    expect(safeReturnPath(undefined, "/hesabim")).toBe("/hesabim");
+    expect(safeReturnPath(null, "/account")).toBe("/account");
+    expect(safeReturnPath(undefined, "/account")).toBe("/account");
   });
 });

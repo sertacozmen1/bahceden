@@ -86,7 +86,7 @@ cd api && ./mvnw test -Dtest=OpenApiContractTest -Dopenapi.write=true
 
 ### 7. `web` tarafında veriyi oturumla çekin
 
-Sunucu tarafında oturumu `currentSession()` ile okuyun; korunan sayfanın kapısını `layout.tsx` içine `requireSignedIn("/yol")` olarak koyun. Böylece oturumsuz istek gerçek bir `307` ile `/giris`'e, süresi dolmuş token ise önce yenilemeye gider ([ADR-023](../adr/023-web-bff-cookies-and-header-csrf.md)). Erişim token'ını `apiGet(path, { accessToken })` ile iletin; token'ı asla istemci bileşenine prop olarak vermeyin.
+Sunucu tarafında oturumu `currentSession()` ile okuyun; korunan sayfanın kapısını `layout.tsx` içine `requireSignedIn("/yol")` olarak koyun. Böylece oturumsuz istek gerçek bir `307` ile `/login`'e, süresi dolmuş token ise önce yenilemeye gider ([ADR-023](../adr/023-web-bff-cookies-and-header-csrf.md)). Erişim token'ını `apiGet(path, { accessToken })` ile iletin; token'ı asla istemci bileşenine prop olarak vermeyin.
 
 ---
 

@@ -128,7 +128,7 @@ Tercih `bahceden_theme` çerezinde (bir yıl). Kök düzen onu sunucuda okur; il
 | Yükleniyor | Son düzenin ölçüsünü taşıyan `Skeleton` blokları; dönen gösterge yok |
 | Boş | Kesik çizgili kutu, ikon, başlık, ne bekleneceğini söyleyen tek cümle |
 | Hata | `StatusPanel` (`role="alert"`) + "Yeniden dene"; form içinde `FormMessage tone="error"` |
-| Yetkisiz | Korunan sayfa `layout.tsx` kapısında `/giris?next=…`'e yönlendirir; giriş sayfası nedenini söyler |
+| Yetkisiz | Korunan sayfa `layout.tsx` kapısında `/login?next=…`'e yönlendirir; giriş sayfası nedenini söyler |
 
 ## 6. Bilinçli olarak olmayanlar
 

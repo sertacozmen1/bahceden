@@ -13,7 +13,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t("account.login.title") };
 }
 
-const DEFAULT_RETURN_PATH = "/hesabim";
+const DEFAULT_RETURN_PATH = "/account";
 
 /**
  * Giriş sayfası. Korunan bir sayfadan yönlendirildiyse (`next`) bunu söyler ve
@@ -39,7 +39,7 @@ export default async function LoginPage({
       aside={
         <>
           {t("account.login.noAccount")}{" "}
-          <Link className="font-medium text-primary underline-offset-4 hover:underline" href="/kayit">
+          <Link className="font-medium text-primary underline-offset-4 hover:underline" href="/register">
             {t("account.nav.register")}
           </Link>
         </>

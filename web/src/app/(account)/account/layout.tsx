@@ -5,6 +5,6 @@ import { requireSignedIn } from "@/features/account/requireSession";
  * istek akış başlamadan gerçek bir 307 ile yönlendirilir.
  */
 export default async function MyAccountLayout({ children }: { readonly children: React.ReactNode }) {
-  await requireSignedIn("/hesabim");
+  await requireSignedIn("/account");
   return children;
 }

@@ -16,7 +16,7 @@ function jsonResponse(status: number, body: unknown): Response {
   return new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
 }
 
-function kimlikGonder() {
+function submitCredentials() {
   fireEvent.change(screen.getByLabelText("E-posta adresi"), { target: { value: "alici@ornek.test" } });
   fireEvent.change(screen.getByLabelText("Parola"), { target: { value: "cok-gizli-parola" } });
   fireEvent.click(screen.getByRole("button", { name: "Giriş yap" }));
@@ -43,9 +43,9 @@ describe("LoginForm", () => {
         }),
       ),
     );
-    renderWithIntl(<LoginForm returnPath="/hesabim" />);
+    renderWithIntl(<LoginForm returnPath="/account" />);
 
-    kimlikGonder();
+    submitCredentials();
 
     expect((await screen.findByRole("alert")).textContent).toBe("E-posta adresi veya parola hatalı.");
     expect(screen.getByLabelText("E-posta adresi").getAttribute("aria-invalid")).toBe("false");
@@ -55,11 +55,11 @@ describe("LoginForm", () => {
 
   it("başarıda hedefe gider ve sunucu bileşenlerini yeniler", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse(200, { outcome: "AUTHENTICATED" })));
-    renderWithIntl(<LoginForm returnPath="/hesabim" />);
+    renderWithIntl(<LoginForm returnPath="/account" />);
 
-    kimlikGonder();
+    submitCredentials();
 
-    await vi.waitFor(() => expect(router.push).toHaveBeenCalledWith("/hesabim"));
+    await vi.waitFor(() => expect(router.push).toHaveBeenCalledWith("/account"));
     expect(router.refresh).toHaveBeenCalled();
   });
 
@@ -71,9 +71,9 @@ describe("LoginForm", () => {
       )
       .mockResolvedValueOnce(jsonResponse(200, { outcome: "AUTHENTICATED" }));
     vi.stubGlobal("fetch", fetchMock);
-    renderWithIntl(<LoginForm returnPath="/hesabim" />);
+    renderWithIntl(<LoginForm returnPath="/account" />);
 
-    kimlikGonder();
+    submitCredentials();
 
     expect(await screen.findByText("E-posta adresinize bir giriş kodu gönderdik.")).toBeDefined();
     expect(screen.queryByLabelText("Parola")).toBeNull();
@@ -81,7 +81,7 @@ describe("LoginForm", () => {
     fireEvent.change(screen.getByLabelText("Giriş kodu"), { target: { value: " 042917 " } });
     fireEvent.click(screen.getByRole("button", { name: "Kodu onayla" }));
 
-    await vi.waitFor(() => expect(router.push).toHaveBeenCalledWith("/hesabim"));
+    await vi.waitFor(() => expect(router.push).toHaveBeenCalledWith("/account"));
     const [path, init] = fetchMock.mock.calls[1] ?? [];
     expect(path).toBe("/api/auth/challenge");
     expect(JSON.parse(String(init?.body))).toEqual({ email: "alici@ornek.test", code: "042917" });
@@ -97,9 +97,9 @@ describe("LoginForm", () => {
           jsonResponse(401, { code: "AUTH_CODE_INVALID", message: "Kod hatalı ya da süresi dolmuş.", fieldErrors: [] }),
         ),
     );
-    renderWithIntl(<LoginForm returnPath="/hesabim" />);
+    renderWithIntl(<LoginForm returnPath="/account" />);
 
-    kimlikGonder();
+    submitCredentials();
     fireEvent.change(await screen.findByLabelText("Giriş kodu"), { target: { value: "000000" } });
     fireEvent.click(screen.getByRole("button", { name: "Kodu onayla" }));
 

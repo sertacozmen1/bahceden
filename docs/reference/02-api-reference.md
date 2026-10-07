@@ -169,7 +169,7 @@ E-posta biçimi geçerli olmalı (baştaki/sondaki boşluk reddedilir, kırpma i
 { "message": "E-posta adresinize bir bağlantı gönderdik. Hesabınızla hemen giriş yapabilirsiniz." }
 ```
 
-Yeni adrese doğrulama bağlantısı (`<web>/dogrulama?token=…`), kayıtlı adrese "hesabınız zaten var" e-postası gider. Kayıtlı adresle yapılan kayıt mevcut hesabı değiştirmez.
+Yeni adrese doğrulama bağlantısı (`<web>/verify-email?token=…`), kayıtlı adrese "hesabınız zaten var" e-postası gider. Kayıtlı adresle yapılan kayıt mevcut hesabı değiştirmez.
 
 ### `POST /api/v1/accounts/verifications`
 
@@ -255,7 +255,7 @@ Tarayıcı `api`'ye hiç konuşmaz ve token görmez ([ADR-023](../adr/023-web-bf
 | `/api/auth/challenge` | POST | `POST /sessions/challenge` | |
 | `/api/auth/verification-request` | POST | `POST /accounts/me/verification-requests` | |
 | `/api/auth/logout` | POST | `DELETE /sessions/current` | `api`'ye ulaşılamasa da çerezler silinir |
-| `/api/auth/refresh?next=<yol>` | GET | `POST /sessions/refresh` | Gezinti; başarıda `next`'e, reddedilirse `/giris?next=`'e 307 |
+| `/api/auth/refresh?next=<yol>` | GET | `POST /sessions/refresh` | Gezinti; başarıda `next`'e, reddedilirse `/login?next=`'e 307 |
 
 - **Çerezler:** `bahceden_at` (`path=/`) ve `bahceden_rt` (`path=/api/auth`); ikisi de `HttpOnly`, `Secure`, `SameSite=Lax`, ömürleri yenileme token'ı kadar.
 - **CSRF:** POST'lar `Sec-Fetch-Site: same-origin` ister; yoksa `Origin` `Host` ile karşılaştırılır. Reddedilen istek `403 CROSS_SITE_REQUEST` alır (BFF'in kendi kodu, `api`'de yok). `api`'ye ulaşılamazsa BFF `502 SERVICE_UNAVAILABLE` döner.

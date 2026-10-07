@@ -17,7 +17,7 @@ export async function requireSignedIn(selfPath: Route): Promise<SignedIn> {
   const session = await currentSession();
   const next = encodeURIComponent(selfPath);
   if (session.kind === "anonymous") {
-    redirect(`/giris?next=${next}`);
+    redirect(`/login?next=${next}`);
   }
   if (session.kind === "expired") {
     redirect(`/api/auth/refresh?next=${next}`);

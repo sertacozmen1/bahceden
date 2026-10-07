@@ -36,6 +36,7 @@ Kullanıcı e-posta adresi ve parolayla hesap açar ve hesabını hemen kullanı
 
 ## Tarihçe
 
+- 2026-10-07: Hesap sayfalarının adresleri İngilizce oldu: `/kayit` → `/register`, `/giris` → `/login`, `/dogrulama` → `/verify-email`, `/hesabim` → `/account`. Değişikliğe e-postadaki doğrulama ve giriş bağlantıları da dahil. Eski adresler yönlendirilmez: üretim yok, yalnızca geliştirmede gönderilmiş bağlantılar kırılır. Form alanı `id`'leri ve testlerdeki Türkçe yardımcı adları da İngilizce yapıldı (AGENTS.md §1).
 - 2026-10-07: Hesap ekranları, sunucu mesajları ve e-postalar Türkçe ve İngilizce (change `add-i18n`). Hesabın dili saklanıyor (`accounts.locale`): kayıtta yazılır, her başarılı girişte güncellenir; doğrulama bağlantısı, giriş kodu ve "hesabınız zaten var" e-postaları hesabın dilinde gider ([ADR-032](../adr/032-account-locale-stored-and-refreshed-on-login.md)). Kayıt ve giriş yanıtları isteğin dilinde ([ADR-031](../adr/031-api-messages-by-accept-language.md)).
 
 - 2026-10-07: `add-account-and-session` change'i kullanıcı onayıyla archive edildi (`openspec/changes/archive/2026-10-07-add-account-and-session/`). Ön koşullar sağlandı: delta spec ana spec'le birebir, D1–D9 → ADR-018…026, dokümanlar güncel, CI run `37589772992` 4/4 yeşil. Açık kalan tek görev 4.9: ekranların gerçek tarayıcıda, 375 / 1440 px ve iki temada gözle doğrulanması (insan işi). Taşımada 22 göreli link bir seviye uzatıldı; delta spec'teki önceden de kırık olan ADR-017 linki düzeltildi.

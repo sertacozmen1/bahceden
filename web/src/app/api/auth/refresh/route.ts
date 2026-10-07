@@ -17,7 +17,7 @@ import { clearSession, readRefreshToken, writeSession } from "@/lib/session";
  * Yenileme tek bir gezinti içinde yapılır: aynı token'la eşzamanlı iki yenileme
  * (ki `api` bunu sızıntı sayıp oturum zincirini iptal eder) oluşmaz.
  */
-const FALLBACK_PATH = "/hesabim";
+const FALLBACK_PATH = "/account";
 
 /**
  * Göreli `Location` ile yönlendirme. Mutlak adres istek URL'sinden kurulursa
@@ -30,7 +30,7 @@ function redirectTo(path: string): Response {
 
 export async function GET(request: NextRequest): Promise<Response> {
   const returnPath = safeReturnPath(request.nextUrl.searchParams.get("next"), FALLBACK_PATH);
-  const toLogin = `/giris?next=${encodeURIComponent(returnPath)}`;
+  const toLogin = `/login?next=${encodeURIComponent(returnPath)}`;
 
   if (!isAllowedNavigation(request)) {
     return redirectTo(toLogin);

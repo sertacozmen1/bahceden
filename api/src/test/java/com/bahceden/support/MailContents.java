@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
  */
 public final class MailContents {
 
-    private static final String VERIFICATION_LINK = "/dogrulama?token=";
+    private static final String VERIFICATION_LINK = "/verify-email?token=";
 
     private static final Pattern SIX_DIGIT_CODE = Pattern.compile("(?m)^\\s*(\\d{6})\\s*$");
 

@@ -68,7 +68,7 @@ class SessionRefreshTest {
     private ObjectMapper objectMapper;
 
     @BeforeEach
-    void hazirla() {
+    void setUp() {
         // Önceki testlerin hız sınırı pencerelerini geride bırakır.
         clock.advance(Duration.ofDays(1));
         jdbc.execute("delete from accounts");
@@ -78,12 +78,12 @@ class SessionRefreshTest {
     @Test
     @DisplayName("Yenileme yeni token çifti verir; sunulan token bir daha kullanılamaz")
     void yenileme_rotasyon_yapar() throws Exception {
-        var ilk = girisYap();
+        var first = signInAndGetToken();
 
-        var ikinci = tokenlar(yenile(ilk.refreshToken()).andExpect(status().isOk()));
+        var second = issuedTokens(postRefresh(first.refreshToken()).andExpect(status().isOk()));
 
-        assertThat(ikinci.refreshToken()).isNotEqualTo(ilk.refreshToken());
-        assertThat(ikinci.accessToken()).isNotBlank();
+        assertThat(second.refreshToken()).isNotEqualTo(first.refreshToken());
+        assertThat(second.accessToken()).isNotBlank();
         assertThat(jdbc.queryForObject("select count(distinct family_id) from refresh_tokens", Integer.class))
                 .as("rotasyon aynı ailede kalır")
                 .isEqualTo(1);
@@ -92,15 +92,15 @@ class SessionRefreshTest {
     @Test
     @DisplayName("Kullanılmış token tekrar sunulursa ailenin tamamı iptal edilir")
     void tekrar_kullanim_aileyi_iptal_eder() throws Exception {
-        var ilk = girisYap();
-        var ikinci = tokenlar(yenile(ilk.refreshToken()).andExpect(status().isOk()));
+        var first = signInAndGetToken();
+        var second = issuedTokens(postRefresh(first.refreshToken()).andExpect(status().isOk()));
 
-        yenile(ilk.refreshToken())
+        postRefresh(first.refreshToken())
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value(ApiErrorCode.AUTH_TOKEN_INVALID.name()));
 
         // Sızıntı tespitinden sonra meşru görünen token da geçersizdir.
-        yenile(ikinci.refreshToken())
+        postRefresh(second.refreshToken())
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value(ApiErrorCode.AUTH_TOKEN_INVALID.name()));
         assertThat(jdbc.queryForObject("select count(*) from refresh_tokens where revoked_at is null", Integer.class))
@@ -110,23 +110,23 @@ class SessionRefreshTest {
     @Test
     @DisplayName("Tekrar kullanım yalnızca o aileyi iptal eder; başka cihazdaki oturum etkilenmez")
     void iptal_yalnizca_aileyi_etkiler() throws Exception {
-        var telefon = girisYap();
-        var bilgisayar = girisYap();
-        yenile(telefon.refreshToken()).andExpect(status().isOk());
+        var phone = signInAndGetToken();
+        var laptop = signInAndGetToken();
+        postRefresh(phone.refreshToken()).andExpect(status().isOk());
 
-        yenile(telefon.refreshToken()).andExpect(status().isBadRequest());
+        postRefresh(phone.refreshToken()).andExpect(status().isBadRequest());
 
-        yenile(bilgisayar.refreshToken()).andExpect(status().isOk());
+        postRefresh(laptop.refreshToken()).andExpect(status().isOk());
     }
 
     @Test
     @DisplayName("Çıkış sonrası yenileme reddedilir")
     void cikis_sonrasi_yenileme_reddedilir() throws Exception {
-        var oturum = girisYap();
+        var session = signInAndGetToken();
 
-        cikis(oturum.refreshToken()).andExpect(status().isNoContent());
+        postLogout(session.refreshToken()).andExpect(status().isNoContent());
 
-        yenile(oturum.refreshToken())
+        postRefresh(session.refreshToken())
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value(ApiErrorCode.AUTH_TOKEN_INVALID.name()));
     }
@@ -134,26 +134,26 @@ class SessionRefreshTest {
     @Test
     @DisplayName("Çıkıştan sonra erişim token'ı süresi dolunca me 401 alır")
     void cikis_sonrasi_erisim_tokeni_suresi_dolunca_gecersiz() throws Exception {
-        var oturum = girisYap();
-        cikis(oturum.refreshToken()).andExpect(status().isNoContent());
+        var session = signInAndGetToken();
+        postLogout(session.refreshToken()).andExpect(status().isNoContent());
 
         // Bilinen pencere: JWT durumsuzdur, ömrü boyunca geçerli kalır (ADR-008).
-        me(oturum.accessToken()).andExpect(status().isOk());
+        me(session.accessToken()).andExpect(status().isOk());
 
         clock.advance(AccessTokenIssuer.TTL.plusMinutes(2));
-        me(oturum.accessToken())
+        me(session.accessToken())
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value(ApiErrorCode.AUTH_REQUIRED.name()));
-        yenile(oturum.refreshToken()).andExpect(status().isBadRequest());
+        postRefresh(session.refreshToken()).andExpect(status().isBadRequest());
     }
 
     @Test
     @DisplayName("Süresi dolmuş yenileme token'ı reddedilir")
     void suresi_dolmus_yenileme_reddedilir() throws Exception {
-        var oturum = girisYap();
+        var session = signInAndGetToken();
         clock.advance(SessionService.REFRESH_TOKEN_TTL.plusSeconds(1));
 
-        yenile(oturum.refreshToken())
+        postRefresh(session.refreshToken())
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value(ApiErrorCode.AUTH_TOKEN_INVALID.name()));
     }
@@ -161,14 +161,14 @@ class SessionRefreshTest {
     @Test
     @DisplayName("Yenilenen erişim token'ı hesabın güncel rollerini taşır")
     void yenileme_guncel_rolleri_tasir() throws Exception {
-        var oturum = girisYap();
+        var session = signInAndGetToken();
         jdbc.update("""
                 insert into account_roles (account_id, role)
                 select id, 'ROLE_SELLER' from accounts where email = ?""", EMAIL);
 
-        var yeni = tokenlar(yenile(oturum.refreshToken()).andExpect(status().isOk()));
+        var refreshed = issuedTokens(postRefresh(session.refreshToken()).andExpect(status().isOk()));
 
-        var payload = new String(Base64.getUrlDecoder().decode(yeni.accessToken().split("\\.")[1]),
+        var payload = new String(Base64.getUrlDecoder().decode(refreshed.accessToken().split("\\.")[1]),
                 StandardCharsets.UTF_8);
         assertThat(objectMapper.readTree(payload).get("roles").toString())
                 .contains("ROLE_CUSTOMER", "ROLE_SELLER");
@@ -177,31 +177,31 @@ class SessionRefreshTest {
     @Test
     @DisplayName("Bilinmeyen token ile çıkış 204 döner: token hakkında bilgi verilmez")
     void bilinmeyen_token_ile_cikis_204() throws Exception {
-        cikis("boyle-bir-token-yok").andExpect(status().isNoContent());
+        postLogout("boyle-bir-token-yok").andExpect(status().isNoContent());
     }
 
     @Test
     @DisplayName("Bilinmeyen token ile yenileme reddedilir")
     void bilinmeyen_token_ile_yenileme_reddedilir() throws Exception {
-        yenile("boyle-bir-token-yok")
+        postRefresh("boyle-bir-token-yok")
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value(ApiErrorCode.AUTH_TOKEN_INVALID.name()));
     }
 
-    private Tokens girisYap() throws Exception {
-        return tokenlar(mockMvc.perform(post("/api/v1/sessions")
+    private Tokens signInAndGetToken() throws Exception {
+        return issuedTokens(mockMvc.perform(post("/api/v1/sessions")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(Map.of("email", EMAIL, "password", PASSWORD))))
                 .andExpect(status().isOk()));
     }
 
-    private ResultActions yenile(String refreshToken) throws Exception {
+    private ResultActions postRefresh(String refreshToken) throws Exception {
         return mockMvc.perform(post("/api/v1/sessions/refresh")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(Map.of("refreshToken", refreshToken))));
     }
 
-    private ResultActions cikis(String refreshToken) throws Exception {
+    private ResultActions postLogout(String refreshToken) throws Exception {
         return mockMvc.perform(delete("/api/v1/sessions/current")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(Map.of("refreshToken", refreshToken))));
@@ -212,7 +212,7 @@ class SessionRefreshTest {
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken));
     }
 
-    private Tokens tokenlar(ResultActions result) throws Exception {
+    private Tokens issuedTokens(ResultActions result) throws Exception {
         var json = result.andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
         return objectMapper.readValue(json, Tokens.class);
     }

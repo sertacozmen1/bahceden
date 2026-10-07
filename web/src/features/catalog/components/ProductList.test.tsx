@@ -11,7 +11,7 @@ import { ProductList } from "./ProductList";
  * alınmaz. Veri sahtedir ve ağa çıkılmaz (K10).
  */
 
-function urun(overrides: Partial<ProductSummary> = {}): ProductSummary {
+function aProduct(overrides: Partial<ProductSummary> = {}): ProductSummary {
   return {
     slug: "sultani-uzum",
     name: "Sultani Üzüm",
@@ -29,7 +29,7 @@ function urun(overrides: Partial<ProductSummary> = {}): ProductSummary {
 
 describe("ProductList", () => {
   it("ürünü adı, üreticisi ve fiyatıyla gösterir", () => {
-    renderWithIntl(<ProductList products={[urun()]} />);
+    renderWithIntl(<ProductList products={[aProduct()]} />);
 
     expect(screen.getByRole("heading", { name: "Sultani Üzüm" })).toBeDefined();
     expect(screen.getByText("Örnek Üretici (Manisa)")).toBeDefined();
@@ -48,13 +48,13 @@ describe("ProductList", () => {
   });
 
   it("stok bittiğinde durumu metinle söyler", () => {
-    renderWithIntl(<ProductList products={[urun({ stockQuantity: 0 })]} />);
+    renderWithIntl(<ProductList products={[aProduct({ stockQuantity: 0 })]} />);
 
     expect(screen.getByText("Stokta yok")).toBeDefined();
   });
 
   it("stok azaldığında kalan adedi söyler", () => {
-    renderWithIntl(<ProductList products={[urun({ stockQuantity: 3 })]} />);
+    renderWithIntl(<ProductList products={[aProduct({ stockQuantity: 3 })]} />);
 
     expect(screen.getByText("Son 3 adet")).toBeDefined();
   });
@@ -63,8 +63,8 @@ describe("ProductList", () => {
     renderWithIntl(
       <ProductList
         products={[
-          urun({ slug: "avokado", unit: "PIECE" }),
-          urun({ slug: "maydanoz", unit: "BUNCH" }),
+          aProduct({ slug: "avokado", unit: "PIECE" }),
+          aProduct({ slug: "maydanoz", unit: "BUNCH" }),
         ]}
       />,
     );
@@ -74,13 +74,13 @@ describe("ProductList", () => {
   });
 
   it("her ürün için bir liste öğesi üretir", () => {
-    renderWithIntl(<ProductList products={[urun({ slug: "a" }), urun({ slug: "b" })]} />);
+    renderWithIntl(<ProductList products={[aProduct({ slug: "a" }), aProduct({ slug: "b" })]} />);
 
     expect(screen.getAllByRole("listitem")).toHaveLength(2);
   });
 
   it("İngilizcede metinleri ve para biçimini çevirir; ürün ve üretici adı olduğu gibi kalır (ADR-029)", () => {
-    renderWithIntl(<ProductList products={[urun({ stockQuantity: 3 })]} />, "en");
+    renderWithIntl(<ProductList products={[aProduct({ stockQuantity: 3 })]} />, "en");
 
     expect(screen.getByRole("heading", { name: "Sultani Üzüm" })).toBeDefined();
     expect(screen.getByText("Örnek Üretici (Manisa)")).toBeDefined();

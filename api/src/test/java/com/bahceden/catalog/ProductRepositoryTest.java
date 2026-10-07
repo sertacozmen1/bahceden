@@ -43,7 +43,7 @@ class ProductRepositoryTest {
     private EntityManagerFactory entityManagerFactory;
 
     @BeforeEach
-    void temizle() {
+    void cleanUp() {
         jdbc.execute("delete from products");
         jdbc.execute("delete from sellers");
     }
@@ -51,10 +51,10 @@ class ProductRepositoryTest {
     @Test
     @DisplayName("Yalnızca PUBLISHED ürünler döner; DRAFT ve ARCHIVED gizlenir")
     void yalnizca_yayinlanmis_urunler_doner() {
-        long seller = ureticiEkle("uretici-a", "Üretici A", "Manisa");
-        urunEkle(seller, "yayinda", "Yayında", "PUBLISHED", Instant.now());
-        urunEkle(seller, "taslak", "Taslak", "DRAFT", null);
-        urunEkle(seller, "arsiv", "Arşiv", "ARCHIVED", Instant.now());
+        long seller = insertSeller("uretici-a", "Üretici A", "Manisa");
+        insertProduct(seller, "yayinda", "Yayında", "PUBLISHED", Instant.now());
+        insertProduct(seller, "taslak", "Taslak", "DRAFT", null);
+        insertProduct(seller, "arsiv", "Arşiv", "ARCHIVED", Instant.now());
 
         var page = repository.findPublished(PageRequest.of(0, 20));
 
@@ -66,11 +66,11 @@ class ProductRepositoryTest {
     @Test
     @DisplayName("Sıralama yayın tarihine göre yeniden eskiye")
     void siralama_yeniden_eskiye() {
-        long seller = ureticiEkle("uretici-b", "Üretici B", "Antalya");
+        long seller = insertSeller("uretici-b", "Üretici B", "Antalya");
         var now = Instant.now();
-        urunEkle(seller, "eski", "Eski", "PUBLISHED", now.minus(5, ChronoUnit.DAYS));
-        urunEkle(seller, "yeni", "Yeni", "PUBLISHED", now.minus(1, ChronoUnit.DAYS));
-        urunEkle(seller, "orta", "Orta", "PUBLISHED", now.minus(3, ChronoUnit.DAYS));
+        insertProduct(seller, "eski", "Eski", "PUBLISHED", now.minus(5, ChronoUnit.DAYS));
+        insertProduct(seller, "yeni", "Yeni", "PUBLISHED", now.minus(1, ChronoUnit.DAYS));
+        insertProduct(seller, "orta", "Orta", "PUBLISHED", now.minus(3, ChronoUnit.DAYS));
 
         var slugs = repository.findPublished(PageRequest.of(0, 20)).getContent()
                 .stream().map(p -> p.getSlug()).toList();
@@ -81,10 +81,10 @@ class ProductRepositoryTest {
     @Test
     @DisplayName("Eşit yayın tarihinde sıralama kararlı: aynı kayıt iki sayfada görünmez")
     void esit_tarihte_siralama_kararli() {
-        long seller = ureticiEkle("uretici-c", "Üretici C", "İzmir");
+        long seller = insertSeller("uretici-c", "Üretici C", "İzmir");
         var sameMoment = Instant.now();
         for (int i = 1; i <= 4; i++) {
-            urunEkle(seller, "urun-" + i, "Ürün " + i, "PUBLISHED", sameMoment);
+            insertProduct(seller, "urun-" + i, "Ürün " + i, "PUBLISHED", sameMoment);
         }
 
         var first = repository.findPublished(PageRequest.of(0, 2)).getContent()
@@ -109,8 +109,8 @@ class ProductRepositoryTest {
     @Test
     @DisplayName("Aralık dışı sayfa boş içerik ve doğru toplam döner")
     void aralik_disi_sayfa() {
-        long seller = ureticiEkle("uretici-d", "Üretici D", "Mersin");
-        urunEkle(seller, "tek-urun", "Tek Ürün", "PUBLISHED", Instant.now());
+        long seller = insertSeller("uretici-d", "Üretici D", "Mersin");
+        insertProduct(seller, "tek-urun", "Tek Ürün", "PUBLISHED", Instant.now());
 
         var page = repository.findPublished(PageRequest.of(5, 20));
 
@@ -121,9 +121,9 @@ class ProductRepositoryTest {
     @Test
     @DisplayName("Üretici tek sorguda gelir: ürün sayısı sorgu sayısını artırmaz (N+1 yok)")
     void uretici_tek_sorguda_gelir() {
-        long seller = ureticiEkle("uretici-e", "Üretici E", "Manisa");
+        long seller = insertSeller("uretici-e", "Üretici E", "Manisa");
         for (int i = 1; i <= 10; i++) {
-            urunEkle(seller, "coklu-" + i, "Çoklu " + i, "PUBLISHED", Instant.now().minus(i, ChronoUnit.HOURS));
+            insertProduct(seller, "coklu-" + i, "Çoklu " + i, "PUBLISHED", Instant.now().minus(i, ChronoUnit.HOURS));
         }
 
         var statistics = statistics();
@@ -143,12 +143,12 @@ class ProductRepositoryTest {
         return entityManagerFactory.unwrap(SessionFactory.class).getStatistics();
     }
 
-    private long ureticiEkle(String slug, String displayName, String city) {
+    private long insertSeller(String slug, String displayName, String city) {
         jdbc.update("insert into sellers (slug, display_name, city) values (?, ?, ?)", slug, displayName, city);
         return jdbc.queryForObject("select id from sellers where slug = ?", Long.class, slug);
     }
 
-    private void urunEkle(long sellerId, String slug, String name, String status, Instant publishedAt) {
+    private void insertProduct(long sellerId, String slug, String name, String status, Instant publishedAt) {
         jdbc.update("""
                 insert into products (seller_id, slug, name, status, unit, price_amount,
                                       price_currency, stock_quantity, published_at)

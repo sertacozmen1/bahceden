@@ -84,7 +84,7 @@ class CurrentAccountTest {
     private String verificationToken;
 
     @BeforeEach
-    void hazirla() {
+    void setUp() {
         // Önceki testlerin hız sınırı pencerelerini geride bırakır.
         clock.advance(Duration.ofDays(1));
         jdbc.execute("delete from accounts");
@@ -96,7 +96,7 @@ class CurrentAccountTest {
     @Test
     @DisplayName("Geçerli token: e-posta, roller ve doğrulama durumu döner")
     void gecerli_token_ile_kimlik_doner() throws Exception {
-        me(girisYap())
+        me(signInAndGetToken())
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.email").value(EMAIL))
                 .andExpect(jsonPath("$.roles").value(org.hamcrest.Matchers.contains("ROLE_CUSTOMER")))
@@ -107,7 +107,7 @@ class CurrentAccountTest {
     @Test
     @DisplayName("E-posta doğrulandıktan sonra emailVerified true döner; aynı erişim token'ıyla")
     void dogrulama_sonrasi_durum_guncel_doner() throws Exception {
-        var accessToken = girisYap();
+        var accessToken = signInAndGetToken();
 
         mockMvc.perform(post("/api/v1/accounts/verifications")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -120,7 +120,7 @@ class CurrentAccountTest {
     @Test
     @DisplayName("Rol değişikliği token yenilenmeden yansır: veri güncel kaynaktan okunur (D7)")
     void rol_degisikligi_guncel_yansir() throws Exception {
-        var accessToken = girisYap();
+        var accessToken = signInAndGetToken();
         jdbc.update("""
                 insert into account_roles (account_id, role)
                 select id, 'ROLE_SELLER' from accounts where email = ?""", EMAIL);
@@ -153,7 +153,7 @@ class CurrentAccountTest {
         var foreignKey = "baska-bir-uygulamanin-imza-anahtari-32b".getBytes(StandardCharsets.UTF_8);
         var foreignEncoder = new NimbusJwtEncoder(new ImmutableSecret<>(new SecretKeySpec(foreignKey, "HmacSHA256")));
 
-        me(imzala(foreignEncoder, hesapKimligi(), Instant.now().plusSeconds(600)))
+        me(signToken(foreignEncoder, accountIdOf(), Instant.now().plusSeconds(600)))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value(ApiErrorCode.AUTH_REQUIRED.name()));
     }
@@ -161,7 +161,7 @@ class CurrentAccountTest {
     @Test
     @DisplayName("Süresi dolmuş token: 401")
     void suresi_dolmus_token_401() throws Exception {
-        me(imzala(jwtEncoder, hesapKimligi(), Instant.now().minusSeconds(300)))
+        me(signToken(jwtEncoder, accountIdOf(), Instant.now().minusSeconds(300)))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.code").value(ApiErrorCode.AUTH_REQUIRED.name()));
     }
@@ -169,7 +169,7 @@ class CurrentAccountTest {
     @Test
     @DisplayName("Geçerli imzalı token ama hesap artık yok: 401")
     void hesabi_silinmis_token_401() throws Exception {
-        var accessToken = girisYap();
+        var accessToken = signInAndGetToken();
         jdbc.execute("delete from accounts");
 
         me(accessToken)
@@ -177,7 +177,7 @@ class CurrentAccountTest {
                 .andExpect(jsonPath("$.code").value(ApiErrorCode.AUTH_REQUIRED.name()));
     }
 
-    private String girisYap() throws Exception {
+    private String signInAndGetToken() throws Exception {
         var json = mockMvc.perform(post("/api/v1/sessions")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"email\": \"%s\", \"password\": \"%s\"}".formatted(EMAIL, PASSWORD)))
@@ -192,11 +192,11 @@ class CurrentAccountTest {
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken));
     }
 
-    private long hesapKimligi() {
+    private long accountIdOf() {
         return jdbc.queryForObject("select id from accounts where email = ?", Long.class, EMAIL);
     }
 
-    private static String imzala(JwtEncoder encoder, long accountId, Instant expiresAt) {
+    private static String signToken(JwtEncoder encoder, long accountId, Instant expiresAt) {
         var claims = JwtClaimsSet.builder()
                 .subject(Long.toString(accountId))
                 .issuedAt(expiresAt.minusSeconds(900))

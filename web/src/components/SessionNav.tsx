@@ -28,7 +28,7 @@ export async function SessionNav() {
     const masked = maskEmail(session.account.email);
     return (
       <nav className={navClassName} aria-label={t("account.nav.signedInAs", { email: masked })}>
-        <Link className={buttonVariants({ variant: "ghost" })} href="/hesabim" aria-label={masked}>
+        <Link className={buttonVariants({ variant: "ghost" })} href="/account" aria-label={masked}>
           <CircleUserRound aria-hidden />
           <span className="hidden max-w-52 truncate sm:inline">{masked}</span>
         </Link>
@@ -41,7 +41,7 @@ export async function SessionNav() {
     // Oturum var ama yenilenmeli ya da durum okunamadı: "Hesabım" yenilemeyi tetikler.
     return (
       <nav className={navClassName} aria-label={t("account.nav.myAccount")}>
-        <Link className={buttonVariants({ variant: "outline" })} href="/hesabim">
+        <Link className={buttonVariants({ variant: "outline" })} href="/account">
           <CircleUserRound aria-hidden />
           {t("account.nav.myAccount")}
         </Link>
@@ -51,10 +51,10 @@ export async function SessionNav() {
 
   return (
     <nav className={navClassName} aria-label={t("account.nav.signIn")}>
-      <Link className={cn(buttonVariants({ variant: "ghost" }), "max-sm:px-2.5")} href="/giris">
+      <Link className={cn(buttonVariants({ variant: "ghost" }), "max-sm:px-2.5")} href="/login">
         {t("account.nav.signIn")}
       </Link>
-      <Link className={cn(buttonVariants(), "max-sm:px-3")} href="/kayit">
+      <Link className={cn(buttonVariants(), "max-sm:px-3")} href="/register">
         {t("account.nav.register")}
       </Link>
     </nav>

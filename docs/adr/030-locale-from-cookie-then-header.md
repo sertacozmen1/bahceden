@@ -8,7 +8,7 @@
 
 ## Context
 
-Proje sahibi dili URL'de göstermemeyi seçti: `/giris` her dilde aynı adrestir. Dilin kalıcı tek yeri bu durumda tarayıcıdadır. Sayfa İngilizce iken `api`'nin hata mesajı Türkçe gelmemeli; iki tarafın aynı dili konuşması gerekir ([ADR-031](031-api-messages-by-accept-language.md)).
+Proje sahibi dili URL'de göstermemeyi seçti: `/login` her dilde aynı adrestir. Dilin kalıcı tek yeri bu durumda tarayıcıdadır. Sayfa İngilizce iken `api`'nin hata mesajı Türkçe gelmemeli; iki tarafın aynı dili konuşması gerekir ([ADR-031](031-api-messages-by-accept-language.md)).
 
 ## Decision
 

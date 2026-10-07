@@ -63,7 +63,7 @@ class AccountRegistrationTest {
     private SecureTokens secureTokens;
 
     @BeforeEach
-    void temizle() {
+    void cleanUp() {
         // Önceki testlerin hız sınırı pencerelerini geride bırakır.
         clock.advance(Duration.ofDays(1));
         jdbc.execute("delete from email_verification_tokens");
@@ -75,30 +75,30 @@ class AccountRegistrationTest {
     @Test
     @DisplayName("Yeni e-posta: hesap etkin açılır, doğrulanmamış işaretlenir, bağlantı gönderilir")
     void yeni_eposta_ile_kayit() throws Exception {
-        kayitIstegi(EMAIL, PASSWORD)
+        registerRequest(EMAIL, PASSWORD)
                 .andExpect(status().isAccepted())
                 .andExpect(jsonPath("$.message").exists());
 
         // ADR-017: hesap doğrudan ACTIVE; doğrulama bir bilgi, giriş koşulu değil.
-        assertThat(tekKolon("select status from accounts where email = ?", EMAIL)).isEqualTo("ACTIVE");
+        assertThat(singleColumn("select status from accounts where email = ?", EMAIL)).isEqualTo("ACTIVE");
         assertThat(jdbc.queryForObject("select email_verified from accounts where email = ?", Boolean.class, EMAIL))
                 .isFalse();
         assertThat(jdbc.queryForObject("select two_factor_enabled from accounts where email = ?", Boolean.class, EMAIL))
                 .as("ikinci faktör varsayılan kapalı (ADR-017)")
                 .isFalse();
-        assertThat(tekKolon("select role from account_roles ar join accounts a on a.id = ar.account_id where a.email = ?", EMAIL))
+        assertThat(singleColumn("select role from account_roles ar join accounts a on a.id = ar.account_id where a.email = ?", EMAIL))
                 .isEqualTo("ROLE_CUSTOMER");
         assertThat(mail.lastSent().to()).isEqualTo(EMAIL);
-        assertThat(mail.lastSent().body()).contains("/dogrulama?token=");
+        assertThat(mail.lastSent().body()).contains("/verify-email?token=");
     }
 
     @Test
     @DisplayName("Doğrulama token'ı veritabanında yalnızca hash olarak durur")
     void token_hashli_saklanir() throws Exception {
-        kayitIstegi(EMAIL, PASSWORD).andExpect(status().isAccepted());
+        registerRequest(EMAIL, PASSWORD).andExpect(status().isAccepted());
 
         var plainToken = MailContents.verificationToken(mail.lastSent().body());
-        var storedHash = tekKolon("select token_hash from email_verification_tokens", null);
+        var storedHash = singleColumn("select token_hash from email_verification_tokens", null);
 
         assertThat(storedHash).isEqualTo(secureTokens.hash(plainToken));
         assertThat(storedHash).isNotEqualTo(plainToken);
@@ -111,9 +111,9 @@ class AccountRegistrationTest {
     @Test
     @DisplayName("Parola düz metin saklanmaz; hash BCrypt biçimindedir")
     void parola_hashlenir() throws Exception {
-        kayitIstegi(EMAIL, PASSWORD).andExpect(status().isAccepted());
+        registerRequest(EMAIL, PASSWORD).andExpect(status().isAccepted());
 
-        var hash = tekKolon("select password_hash from accounts where email = ?", EMAIL);
+        var hash = singleColumn("select password_hash from accounts where email = ?", EMAIL);
 
         assertThat(hash).isNotEqualTo(PASSWORD).doesNotContain(PASSWORD);
         assertThat(hash).startsWith("$2");
@@ -122,41 +122,41 @@ class AccountRegistrationTest {
     @Test
     @DisplayName("Var olan e-posta: ikinci hesap açılmaz ve yanıt birebir aynıdır (enumeration)")
     void var_olan_eposta_ile_kayit_ayni_yaniti_doner() throws Exception {
-        var ilkYanit = kayitIstegi(EMAIL, PASSWORD)
+        var firstResponse = registerRequest(EMAIL, PASSWORD)
                 .andExpect(status().isAccepted())
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
         mail.reset();
 
-        var ikinciYanit = kayitIstegi(EMAIL, "baska-bir-parola-123")
+        var secondResponse = registerRequest(EMAIL, "baska-bir-parola-123")
                 .andExpect(status().isAccepted())
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
 
-        assertThat(ikinciYanit)
+        assertThat(secondResponse)
                 .as("yanıt, e-postanın kayıtlı olduğunu açığa çıkarmamalı (D4)")
-                .isEqualTo(ilkYanit);
+                .isEqualTo(firstResponse);
         assertThat(jdbc.queryForObject("select count(*) from accounts where email = ?", Integer.class, EMAIL))
                 .isEqualTo(1);
         assertThat(mail.lastSent().subject()).contains("zaten var");
-        assertThat(mail.lastSent().body()).doesNotContain("/dogrulama?token=");
+        assertThat(mail.lastSent().body()).doesNotContain("/verify-email?token=");
     }
 
     @Test
     @DisplayName("Var olan e-postada parola değişmez: ikinci kayıt mevcut hesabı ele geçirmeye izin vermez")
     void var_olan_hesabin_parolasi_degismez() throws Exception {
-        kayitIstegi(EMAIL, PASSWORD).andExpect(status().isAccepted());
-        var ilkHash = tekKolon("select password_hash from accounts where email = ?", EMAIL);
+        registerRequest(EMAIL, PASSWORD).andExpect(status().isAccepted());
+        var originalHash = singleColumn("select password_hash from accounts where email = ?", EMAIL);
 
-        kayitIstegi(EMAIL, "saldirganin-parolasi-1").andExpect(status().isAccepted());
+        registerRequest(EMAIL, "saldirganin-parolasi-1").andExpect(status().isAccepted());
 
-        assertThat(tekKolon("select password_hash from accounts where email = ?", EMAIL)).isEqualTo(ilkHash);
+        assertThat(singleColumn("select password_hash from accounts where email = ?", EMAIL)).isEqualTo(originalHash);
     }
 
     @Test
     @DisplayName("E-posta büyük harfli girilse de aynı hesap sayılır")
     void eposta_buyuk_kucuk_harften_bagimsiz() throws Exception {
-        kayitIstegi(EMAIL, PASSWORD).andExpect(status().isAccepted());
+        registerRequest(EMAIL, PASSWORD).andExpect(status().isAccepted());
 
-        kayitIstegi("ALICI@Ornek.Test", PASSWORD).andExpect(status().isAccepted());
+        registerRequest("ALICI@Ornek.Test", PASSWORD).andExpect(status().isAccepted());
 
         assertThat(jdbc.queryForObject("select count(*) from accounts", Integer.class))
                 .as("büyük/küçük harf farkı ikinci hesap açmamalı")
@@ -168,7 +168,7 @@ class AccountRegistrationTest {
     void bosluklu_eposta_reddedilir() throws Exception {
         // Sunucu katı davranır; formun gönderim öncesi kırpması gerekir (Faz 4).
         // Bu davranış bilinçli: sessizce düzeltmek yerine istemciye söylüyoruz.
-        kayitIstegi("  " + EMAIL + "  ", PASSWORD)
+        registerRequest("  " + EMAIL + "  ", PASSWORD)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.fieldErrors[0].field").value("email"));
     }
@@ -178,7 +178,7 @@ class AccountRegistrationTest {
     void gonderim_hatasi_kaydi_bozmaz() throws Exception {
         mail.failNextSends();
 
-        kayitIstegi(EMAIL, PASSWORD).andExpect(status().isAccepted());
+        registerRequest(EMAIL, PASSWORD).andExpect(status().isAccepted());
 
         assertThat(jdbc.queryForObject("select count(*) from accounts where email = ?", Integer.class, EMAIL))
                 .as("gönderim hatası hesabı geri almamalı (ADR-017 §4)")
@@ -189,7 +189,7 @@ class AccountRegistrationTest {
     @Test
     @DisplayName("Geçersiz e-posta ortak hata gövdesiyle reddedilir")
     void gecersiz_eposta_reddedilir() throws Exception {
-        kayitIstegi("eposta-degil", PASSWORD)
+        registerRequest("eposta-degil", PASSWORD)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value(ApiErrorCode.VALIDATION_FAILED.name()))
                 .andExpect(jsonPath("$.fieldErrors[0].field").value("email"));
@@ -200,7 +200,7 @@ class AccountRegistrationTest {
     @Test
     @DisplayName("Kısa parola ortak hata gövdesiyle reddedilir")
     void kisa_parola_reddedilir() throws Exception {
-        kayitIstegi(EMAIL, "kisa")
+        registerRequest(EMAIL, "kisa")
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value(ApiErrorCode.VALIDATION_FAILED.name()))
                 .andExpect(jsonPath("$.fieldErrors[0].field").value("password"));
@@ -213,12 +213,12 @@ class AccountRegistrationTest {
     void hata_govdesi_parola_icermez() throws Exception {
         var secret = "gizli-parola-sizmasin";
 
-        kayitIstegi("eposta-degil", secret)
+        registerRequest("eposta-degil", secret)
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string(org.hamcrest.Matchers.not(org.hamcrest.Matchers.containsString(secret))));
     }
 
-    private org.springframework.test.web.servlet.ResultActions kayitIstegi(String email, String password)
+    private org.springframework.test.web.servlet.ResultActions registerRequest(String email, String password)
             throws Exception {
         var body = """
                 {"email": "%s", "password": "%s"}
@@ -228,7 +228,7 @@ class AccountRegistrationTest {
                 .content(body));
     }
 
-    private String tekKolon(String sql, String param) {
+    private String singleColumn(String sql, String param) {
         return param == null
                 ? jdbc.queryForObject(sql, String.class)
                 : jdbc.queryForObject(sql, String.class, param);

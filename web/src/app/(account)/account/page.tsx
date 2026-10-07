@@ -26,7 +26,7 @@ export async function generateMetadata(): Promise<Metadata> {
  */
 export default async function MyAccountPage() {
   const t = await getTranslations();
-  const { account } = await requireSignedIn("/hesabim");
+  const { account } = await requireSignedIn("/account");
   return (
     <AccountScreen title={t("account.myAccount.title")}>
       <dl className="grid gap-4">

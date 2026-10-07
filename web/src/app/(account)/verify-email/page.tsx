@@ -52,7 +52,7 @@ export default async function VerificationPage({
         <p className="text-pretty text-muted-foreground">{failure ?? t("account.verification.successBody")}</p>
       </div>
       <div className="flex flex-col gap-2 sm:flex-row">
-        <Link className={buttonVariants()} href="/hesabim">
+        <Link className={buttonVariants()} href="/account">
           {t("account.verification.goToAccount")}
         </Link>
         <Link className={buttonVariants({ variant: "ghost" })} href="/">

@@ -68,7 +68,7 @@ class EmailVerificationTest {
     private ObjectMapper objectMapper;
 
     @BeforeEach
-    void temizle() {
+    void cleanUp() {
         // Önceki testlerin hız sınırı pencerelerini geride bırakır.
         clock.advance(Duration.ofDays(1));
         jdbc.execute("delete from accounts");
@@ -78,9 +78,9 @@ class EmailVerificationTest {
     @Test
     @DisplayName("Geçerli token: hesap doğrulanmış işaretlenir ve token tüketilir")
     void gecerli_token_hesabi_dogrular() throws Exception {
-        var token = kayitOlVeTokenAl();
+        var token = registerAndGetToken();
 
-        dogrula(token).andExpect(status().isNoContent());
+        postVerification(token).andExpect(status().isNoContent());
 
         assertThat(emailVerified()).isTrue();
         assertThat(jdbc.queryForObject(
@@ -91,10 +91,10 @@ class EmailVerificationTest {
     @Test
     @DisplayName("Token iki kez kullanılamaz")
     void token_iki_kez_kullanilamaz() throws Exception {
-        var token = kayitOlVeTokenAl();
-        dogrula(token).andExpect(status().isNoContent());
+        var token = registerAndGetToken();
+        postVerification(token).andExpect(status().isNoContent());
 
-        dogrula(token)
+        postVerification(token)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value(ApiErrorCode.AUTH_TOKEN_INVALID.name()));
 
@@ -104,10 +104,10 @@ class EmailVerificationTest {
     @Test
     @DisplayName("Süresi dolmuş token reddedilir ve hesap doğrulanmamış kalır")
     void suresi_dolmus_token_reddedilir() throws Exception {
-        var token = kayitOlVeTokenAl();
+        var token = registerAndGetToken();
         jdbc.update("update email_verification_tokens set expires_at = now() - interval '1 minute'");
 
-        dogrula(token)
+        postVerification(token)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value(ApiErrorCode.AUTH_TOKEN_INVALID.name()))
                 .andExpect(jsonPath("$.message").isNotEmpty());
@@ -118,9 +118,9 @@ class EmailVerificationTest {
     @Test
     @DisplayName("Bilinmeyen token reddedilir")
     void bilinmeyen_token_reddedilir() throws Exception {
-        kayitOlVeTokenAl();
+        registerAndGetToken();
 
-        dogrula("boyle-bir-token-yok")
+        postVerification("boyle-bir-token-yok")
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value(ApiErrorCode.AUTH_TOKEN_INVALID.name()));
 
@@ -130,7 +130,7 @@ class EmailVerificationTest {
     @Test
     @DisplayName("Boş token doğrulama hatasıyla reddedilir")
     void bos_token_reddedilir() throws Exception {
-        dogrula("")
+        postVerification("")
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value(ApiErrorCode.VALIDATION_FAILED.name()))
                 .andExpect(jsonPath("$.fieldErrors[0].field").value("token"));
@@ -139,27 +139,27 @@ class EmailVerificationTest {
     @Test
     @DisplayName("Doğrulanmamış hesap yeni bağlantı ister: yeni bağlantı hesabı doğrular (D9)")
     void yeni_baglanti_istenir_ve_dogrular() throws Exception {
-        var ilkToken = kayitOlVeTokenAl();
+        var firstToken = registerAndGetToken();
         mail.reset();
 
-        yeniBaglantiIste(girisYap()).andExpect(status().isAccepted());
+        requestNewLink(signInAndGetToken()).andExpect(status().isAccepted());
 
         assertThat(mail.lastSent().to()).as("adres istekten değil hesaptan gelir").isEqualTo(EMAIL);
-        var yeniToken = MailContents.verificationToken(mail.lastSent().body());
-        assertThat(yeniToken).isNotEqualTo(ilkToken);
+        var newToken = MailContents.verificationToken(mail.lastSent().body());
+        assertThat(newToken).isNotEqualTo(firstToken);
 
-        dogrula(yeniToken).andExpect(status().isNoContent());
+        postVerification(newToken).andExpect(status().isNoContent());
         assertThat(emailVerified()).isTrue();
     }
 
     @Test
     @DisplayName("Doğrulanmış hesap yeni bağlantı isterse e-posta gönderilmez")
     void dogrulanmis_hesaba_baglanti_gonderilmez() throws Exception {
-        dogrula(kayitOlVeTokenAl()).andExpect(status().isNoContent());
-        var accessToken = girisYap();
+        postVerification(registerAndGetToken()).andExpect(status().isNoContent());
+        var accessToken = signInAndGetToken();
         mail.reset();
 
-        yeniBaglantiIste(accessToken).andExpect(status().isAccepted());
+        requestNewLink(accessToken).andExpect(status().isAccepted());
 
         assertThat(mail.sent()).isEmpty();
     }
@@ -167,7 +167,7 @@ class EmailVerificationTest {
     @Test
     @DisplayName("Oturumsuz yeni bağlantı isteği 401 alır ve e-posta gönderilmez")
     void oturumsuz_baglanti_istegi_401() throws Exception {
-        kayitOlVeTokenAl();
+        registerAndGetToken();
         mail.reset();
 
         mockMvc.perform(post("/api/v1/accounts/me/verification-requests"))
@@ -177,12 +177,12 @@ class EmailVerificationTest {
         assertThat(mail.sent()).isEmpty();
     }
 
-    private String kayitOlVeTokenAl() {
+    private String registerAndGetToken() {
         accountService.register(EMAIL, PASSWORD, SupportedLocale.TR);
         return MailContents.verificationToken(mail.lastSent().body());
     }
 
-    private String girisYap() throws Exception {
+    private String signInAndGetToken() throws Exception {
         var json = mockMvc.perform(post("/api/v1/sessions")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -193,12 +193,12 @@ class EmailVerificationTest {
         return objectMapper.readTree(json).get("accessToken").asText();
     }
 
-    private ResultActions yeniBaglantiIste(String accessToken) throws Exception {
+    private ResultActions requestNewLink(String accessToken) throws Exception {
         return mockMvc.perform(post("/api/v1/accounts/me/verification-requests")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken));
     }
 
-    private ResultActions dogrula(String token) throws Exception {
+    private ResultActions postVerification(String token) throws Exception {
         return mockMvc.perform(post("/api/v1/accounts/verifications")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""

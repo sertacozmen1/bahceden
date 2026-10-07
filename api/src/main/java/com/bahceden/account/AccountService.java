@@ -92,7 +92,7 @@ public class AccountService {
             var owner = existing.get();
             mailSender.send(email,
                     messages.get("mail.existingAccount.subject", owner.getLocale()),
-                    messages.get("mail.existingAccount.body", owner.getLocale(), properties.webOrigin() + "/giris"));
+                    messages.get("mail.existingAccount.body", owner.getLocale(), properties.webOrigin() + "/login"));
             log.info("Kayıt isteği var olan hesap için alındı: {}", maskedEmail(email));
             return;
         }
@@ -172,7 +172,7 @@ public class AccountService {
     }
 
     private String verificationLink(String plainToken) {
-        return properties.webOrigin() + "/dogrulama?token=" + URLEncoder.encode(plainToken, StandardCharsets.UTF_8);
+        return properties.webOrigin() + "/verify-email?token=" + URLEncoder.encode(plainToken, StandardCharsets.UTF_8);
     }
 
     /** Kişisel veri log'a maskeli yazılır (K10). */

@@ -51,7 +51,7 @@ export function RegisterForm() {
       <section className="flex flex-col gap-5" aria-live="polite">
         <h2 className="text-lg font-semibold tracking-tight">{t("account.register.successTitle")}</h2>
         <FormMessage tone="success">{successMessage}</FormMessage>
-        <Link className={buttonVariants()} href="/giris">
+        <Link className={buttonVariants()} href="/login">
           {t("account.register.goToSignIn")}
         </Link>
       </section>
@@ -63,7 +63,7 @@ export function RegisterForm() {
       <FieldGroup>
         {errors.general !== undefined && <FormMessage tone="error">{errors.general}</FormMessage>}
         <FormField
-          id="kayit-eposta"
+          id="register-email"
           name="email"
           label={t("account.fields.email")}
           type="email"
@@ -71,7 +71,7 @@ export function RegisterForm() {
           error={errors.fields.email}
         />
         <FormField
-          id="kayit-parola"
+          id="register-password"
           name="password"
           label={t("account.fields.password")}
           type="password"

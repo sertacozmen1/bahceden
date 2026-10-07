@@ -32,14 +32,14 @@ describe("Hesabım sayfası", () => {
     session.current = { kind: "anonymous" };
 
     await expect(MyAccountPage()).rejects.toThrow("yönlendirildi");
-    expect(redirect).toHaveBeenCalledWith("/giris?next=%2Fhesabim");
+    expect(redirect).toHaveBeenCalledWith("/login?next=%2Faccount");
   });
 
   it("erişim token'ının süresi dolduysa önce yenilemeye yönlendirir", async () => {
     session.current = { kind: "expired" };
 
     await expect(MyAccountPage()).rejects.toThrow("yönlendirildi");
-    expect(redirect).toHaveBeenCalledWith("/api/auth/refresh?next=%2Fhesabim");
+    expect(redirect).toHaveBeenCalledWith("/api/auth/refresh?next=%2Faccount");
   });
 
   it("oturum açıksa hesap bilgisini ve doğrulama durumunu gösterir", async () => {

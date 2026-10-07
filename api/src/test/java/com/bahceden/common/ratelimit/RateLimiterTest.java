@@ -40,7 +40,7 @@ class RateLimiterTest {
     @Test
     @DisplayName("Pencere kayınca istekler yeniden kabul edilir")
     void pencere_kayinca_yeniden_acilir() {
-        doldur("10.0.0.1");
+        fillWindow("10.0.0.1");
 
         clock.advance(POLICY.window().minusSeconds(1));
         assertThatThrownBy(() -> limiter.check(POLICY, "10.0.0.1")).isInstanceOf(ApiException.class);
@@ -52,13 +52,13 @@ class RateLimiterTest {
     @Test
     @DisplayName("Anahtarlar birbirinden bağımsızdır: bir istemcinin sınırı diğerini etkilemez")
     void anahtarlar_bagimsizdir() {
-        doldur("10.0.0.1");
+        fillWindow("10.0.0.1");
 
         assertThatCode(() -> limiter.check(POLICY, "10.0.0.2")).doesNotThrowAnyException();
         assertThatCode(() -> limiter.check(RateLimitPolicy.REFRESH, "10.0.0.1")).doesNotThrowAnyException();
     }
 
-    private void doldur(String key) {
+    private void fillWindow(String key) {
         for (int i = 0; i < POLICY.limit(); i++) {
             limiter.check(POLICY, key);
         }

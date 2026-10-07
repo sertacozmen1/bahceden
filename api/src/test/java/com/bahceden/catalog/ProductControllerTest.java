@@ -69,7 +69,7 @@ class ProductControllerTest {
     @Test
     @DisplayName("Yanıt alan adları ve sayfalama şekli sözleşmeye uygundur")
     void yanit_sozlesmeye_uygundur() throws Exception {
-        when(service.listPublished(anyInt(), anyInt())).thenReturn(ornekSayfa());
+        when(service.listPublished(anyInt(), anyInt())).thenReturn(samplePage());
 
         mockMvc.perform(get("/api/v1/products"))
                 .andExpect(status().isOk())
@@ -92,7 +92,7 @@ class ProductControllerTest {
     @Test
     @DisplayName("Sayfalama parametresi verilmezse varsayılanlar uygulanır")
     void varsayilan_sayfalama() throws Exception {
-        when(service.listPublished(anyInt(), anyInt())).thenReturn(bosSayfa(0, 20));
+        when(service.listPublished(anyInt(), anyInt())).thenReturn(emptyPage(0, 20));
 
         mockMvc.perform(get("/api/v1/products")).andExpect(status().isOk());
 
@@ -102,7 +102,7 @@ class ProductControllerTest {
     @Test
     @DisplayName("Üst sınırın üzerindeki sayfa boyutu reddedilmez, service'e iletilir ve sunucuda sınıra çekilir")
     void ust_sinir_ustu_sayfa_boyutu() throws Exception {
-        when(service.listPublished(anyInt(), anyInt())).thenReturn(bosSayfa(0, ProductService.MAX_PAGE_SIZE));
+        when(service.listPublished(anyInt(), anyInt())).thenReturn(emptyPage(0, ProductService.MAX_PAGE_SIZE));
 
         mockMvc.perform(get("/api/v1/products").param("size", "500"))
                 .andExpect(status().isOk())
@@ -117,7 +117,7 @@ class ProductControllerTest {
     @Test
     @DisplayName("Boş katalog boş liste döner, hata üretmez")
     void bos_katalog() throws Exception {
-        when(service.listPublished(anyInt(), anyInt())).thenReturn(bosSayfa(0, 20));
+        when(service.listPublished(anyInt(), anyInt())).thenReturn(emptyPage(0, 20));
 
         mockMvc.perform(get("/api/v1/products"))
                 .andExpect(status().isOk())
@@ -148,7 +148,7 @@ class ProductControllerTest {
                 .andExpect(jsonPath("$.fieldErrors[0].field").value("size"));
     }
 
-    private static PageResponse<ProductSummary> ornekSayfa() {
+    private static PageResponse<ProductSummary> samplePage() {
         var product = new ProductSummary(
                 "sultani-uzum",
                 "Sultani Üzüm",
@@ -159,7 +159,7 @@ class ProductControllerTest {
         return new PageResponse<>(List.of(product), 0, 20, 1, 1);
     }
 
-    private static PageResponse<ProductSummary> bosSayfa(int page, int size) {
+    private static PageResponse<ProductSummary> emptyPage(int page, int size) {
         return new PageResponse<>(List.of(), page, size, 0, 0);
     }
 }
