@@ -38,7 +38,7 @@ Adım görevleri Radix ölçeğini izler: 50–100 zemin, 200–300 kenar, 600�
 |---|---|---|---|
 | `background` / `foreground` | neutral-50 / 950 | neutral-950 / 50 | Sayfa zemini ve ana metin |
 | `card`, `popover` | neutral-0 | neutral-900 | Kart, form paneli, girdi zemini |
-| `primary` | green-700 / 50 | green-400 / 950 | Tek vurgu: birincil düğme, bağlantı, marka işareti |
+| `primary` | green-700 / 50 | green-400 / 950 | Tek vurgu: birincil düğme, bağlantı |
 | `secondary` | green-100 / 900 | green-900 / 100 | Düşük vurgulu eylem, seçili seçenek zemini (ikinci bir renk değil) |
 | `muted` | neutral-100 / 600 | neutral-800 / 400 | İskelet, ikincil metin |
 | `accent` | neutral-100 | neutral-800 | Üzerine gelme zemini |
@@ -69,7 +69,31 @@ Kurallar:
 - Renk tek başına anlam taşımaz: her durum etiketi metniyle okunur (AGENTS.md §12.4).
 - Yeni rol eklenirse `-foreground` eşiyle eklenir ve kontrastı iki temada hesaplanıp bu tabloya yazılır.
 
-### 2.4 Tema seçimi
+### 2.4 Logo ve marka renkleri
+
+Kaynak marka paketi `docs/assets/brand/` altındadır (SVG; yazı tipi Fredoka yola çevrilmiş, font yüklenmez):
+
+| Dosya | Kullanım |
+|---|---|
+| ![logo](../assets/brand/bahceden-logo.svg){ width="200" } `bahceden-logo.svg` | Açık zeminde tam logo |
+| `bahceden-logo-dark-bg.svg` | Koyu zeminde tam logo (kelime işareti krem) |
+| `bahceden-logo-mono.svg`, `bahceden-mark-mono.svg` | Tek renk (`currentColor`) |
+| `bahceden-icon.svg` | Karolu uygulama ikonu; sekme ikonu (`web/src/app/icon.svg`) bunun kopyası |
+| `bahceden-mark.svg`, `bahceden-mark-dark-bg.svg` | Karosuz "b" |
+| `og-image.svg` | 1200×630 paylaşım görseli; **bağlı değil**: mutlak site adresi (`metadataBase`) üretim alan adına bağlı (KALANLAR B5) |
+
+Ham renkler yalnızca `globals.css`'teki `--brand-*` merdiveninde, bileşen yalnızca `logo-*` rollerini kullanır:
+
+| Rol | Açık | Koyu |
+|---|---|---|
+| `logo-tile` (karo) | `#24302A` | `#24302A` |
+| `logo-letter` ("b") | `#B5E04A` | `#B5E04A` |
+| `logo-leaf` (yaprak) | `#7DB534` | `#7DB534` |
+| `logo-wordmark` (kelime işareti) | `#24302A` | `#F6F2E6` |
+
+Logo rolleri yalnızca logoda kullanılır; arayüz rengi değildir (tek vurgu `primary` kalır). Tarayıcı ve PWA ikonları Next.js dosya kuralıyla `web/src/app/` altında (`favicon.ico`, `icon.svg`, `apple-icon.png`, `manifest.webmanifest`), manifestin ikonları `web/public/icons/` altındadır; `theme-color` `#24302A`. Kurallar: logo 32px'ten kısa gösterilmez (daha dar alanda `BrandMark`); açık zemine karosuz lime "b" konmaz.
+
+### 2.5 Tema seçimi
 
 | Seçim | `<html data-theme>` | Davranış |
 |---|---|---|
@@ -87,7 +111,7 @@ Tercih `bahceden_theme` çerezinde (bir yıl). Kök düzen onu sunucuda okur; il
 | Dokunma hedefi | Düğme ve girdi mobilde `h-11` (44px), `lg` ve üstünde `h-10` (40px) |
 | Kırılımlar | Tailwind varsayılanları; düzen mobil önce, `sm` (640) ızgarayı ikiye, `lg` (1024) üçe açar |
 | Sayfa genişliği | Vitrin `max-w-6xl`; hesap ve durum ekranları `max-w-md` tek sütun |
-| Başlık çubuğu | 64px, yapışkan, yarı saydam zemin; her genişlikte tek satır. 375px'de oturumsuz başlık (logo + "Giriş yap" + "Kayıt ol" + dil ve tema ikonları) sığsın diye mobilde yan boşluk 12px, düğme iç boşluğu daraltılmış ve 420px altında marka yazısı yalnızca ekran okuyucuya bırakılmış (logo görünür); başlığa öğe eklemeden önce bu genişlik kontrol edilir |
+| Başlık çubuğu | 64px, yapışkan, yarı saydam zemin; her genişlikte tek satır. 375px'de oturumsuz başlık (logo + "Giriş yap" + "Kayıt ol" + dil ve tema ikonları) sığsın diye mobilde yan boşluk 12px, düğme iç boşluğu daraltılmış ve 420px altında logonun kelime işareti düşer, yalnızca "b" karosu kalır; başlığa öğe eklemeden önce bu genişlik kontrol edilir |
 
 ## 4. Bileşenler
 
@@ -110,7 +134,8 @@ Tercih `bahceden_theme` çerezinde (bir yıl). Kök düzen onu sunucuda okur; il
 
 | Bileşen | Yer | Görev |
 |---|---|---|
-| `AppShell` | `components/` | Başlık (marka işareti `Sprout`, slogan yalnızca masaüstünde, oturum alanı + tema menüsü) ve alt bilgi (marka) |
+| `AppShell` | `components/` | Başlık (logo, slogan yalnızca masaüstünde, oturum alanı + tema menüsü) ve alt bilgi (marka) |
+| `BrandLogo` / `BrandMark` | `components/` | Satır içi SVG logo ve dar alan için yalnızca karo; renkler `logo-*` rollerinden, erişilebilir adı çağıran verir |
 | `LocaleMenu` | `components/` | Tek ikonlu tetikleyici + dil menüsü; seçenekler kendi dilinde, seçim çereze yazılır ve sayfa sunucuda yenilenir |
 | `ThemeMenu` | `components/` | Tek ikonlu tetikleyici + Açık / Koyu / Sistem menüsü; seçimi `data-theme`'ya ve çereze yazar |
 | `SessionNav` | `components/` | Oturum durumuna göre "Giriş yap / Kayıt ol" veya maskeli e-posta + çıkış |

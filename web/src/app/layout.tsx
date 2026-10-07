@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { cookies } from "next/headers";
 import { NextIntlClientProvider } from "next-intl";
@@ -32,6 +32,13 @@ export async function generateMetadata(): Promise<Metadata> {
     description: t("tagline"),
   };
 }
+
+/**
+ * Tarayıcı arayüzü (mobil adres çubuğu) marka koyu yeşiliyle boyanır; değer
+ * `manifest.webmanifest` içindeki `theme_color` ile aynıdır. Sekme ikonu,
+ * `apple-icon` ve manifest bu dizinde Next.js dosya kuralıyla durur.
+ */
+export const viewport: Viewport = { themeColor: "#24302a" };
 
 /**
  * Tema tercihi çerezden sunucuda okunur ve `data-theme` olarak basılır

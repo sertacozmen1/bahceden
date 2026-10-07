@@ -108,6 +108,10 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-logo-tile: var(--logo-tile);
+  --color-logo-letter: var(--logo-letter);
+  --color-logo-leaf: var(--logo-leaf);
+  --color-logo-wordmark: var(--logo-wordmark);
 
   /* Tek köşe ölçeği: girdi ve düğme 8px (`rounded-lg`), kart 12px (`rounded-xl`). */
   --radius-sm: calc(var(--radius) - 4px);
@@ -162,6 +166,12 @@
   --blue-600: oklch(0.5 0.13 245);
   --blue-950: oklch(0.24 0.05 245);
 
+  /* Logo paketinin sabit renkleri (docs/assets/brand/). Yalnızca logo-* rolleri kullanır. */
+  --brand-ink: #24302a;
+  --brand-lime: #b5e04a;
+  --brand-leaf: #7db534;
+  --brand-cream: #f6f2e6;
+
   /* ── 2. Anlamsal roller: light-dark(açık, koyu) ─────────────────── */
 
   color-scheme: light dark;
@@ -198,6 +208,13 @@
   --warning-foreground: light-dark(var(--amber-50), var(--amber-950));
   --info: light-dark(var(--blue-600), var(--blue-400));
   --info-foreground: light-dark(var(--blue-50), var(--blue-950));
+
+  /* Logo: karo her temada koyu yeşil (koyu zeminde de kendi çerçevesi); kelime
+     işareti açıkta koyu yeşil, koyuda krem (marka paketinin iki varyantı). */
+  --logo-tile: var(--brand-ink);
+  --logo-letter: var(--brand-lime);
+  --logo-leaf: var(--brand-leaf);
+  --logo-wordmark: light-dark(var(--brand-ink), var(--brand-cream));
 
   --border: light-dark(var(--neutral-200), oklch(1 0 0 / 10%));
   --input: light-dark(var(--neutral-300), oklch(1 0 0 / 16%));

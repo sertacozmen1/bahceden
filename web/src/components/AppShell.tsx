@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { Sprout } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { BrandLogo, BrandMark } from "@/components/BrandLogo";
 import { LocaleMenu } from "@/components/LocaleMenu";
 import { SessionNav } from "@/components/SessionNav";
 import { ThemeMenu } from "@/components/ThemeMenu";
@@ -16,11 +16,10 @@ import type { Theme } from "@/lib/theme";
  * bağlanan boş bir menü, kullanıcıyı çıkmaz sokağa sokar (AGENTS.md §12.5) ve
  * yapılmamış işi yapılmış gibi gösterir (K6).
  *
- * Marka işareti ikon setinden gelir (Lucide, ADR-027); elle çizilmiş logo
- * yok. Başlık 64px'i geçmez ve her genişlikte tek satırdır: 375px'de marka +
- * iki oturum düğmesi + iki ikon sığsın diye 420px altında marka yazısı
- * yalnızca ekran okuyucuya kalır (logo görünür), yan boşluk ve aralıklar
- * daraltılır.
+ * Logo marka paketinden gelir ({@link BrandLogo}). Başlık 64px'i geçmez ve
+ * her genişlikte tek satırdır: 375px'de logo + iki oturum düğmesi + iki ikon
+ * sığsın diye 420px altında kelime işareti düşer, yalnızca "b" karosu kalır
+ * ({@link BrandMark}); yan boşluk ve aralıklar daraltılır.
  */
 export function AppShell({ children, theme }: { readonly children: React.ReactNode; readonly theme: Theme }) {
   const t = useTranslations();
@@ -28,14 +27,9 @@ export function AppShell({ children, theme }: { readonly children: React.ReactNo
     <>
       <header className="sticky top-0 z-40 border-b bg-background/85 backdrop-blur-md supports-[backdrop-filter]:bg-background/70">
         <div className="mx-auto flex h-16 max-w-6xl items-center gap-2 px-3 sm:gap-3 sm:px-4 lg:px-6">
-          <Link
-            href="/"
-            className="flex shrink-0 items-center gap-2 rounded-lg text-lg font-semibold tracking-tight text-foreground"
-          >
-            <span className="grid size-8 place-items-center rounded-lg bg-primary text-primary-foreground">
-              <Sprout aria-hidden className="size-4.5" />
-            </span>
-            <span className="max-[420px]:sr-only">{t("site.name")}</span>
+          <Link href="/" className="flex shrink-0 items-center rounded-lg">
+            <BrandLogo label={t("site.name")} className="max-[420px]:hidden" />
+            <BrandMark label={t("site.name")} className="min-[421px]:hidden" />
           </Link>
           <p className="hidden text-sm text-muted-foreground lg:block">{t("site.tagline")}</p>
           <div className="ml-auto flex items-center gap-1 sm:gap-2">
