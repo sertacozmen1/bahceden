@@ -15,6 +15,7 @@ export type AccountView = components["schemas"]["AccountView"];
 export type SessionTokens = components["schemas"]["SessionTokens"];
 type LoginChallengeIssued = components["schemas"]["LoginChallengeIssued"];
 type RegistrationAccepted = components["schemas"]["RegistrationAccepted"];
+type PasswordResetRequested = components["schemas"]["PasswordResetRequested"];
 
 /** Girişin iki başarılı sonucu: `api` bunları durum koduyla ayırır (200 / 202). */
 export type LoginResult =
@@ -78,6 +79,26 @@ export async function logout(refreshToken: string): Promise<void> {
 
 export async function verifyEmail(token: string, forwardedFor: string | null): Promise<void> {
   await apiSend<never>("POST", "/api/v1/accounts/verifications", { body: { token }, forwardedFor });
+}
+
+/** Yanıt adresin kayıtlı olup olmadığını söylemez (ADR-034). */
+export async function requestPasswordReset(
+  email: string,
+  forwardedFor: string | null,
+): Promise<PasswordResetRequested | undefined> {
+  const result = await apiSend<PasswordResetRequested>("POST", "/api/v1/accounts/password-resets", {
+    body: { email },
+    forwardedFor,
+  });
+  return result.data;
+}
+
+/** Parolayı değiştirir; oturum açmaz (ADR-035). */
+export async function resetPassword(token: string, password: string, forwardedFor: string | null): Promise<void> {
+  await apiSend<never>("POST", "/api/v1/accounts/password-resets/confirmations", {
+    body: { token, password },
+    forwardedFor,
+  });
 }
 
 /** Erişim token'ı yoksa başlık gönderilmez; api 401 döner. */

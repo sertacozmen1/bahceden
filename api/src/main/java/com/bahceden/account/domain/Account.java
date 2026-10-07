@@ -120,6 +120,16 @@ public class Account {
     }
 
     /**
+     * Parolayı değiştirir (add-password-reset design.md D3).
+     *
+     * @param newPasswordHash hash'lenmiş yeni parola; düz parola bu sınıfa girmez
+     */
+    public void changePassword(String newPasswordHash, Instant now) {
+        passwordHash = newPasswordHash;
+        updatedAt = now;
+    }
+
+    /**
      * Kullanıcının en son kullandığı dil: başarılı girişte çağrılır (ADR-032).
      * Dil değişmediyse kayıt güncellenmez.
      */

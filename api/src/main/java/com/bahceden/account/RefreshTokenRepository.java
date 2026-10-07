@@ -32,4 +32,16 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
              where t.familyId = :familyId
                and t.revokedAt is null""")
     int revokeFamily(@Param("familyId") UUID familyId, @Param("now") Instant now);
+
+    /**
+     * Hesabın bütün ailelerindeki iptal edilmemiş token'ları iptal eder: parola
+     * sıfırlandığında tüm oturumlar kapanır (add-password-reset design.md D3).
+     */
+    @Modifying
+    @Query("""
+            update RefreshToken t
+               set t.revokedAt = :now
+             where t.accountId = :accountId
+               and t.revokedAt is null""")
+    int revokeAllForAccount(@Param("accountId") Long accountId, @Param("now") Instant now);
 }

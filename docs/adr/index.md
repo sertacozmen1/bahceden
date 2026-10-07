@@ -52,8 +52,12 @@ Architecture Decision Records, projedeki önemli mimari kararları ve bu kararla
 | 030 | [Dil seçimi: çerez → `Accept-Language` → Türkçe; aynı dil `api`'ye iletilir](030-locale-from-cookie-then-header.md) | Accepted | 2026-10-07 |
 | 031 | [`api` metinleri `MessageSource` ile, `Accept-Language`'a göre; hata kodları sabit](031-api-messages-by-accept-language.md) | Accepted | 2026-10-07 |
 | 032 | [Hesabın dili saklanır; kayıtta yazılır, girişte güncellenir; e-postalar o dilde](032-account-locale-stored-and-refreshed-on-login.md) | Accepted | 2026-10-07 |
+| 033 | [Parola sıfırlama token'ı: ayrı tablo, 1 saat, yenisi eskileri kapatır](033-password-reset-token-separate-table-one-hour.md) | Accepted | 2026-10-07 |
+| 034 | [Parola sıfırlama talebi hesabı açığa çıkarmaz; kayıtsız adrese e-posta gitmez](034-password-reset-request-reveals-nothing.md) | Accepted | 2026-10-07 |
+| 035 | [Parola sıfırlama bütün oturumları kapatır; otomatik giriş yok](035-password-reset-signs-out-everywhere-no-auto-login.md) | Accepted | 2026-10-07 |
+| 036 | [Sıfırlama bağlantısını kullanmak e-postayı doğrular](036-password-reset-marks-email-verified.md) | Accepted | 2026-10-07 |
 
-**Sıradaki numara: 033.**
+**Sıradaki numara: 037.**
 
 **Durum değerleri:** `Proposed` (öneri, henüz bağlayıcı değil) · `Accepted` (yürürlükte, bağlayıcı) · `Deprecated` (artık geçerli değil, yerine bir şey gelmedi) · `Superseded by [ADR-XXX]` (yerini başka bir karara bıraktı).
 

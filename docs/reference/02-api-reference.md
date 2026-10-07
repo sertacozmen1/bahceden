@@ -142,12 +142,14 @@ Derin kontrol (veritabanı erişimi) **yoktur**: sağlık ucu, bağımlılıklar
 
 ## Kimlik ve oturum uçları
 
-Kimlik modeli: [ADR-008](../adr/008-jwt-auth-with-opaque-refresh.md), [ADR-017](../adr/017-email-verification-non-blocking-and-2fa-switch.md), [ADR-018](../adr/018-refresh-token-rotation-with-family-revocation.md)…[ADR-026](../adr/026-verification-link-resend-requires-session.md). Korunan uçlar `Authorization: Bearer <erişim token'ı>` ister (sözleşmede `bearerAuth` güvenlik şeması). Erişim token'ı HS256 imzalı bir JWT'dir, 15 dakika geçerlidir ve `sub` (hesap kimliği), `email`, `roles` iddialarını taşır.
+Kimlik modeli: [ADR-008](../adr/008-jwt-auth-with-opaque-refresh.md), [ADR-017](../adr/017-email-verification-non-blocking-and-2fa-switch.md), [ADR-018](../adr/018-refresh-token-rotation-with-family-revocation.md)…[ADR-026](../adr/026-verification-link-resend-requires-session.md), parola sıfırlama [ADR-033](../adr/033-password-reset-token-separate-table-one-hour.md)…[ADR-036](../adr/036-password-reset-marks-email-verified.md). Korunan uçlar `Authorization: Bearer <erişim token'ı>` ister (sözleşmede `bearerAuth` güvenlik şeması). Erişim token'ı HS256 imzalı bir JWT'dir, 15 dakika geçerlidir ve `sub` (hesap kimliği), `email`, `roles` iddialarını taşır.
 
 | Uç | Kimlik | Başarı | Hatalar | Hız sınırı |
 |---|---|---|---|---|
 | `POST /api/v1/accounts` | açık | `202` `RegistrationAccepted` | 400 | IP: saatte 10 |
 | `POST /api/v1/accounts/verifications` | açık | `204` | 400 (`VALIDATION_FAILED`, `AUTH_TOKEN_INVALID`) | IP: 15 dk'da 20 |
+| `POST /api/v1/accounts/password-resets` | açık | `202` `PasswordResetRequested` | 400 | IP: saatte 10 · e-posta: saatte 3 |
+| `POST /api/v1/accounts/password-resets/confirmations` | açık | `204` | 400 (`VALIDATION_FAILED`, `AUTH_TOKEN_INVALID`) | IP: 15 dk'da 20 |
 | `GET /api/v1/accounts/me` | Bearer | `200` `AccountView` | 401 | - |
 | `POST /api/v1/accounts/me/verification-requests` | Bearer | `202` (gövdesiz) | 401 | hesap: saatte 3 |
 | `POST /api/v1/sessions` | açık | `200` `SessionTokens` · `202` `LoginChallengeIssued` | 400, 401 | IP + e-posta: 15 dk'da 10 |
@@ -178,6 +180,35 @@ Yeni adrese doğrulama bağlantısı (`<web>/verify-email?token=…`), kayıtlı
 ```
 
 Hesabı doğrulanmış işaretler ve token'ı tüketir. Girişi etkilemez.
+
+### `POST /api/v1/accounts/password-resets`
+
+```json
+{ "email": "alici@ornek.test" }
+```
+
+Yanıt **her durumda** aynıdır ([ADR-034](../adr/034-password-reset-request-reveals-nothing.md)):
+
+```json
+{ "message": "Bu adrese kayıtlı bir hesap varsa parola sıfırlama bağlantısı gönderdik. Bağlantı 1 saat geçerlidir." }
+```
+
+Adres kayıtlıysa hesabın dilinde bir sıfırlama bağlantısı (`<web>/reset-password?token=…`) gider; bağlantı 1 saat geçerlidir ve önceki bağlantıları geçersiz kılar ([ADR-033](../adr/033-password-reset-token-separate-table-one-hour.md)). Kayıtsız adrese e-posta **gönderilmez**.
+
+### `POST /api/v1/accounts/password-resets/confirmations`
+
+```json
+{ "token": "<e-postadaki bağlantının token'ı>", "password": "yeni-cok-gizli-parola" }
+```
+
+Parola kuralları kayıttakiyle aynıdır (10–200 karakter); doğrulama hatası token'ı tüketmez. Başarıda ([ADR-035](../adr/035-password-reset-signs-out-everywhere-no-auto-login.md), [ADR-036](../adr/036-password-reset-marks-email-verified.md)):
+
+- parola değişir ve token tüketilir;
+- hesabın bütün yenileme token'ları iptal edilir, açık giriş kodları kapanır;
+- e-posta doğrulanmış işaretlenir;
+- hesabın dilinde "parolanız değişti" bildirimi gider.
+
+Yanıt gövdesizdir ve **oturum açmaz**: kullanıcı `POST /sessions` ile yeni parolasıyla giriş yapar. Geçersiz, kullanılmış ve süresi dolmuş token aynı `400 AUTH_TOKEN_INVALID` hatasını alır.
 
 ### `GET /api/v1/accounts/me`
 
@@ -254,6 +285,8 @@ Tarayıcı `api`'ye hiç konuşmaz ve token görmez ([ADR-023](../adr/023-web-bf
 | `/api/auth/login` | POST | `POST /sessions` | Yanıt `{"outcome":"AUTHENTICATED"}` veya `{"outcome":"CHALLENGE_REQUIRED","message":…}`; token yok |
 | `/api/auth/challenge` | POST | `POST /sessions/challenge` | |
 | `/api/auth/verification-request` | POST | `POST /accounts/me/verification-requests` | |
+| `/api/auth/password-reset-request` | POST | `POST /accounts/password-resets` | |
+| `/api/auth/password-reset` | POST | `POST /accounts/password-resets/confirmations` | Çerez yazmaz; tarayıcı `/login?reset=1`'e gider |
 | `/api/auth/logout` | POST | `DELETE /sessions/current` | `api`'ye ulaşılamasa da çerezler silinir |
 | `/api/auth/refresh?next=<yol>` | GET | `POST /sessions/refresh` | Gezinti; başarıda `next`'e, reddedilirse `/login?next=`'e 307 |
 
@@ -266,4 +299,4 @@ Tarayıcı `api`'ye hiç konuşmaz ve token görmez ([ADR-023](../adr/023-web-bf
 
 ## Henüz olmayan uçlar
 
-Parola sıfırlama, satıcı olma, satıcı ürün yönetimi, sepet, sipariş, ödeme ve gönderim uçları **yoktur**. Parola sıfırlama sıradaki en küçük dilimdir; diğerleri `openspec/KALANLAR.md` maddelerine bağlıdır.
+Oturum açıkken parola değiştirme, satıcı olma, satıcı ürün yönetimi, sepet, sipariş, ödeme ve gönderim uçları **yoktur**. Parola değiştirme sıfırlama altyapısının üzerine oturan küçük bir dilimdir; diğerleri `openspec/KALANLAR.md` maddelerine bağlıdır.

@@ -28,7 +28,16 @@ public enum RateLimitPolicy {
     VERIFICATION_REQUEST(3, Duration.ofHours(1)),
 
     /** Oturum yenileme: aynı istemciden 15 dakikada 60. */
-    REFRESH(60, Duration.ofMinutes(15));
+    REFRESH(60, Duration.ofMinutes(15)),
+
+    /** Parola sıfırlama talebi: aynı istemciden saatte 10; tek kaynaktan adres taraması yavaşlar (ADR-034). */
+    PASSWORD_RESET_REQUEST(10, Duration.ofHours(1)),
+
+    /** Parola sıfırlama talebi: aynı e-posta için saatte 3; kurbanın gelen kutusu doldurulamaz (ADR-034). */
+    PASSWORD_RESET_REQUEST_EMAIL(3, Duration.ofHours(1)),
+
+    /** Sıfırlama bağlantısının tüketilmesi: aynı istemciden 15 dakikada 20. */
+    PASSWORD_RESET(20, Duration.ofMinutes(15));
 
     private final int limit;
     private final Duration window;

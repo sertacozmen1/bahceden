@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
 import { currentSession } from "@/features/account/api";
 import { AccountScreen } from "@/features/account/components/AccountScreen";
+import { FormMessage } from "@/features/account/components/FormMessage";
 import { LoginForm } from "@/features/account/components/LoginForm";
 import { safeReturnPath } from "@/lib/sameOrigin";
 
@@ -18,13 +19,15 @@ const DEFAULT_RETURN_PATH = "/account";
 /**
  * Giriş sayfası. Korunan bir sayfadan yönlendirildiyse (`next`) bunu söyler ve
  * girişten sonra oraya döner. Zaten oturum açıksa doğrudan hedefe gider.
+ * Parola sıfırlamadan gelindiyse (`reset`) parolanın değiştiğini söyler:
+ * sıfırlama oturum açmaz, kullanıcı burada yeni parolasıyla girer (ADR-035).
  */
 export default async function LoginPage({
   searchParams,
 }: {
-  readonly searchParams: Promise<{ readonly next?: string }>;
+  readonly searchParams: Promise<{ readonly next?: string; readonly reset?: string }>;
 }) {
-  const { next } = await searchParams;
+  const { next, reset } = await searchParams;
   const t = await getTranslations();
   const returnPath = safeReturnPath(next, DEFAULT_RETURN_PATH);
 
@@ -45,6 +48,7 @@ export default async function LoginPage({
         </>
       }
     >
+      {reset === "1" && <FormMessage tone="success">{t("account.login.passwordChanged")}</FormMessage>}
       <LoginForm returnPath={returnPath} />
     </AccountScreen>
   );

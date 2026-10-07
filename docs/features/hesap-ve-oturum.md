@@ -6,9 +6,9 @@
 
 | | |
 |---|---|
-| **Kararlar** | [ADR-008](../adr/008-jwt-auth-with-opaque-refresh.md), [ADR-017](../adr/017-email-verification-non-blocking-and-2fa-switch.md), [ADR-018](../adr/018-refresh-token-rotation-with-family-revocation.md) … [ADR-026](../adr/026-verification-link-resend-requires-session.md) |
+| **Kararlar** | [ADR-008](../adr/008-jwt-auth-with-opaque-refresh.md), [ADR-017](../adr/017-email-verification-non-blocking-and-2fa-switch.md), [ADR-018](../adr/018-refresh-token-rotation-with-family-revocation.md) … [ADR-026](../adr/026-verification-link-resend-requires-session.md), parola sıfırlama [ADR-033](../adr/033-password-reset-token-separate-table-one-hour.md) … [ADR-036](../adr/036-password-reset-marks-email-verified.md) |
 | **Spec (capability)** | `openspec/specs/account-identity` |
-| **Change'ler** | `openspec/changes/archive/2026-10-07-add-account-and-session` (archive edildi) |
+| **Change'ler** | `openspec/changes/archive/2026-10-07-add-account-and-session`, `openspec/changes/archive/2026-10-07-add-password-reset` (ikisi de archive edildi) |
 | **Rehberler** | [Korunan uç ekleme](../how-to/korunan-uc-ekleme.md), [Yerel geliştirme](../how-to/yerel-gelistirme.md) |
 | **Referans** | [Domain modeli](../reference/01-domain-model.md), [API referansı](../reference/02-api-reference.md) |
 | **Kod** | `api/src/main/java/com/bahceden/account/`, `api/.../common/security/`, `api/.../common/ratelimit/`, `web/src/app/(account)/`, `web/src/app/api/auth/`, `web/src/features/account/` |
@@ -17,11 +17,11 @@
 
 ## Ne yapar
 
-Kullanıcı e-posta adresi ve parolayla hesap açar ve hesabını hemen kullanır; e-posta adresini doğrulamak girişin koşulu değildir, yalnızca hesapta bir bilgi olarak durur. Doğrulama bağlantısı e-postayla gelir; süresi dolarsa veya ulaşmazsa "Hesabım" sayfasından yenisi istenir. Giriş yapan kullanıcı üst başlıkta maskeli e-postasını ve çıkış düğmesini görür; oturum arka planda yenilenir ve çıkış gerçekten oturumu kapatır. Hesabında ikinci faktör açık olan kullanıcı girişte e-postasına gelen 6 haneli kodu da girer. Bu anahtar bugün yalnızca veritabanından açılabiliyor.
+Kullanıcı e-posta adresi ve parolayla hesap açar ve hesabını hemen kullanır; e-posta adresini doğrulamak girişin koşulu değildir, yalnızca hesapta bir bilgi olarak durur. Doğrulama bağlantısı e-postayla gelir; süresi dolarsa veya ulaşmazsa "Hesabım" sayfasından yenisi istenir. Giriş yapan kullanıcı üst başlıkta maskeli e-postasını ve çıkış düğmesini görür; oturum arka planda yenilenir ve çıkış gerçekten oturumu kapatır. Hesabında ikinci faktör açık olan kullanıcı girişte e-postasına gelen 6 haneli kodu da girer. Bu anahtar bugün yalnızca veritabanından açılabiliyor. Parolasını unutan kullanıcı giriş ekranındaki "Parolamı unuttum" bağlantısıyla e-postasına bir saatlik sıfırlama bağlantısı ister; yeni parolayı belirleyince bütün cihazlardaki oturumları kapanır ve yeni parolasıyla giriş yapar.
 
 ## Bilinçli sınırlar
 
-- **Parola sıfırlama yok.** Token altyapısı kuruldu; sıradaki en küçük dilim.
+- **Oturum açıkken parola değiştirme yok.** Sıfırlama altyapısı (parola kuralları, bütün oturumları kapatma) ona doğrudan taşınır.
 - **İkinci faktörü kullanıcı açamaz** ([ADR-017](../adr/017-email-verification-non-blocking-and-2fa-switch.md)); anahtar yalnızca veritabanından veya dev seed'inden açılır.
 - **Doğrulanmamış e-postayla hesap açılabilir.** Bu kabul edilmiş bir borç: sipariş dilimi `email_verified` kapısını değerlendirmek zorunda.
 - **Satıcı olma akışı yok** (KALANLAR A3); herkes `ROLE_CUSTOMER` alır.
@@ -36,6 +36,8 @@ Kullanıcı e-posta adresi ve parolayla hesap açar ve hesabını hemen kullanı
 
 ## Tarihçe
 
+- 2026-10-07: `add-password-reset` change'i kullanıcı onayıyla archive edildi (`openspec/changes/archive/2026-10-07-add-password-reset/`). Ön koşullar: delta spec ana spec'e sync edildi, D1–D4 → ADR-033…036, dokümanlar güncel, `api` 102 / `web` 62 test yeşil, docs strict derleme temiz. Taşımada `proposal.md` ve `design.md` içindeki göreli linkler bir seviye uzatıldı.
+- 2026-10-07: Parola sıfırlama (change `add-password-reset`). `api`: `POST /accounts/password-resets` (her durumda aynı `202`, kayıtsız adrese e-posta yok, istemci ve e-posta başına hız sınırı) ve `POST /accounts/password-resets/confirmations` (parola değişir, bütün oturumlar ve açık giriş kodları kapanır, e-posta doğrulanır, "parolanız değişti" bildirimi; oturum açmaz). Token 1 saat, tek kullanımlık, ayrı tabloda (`006-create-password-reset-tokens.sql`). `web`: `/forgot-password`, `/reset-password`, giriş formunda "Parolamı unuttum" bağlantısı. Kararlar ADR-033…036; 14 yeni `api` testi, 8 yeni `web` testi.
 - 2026-10-07: Hesap sayfalarının adresleri İngilizce oldu: `/kayit` → `/register`, `/giris` → `/login`, `/dogrulama` → `/verify-email`, `/hesabim` → `/account`. Değişikliğe e-postadaki doğrulama ve giriş bağlantıları da dahil. Eski adresler yönlendirilmez: üretim yok, yalnızca geliştirmede gönderilmiş bağlantılar kırılır. Form alanı `id`'leri ve testlerdeki Türkçe yardımcı adları da İngilizce yapıldı (AGENTS.md §1).
 - 2026-10-07: Hesap ekranları, sunucu mesajları ve e-postalar Türkçe ve İngilizce (change `add-i18n`). Hesabın dili saklanıyor (`accounts.locale`): kayıtta yazılır, her başarılı girişte güncellenir; doğrulama bağlantısı, giriş kodu ve "hesabınız zaten var" e-postaları hesabın dilinde gider ([ADR-032](../adr/032-account-locale-stored-and-refreshed-on-login.md)). Kayıt ve giriş yanıtları isteğin dilinde ([ADR-031](../adr/031-api-messages-by-accept-language.md)).
 

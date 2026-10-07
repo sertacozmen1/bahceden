@@ -6,11 +6,13 @@ import java.util.regex.Pattern;
 
 /**
  * Test e-postalarının gövdesinden kullanıcının göreceği değerleri çıkarır:
- * doğrulama bağlantısındaki token ve ikinci faktör kodu.
+ * doğrulama ve parola sıfırlama bağlantılarındaki token ile ikinci faktör kodu.
  */
 public final class MailContents {
 
     private static final String VERIFICATION_LINK = "/verify-email?token=";
+
+    private static final String PASSWORD_RESET_LINK = "/reset-password?token=";
 
     private static final Pattern SIX_DIGIT_CODE = Pattern.compile("(?m)^\\s*(\\d{6})\\s*$");
 
@@ -19,11 +21,20 @@ public final class MailContents {
 
     /** Doğrulama bağlantısındaki düz token. */
     public static String verificationToken(String body) {
-        int start = body.indexOf(VERIFICATION_LINK);
+        return tokenAfter(body, VERIFICATION_LINK, "doğrulama");
+    }
+
+    /** Parola sıfırlama bağlantısındaki düz token. */
+    public static String passwordResetToken(String body) {
+        return tokenAfter(body, PASSWORD_RESET_LINK, "parola sıfırlama");
+    }
+
+    private static String tokenAfter(String body, String link, String kind) {
+        int start = body.indexOf(link);
         if (start < 0) {
-            throw new AssertionError("E-postada doğrulama bağlantısı yok");
+            throw new AssertionError("E-postada " + kind + " bağlantısı yok");
         }
-        start += VERIFICATION_LINK.length();
+        start += link.length();
         int end = start;
         while (end < body.length() && !Character.isWhitespace(body.charAt(end))) {
             end++;

@@ -40,7 +40,8 @@
       "password": "Password",
       "passwordHint": "At least 10 characters",
       "code": "Sign-in code",
-      "codeHint": "The 6-digit code sent to your email"
+      "codeHint": "The 6-digit code sent to your email",
+      "newPassword": "New password"
     },
     "register": {
       "title": "Sign up",
@@ -61,7 +62,9 @@
       "codeSubmitting": "Checking code…",
       "startOver": "Start over",
       "noAccount": "Don't have an account?",
-      "signInRequired": "Sign in to see this page."
+      "signInRequired": "Sign in to see this page.",
+      "forgotPassword": "Forgot your password?",
+      "passwordChanged": "Your password was changed and your open sessions were signed out. Sign in with your new password."
     },
     "verification": {
       "title": "Email verification",
@@ -71,6 +74,24 @@
       "missingToken": "The link looks incomplete. Make sure you opened the full link from the email, or request a new link from My account.",
       "goToAccount": "Go to my account",
       "goToStorefront": "Back to the storefront"
+    },
+    "forgotPassword": {
+      "title": "Forgot your password",
+      "intro": "Enter the email address of your account and we will send you a link to set a new password.",
+      "submit": "Send link",
+      "submitting": "Sending…",
+      "successTitle": "Check your email",
+      "backToSignIn": "Back to sign in",
+      "remembered": "Remembered your password?"
+    },
+    "resetPassword": {
+      "title": "Set a new password",
+      "intro": "Enter your new password. Once it changes, you are signed out on every device.",
+      "submit": "Change password",
+      "submitting": "Changing…",
+      "requestNewLink": "Request a new link",
+      "missingTitle": "This link cannot be used",
+      "missingToken": "The link looks incomplete. Make sure you opened the full link from the email, or request a new link."
     },
     "myAccount": {
       "title": "My account",

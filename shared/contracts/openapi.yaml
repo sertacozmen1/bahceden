@@ -16,7 +16,8 @@ tags:
 - name: Oturum
   description: "Oturum açma, yenileme ve kapatma"
 - name: Hesap
-  description: "Hesap açma, e-posta doğrulama ve oturum sahibinin kimliği"
+  description: "Hesap açma, e-posta doğrulama, parola sıfırlama ve oturum sahibinin\
+    \ kimliği"
 paths:
   /api/v1/sessions:
     post:
@@ -201,6 +202,75 @@ paths:
         "400":
           description: "Token eksik (VALIDATION_FAILED) ya da geçersiz, kullanılmı\
             ş veya süresi dolmuş (AUTH_TOKEN_INVALID)"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "429":
+          description: Çok fazla istek (RATE_LIMITED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+  /api/v1/accounts/password-resets:
+    post:
+      tags:
+      - Hesap
+      summary: Parola sıfırlama bağlantısı gönderir
+      description: |
+        Adres kayıtlı bir hesaba aitse hesabın dilinde, 1 saat geçerli ve tek
+        kullanımlık bir sıfırlama bağlantısı gönderir; önceki bağlantılar geçersiz
+        olur. Yanıt, adresin kayıtlı olup olmadığını açığa çıkarmaz: her durumda
+        aynı gövde döner. Kayıtsız adrese e-posta gönderilmez.
+      operationId: requestPasswordReset
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasswordResetRequest"
+        required: true
+      responses:
+        "202":
+          description: İstek alındı
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PasswordResetRequested"
+        "400":
+          description: E-posta geçersiz (VALIDATION_FAILED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "429":
+          description: Çok fazla istek (RATE_LIMITED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+  /api/v1/accounts/password-resets/confirmations:
+    post:
+      tags:
+      - Hesap
+      summary: Sıfırlama bağlantısıyla yeni parola belirler
+      description: |
+        Sıfırlama token'ını tüketir ve parolayı değiştirir. Hesabın bütün oturumları
+        ve açık giriş kodları kapanır, e-posta doğrulanmış işaretlenir ve parolanın
+        değiştiği hesabın e-posta adresine bildirilir. Oturum açılmaz: kullanıcı
+        yeni parolasıyla giriş yapar.
+      operationId: resetPassword
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasswordResetConfirmation"
+        required: true
+      responses:
+        "204":
+          description: Parola değişti
+        "400":
+          description: "Token veya parola geçersiz (VALIDATION_FAILED) ya da token\
+            \ geçersiz, kullanılmış veya süresi dolmuş (AUTH_TOKEN_INVALID)"
           content:
             application/json:
               schema:
@@ -521,6 +591,49 @@ components:
           maxLength: 200
           minLength: 0
       required:
+      - token
+    PasswordResetRequest:
+      type: object
+      description: Parola sıfırlama talebi
+      properties:
+        email:
+          type: string
+          format: email
+          description: Hesabın e-posta adresi
+          example: alici@ornek.test
+          maxLength: 320
+          minLength: 0
+      required:
+      - email
+    PasswordResetRequested:
+      type: object
+      description: Parola sıfırlama talebi alındı bilgisi
+      properties:
+        message:
+          type: string
+          description: Kullanıcıya gösterilebilir bilgilendirme; isteğin diliyle (Accept-Language)
+            döner
+          example: Bu adrese kayıtlı bir hesap varsa parola sıfırlama bağlantısı gönderdik.
+      required:
+      - message
+    PasswordResetConfirmation:
+      type: object
+      description: Parola sıfırlama onayı
+      properties:
+        token:
+          type: string
+          description: Sıfırlama bağlantısındaki tek kullanımlık token
+          example: q3Jx0ornekSifirlamaTokeni9Zt
+          maxLength: 200
+          minLength: 0
+        password:
+          type: string
+          description: Yeni parola; en az 10 karakter
+          example: yeni-cok-gizli-parola
+          maxLength: 200
+          minLength: 10
+      required:
+      - password
       - token
     Money:
       type: object

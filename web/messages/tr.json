@@ -40,7 +40,8 @@
       "password": "Parola",
       "passwordHint": "En az 10 karakter",
       "code": "Giriş kodu",
-      "codeHint": "E-postanıza gelen 6 haneli kod"
+      "codeHint": "E-postanıza gelen 6 haneli kod",
+      "newPassword": "Yeni parola"
     },
     "register": {
       "title": "Kayıt ol",
@@ -61,7 +62,9 @@
       "codeSubmitting": "Kod doğrulanıyor…",
       "startOver": "Baştan başla",
       "noAccount": "Hesabınız yok mu?",
-      "signInRequired": "Bu sayfayı görmek için giriş yapın."
+      "signInRequired": "Bu sayfayı görmek için giriş yapın.",
+      "forgotPassword": "Parolamı unuttum",
+      "passwordChanged": "Parolanız değişti ve açık oturumlarınız kapatıldı. Yeni parolanızla giriş yapın."
     },
     "verification": {
       "title": "E-posta doğrulama",
@@ -71,6 +74,24 @@
       "missingToken": "Bağlantı eksik görünüyor. E-postadaki bağlantıyı tam olarak açtığınızdan emin olun ya da Hesabım sayfasından yeni bir bağlantı isteyin.",
       "goToAccount": "Hesabıma git",
       "goToStorefront": "Vitrine dön"
+    },
+    "forgotPassword": {
+      "title": "Parolamı unuttum",
+      "intro": "Hesabınızın e-posta adresini yazın; yeni parola belirlemeniz için bir bağlantı gönderelim.",
+      "submit": "Bağlantı gönder",
+      "submitting": "Gönderiliyor…",
+      "successTitle": "E-postanızı kontrol edin",
+      "backToSignIn": "Giriş ekranına dön",
+      "remembered": "Parolanızı hatırladınız mı?"
+    },
+    "resetPassword": {
+      "title": "Yeni parola belirleyin",
+      "intro": "Yeni parolanızı yazın. Parola değişince bütün cihazlardaki oturumlarınız kapanır.",
+      "submit": "Parolayı değiştir",
+      "submitting": "Değiştiriliyor…",
+      "requestNewLink": "Yeni bağlantı iste",
+      "missingTitle": "Bağlantı kullanılamadı",
+      "missingToken": "Bağlantı eksik görünüyor. E-postadaki bağlantıyı tam olarak açtığınızdan emin olun ya da yeni bir bağlantı isteyin."
     },
     "myAccount": {
       "title": "Hesabım",

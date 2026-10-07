@@ -122,6 +122,10 @@ nav:
     - "ADR-030 · Dil seçimi": adr/030-locale-from-cookie-then-header.md
     - "ADR-031 · api mesajları ve dil": adr/031-api-messages-by-accept-language.md
     - "ADR-032 · Hesabın dili": adr/032-account-locale-stored-and-refreshed-on-login.md
+    - "ADR-033 · Sıfırlama token'ı": adr/033-password-reset-token-separate-table-one-hour.md
+    - "ADR-034 · Sıfırlama talebi ve hesap keşfi": adr/034-password-reset-request-reveals-nothing.md
+    - "ADR-035 · Sıfırlama oturumları kapatır": adr/035-password-reset-signs-out-everywhere-no-auto-login.md
+    - "ADR-036 · Sıfırlama e-postayı doğrular": adr/036-password-reset-marks-email-verified.md
   - Nasıl Yapılır (How-to):
     - Genel Bakış: how-to/index.md
     - Yerel Geliştirme Ortamı: how-to/yerel-gelistirme.md

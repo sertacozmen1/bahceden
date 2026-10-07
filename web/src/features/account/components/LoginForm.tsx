@@ -1,6 +1,7 @@
 "use client";
 
 import type { Route } from "next";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { useTranslations } from "next-intl";
@@ -131,6 +132,12 @@ export function LoginForm({ returnPath }: LoginFormProps) {
           autoComplete="current-password"
           error={errors.fields.password}
         />
+        <Link
+          className="-my-2 flex min-h-11 items-center self-end text-sm font-medium text-primary underline-offset-4 hover:underline"
+          href="/forgot-password"
+        >
+          {t("account.login.forgotPassword")}
+        </Link>
         <Button type="submit" disabled={pending}>
           {pending ? t("account.login.submitting") : t("account.login.submit")}
         </Button>

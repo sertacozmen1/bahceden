@@ -102,12 +102,13 @@ Satılan ürün ilanı.
 
 ## Hesap bölgesi
 
-Changeset: `003-create-account.sql`, `005-account-locale.sql` (`locale` kolonu). Geliştirme hesapları: `004-dev-seed-account.sql` (yalnızca dev bağlamı).
+Changeset: `003-create-account.sql`, `005-account-locale.sql` (`locale` kolonu), `006-create-password-reset-tokens.sql`. Geliştirme hesapları: `004-dev-seed-account.sql` (yalnızca dev bağlamı).
 
 ```mermaid
 erDiagram
     ACCOUNTS ||--|{ ACCOUNT_ROLES : "rolleri"
     ACCOUNTS ||--o{ EMAIL_VERIFICATION_TOKENS : "doğrulama bağlantıları"
+    ACCOUNTS ||--o{ PASSWORD_RESET_TOKENS : "sıfırlama bağlantıları"
     ACCOUNTS ||--o{ REFRESH_TOKENS : "oturum zincirleri"
     ACCOUNTS ||--o{ LOGIN_CHALLENGES : "ikinci faktör girişimleri"
 
@@ -134,6 +135,15 @@ erDiagram
         varchar(64) token_hash UK "SHA-256"
         timestamptz expires_at "24 saat"
         timestamptz used_at "tek kullanımlık"
+        timestamptz created_at
+    }
+
+    PASSWORD_RESET_TOKENS {
+        bigserial id PK
+        bigint account_id FK
+        varchar(64) token_hash UK "SHA-256"
+        timestamptz expires_at "1 saat"
+        timestamptz used_at "tek kullanımlık; yeni talep kapatır"
         timestamptz created_at
     }
 
@@ -180,6 +190,10 @@ Hesabın rolleri, değer kümesi olarak (`@ElementCollection`). Birincil anahtar
 
 Doğrulama bağlantısının token'ı: yalnızca SHA-256 hash'i saklanır, 24 saat geçerlidir, tek kullanımlıktır ([ADR-020](../adr/020-verification-tokens-sha256-single-use.md)). Yeni bağlantı istendiğinde ([ADR-026](../adr/026-verification-link-resend-requires-session.md)) eski satırlar süreleri dolana kadar geçerli kalır.
 
+### `password_reset_tokens`
+
+Parola sıfırlama bağlantısının token'ı ([ADR-033](../adr/033-password-reset-token-separate-table-one-hour.md)): yalnızca SHA-256 hash'i saklanır, 1 saat geçerlidir, tek kullanımlıktır. Şekli `email_verification_tokens` ile aynıdır ama tablo ayrıdır: bir doğrulama token'ı parola değiştiremez. Yeni talep hesabın kullanılmamış satırlarına `used_at` yazar (`password_reset_tokens_account_idx`); onay satırı `SELECT … FOR UPDATE` ile kilitleyerek okur. Başarılı sıfırlama hesabın bütün `refresh_tokens` satırlarına `revoked_at`, açık `login_challenges` satırlarına `used_at` yazar ([ADR-035](../adr/035-password-reset-signs-out-everywhere-no-auto-login.md)).
+
 ### `refresh_tokens`
 
 Opak yenileme token'ı ([ADR-018](../adr/018-refresh-token-rotation-with-family-revocation.md)). Her giriş yeni bir `family_id` başlatır; rotasyon aynı ailede kalır. Kullanılmış bir token tekrar sunulursa ailenin tüm satırlarına `revoked_at` yazılır. Yenileme ve çıkış satırı `SELECT … FOR UPDATE` ile kilitleyerek okur.
@@ -209,6 +223,7 @@ Hesaba bağlı tüm tablolarda yabancı anahtar `on delete cascade`'dir: hesap s
 | `com.bahceden.common.money.Money` | `products.price_amount`, `products.price_currency` | `@Embeddable`; ayrı tablo yok |
 | `com.bahceden.account.domain.Account` | `accounts` + `account_roles` | Roller `@ElementCollection` (`EAGER`): yetkilendirme her zaman rollere ihtiyaç duyar |
 | `com.bahceden.account.domain.EmailVerificationToken` | `email_verification_tokens` | |
+| `com.bahceden.account.domain.PasswordResetToken` | `password_reset_tokens` | |
 | `com.bahceden.account.domain.RefreshToken` | `refresh_tokens` | |
 | `com.bahceden.account.domain.LoginChallenge` | `login_challenges` | |
 

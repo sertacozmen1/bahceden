@@ -54,6 +54,9 @@ public class SecurityConfig {
                         // Kimlik: hesap açma, doğrulama ve giriş oturumdan önce gelir, doğal olarak açıktır.
                         .requestMatchers(HttpMethod.POST, "/api/v1/accounts").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/accounts/verifications").permitAll()
+                        // Parola sıfırlama: parolasını unutan kullanıcının oturumu yoktur; kanıt e-postadaki token'dır.
+                        .requestMatchers(HttpMethod.POST, "/api/v1/accounts/password-resets",
+                                "/api/v1/accounts/password-resets/confirmations").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/sessions").permitAll()
                         // İkinci adım, yenileme ve çıkış: kimlik kanıtı gövdedeki kod veya yenileme token'ıdır.
                         .requestMatchers(HttpMethod.POST, "/api/v1/sessions/challenge", "/api/v1/sessions/refresh").permitAll()
