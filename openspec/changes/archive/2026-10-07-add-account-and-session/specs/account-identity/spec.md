@@ -1,7 +1,7 @@
 # account-identity Specification (delta)
 
 > Bu bir **delta spec**'tir: yalnızca bu change'in getirdiği davranışı tanımlar. Onaylanıp uygulandıktan sonra `openspec/specs/account-identity/spec.md` ana spec'ine sync edilir (`AGENTS.md` §5.3).
-> E-posta doğrulamasının girişi **engellememesi** ve ikinci faktörün hesap bazlı bir anahtara bağlı olması [ADR-017](../../../../docs/adr/017-email-verification-non-blocking-and-2fa-switch.md) kararıdır.
+> E-posta doğrulamasının girişi **engellememesi** ve ikinci faktörün hesap bazlı bir anahtara bağlı olması [ADR-017](../../../../../../docs/adr/017-email-verification-non-blocking-and-2fa-switch.md) kararıdır.
 
 ## ADDED Requirements
 

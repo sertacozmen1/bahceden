@@ -2,7 +2,7 @@
 
 > Her faz **tek başına çalışır durumda** bırakılır (`AGENTS.md` K5). Kutu yalnızca gerçekten biten iş için işaretlenir; dış/insan işi açık kalır ve notlanır (K6).
 > **Bağımlılık onayı alındı (2026-10-06):** `spring-boot-starter-mail` bütçeye eklenir (K7; ADR ile kaydedilir).
-> **Kapsam güncellendi:** e-posta doğrulaması girişi **engellemez**; e-postanın kimlik akışına girmesi hesap bazlı `two_factor_enabled` anahtarına bağlıdır ve anahtar varsayılan kapalıdır ([ADR-017](../../../docs/adr/017-email-verification-non-blocking-and-2fa-switch.md)).
+> **Kapsam güncellendi:** e-posta doğrulaması girişi **engellemez**; e-postanın kimlik akışına girmesi hesap bazlı `two_factor_enabled` anahtarına bağlıdır ve anahtar varsayılan kapalıdır ([ADR-017](../../../../docs/adr/017-email-verification-non-blocking-and-2fa-switch.md)).
 > Faz sonlarında `AGENTS.md` §7 doğrulama komutları koşulur ve çıktılar raporlanır.
 
 ## Faz 1 · Hesap şeması, e-posta altyapısı ve kayıt
@@ -89,7 +89,7 @@
 
 ## Faz 5 · Doküman ve kapanış
 
-- [x] 5.1 ADR-018…026: D1–D9 kararları (`docs/adr/` + `index.md` + nav). [ADR-017](../../../docs/adr/017-email-verification-non-blocking-and-2fa-switch.md) ve `spring-boot-starter-mail` bütçe kaydı bu dilim başlarken yazıldı.
+- [x] 5.1 ADR-018…026: D1–D9 kararları (`docs/adr/` + `index.md` + nav). [ADR-017](../../../../docs/adr/017-email-verification-non-blocking-and-2fa-switch.md) ve `spring-boot-starter-mail` bütçe kaydı bu dilim başlarken yazıldı.
 - [x] 5.2 `docs/features/hesap-ve-oturum.md` (yeni feature dosyası) + `features/index.md` tablosu + nav; `features/index.md` "Planlanan" tablosundan satır düşer.
 - [x] 5.3 `docs/reference/01-domain-model.md`: dört yeni tablo + ER diyagramı; `products.seller_id` ↔ `accounts` ilişkisinin **bilinçli yokluğu** not edilir.
 - [x] 5.4 `docs/reference/02-api-reference.md`: sekiz yeni uç, yeni hata kodları, çerez/BFF akışı.
@@ -99,10 +99,10 @@
 - [x] 5.8 `./docs/.tools/serve.sh --build` strict temiz.
 - [x] 5.9 Delta spec ana spec'e sync edilir (`openspec/specs/account-identity/spec.md`). (`openspec` CLI kurulu olmadığı için `openspec validate` koşulamadı; yapı `storefront-catalog` ana spec'iyle aynı, 7 gereksinim / 33 senaryo delta ile birebir.)
 - [x] 5.10 CI 4/4 yeşil. **Doğrulama:** run numarası rapora. Run `37589772992` (2026-10-07): 4/4 yeşil; `api` 1m23s, `web` 1m5s, `docs` 20s, kural denetimi 5s.
-- [ ] 5.11 Rapor `AGENTS.md` §14 formatında; archive **kullanıcı onayı** ister (§9).
+- [x] 5.11 Rapor `AGENTS.md` §14 formatında; archive **kullanıcı onayı** ister (§9). **Tamam (2026-10-07):** rapor sunuldu, kullanıcı archive'ı onayladı; 4.9 (tarayıcıda elle deneme) notlu açık görev olarak kaldı.
 
 ## Sonraki dilim adayları
 
 - **Parola sıfırlama** (bu dilimin token altyapısı üzerine oturur; en küçük sonraki adım).
 - Satıcı olma akışı ve `ROLE_SELLER` ataması (`KALANLAR` A3'e bağlı).
-- Satıcı ürün yönetimi: kimlik + sahiplik artık mevcut ([ADR-007](../../../docs/adr/007-query-level-ownership-scoping.md) uygulanabilir).
+- Satıcı ürün yönetimi: kimlik + sahiplik artık mevcut ([ADR-007](../../../../docs/adr/007-query-level-ownership-scoping.md) uygulanabilir).

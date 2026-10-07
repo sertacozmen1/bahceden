@@ -3,13 +3,13 @@
 > **Durum:** Proposed — kullanıcı onayı bekliyor (`AGENTS.md` §5.3).
 > **Not:** `openspec` CLI bu makinede kurulu değil; artefaktlar `AGENTS.md` §5.2'deki yapıya göre elle yazıldı.
 > **Bu change bütçe dışı bir paket gerektiriyor** (K7): aşağıdaki "Bağımlılık talebi" bölümü ayrıca onay ister.
-> **Güncelleme (2026-10-06):** proje sahibinin yönlendirmesiyle e-posta doğrulaması **girişi engellemez** ve e-postanın kimlik akışına girmesi hesap bazlı `two_factor_enabled` anahtarına bağlanır ([ADR-017](../../../docs/adr/017-email-verification-non-blocking-and-2fa-switch.md), ADR-008 §4'ü değiştirir). Artefaktlar bu karara göre güncellendi.
+> **Güncelleme (2026-10-06):** proje sahibinin yönlendirmesiyle e-posta doğrulaması **girişi engellemez** ve e-postanın kimlik akışına girmesi hesap bazlı `two_factor_enabled` anahtarına bağlanır ([ADR-017](../../../../docs/adr/017-email-verification-non-blocking-and-2fa-switch.md), ADR-008 §4'ü değiştirir). Artefaktlar bu karara göre güncellendi.
 
 ## Why
 
-[ADR-008](../../../docs/adr/008-jwt-auth-with-opaque-refresh.md) kimlik modelini karara bağladı ama **tek satır kod yazılmadı**: bugün sistemde hesap, oturum ve yetkilendirme yok. `SecurityConfig` varsayılan deny uyguluyor ve yalnızca üç uç açık; yazma ucu olmadığı için bu bir sorun değil ama **her sonraki dilim buraya oturuyor**:
+[ADR-008](../../../../docs/adr/008-jwt-auth-with-opaque-refresh.md) kimlik modelini karara bağladı ama **tek satır kod yazılmadı**: bugün sistemde hesap, oturum ve yetkilendirme yok. `SecurityConfig` varsayılan deny uyguluyor ve yalnızca üç uç açık; yazma ucu olmadığı için bu bir sorun değil ama **her sonraki dilim buraya oturuyor**:
 
-- Satıcı ürün ekleyemez: kim olduğunu bilmiyoruz ([ADR-007](../../../docs/adr/007-query-level-ownership-scoping.md) sahiplik kuralları güvenilir bir kimlik üzerine kurulu).
+- Satıcı ürün ekleyemez: kim olduğunu bilmiyoruz ([ADR-007](../../../../docs/adr/007-query-level-ownership-scoping.md) sahiplik kuralları güvenilir bir kimlik üzerine kurulu).
 - Alıcı sipariş veremez: siparişin sahibi yok.
 - `web` tarafındaki BFF katmanı (çerez + `Authorization: Bearer` köprüsü) hiç kurulmadı.
 
@@ -20,7 +20,7 @@ Bu dilim kimliği uçtan uca ayağa kaldırır: **kayıt → e-posta doğrulama 
 **`api/` (yeni `account` domaini):**
 
 - `accounts` (`email_verified`, `two_factor_enabled` dahil) + `account_roles` + `email_verification_tokens` + `refresh_tokens` + `login_challenges` tabloları (Liquibase `003`).
-- `POST /api/v1/accounts` — kayıt. Hesap doğrudan **`ACTIVE`** açılır; doğrulama e-postası gider ama **girişi engellemez** ([ADR-017](../../../docs/adr/017-email-verification-non-blocking-and-2fa-switch.md)). Yanıt, e-postanın kayıtlı olup olmadığını **açığa çıkarmaz**.
+- `POST /api/v1/accounts` — kayıt. Hesap doğrudan **`ACTIVE`** açılır; doğrulama e-postası gider ama **girişi engellemez** ([ADR-017](../../../../docs/adr/017-email-verification-non-blocking-and-2fa-switch.md)). Yanıt, e-postanın kayıtlı olup olmadığını **açığa çıkarmaz**.
 - `POST /api/v1/accounts/verifications` — doğrulama token'ını tüketir ve `email_verified` işaretler (giriş koşulu değildir).
 - `POST /api/v1/sessions` — giriş. İkinci faktör kapalıysa (varsayılan) JWT erişim token'ı (15 dk) + opak yenileme token'ı döner; açıksa token dönmez ve e-posta ile tek kullanımlık kod gönderilir.
 - `POST /api/v1/sessions/challenge` — ikinci faktör kodunu doğrular ve token'ları verir. Anahtar kapalı olduğu sürece bu yol kullanılmaz ama **uygulanmış ve testlidir** (K6: uygulanmamış dal bırakılmaz).
@@ -37,7 +37,7 @@ Bu dilim kimliği uçtan uca ayağa kaldırır: **kayıt → e-posta doğrulama 
 - `AppShell` oturum durumunu gösterir (giriş yapılmışsa e-posta + çıkış, değilse giriş bağlantısı).
 - Sunucu tarafı render çerezi okur ve `api`'ye `Bearer` ile gider; erişim token'ı süresi dolmuşsa sessizce yenilenir.
 
-**Sözleşme:** yeni DTO'lar ve yeni hata kodları (`AUTH_INVALID_CREDENTIALS`, `AUTH_TOKEN_INVALID`, `AUTH_CODE_INVALID`, `RATE_LIMITED`) sözleşmeye yansır; `openapi.yaml` yeniden üretilir. "Doğrulanmamış hesap" diye bir giriş hatası **yoktur** ([ADR-017](../../../docs/adr/017-email-verification-non-blocking-and-2fa-switch.md)).
+**Sözleşme:** yeni DTO'lar ve yeni hata kodları (`AUTH_INVALID_CREDENTIALS`, `AUTH_TOKEN_INVALID`, `AUTH_CODE_INVALID`, `RATE_LIMITED`) sözleşmeye yansır; `openapi.yaml` yeniden üretilir. "Doğrulanmamış hesap" diye bir giriş hatası **yoktur** ([ADR-017](../../../../docs/adr/017-email-verification-non-blocking-and-2fa-switch.md)).
 
 ## Capabilities
 
@@ -89,7 +89,7 @@ Bu change **kapsam dışı** bırakır:
 | Risk | Karşılık |
 |---|---|
 | Güvenlik yüzeyi bu dilimde en geniş: yanlış bir ayrıntı hesap devralmaya kadar gider | Her kural `critical` testle sabitlenir (enumeration, doğrulanmamış hesapla giriş, token tekrar kullanımı, iptal sonrası yenileme, hız sınırı). Testler kuralın kendisini korur |
-| E-posta teslim edilemezse | **Kullanıcı kilitlenmiyor** ([ADR-017](../../../docs/adr/017-email-verification-non-blocking-and-2fa-switch.md)): doğrulama girişi engellemiyor. Gönderim hatası kayda yazılır, kullanıcı aynı yanıtı alır. Bedeli: doğrulanmamış e-postayla hesap açılabiliyor; sipariş dilimi `email_verified` kapısını değerlendirmek zorunda |
+| E-posta teslim edilemezse | **Kullanıcı kilitlenmiyor** ([ADR-017](../../../../docs/adr/017-email-verification-non-blocking-and-2fa-switch.md)): doğrulama girişi engellemiyor. Gönderim hatası kayda yazılır, kullanıcı aynı yanıtı alır. Bedeli: doğrulanmamış e-postayla hesap açılabiliyor; sipariş dilimi `email_verified` kapısını değerlendirmek zorunda |
 | JWT imza anahtarının yönetimi | Ortam değişkeni, açılışta fail-fast doğrulama (K10). Anahtar rotasyonu en fazla 15 dk erişim token'ı geçersizliği demek; ADR-008'de kayıtlı |
 | `web` BFF katmanı sunum katmanını kalınlaştırıyor | Üç Route Handler ve tek çerez yardımcısıyla sınırlı; iş kuralı taşımaz, yalnızca token taşır |
 | Dilim büyük: dört tablo, yedi uç, dört ekran | `tasks.md` beş faza bölündü ve her faz tek başına çalışır durumda bırakılıyor (K5). Parola sıfırlama bilinçli olarak dışarıda tutuldu |

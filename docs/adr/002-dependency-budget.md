@@ -13,7 +13,7 @@
 > | 2026-10-06 | `api/` runtime: `springdoc-openapi-starter-webmvc-api` | [ADR-009](009-contract-generated-from-spring.md) |
 > | 2026-10-06 | `api/` runtime: `spring-boot-starter-oauth2-resource-server` (JWT; Nimbus JOSE dahil) | [ADR-008](008-jwt-auth-with-opaque-refresh.md) §6 |
 > | 2026-10-06 | **Değişim:** `flyway-core` + `flyway-database-postgresql` → `liquibase-core` | [ADR-016](016-liquibase-for-schema-migrations.md) |
-> | 2026-10-06 | `api/` runtime: `spring-boot-starter-mail` (SMTP; doğrulama bağlantısı ve ikinci faktör kodu). K7'nin dört sorusu `openspec/changes/add-account-and-session/proposal.md` içinde cevaplandı; kullanıcı onayı alındı. Sağlayıcı seçimi yapılmadı: SMTP sağlayıcıdan bağımsızdır, geliştirmede `mailpit` | [ADR-017](017-email-verification-non-blocking-and-2fa-switch.md) |
+> | 2026-10-06 | `api/` runtime: `spring-boot-starter-mail` (SMTP; doğrulama bağlantısı ve ikinci faktör kodu). K7'nin dört sorusu `openspec/changes/archive/2026-10-07-add-account-and-session/proposal.md` içinde cevaplandı; kullanıcı onayı alındı. Sağlayıcı seçimi yapılmadı: SMTP sağlayıcıdan bağımsızdır, geliştirmede `mailpit` | [ADR-017](017-email-verification-non-blocking-and-2fa-switch.md) |
 
 ## Context
 

@@ -1,6 +1,6 @@
 # Hesap ve Oturum
 
-**Durum:** Geliştirmede
+**Durum:** Yayında
 **İlk sürüm:** 2026-10-07
 **Son değişiklik:** 2026-10-07
 
@@ -8,7 +8,7 @@
 |---|---|
 | **Kararlar** | [ADR-008](../adr/008-jwt-auth-with-opaque-refresh.md), [ADR-017](../adr/017-email-verification-non-blocking-and-2fa-switch.md), [ADR-018](../adr/018-refresh-token-rotation-with-family-revocation.md) … [ADR-026](../adr/026-verification-link-resend-requires-session.md) |
 | **Spec (capability)** | `openspec/specs/account-identity` |
-| **Change'ler** | `openspec/changes/add-account-and-session` (açık; archive kullanıcı onayı bekliyor) |
+| **Change'ler** | `openspec/changes/archive/2026-10-07-add-account-and-session` (archive edildi) |
 | **Rehberler** | [Korunan uç ekleme](../how-to/korunan-uc-ekleme.md), [Yerel geliştirme](../how-to/yerel-gelistirme.md) |
 | **Referans** | [Domain modeli](../reference/01-domain-model.md), [API referansı](../reference/02-api-reference.md) |
 | **Kod** | `api/src/main/java/com/bahceden/account/`, `api/.../common/security/`, `api/.../common/ratelimit/`, `web/src/app/(account)/`, `web/src/app/api/auth/`, `web/src/features/account/` |
@@ -36,4 +36,5 @@ Kullanıcı e-posta adresi ve parolayla hesap açar ve hesabını hemen kullanı
 
 ## Tarihçe
 
+- 2026-10-07: `add-account-and-session` change'i kullanıcı onayıyla archive edildi (`openspec/changes/archive/2026-10-07-add-account-and-session/`). Ön koşullar sağlandı: delta spec ana spec'le birebir, D1–D9 → ADR-018…026, dokümanlar güncel, CI run `37589772992` 4/4 yeşil. Açık kalan tek görev 4.9: ekranların gerçek tarayıcıda, 375 / 1440 px ve iki temada gözle doğrulanması (insan işi). Taşımada 22 göreli link bir seviye uzatıldı; delta spec'teki önceden de kırık olan ADR-017 linki düzeltildi.
 - 2026-10-07: İlk sürüm (`add-account-and-session`, Faz 1–4). `api`: kayıt (`202`, enumeration güvenli), e-posta doğrulama, yeni doğrulama bağlantısı, giriş (JWT + rotasyonlu opak yenileme), ikinci faktör adımı, yenileme (tekrar kullanımda aile iptali), çıkış, `GET /accounts/me`, bellek içi hız sınırı; 78 test. `web`: BFF Route Handler'ları, `HttpOnly` çerezler, başlık tabanlı CSRF, yönlendirmeyle yenileme, `/kayit`, `/giris` (aynı ekranda kod adımı), `/dogrulama`, `/hesabim`, başlıkta oturum alanı; 30 test. Dev seed'e iki hesap eklendi. Kararlar ADR-018…026.
