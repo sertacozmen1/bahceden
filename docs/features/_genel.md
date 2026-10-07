@@ -1,6 +1,6 @@
 # Genel: Feature'a Bağlı Olmayan İşler
 
-**Son değişiklik:** 2026-10-06
+**Son değişiklik:** 2026-10-07
 
 Dokümantasyon altyapısı, geliştirme araçları, AI kural dosyaları, CI ve tek bir feature'a bağlanamayan altyapı işleri burada kayıt altına alınır. Bir feature'a ait değişiklik buraya **yazılmaz**; ilgili feature dosyasına gider.
 
@@ -28,6 +28,7 @@ Dokümantasyon altyapısı, geliştirme araçları, AI kural dosyaları, CI ve t
 
 ## Tarihçe
 
+- 2026-10-07: `add-account-and-session` change'inin Faz 5 kapanış dokümanları yazıldı: design.md D1–D9 → [ADR-018](../adr/018-refresh-token-rotation-with-family-revocation.md)…[ADR-026](../adr/026-verification-link-resend-requires-session.md), yeni feature kaydı [Hesap ve Oturum](hesap-ve-oturum.md), [korunan uç ekleme](../how-to/korunan-uc-ekleme.md) rehberi, domain modeli ve API referansı hesap bölgesiyle güncellendi, güncel durum L9–L15 ile yenilendi. `AGENTS.md` §7: `web` `typecheck` betiği artık önce `next typegen` koşuyor (`typedRoutes` tipleri CI'da da üretilsin, yerel ile CI aynı sıkılıkta olsun).
 - 2026-10-06: Kimlik diliminin yönü proje sahibinin talimatıyla değişti ve [ADR-017](../adr/017-email-verification-non-blocking-and-2fa-switch.md) yazıldı (ADR-008 §4'ün zorunlu e-posta doğrulaması kuralını superseded eder): hesap doğrudan `ACTIVE` açılır, doğrulama bağlantısı gönderilir ama girişi engellemez; e-postanın kimlik akışına girmesi hesap bazlı `two_factor_enabled` anahtarına bağlıdır ve anahtar varsayılan kapalıdır. Anahtarın açık yolu da uygulanacak (okunmayan kolon §3 ihlali, uygulanmamış dal K6 ihlali). `spring-boot-starter-mail` kullanıcı onayıyla bütçeye eklendi ([ADR-002](../adr/002-dependency-budget.md) değişim tablosu). `add-account-and-session` artefaktları bu karara göre güncellendi (D8 eklendi, delta spec 7 gereksinim / 30 senaryo). Ayrıca IntelliJ'de yerel veritabanı bağlantısı MCP ile kuruldu ve [yerel geliştirme rehberine](../how-to/yerel-gelistirme.md) bir bölüm eklendi.
 - 2026-10-06: İkinci dilim için `add-account-and-session` change artefaktları yazıldı (proposal, design D1–D7, tasks 5 faz / 44 görev, `account-identity` delta spec: 6 gereksinim, 23 senaryo). ADR-008 kimlik modelini uygular: kayıt, zorunlu e-posta doğrulama, giriş, yenileme, çıkış, oturum sahibi ucu ve `web` BFF katmanı. Uygulama kullanıcı onayı bekliyor; ayrıca bütçe dışı tek paket (`spring-boot-starter-mail`) K7 gerekçeleriyle onaya sunuldu. Parola sıfırlama bilinçli olarak kapsam dışı.
 - 2026-10-06: İlk openspec change'i (`add-storefront-product-listing`) kullanıcı onayıyla archive edildi: §5.3.5 ön koşullarının altısı da doğrulandı (tasks dürüst, spec sync, D1–D6 → ADR-010…015, feature kaydı güncel, docs/nav güncel, CI yeşil). Artefaktlar `openspec/changes/archive/2026-10-06-add-storefront-product-listing/` altına taşındı ve bir seviye derinleşen 14 göreli link düzeltildi. Açık change kalmadı.

@@ -281,7 +281,7 @@ docker compose exec -T api ./mvnw -B test -Dgroups=critical
 # web/ doğrulama (her dilim sonunda, tamamı)
 npm --prefix web ci
 npm --prefix web run lint
-npm --prefix web run typecheck          # tsc --noEmit; üretilen tipler sözleşmeyle uyumlu mu
+npm --prefix web run typecheck          # next typegen + tsc --noEmit; sözleşme tipleri ve typedRoutes uyumlu mu
 npm --prefix web test                   # Vitest
 npm --prefix web run build              # Next.js production derlemesi
 npm --prefix web run test:e2e           # Playwright (ortam ayakta olmalı)

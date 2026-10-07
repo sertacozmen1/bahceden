@@ -1,0 +1,39 @@
+# Hesap ve Oturum
+
+**Durum:** Geliştirmede
+**İlk sürüm:** 2026-10-07
+**Son değişiklik:** 2026-10-07
+
+| | |
+|---|---|
+| **Kararlar** | [ADR-008](../adr/008-jwt-auth-with-opaque-refresh.md), [ADR-017](../adr/017-email-verification-non-blocking-and-2fa-switch.md), [ADR-018](../adr/018-refresh-token-rotation-with-family-revocation.md) … [ADR-026](../adr/026-verification-link-resend-requires-session.md) |
+| **Spec (capability)** | `openspec/specs/account-identity` |
+| **Change'ler** | `openspec/changes/add-account-and-session` (açık; archive kullanıcı onayı bekliyor) |
+| **Rehberler** | [Korunan uç ekleme](../how-to/korunan-uc-ekleme.md), [Yerel geliştirme](../how-to/yerel-gelistirme.md) |
+| **Referans** | [Domain modeli](../reference/01-domain-model.md), [API referansı](../reference/02-api-reference.md) |
+| **Kod** | `api/src/main/java/com/bahceden/account/`, `api/.../common/security/`, `api/.../common/ratelimit/`, `web/src/app/(account)/`, `web/src/app/api/auth/`, `web/src/features/account/` |
+
+---
+
+## Ne yapar
+
+Kullanıcı e-posta adresi ve parolayla hesap açar ve hesabını hemen kullanır; e-posta adresini doğrulamak girişin koşulu değildir, yalnızca hesapta bir bilgi olarak durur. Doğrulama bağlantısı e-postayla gelir; süresi dolarsa veya ulaşmazsa "Hesabım" sayfasından yenisi istenir. Giriş yapan kullanıcı üst başlıkta maskeli e-postasını ve çıkış düğmesini görür; oturum arka planda yenilenir ve çıkış gerçekten oturumu kapatır. Hesabında ikinci faktör açık olan kullanıcı girişte e-postasına gelen 6 haneli kodu da girer. Bu anahtar bugün yalnızca veritabanından açılabiliyor.
+
+## Bilinçli sınırlar
+
+- **Parola sıfırlama yok.** Token altyapısı kuruldu; sıradaki en küçük dilim.
+- **İkinci faktörü kullanıcı açamaz** ([ADR-017](../adr/017-email-verification-non-blocking-and-2fa-switch.md)); anahtar yalnızca veritabanından veya dev seed'inden açılır.
+- **Doğrulanmamış e-postayla hesap açılabilir.** Bu kabul edilmiş bir borç: sipariş dilimi `email_verified` kapısını değerlendirmek zorunda.
+- **Satıcı olma akışı yok** (KALANLAR A3); herkes `ROLE_CUSTOMER` alır.
+- **Hesap silme, KVKK dışa aktarma, sosyal giriş, yönetici ekranları yok.**
+- **Hız sınırı tek örnek içindir** ve istemci adresine dayanır ([ADR-022](../adr/022-in-memory-fixed-window-rate-limiting.md)).
+
+## Açık konular
+
+- Ekranların gerçek tarayıcıda, 375 px ve 1440 px'de, açık ve koyu temada gözle doğrulanması (insan işi; akış curl ile doğrulandı).
+- Üretimde `web`'in önünde `X-Forwarded-For` başlığını kendisi yazan bir reverse proxy gerekiyor (KALANLAR B5).
+- Hesap askıya alma (`SUSPENDED`) ihtiyacı doğarsa durum enum'u genişleyecek.
+
+## Tarihçe
+
+- 2026-10-07: İlk sürüm (`add-account-and-session`, Faz 1–4). `api`: kayıt (`202`, enumeration güvenli), e-posta doğrulama, yeni doğrulama bağlantısı, giriş (JWT + rotasyonlu opak yenileme), ikinci faktör adımı, yenileme (tekrar kullanımda aile iptali), çıkış, `GET /accounts/me`, bellek içi hız sınırı; 78 test. `web`: BFF Route Handler'ları, `HttpOnly` çerezler, başlık tabanlı CSRF, yönlendirmeyle yenileme, `/kayit`, `/giris` (aynı ekranda kod adımı), `/dogrulama`, `/hesabim`, başlıkta oturum alanı; 30 test. Dev seed'e iki hesap eklendi. Kararlar ADR-018…026.

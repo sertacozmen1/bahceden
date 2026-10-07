@@ -1,6 +1,6 @@
 # Domain Modeli ve Veritabanı Şeması
 
-**Son doğrulama:** 2026-10-06 · Kaynak: `api/src/main/resources/db/changelog/`
+**Son doğrulama:** 2026-10-07 · Kaynak: `api/src/main/resources/db/changelog/`
 
 > Bu sayfa şemanın **mevcut halini** anlatır, hedefini değil. Şema yalnızca Liquibase ile değişir ([ADR-016](../adr/016-liquibase-for-schema-migrations.md)); changeset değiştiğinde bu sayfa aynı commit'te güncellenir (`AGENTS.md` K4).
 
@@ -8,7 +8,9 @@
 
 ## Mevcut durum
 
-Şemada bugün yalnızca **katalog** vardır: üretici ve ürün. Hesap, sipariş, ödeme ve gönderim tabloları henüz yok ([güncel durum](00-current-state.md)).
+Şemada bugün iki bölge vardır: **katalog** (üretici ve ürün) ve **hesap** (hesap, roller, tek kullanımlık token'lar, oturum zinciri, ikinci faktör girişimleri). Sipariş, ödeme ve gönderim tabloları henüz yok ([güncel durum](00-current-state.md)).
+
+İki bölge arasında **bilinçli olarak ilişki yoktur**: `products.seller_id` → `sellers`, `accounts` ile bağlı değildir. Satıcı ile hesabın nasıl bağlanacağı satıcı onboarding kararına (`openspec/KALANLAR.md` A3, [ADR-013](../adr/013-minimal-seller-table-ahead-of-onboarding.md)) bağlıdır; karar verilmeden bir yabancı anahtar kurmak o kararı önceden almak olurdu.
 
 ```mermaid
 erDiagram
@@ -98,6 +100,104 @@ Satılan ürün ilanı.
 
 ---
 
+## Hesap bölgesi
+
+Changeset: `003-create-account.sql`. Geliştirme hesapları: `004-dev-seed-account.sql` (yalnızca dev bağlamı).
+
+```mermaid
+erDiagram
+    ACCOUNTS ||--|{ ACCOUNT_ROLES : "rolleri"
+    ACCOUNTS ||--o{ EMAIL_VERIFICATION_TOKENS : "doğrulama bağlantıları"
+    ACCOUNTS ||--o{ REFRESH_TOKENS : "oturum zincirleri"
+    ACCOUNTS ||--o{ LOGIN_CHALLENGES : "ikinci faktör girişimleri"
+
+    ACCOUNTS {
+        bigserial id PK
+        varchar(320) email UK "küçük harf, kırpılmış"
+        varchar(100) password_hash "BCrypt, maliyet 12"
+        varchar(20) status "ACTIVE"
+        boolean email_verified "bilgi; girişi engellemez"
+        boolean two_factor_enabled "varsayılan false"
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    ACCOUNT_ROLES {
+        bigint account_id PK,FK
+        varchar(30) role PK "ROLE_CUSTOMER | ROLE_SELLER | ROLE_ADMIN"
+    }
+
+    EMAIL_VERIFICATION_TOKENS {
+        bigserial id PK
+        bigint account_id FK
+        varchar(64) token_hash UK "SHA-256"
+        timestamptz expires_at "24 saat"
+        timestamptz used_at "tek kullanımlık"
+        timestamptz created_at
+    }
+
+    REFRESH_TOKENS {
+        bigserial id PK
+        bigint account_id FK
+        uuid family_id "oturum zinciri"
+        varchar(64) token_hash UK "SHA-256"
+        timestamptz expires_at "30 gün"
+        timestamptz used_at "rotasyonda dolar"
+        timestamptz revoked_at "aile iptali / çıkış"
+        timestamptz created_at
+    }
+
+    LOGIN_CHALLENGES {
+        bigserial id PK
+        bigint account_id FK
+        varchar(64) code_hash UK "SHA-256(hesap:kod)"
+        timestamptz expires_at "10 dakika"
+        timestamptz used_at
+        integer attempt_count "en fazla 5 hatalı"
+        timestamptz created_at
+    }
+```
+
+### `accounts`
+
+Tek hesap tablosu; aynı kişi hem alıcı hem satıcı olabilir ([ADR-008](../adr/008-jwt-auth-with-opaque-refresh.md)).
+
+| Kolon | Tip | Not |
+|---|---|---|
+| `email` | `varchar(320)` | Tekil. Kayıt ve giriş aramadan önce küçük harfe çevirip kırpar (`Account.normalizeEmail`); tekil kısıt bu sayede gerçekten tekilliği garanti eder |
+| `password_hash` | `varchar(100)` | BCrypt, maliyet 12. Düz parola hiçbir yerde saklanmaz ve loglanmaz |
+| `status` | `varchar(20)` | Bugün tek değer `ACTIVE` ([ADR-017](../adr/017-email-verification-non-blocking-and-2fa-switch.md)); enum olarak tutulur ki askıya alma şema göçü gerektirmesin |
+| `email_verified` | `boolean` | Doğrulama bağlantısı kullanıldı mı. **Girişi engellemez** |
+| `two_factor_enabled` | `boolean` | E-posta ile ikinci faktör. Varsayılan `false`; ürün yüzeyinden değiştirilemez ([ADR-025](../adr/025-second-factor-code-bound-to-account.md)) |
+
+### `account_roles`
+
+Hesabın rolleri, değer kümesi olarak (`@ElementCollection`). Birincil anahtar `(account_id, role)`. Kayıt olan herkes `ROLE_CUSTOMER` alır; `ROLE_SELLER` atama akışı yok (A3), `ROLE_ADMIN` yalnızca veritabanından verilir.
+
+### `email_verification_tokens`
+
+Doğrulama bağlantısının token'ı: yalnızca SHA-256 hash'i saklanır, 24 saat geçerlidir, tek kullanımlıktır ([ADR-020](../adr/020-verification-tokens-sha256-single-use.md)). Yeni bağlantı istendiğinde ([ADR-026](../adr/026-verification-link-resend-requires-session.md)) eski satırlar süreleri dolana kadar geçerli kalır.
+
+### `refresh_tokens`
+
+Opak yenileme token'ı ([ADR-018](../adr/018-refresh-token-rotation-with-family-revocation.md)). Her giriş yeni bir `family_id` başlatır; rotasyon aynı ailede kalır. Kullanılmış bir token tekrar sunulursa ailenin tüm satırlarına `revoked_at` yazılır. Yenileme ve çıkış satırı `SELECT … FOR UPDATE` ile kilitleyerek okur.
+
+| İndeks | Hangi sorgu için |
+|---|---|
+| `refresh_tokens_hash_unique` | Hash ile arama |
+| `refresh_tokens_family_idx` | Aile iptali: tek `update` sorgusu |
+| `refresh_tokens_expires_idx` | İleride süresi dolmuş satırların temizliği |
+
+### `login_challenges`
+
+İkinci faktör girişimi ([ADR-025](../adr/025-second-factor-code-bound-to-account.md)). Kod hesaba bağlı hash'lenir: `SHA-256(account_id + ":" + kod)`. İkinci adım hesabın en son açılan, süresi geçmemiş ve kullanılmamış girişimini kilitleyerek okur. `attempt_count` 5'e ulaşınca girişim kilitlenir.
+
+### Silme davranışı
+
+Hesaba bağlı tüm tablolarda yabancı anahtar `on delete cascade`'dir: hesap silinirse roller, token'lar ve girişimler de gider. Hesap silme akışı bugün yoktur.
+
+---
+
 ## Entity ↔ tablo eşlemesi
 
 | Java tipi | Tablo | Not |
@@ -105,5 +205,9 @@ Satılan ürün ilanı.
 | `com.bahceden.catalog.domain.Seller` | `sellers` | Yalnızca okuma; bu dilimde yazma akışı yok |
 | `com.bahceden.catalog.domain.Product` | `products` | `seller` ilişkisi `LAZY`; liste sorgusu `join fetch` ile çeker ([ADR-011](../adr/011-fetch-join-with-query-count-test.md)) |
 | `com.bahceden.common.money.Money` | `products.price_amount`, `products.price_currency` | `@Embeddable`; ayrı tablo yok |
+| `com.bahceden.account.domain.Account` | `accounts` + `account_roles` | Roller `@ElementCollection` (`EAGER`): yetkilendirme her zaman rollere ihtiyaç duyar |
+| `com.bahceden.account.domain.EmailVerificationToken` | `email_verification_tokens` | |
+| `com.bahceden.account.domain.RefreshToken` | `refresh_tokens` | |
+| `com.bahceden.account.domain.LoginChallenge` | `login_challenges` | |
 
 `spring.jpa.hibernate.ddl-auto` her ortamda `validate`: entity ile şema uyuşmazsa uygulama **ayağa kalkmaz**. Bu koruma, geliştirme sırasında `char(3)` / `varchar(3)` uyumsuzluğunu gerçekten yakaladı.

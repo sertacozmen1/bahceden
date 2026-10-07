@@ -1,3 +1,12 @@
+| 018 | [Yenileme token'ı: rotasyon ve tekrar kullanımda aile iptali](018-refresh-token-rotation-with-family-revocation.md) | Accepted | 2026-10-07 |
+| 019 | [E-posta SMTP üzerinden, sağlayıcıdan bağımsız, akışı kesmeden](019-email-via-smtp-provider-agnostic.md) | Accepted | 2026-10-07 |
+| 020 | [Tek kullanımlık token'lar: 256 bit, SHA-256 hash'li, süreli](020-verification-tokens-sha256-single-use.md) | Accepted | 2026-10-07 |
+| 021 | [Kimlik yanıtları hesabın varlığını açığa çıkarmaz](021-identity-responses-do-not-reveal-accounts.md) | Accepted | 2026-10-07 |
+| 022 | [Kimlik uçlarında bellek içi sabit pencere hız sınırı](022-in-memory-fixed-window-rate-limiting.md) | Accepted | 2026-10-07 |
+| 023 | [`web` BFF: HttpOnly çerezler, başlık tabanlı CSRF, yönlendirmeyle yenileme](023-web-bff-cookies-and-header-csrf.md) | Accepted | 2026-10-07 |
+| 024 | [Yetkilendirme JWT iddialarıyla; `/accounts/me` taze okunur](024-roles-in-jwt-claims-fresh-me-endpoint.md) | Accepted | 2026-10-07 |
+| 025 | [İkinci faktör kodu hesaba bağlı; ikinci adım e-posta + kod](025-second-factor-code-bound-to-account.md) | Accepted | 2026-10-07 |
+| 026 | [Doğrulama bağlantısını yeniden gönderme oturum ister](026-verification-link-resend-requires-session.md) | Accepted | 2026-10-07 |
 # Architecture Decision Records (ADR)
 
 > **Biçim:** [Michael Nygard'ın ADR formatı](https://cognitect.com/blog/2011/11/15/documenting-architecture-decisions)
@@ -38,7 +47,7 @@ Architecture Decision Records, projedeki önemli mimari kararları ve bu kararla
 | 016 | [Şema değişiklikleri Liquibase ile yönetilir](016-liquibase-for-schema-migrations.md) | Accepted | 2026-10-06 |
 | 017 | [E-posta doğrulaması girişi engellemez; 2FA hesap anahtarıyla açılır](017-email-verification-non-blocking-and-2fa-switch.md) | Accepted | 2026-10-06 |
 
-**Sıradaki numara: 018.**
+**Sıradaki numara: 027.**
 
 **Durum değerleri:** `Proposed` (öneri, henüz bağlayıcı değil) · `Accepted` (yürürlükte, bağlayıcı) · `Deprecated` (artık geçerli değil, yerine bir şey gelmedi) · `Superseded by [ADR-XXX]` (yerini başka bir karara bıraktı).
 

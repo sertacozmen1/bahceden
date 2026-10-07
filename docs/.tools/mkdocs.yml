@@ -106,10 +106,20 @@ nav:
     - "ADR-015 · Sözleşme tazelik testi": adr/015-contract-freshness-enforced-by-test.md
     - "ADR-016 · Liquibase ile şema takibi": adr/016-liquibase-for-schema-migrations.md
     - "ADR-017 · Doğrulama engellemez, 2FA anahtarı": adr/017-email-verification-non-blocking-and-2fa-switch.md
+    - "ADR-018 · Yenileme rotasyonu ve aile iptali": adr/018-refresh-token-rotation-with-family-revocation.md
+    - "ADR-019 · E-posta SMTP ile": adr/019-email-via-smtp-provider-agnostic.md
+    - "ADR-020 · Tek kullanımlık token'lar": adr/020-verification-tokens-sha256-single-use.md
+    - "ADR-021 · Hesap varlığı sızmaz": adr/021-identity-responses-do-not-reveal-accounts.md
+    - "ADR-022 · Hız sınırı": adr/022-in-memory-fixed-window-rate-limiting.md
+    - "ADR-023 · web BFF ve çerezler": adr/023-web-bff-cookies-and-header-csrf.md
+    - "ADR-024 · JWT iddiaları ve /me": adr/024-roles-in-jwt-claims-fresh-me-endpoint.md
+    - "ADR-025 · İkinci faktör kodu": adr/025-second-factor-code-bound-to-account.md
+    - "ADR-026 · Bağlantıyı yeniden gönderme": adr/026-verification-link-resend-requires-session.md
   - Nasıl Yapılır (How-to):
     - Genel Bakış: how-to/index.md
     - Yerel Geliştirme Ortamı: how-to/yerel-gelistirme.md
     - Yeni API Ucu Ekleme: how-to/yeni-api-ucu-ekleme.md
+    - Korunan API Ucu Ekleme: how-to/korunan-uc-ekleme.md
   - Ürün & Strateji: product/index.md
   - Araştırma (Research): research/index.md
   - Eğitimler (Tutorials): tutorials/index.md
@@ -117,6 +127,7 @@ nav:
   - Feature Kayıtları:
     - Genel Bakış: features/index.md
     - Vitrin ve Arama: features/vitrin-ve-arama.md
+    - Hesap ve Oturum: features/hesap-ve-oturum.md
     - "Genel (feature dışı işler)": features/_genel.md
 
 copyright: Bahçeden Internal Documentation
