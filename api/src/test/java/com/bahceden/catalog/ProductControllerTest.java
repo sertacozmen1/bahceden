@@ -14,7 +14,10 @@ import com.bahceden.catalog.dto.SellerSummary;
 import com.bahceden.common.web.ApiErrorCode;
 import com.bahceden.common.web.GlobalExceptionHandler;
 import com.bahceden.common.web.PageResponse;
+import com.bahceden.common.ClockConfig;
 import com.bahceden.common.SecurityConfig;
+import com.bahceden.common.security.ApiAuthenticationEntryPoint;
+import com.bahceden.common.security.JwtConfig;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -41,10 +44,15 @@ import org.springframework.test.web.servlet.MockMvc;
 @WebMvcTest(ProductController.class)
 // Gerçek SecurityConfig yüklenir: ucun kimlik doğrulaması olmadan erişilebildiği
 // (permitAll) de bu testin doğruladığı sözleşmenin parçasıdır.
-@Import({GlobalExceptionHandler.class, SecurityConfig.class})
+// SecurityConfig JWT doğrulayıcısına (JwtConfig) ve 401 gövdesini yazan giriş
+// noktasına bağımlıdır; dilim testi bunları kendisi yüklemez.
+@Import({GlobalExceptionHandler.class, SecurityConfig.class, JwtConfig.class,
+        ApiAuthenticationEntryPoint.class, ClockConfig.class})
 @TestPropertySource(properties = {
         "bahceden.web-origin=http://localhost:3000",
-        "bahceden.mail-from=bahceden@ornek.test"
+        "bahceden.mail-from=bahceden@ornek.test",
+        // Yalnızca testler için sabit anahtar (application-test.yaml ile aynı); gerçek secret değildir.
+        "bahceden.jwt.secret=YmFoY2VkZW4tdGVzdC1pbXphLWFuYWh0YXJpLXlhbG5pemNhLXRlc3RsZXItaWNpbg=="
 })
 @DisplayName("GET /api/v1/products sözleşmesi")
 class ProductControllerTest {

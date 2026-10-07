@@ -11,6 +11,8 @@ Yenileme token'ı 256 bit rastgele bir dizedir (JWT değil). Veritabanında **SH
 
 Her kullanımda **rotasyon**: eski kayıt `used_at` ile işaretlenir, yeni token aynı **aile** (`family_id`) altında üretilir. Zaten kullanılmış bir token tekrar sunulursa bu bir sızıntı işaretidir: **o ailenin tamamı iptal edilir** ve kullanıcı yeniden giriş yapmak zorunda kalır.
 
+Yenileme token'ının ömrü **30 gündür** (ADR-008 değeri açık bırakmıştı; 2026-10-07'de uygulama sırasında sabitlendi). Rotasyonla üretilen her yeni token yeni bir 30 günlük ömür alır. Erişim token'ının ömrü ADR-008'de 15 dakika olarak sabittir.
+
 **Gerekçe:** ADR-008 "iptal edilebilir yenileme" dedi; bunun pratikte anlamı budur. Rotasyon olmadan ele geçirilmiş bir token ömrü boyunca kullanılabilir; aile iptali olmadan saldırgan ile kullanıcı sessizce yan yana oturum sürdürür. Hash'li saklama, veritabanı okuma yetkisi olan birinin oturum devralmasını engeller.
 
 **Reddedilen alternatifler:** (a) Yenileme token'ını da JWT yapmak — iptal edilemez (ADR-008 bunu zaten reddetti). (b) Rotasyonsuz opak token — tek kullanımlıklık yok, sızıntı süresiz kullanılabilir. (c) Token'ı BCrypt ile hash'lemek — 256 bit entropili bir değer için gereksiz yavaş; sözlük saldırısı yüzeyi yok (bkz. D3).
@@ -79,6 +81,10 @@ Sunucu tarafı render erişim çerezini okuyup `api`'ye `Bearer` ile gider; `api
 `accounts.two_factor_enabled boolean not null default false`. Kapalıyken giriş tek adım; açıkken iki adım: e-posta ile 6 haneli tek kullanımlık kod, 10 dakika geçerli, hash'li saklanır, denemeler hız sınırlı. Kod için ayrı mekanizma kurulmaz; D3'teki token altyapısı `login_challenges` tablosunda yeniden kullanılır.
 
 Anahtarı değiştiren **uç veya ekran yoktur**: yalnızca veritabanından ya da dev bağlamındaki seed'den açılır.
+
+**Kodun bağlandığı giriş girişimi (2026-10-07, uygulama sırasında netleşti):** birinci adım `202` döner ve token taşımaz. İkinci adım **e-posta + kod** gönderir; sunucu o hesabın en son açılan, süresi geçmemiş ve kullanılmamış girişimini bulur ve kodu onunla karşılaştırır. Saklanan değer `SHA-256(accountId + ":" + kod)`. Kod tek başına aranmaz: aransaydı rastgele bir kod başka bir hesabın açık girişimini tutabilirdi. Hesap kimliği hash'e girdiği için iki hesabın aynı kodu alması `code_hash` tekil kısıtına takılmaz. Aynı hesapta aynı hash'in tekrar üretilmesi (≈ 10⁻⁶) üretim anında kontrol edilir ve yeni kod çekilir.
+
+*Reddedilen:* girişimi ayrı bir opak `challengeToken` ile tanımlamak. Bu yol yeni bir changeset gerektirir (`challenge_token_hash` kolonu ve `code_hash` tekilliğinin kaldırılması). Kullanıcı şemanın değişmemesini seçti. Kabul edilen bedel: aynı hesap için iki sekmede iki giriş başlatılırsa yalnızca son kod geçerlidir.
 
 **Gerekçe:** [ADR-017](../../../docs/adr/017-email-verification-non-blocking-and-2fa-switch.md). Açık yolun da uygulanması iki kuralın sonucudur: hiçbir yerde okunmayan bir kolon `AGENTS.md` §3 ihlalidir ("ileride lazım olur" gerekçe değildir); uygulanmamış dalı olan bir anahtar ise K6 ihlali ve bir mayındır — veritabanından açan biri girişi kırar.
 

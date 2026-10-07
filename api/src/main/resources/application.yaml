@@ -66,6 +66,10 @@ springdoc:
 bahceden:
   web-origin: ${BAHCEDEN_WEB_ORIGIN}
   mail-from: ${BAHCEDEN_MAIL_FROM}
+  jwt:
+    # Erişim token'ı imza anahtarı (ADR-008): Base64, en az 256 bit. Varsayılan
+    # YOKTUR; eksik, kısa veya Base64 olmayan değerle uygulama açılmaz (K10).
+    secret: ${BAHCEDEN_JWT_SECRET}
 
 logging:
   level:

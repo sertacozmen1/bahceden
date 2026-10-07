@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.bahceden.common.security.SecureTokens;
 import com.bahceden.common.web.ApiErrorCode;
+import com.bahceden.support.MailContents;
 import com.bahceden.support.RecordingMailSender;
 import com.bahceden.support.TestcontainersConfig;
 import java.nio.charset.StandardCharsets;
@@ -89,7 +90,7 @@ class AccountRegistrationTest {
     void token_hashli_saklanir() throws Exception {
         kayitIstegi(EMAIL, PASSWORD).andExpect(status().isAccepted());
 
-        var plainToken = tokenFromMailLink(mail.lastSent().body());
+        var plainToken = MailContents.verificationToken(mail.lastSent().body());
         var storedHash = tekKolon("select token_hash from email_verification_tokens", null);
 
         assertThat(storedHash).isEqualTo(secureTokens.hash(plainToken));
@@ -224,15 +225,5 @@ class AccountRegistrationTest {
         return param == null
                 ? jdbc.queryForObject(sql, String.class)
                 : jdbc.queryForObject(sql, String.class, param);
-    }
-
-    /** E-posta gövdesindeki bağlantıdan düz token'ı çıkarır. */
-    private static String tokenFromMailLink(String body) {
-        int start = body.indexOf("/dogrulama?token=") + "/dogrulama?token=".length();
-        int end = start;
-        while (end < body.length() && !Character.isWhitespace(body.charAt(end))) {
-            end++;
-        }
-        return java.net.URLDecoder.decode(body.substring(start, end), StandardCharsets.UTF_8);
     }
 }

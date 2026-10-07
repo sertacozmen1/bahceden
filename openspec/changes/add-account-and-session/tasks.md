@@ -25,15 +25,24 @@
 
 ## Faz 2 · E-posta doğrulama (engellemeyen) ve giriş
 
-- [ ] 2.1 `AccountService.confirmVerification(token)`: hash ile arar, süre ve tek kullanımlık kontrolü, `email_verified` işaretler ve token'ı tüketir (D3). Girişe etkisi **yoktur** (ADR-017).
-- [ ] 2.2 `POST /api/v1/accounts/verifications` ucu + DTO; geçersiz/süresi dolmuş/kullanılmış token için `AUTH_TOKEN_INVALID`.
-- [ ] 2.3 `common/security/`: JWT üretimi ve doğrulaması (`JwtEncoder`/`JwtDecoder`, imza anahtarı ortamdan, açılışta fail-fast). `SecurityConfig` resource server olarak yapılandırılır; `/api/v1/accounts/me` korunur, kimlik uçları `permitAll`.
-- [ ] 2.4 `SessionService.login(...)`: parola doğrulama; `two_factor_enabled` **kapalıysa** erişim JWT'si (15 dk, `sub`/`email`/`roles` iddiaları — D7) + yenileme token'ı (yeni `family_id`); **açıksa** token dönmez, `login_challenges` kaydı ve 6 haneli kod üretilir, e-posta gönderilir (D8).
-- [ ] 2.5 `POST /api/v1/sessions` ucu + DTO'lar.
-- [ ] 2.6 `GET /api/v1/accounts/me` ucu: veritabanından **taze** okur (D7); e-posta, roller ve `emailVerified` döner; kimliksiz istek 401.
-- [ ] 2.7 `ApiErrorCode` genişletilir: `AUTH_INVALID_CREDENTIALS`, `AUTH_TOKEN_INVALID`, `AUTH_CODE_INVALID`, `RATE_LIMITED`. (`AUTH_EMAIL_NOT_VERIFIED` **tanımlanmaz**: ADR-017 sonrası böyle bir giriş hatası yok.)
-- [ ] 2.8 **Test (`critical`):** hatalı parola ile hatalı e-posta **aynı** kodu ve mesajı döner; doğrulanmamış hesap **giriş yapabilir** (ADR-017); doğrulama token'ı **iki kez** kullanılamaz; süresi dolmuş token reddedilir; `me` kimliksiz 401, geçerli token ile doğru rolleri ve `emailVerified` değerini döner.
-- [ ] 2.9 **Doğrulama:** `./mvnw -B verify` temiz; uçtan uca `curl` ile kayıt → giriş → `me` akışı (e-postaya hiç dokunmadan) ve ayrıca `mailpit`ten token → doğrulama → `me` içinde `emailVerified: true`.
+- [x] 2.1 `AccountService.confirmVerification(token)`: hash ile arar, süre ve tek kullanımlık kontrolü, `email_verified` işaretler ve token'ı tüketir (D3). Girişe etkisi **yoktur** (ADR-017).
+- [x] 2.2 `POST /api/v1/accounts/verifications` ucu + DTO; geçersiz/süresi dolmuş/kullanılmış token için `AUTH_TOKEN_INVALID`.
+- [x] 2.3 `common/security/`: JWT üretimi ve doğrulaması (`JwtEncoder`/`JwtDecoder`, imza anahtarı ortamdan, açılışta fail-fast). `SecurityConfig` resource server olarak yapılandırılır; `/api/v1/accounts/me` korunur, kimlik uçları `permitAll`.
+- [x] 2.4 `SessionService.login(...)`: parola doğrulama; `two_factor_enabled` **kapalıysa** erişim JWT'si (15 dk, `sub`/`email`/`roles` iddiaları — D7) + yenileme token'ı (yeni `family_id`); **açıksa** token dönmez, `login_challenges` kaydı ve 6 haneli kod üretilir, e-posta gönderilir (D8).
+- [x] 2.5 `POST /api/v1/sessions` ucu + DTO'lar.
+- [x] 2.6 `GET /api/v1/accounts/me` ucu: veritabanından **taze** okur (D7); e-posta, roller ve `emailVerified` döner; kimliksiz istek 401.
+- [x] 2.7 `ApiErrorCode` genişletilir: `AUTH_INVALID_CREDENTIALS`, `AUTH_TOKEN_INVALID`, `AUTH_CODE_INVALID`, `RATE_LIMITED`. (`AUTH_EMAIL_NOT_VERIFIED` **tanımlanmaz**: ADR-017 sonrası böyle bir giriş hatası yok.) **Sapma (S14):** `AUTH_CODE_INVALID` ve `RATE_LIMITED` Faz 3'te, onları üreten kodla birlikte eklenir (`ApiErrorCode` yalnızca gerçekten üretilen kodları tutar, K6). **Sapma (S15):** planda olmayan `AUTH_REQUIRED` (401) eklendi: korunan uca token'sız veya geçersiz token'la gelen istek için. Bu kod olmadan 401 gövdesiz dönerdi ve §11.5 tek hata gövdesi kuralı kırılırdı. Durum kodları artık koda bağlı (`ApiErrorCode#status`): `AUTH_INVALID_CREDENTIALS` 401, `AUTH_TOKEN_INVALID` 400, `AUTH_REQUIRED` 401.
+- [x] 2.8 **Test (`critical`):** hatalı parola ile hatalı e-posta **aynı** kodu ve mesajı döner; doğrulanmamış hesap **giriş yapabilir** (ADR-017); doğrulama token'ı **iki kez** kullanılamaz; süresi dolmuş token reddedilir; `me` kimliksiz 401, geçerli token ile doğru rolleri ve `emailVerified` değerini döner.
+- [x] 2.9 **Doğrulama:** `./mvnw -B verify` temiz; uçtan uca `curl` ile kayıt → giriş → `me` akışı (e-postaya hiç dokunmadan) ve ayrıca `mailpit`ten token → doğrulama → `me` içinde `emailVerified: true`.
+
+> **Faz 2 tamamlandı (2026-10-07).** 55 `api` testi yeşil (24'ü yeni: doğrulama 5, giriş 8, `me` 8, imza anahtarı 3).
+> Uçtan uca `docker compose` doğrulandı: kayıt 202 → e-postaya dokunmadan giriş 200 → `me` `emailVerified:false`;
+> hatalı parola ile olmayan e-posta birebir aynı 401; token'sız `me` 401 `AUTH_REQUIRED`; `mailpit`ten token → 204 →
+> `me` `emailVerified:true`; aynı token ikinci kez 400 `AUTH_TOKEN_INVALID`. İkinci faktörü veritabanından açılan
+> hesapta giriş 202 döndü, kod e-postası `mailpit`e düştü, açık girişim kaydı oluştu (anahtar sonra kapatıldı).
+> **Faz 3 için not:** ikinci adım `e-posta + kod` alır, hesabın en son açık girişimine karşı doğrular (design.md D8, 2026-10-07 eki).
+> **Yan etki:** `denyAll` kapsamındaki bilinmeyen bir uca kimliksiz istek artık 403 değil 401 + `AUTH_REQUIRED` alır
+> (Spring, kimliksiz isteği yetki reddinden önce kimlik girişine yönlendirir). Uç yine kapalıdır.
 
 ## Faz 3 · İkinci faktör, yenileme, çıkış ve hız sınırlama
 

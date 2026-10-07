@@ -6,11 +6,12 @@ import com.bahceden.common.BahcedenProperties;
 import com.bahceden.common.mail.MailSender;
 import com.bahceden.common.security.PasswordHasher;
 import com.bahceden.common.security.SecureTokens;
+import com.bahceden.common.web.ApiErrorCode;
+import com.bahceden.common.web.ApiException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Duration;
-import java.util.Locale;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -42,6 +43,11 @@ public class AccountService {
 
     private static final String EXISTING_ACCOUNT_SUBJECT = "Bahçeden: hesabınız zaten var";
 
+    private static final String INVALID_VERIFICATION_MESSAGE =
+            "Doğrulama bağlantısı geçersiz, daha önce kullanılmış ya da süresi dolmuş.";
+
+    private static final String ACCOUNT_GONE_MESSAGE = "Oturumunuz geçersiz. Lütfen yeniden giriş yapın.";
+
     private final AccountRepository accounts;
     private final EmailVerificationTokenRepository verificationTokens;
     private final PasswordHasher passwordHasher;
@@ -72,7 +78,7 @@ public class AccountService {
      */
     @Transactional
     public void register(String rawEmail, String rawPassword) {
-        var email = normalize(rawEmail);
+        var email = Account.normalizeEmail(rawEmail);
         var now = clock.instant();
 
         var existing = accounts.findByEmail(email);
@@ -97,12 +103,39 @@ public class AccountService {
     }
 
     /**
-     * E-posta normalleştirme tek yerde: küçük harf ve kırpma. Tekil kısıt bu
-     * sayede gerçekten tekilliği garanti eder; {@code Ali@x} ve {@code ali@x}
-     * iki hesap açamaz.
+     * Doğrulama bağlantısını tüketir ve e-postayı doğrulanmış işaretler (D3).
+     *
+     * <p>Girişe etkisi <strong>yoktur</strong> (ADR-017): doğrulanmış olmak bir
+     * bilgidir. Geçersiz, kullanılmış ve süresi dolmuş token ayrıştırılmaz; üçü
+     * de aynı hatayı döner.
+     *
+     * @throws ApiException {@code AUTH_TOKEN_INVALID}
      */
-    private static String normalize(String rawEmail) {
-        return rawEmail.trim().toLowerCase(Locale.ROOT);
+    @Transactional
+    public void confirmVerification(String plainToken) {
+        var now = clock.instant();
+        var token = verificationTokens.findByTokenHash(secureTokens.hash(plainToken))
+                .filter(candidate -> candidate.isUsable(now))
+                .orElseThrow(() -> new ApiException(ApiErrorCode.AUTH_TOKEN_INVALID, INVALID_VERIFICATION_MESSAGE));
+
+        var account = accounts.findById(token.getAccountId())
+                // Yabancı anahtar bunu imkânsız kılar; düşerse veri bozulmuştur.
+                .orElseThrow(() -> new IllegalStateException("Token'ın hesabı yok: " + token.getId()));
+        account.markEmailVerified(now);
+        token.markUsed(now);
+        log.info("E-posta doğrulandı: hesap {}", account.getId());
+    }
+
+    /**
+     * Oturum sahibinin hesabı, veritabanından <strong>taze</strong> (D7): rol
+     * değişikliği token ömrü dolmadan görünür.
+     *
+     * @throws ApiException {@code AUTH_REQUIRED}: token geçerli ama hesap artık yok
+     */
+    @Transactional(readOnly = true)
+    public Account currentAccount(long accountId) {
+        return accounts.findById(accountId)
+                .orElseThrow(() -> new ApiException(ApiErrorCode.AUTH_REQUIRED, ACCOUNT_GONE_MESSAGE));
     }
 
     private String verificationBody(String plainToken) {

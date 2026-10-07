@@ -42,6 +42,8 @@ services:
       BAHCEDEN_SMTP_HOST: mailpit
       BAHCEDEN_SMTP_PORT: 1025
       BAHCEDEN_MAIL_FROM: bahceden@ornek.test
+      # Yalnızca yerel geliştirme imza anahtarı; üretimde secret yöneticisinden gelir.
+      BAHCEDEN_JWT_SECRET: YmFoY2VkZW4teWVyZWwtZ2VsaXN0aXJtZS1pbXphLWFuYWh0YXJpLWdpemxpLWRlZ2ls
     ports:
       - "8080:8080"
     depends_on:

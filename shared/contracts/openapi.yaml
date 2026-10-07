@@ -9,13 +9,57 @@ servers:
 - url: http://localhost
   description: Generated server url
 tags:
-- name: Hesap
-  description: Hesap açma ve e-posta doğrulama
 - name: Sağlık
   description: Operasyonel sağlık kontrolü
+- name: Oturum
+  description: Oturum açma
 - name: Ürünler
   description: Vitrindeki ürünlerin listelenmesi
+- name: Hesap
+  description: "Hesap açma, e-posta doğrulama ve oturum sahibinin kimliği"
 paths:
+  /api/v1/sessions:
+    post:
+      tags:
+      - Oturum
+      summary: Oturum açar
+      description: |
+        E-posta ve parola ile oturum açar. E-posta doğrulaması girişin koşulu
+        değildir. Hesabın ikinci faktörü kapalıysa (varsayılan) token'lar döner;
+        açıksa token dönmez ve e-postaya tek kullanımlık bir kod gönderilir.
+        Hatalı e-posta ile hatalı parola aynı yanıtı alır.
+      operationId: login
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+        required: true
+      responses:
+        "200":
+          description: Oturum açıldı
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionTokens"
+        "202":
+          description: İkinci adım bekleniyor; kod e-postayla gönderildi
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginChallengeIssued"
+        "400":
+          description: İstek gövdesi geçersiz (VALIDATION_FAILED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: E-posta veya parola hatalı (AUTH_INVALID_CREDENTIALS)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
   /api/v1/accounts:
     post:
       tags:
@@ -41,6 +85,32 @@ paths:
                 $ref: "#/components/schemas/RegistrationAccepted"
         "400":
           description: E-posta veya parola geçersiz
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+  /api/v1/accounts/verifications:
+    post:
+      tags:
+      - Hesap
+      summary: E-posta adresini doğrular
+      description: |
+        E-postadaki bağlantının token'ını tüketir ve hesabı doğrulanmış işaretler.
+        Token tek kullanımlıktır ve 24 saat geçerlidir. Doğrulama girişin koşulu
+        değildir; yalnızca hesabın bilgisini günceller.
+      operationId: verifyEmail
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyEmailRequest"
+        required: true
+      responses:
+        "204":
+          description: E-posta doğrulandı
+        "400":
+          description: "Token eksik (VALIDATION_FAILED) ya da geçersiz, kullanılmı\
+            ş veya süresi dolmuş (AUTH_TOKEN_INVALID)"
           content:
             application/json:
               schema:
@@ -103,28 +173,95 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthResponse"
+  /api/v1/accounts/me:
+    get:
+      tags:
+      - Hesap
+      summary: Oturum sahibinin kimliğini döner
+      description: |
+        E-posta, roller ve e-posta doğrulama durumu güncel kayıttan okunur; rol
+        değişikliği erişim token'ının süresi dolmadan yansır.
+      operationId: getCurrentAccount
+      responses:
+        "200":
+          description: Oturum sahibinin kimliği
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountView"
+        "401":
+          description: "Erişim token'ı yok, geçersiz ya da süresi dolmuş (AUTH_REQUIRED)"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+      security:
+      - bearerAuth: []
 components:
   schemas:
-    RegisterRequest:
+    LoginRequest:
       type: object
-      description: Hesap açma isteği
+      description: Oturum açma isteği
       properties:
         email:
           type: string
-          format: email
           description: E-posta adresi
           example: alici@ornek.test
           maxLength: 320
           minLength: 0
         password:
           type: string
-          description: Parola; en az 10 karakter
+          description: Parola
           example: cok-gizli-parola
           maxLength: 200
-          minLength: 10
+          minLength: 0
       required:
       - email
       - password
+    SessionTokens:
+      type: object
+      description: Açılan oturumun erişim ve yenileme token'ları
+      properties:
+        accessToken:
+          type: string
+          description: "JWT erişim token'ı; `Authorization: Bearer` başlığında gö\
+            nderilir, 15 dakika geçerlidir"
+          example: eyJhbGciOiJIUzI1NiJ9.ornek.imza
+        accessTokenExpiresAt:
+          type: string
+          format: date-time
+          description: Erişim token'ının bitiş anı (UTC)
+          example: 2026-10-07T12:15:00Z
+        refreshToken:
+          type: string
+          description: Opak yenileme token'ı; tek kullanımlıktır
+          example: q3Jx0ornekYenilemeTokeni9Zt
+        refreshTokenExpiresAt:
+          type: string
+          format: date-time
+          description: Yenileme token'ının bitiş anı (UTC)
+          example: 2026-11-06T12:00:00Z
+      required:
+      - accessToken
+      - accessTokenExpiresAt
+      - refreshToken
+      - refreshTokenExpiresAt
+    LoginChallengeIssued:
+      type: object
+      description: "İkinci adım bekleniyor: e-postayla kod gönderildi"
+      properties:
+        message:
+          type: string
+          description: Kullanıcıya gösterilebilir bilgilendirme
+          example: E-posta adresinize bir giriş kodu gönderdik.
+        expiresAt:
+          type: string
+          format: date-time
+          description: Kodun bitiş anı (UTC)
+          example: 2026-10-07T12:10:00Z
+      required:
+      - expiresAt
+      - message
     ApiError:
       type: object
       description: Hata yanıtı
@@ -161,6 +298,26 @@ components:
       required:
       - field
       - message
+    RegisterRequest:
+      type: object
+      description: Hesap açma isteği
+      properties:
+        email:
+          type: string
+          format: email
+          description: E-posta adresi
+          example: alici@ornek.test
+          maxLength: 320
+          minLength: 0
+        password:
+          type: string
+          description: Parola; en az 10 karakter
+          example: cok-gizli-parola
+          maxLength: 200
+          minLength: 10
+      required:
+      - email
+      - password
     RegistrationAccepted:
       type: object
       description: Kayıt isteği alındı bilgisi
@@ -171,6 +328,18 @@ components:
           example: E-posta adresinize bir bağlantı gönderdik.
       required:
       - message
+    VerifyEmailRequest:
+      type: object
+      description: E-posta doğrulama isteği
+      properties:
+        token:
+          type: string
+          description: Doğrulama bağlantısındaki tek kullanımlık token
+          example: q3Jx0ornekDogrulamaTokeni9Zt
+          maxLength: 200
+          minLength: 0
+      required:
+      - token
     Money:
       type: object
       description: "Para değeri: kuruş cinsinden tamsayı tutar ve para birimi"
@@ -290,3 +459,37 @@ components:
           example: UP
       required:
       - status
+    AccountView:
+      type: object
+      description: Oturum sahibinin kimliği ve rolleri
+      properties:
+        email:
+          type: string
+          description: E-posta adresi
+          example: alici@ornek.test
+        roles:
+          type: array
+          description: Hesabın rolleri
+          items:
+            type: string
+            description: Hesap rolü
+            enum:
+            - ROLE_CUSTOMER
+            - ROLE_SELLER
+            - ROLE_ADMIN
+            example: ROLE_CUSTOMER
+        emailVerified:
+          type: boolean
+          description: E-posta adresi doğrulandı mı; giriş koşulu değildir
+          example: false
+      required:
+      - email
+      - emailVerified
+      - roles
+  securitySchemes:
+    bearerAuth:
+      type: http
+      description: 15 dakikalık JWT erişim token'ı (ADR-008); `POST /api/v1/sessions`
+        ile alınır
+      scheme: bearer
+      bearerFormat: JWT

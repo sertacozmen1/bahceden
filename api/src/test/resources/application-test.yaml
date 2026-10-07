@@ -28,6 +28,9 @@ spring:
 bahceden:
   web-origin: http://localhost:3000
   mail-from: bahceden@ornek.test
+  jwt:
+    # Yalnızca testler için sabit anahtar; gerçek bir secret değildir.
+    secret: YmFoY2VkZW4tdGVzdC1pbXphLWFuYWh0YXJpLXlhbG5pemNhLXRlc3RsZXItaWNpbg==
 
 logging:
   level:

@@ -56,6 +56,13 @@ public class GlobalExceptionHandler {
                 .body(ApiError.of(ApiErrorCode.VALIDATION_FAILED, VALIDATION_MESSAGE, List.of(fieldError)));
     }
 
+    /** Modellenmiş iş hatası: kod ve durum {@link ApiErrorCode} içinde sabittir. */
+    @ExceptionHandler(ApiException.class)
+    public ResponseEntity<ApiError> handleApiException(ApiException exception) {
+        return ResponseEntity.status(exception.getStatus())
+                .body(ApiError.of(exception.getCode(), exception.getMessage()));
+    }
+
     /**
      * Beklenmeyen hata. İstemciye yalnızca genel bir mesaj döner; teşhis için
      * gereken her şey sunucu log'una yazılır.

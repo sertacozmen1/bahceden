@@ -14,6 +14,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.EnumSet;
+import java.util.Locale;
 import java.util.Set;
 
 /**
@@ -92,6 +93,15 @@ public class Account {
         account.createdAt = now;
         account.updatedAt = now;
         return account;
+    }
+
+    /**
+     * E-posta normalleştirme tek yerde: küçük harf ve kırpma. Tekil kısıt bu
+     * sayede gerçekten tekilliği garanti eder; {@code Ali@x} ve {@code ali@x}
+     * iki hesap açamaz. Kayıt da giriş de aramadan önce bunu çağırır.
+     */
+    public static String normalizeEmail(String rawEmail) {
+        return rawEmail.trim().toLowerCase(Locale.ROOT);
     }
 
     /** Doğrulama bağlantısı kullanıldığında çağrılır; idempotenttir. */
