@@ -25,7 +25,7 @@
 | `web/` (Next.js 16.3.8, React 19.3, TS 5.9.3) | ✅ Çalışıyor | Vitrin + hesap ekranları (`/kayit`, `/giris`, `/dogrulama`, `/hesabim`) + BFF Route Handler'ları (`/api/auth/*`); tipler sözleşmeden üretilir; 30 Vitest testi; `lint`/`typecheck`/`build` temiz |
 | `docker-compose.yml` | ✅ Çalışıyor | `db` (postgres:17), `api` (8080), `web` (3000), `mailpit` (8025); api healthcheck'li |
 | `.githooks/pre-commit` | ✅ Devrede | `git config core.hooksPath .githooks` çalıştırıldı |
-| `.github/workflows/ci.yml` | ✅ **4/4 yeşil** | Run `37520245480`: `api` 1m9s (Maven + Testcontainers **gerçekten koştu**), `web` 46s, `docs` 20s, kural denetimi 4s |
+| `.github/workflows/ci.yml` | ✅ **4/4 yeşil** | Run `37589772992` (hesap dilimi): `api` 1m23s (79 test, Testcontainers), `web` 1m5s (30 test + build), `docs` 20s, kural denetimi 5s |
 | MkDocs portalı | ✅ Strict derleme temiz | `./docs/.tools/serve.sh --build`: ilk koşuda 18 uyarı (docs dışına link + git-revision eklentisi) düzeltildi |
 
 ## 3. Ortam (doğrulanmış)

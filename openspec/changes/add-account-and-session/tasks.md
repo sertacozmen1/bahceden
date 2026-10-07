@@ -98,7 +98,7 @@
 - [x] 5.7 `docs/features/_genel.md` *Tarihçe*: tek satır (K1).
 - [x] 5.8 `./docs/.tools/serve.sh --build` strict temiz.
 - [x] 5.9 Delta spec ana spec'e sync edilir (`openspec/specs/account-identity/spec.md`). (`openspec` CLI kurulu olmadığı için `openspec validate` koşulamadı; yapı `storefront-catalog` ana spec'iyle aynı, 7 gereksinim / 33 senaryo delta ile birebir.)
-- [ ] 5.10 CI 4/4 yeşil. **Doğrulama:** run numarası rapora. **Açık:** push kullanıcı onayı bekliyor (`AGENTS.md` §9); yerelde `api` 79 test, `web` 30 test, docs strict derleme temiz.
+- [x] 5.10 CI 4/4 yeşil. **Doğrulama:** run numarası rapora. Run `37589772992` (2026-10-07): 4/4 yeşil; `api` 1m23s, `web` 1m5s, `docs` 20s, kural denetimi 5s.
 - [ ] 5.11 Rapor `AGENTS.md` §14 formatında; archive **kullanıcı onayı** ister (§9).
 
 ## Sonraki dilim adayları
