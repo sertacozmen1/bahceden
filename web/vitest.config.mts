@@ -20,6 +20,8 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     include: ["src/**/*.test.{ts,tsx}"],
+    // next-intl/server taklidi ve ortak test dili (ADR-029).
+    setupFiles: ["./src/test/setup.ts"],
     css: true,
   },
 });

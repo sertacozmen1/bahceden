@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { testLocale } from "@/test/intl";
 import { ApiRequestError, ApiUnavailableError, apiSend } from "./apiClient";
 
 /**
@@ -36,6 +37,17 @@ describe("apiSend", () => {
       "X-Forwarded-For": "203.0.113.7",
       "Content-Type": "application/json",
     });
+  });
+
+  it("sayfanın seçili dilini Accept-Language ile api'ye iletir (ADR-030)", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 204 }));
+    vi.stubGlobal("fetch", fetchMock);
+    testLocale.current = "en";
+
+    await apiSend("POST", "/api/v1/x");
+
+    const init: RequestInit | undefined = fetchMock.mock.calls[0]?.[1];
+    expect(init?.headers).toMatchObject({ "Accept-Language": "en" });
   });
 
   it("sözleşmeye uygun hata gövdesini ApiRequestError olarak fırlatır", async () => {

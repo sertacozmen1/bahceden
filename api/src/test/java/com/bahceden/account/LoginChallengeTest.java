@@ -5,6 +5,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.bahceden.common.i18n.SupportedLocale;
 import com.bahceden.common.web.ApiErrorCode;
 import com.bahceden.support.MailContents;
 import com.bahceden.support.MutableClock;
@@ -70,7 +71,7 @@ class LoginChallengeTest {
         // Önceki testlerin hız sınırı pencerelerini geride bırakır.
         clock.advance(Duration.ofDays(1));
         jdbc.execute("delete from accounts");
-        accountService.register(EMAIL, PASSWORD);
+        accountService.register(EMAIL, PASSWORD, SupportedLocale.TR);
         jdbc.update("update accounts set two_factor_enabled = true where email = ?", EMAIL);
         mail.reset();
     }
@@ -150,7 +151,7 @@ class LoginChallengeTest {
     @Test
     @DisplayName("Başka bir hesabın e-postasıyla kod sunmak işe yaramaz")
     void baska_hesabin_epostasiyla_kod_reddedilir() throws Exception {
-        accountService.register("diger@ornek.test", PASSWORD);
+        accountService.register("diger@ornek.test", PASSWORD, SupportedLocale.TR);
         var code = birinciAdim();
 
         kodGonder("diger@ornek.test", code)

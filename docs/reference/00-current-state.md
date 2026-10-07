@@ -9,20 +9,20 @@
 
 ## 1. Tek cümlelik özet
 
-**İki dikey dilim çalışıyor:** `docker compose up` ile vitrin ve hesap uçtan uca ayakta — PostgreSQL + Spring Boot `api` + Next.js `web` + `mailpit`. Kullanıcı kayıt olur, e-postasını doğrular (girişi engellemez), giriş yapar, oturumu arka planda yenilenir ve çıkış yapar; ikinci faktörü veritabanından açılmış hesap e-postayla kod girer. 79 `api` testi ve 35 `web` testi yeşil. Sepet, sipariş, ödeme ve kargo **yok**; bunlar `openspec/KALANLAR.md` maddelerine bağlı.
+**İki dikey dilim çalışıyor:** `docker compose up` ile vitrin ve hesap uçtan uca ayakta — PostgreSQL + Spring Boot `api` + Next.js `web` + `mailpit`. Kullanıcı kayıt olur, e-postasını doğrular (girişi engellemez), giriş yapar, oturumu arka planda yenilenir ve çıkış yapar; ikinci faktörü veritabanından açılmış hesap e-postayla kod girer. Arayüz, sunucu mesajları ve e-postalar Türkçe ve İngilizce. 88 `api` testi ve 52 `web` testi yeşil. Sepet, sipariş, ödeme ve kargo **yok**; bunlar `openspec/KALANLAR.md` maddelerine bağlı.
 
 ## 2. Katman durumu
 
 | Katman | Durum | Kanıt |
 |---|---|---|
 | `AGENTS.md` (anayasa) | ✅ Yazıldı, yürürlükte | Depo kökü, 500 satır |
-| `docs/adr/` | ✅ ADR-001…028 (004 superseded; 008 §4, 017 ile değişti; 002'nin `web/` bütçesi 027 ile, 027'nin tema maddesi 028 ile değişti) | [ADR index](../adr/index.md) |
+| `docs/adr/` | ✅ ADR-001…032 (004 superseded; 008 §4, 017 ile değişti; 002'nin `web/` bütçesi 027 ve 029 ile, 027'nin tema maddesi 028 ile değişti) | [ADR index](../adr/index.md) |
 | `docs/` (Diátaxis) | ✅ İskelet + şablonlar + dört how-to + iki feature kaydı + tasarım sistemi dökümü | `docs/` ağacı |
-| `openspec/` | ✅ İki change **archive edildi** | `changes/archive/2026-10-06-add-storefront-product-listing/`, `changes/archive/2026-10-07-add-account-and-session/`; açık change yok; `specs/storefront-catalog` ve `specs/account-identity` geçerli davranış sözleşmeleri |
+| `openspec/` | ✅ Üç change **archive edildi** | `changes/archive/2026-10-06-add-storefront-product-listing/`, `changes/archive/2026-10-07-add-account-and-session/`, `changes/archive/2026-10-07-add-i18n/`; açık change yok; `specs/storefront-catalog`, `specs/account-identity` ve `specs/localization` geçerli davranış sözleşmeleri |
 | `.claude/` (opsx komutları + skill'ler) | ✅ Kurulu | `.claude/commands/opsx/`, `.claude/skills/` |
 | `shared/contracts/openapi.yaml` | ✅ Üretildi ve commit'lendi | 674 satır, 10 uç, `bearerAuth` güvenlik şeması; `api` DTO'larından üretilir, tazeliği `OpenApiContractTest` ile zorunlu ([ADR-009](../adr/009-contract-generated-from-spring.md), [ADR-015](../adr/015-contract-freshness-enforced-by-test.md)) |
-| `api/` (Spring Boot 3.5.16) | ✅ Çalışıyor | `catalog` ve `account` domainleri; JWT resource server, hız sınırlayıcı, SMTP; **Liquibase** changelog'ları `001`…`004` ([ADR-016](../adr/016-liquibase-for-schema-migrations.md)); 79 test yeşil (`./mvnw -B verify`) |
-| `web/` (Next.js 16.3.8, React 19.3, TS 5.9.3) | ✅ Çalışıyor | Vitrin + hesap ekranları (`/kayit`, `/giris`, `/dogrulama`, `/hesabim`) + BFF Route Handler'ları (`/api/auth/*`); tipler sözleşmeden üretilir; 35 Vitest testi; `lint`/`typecheck`/`build` temiz. Tasarım sistemi Tailwind v4 + shadcn/ui `base-nova` (Base UI, Lucide, Geist); Açık / Koyu / Sistem tema menüsü ([ADR-027](../adr/027-shadcn-ui-design-system.md), [ADR-028](../adr/028-theme-choice-and-color-roles.md), [döküm](03-design-system.md)) |
+| `api/` (Spring Boot 3.5.16) | ✅ Çalışıyor | `catalog` ve `account` domainleri; JWT resource server, hız sınırlayıcı, SMTP; **Liquibase** changelog'ları `001`…`005` ([ADR-016](../adr/016-liquibase-for-schema-migrations.md)); kullanıcı metinleri `messages*.properties`, `Accept-Language` ile `tr` / `en` ([ADR-031](../adr/031-api-messages-by-accept-language.md)), hesabın dili `accounts.locale` ([ADR-032](../adr/032-account-locale-stored-and-refreshed-on-login.md)); 88 test yeşil (`./mvnw -B verify`) |
+| `web/` (Next.js 16.3.8, React 19.3, TS 5.9.3) | ✅ Çalışıyor | Vitrin + hesap ekranları (`/kayit`, `/giris`, `/dogrulama`, `/hesabim`) + BFF Route Handler'ları (`/api/auth/*`); tipler sözleşmeden üretilir; 52 Vitest testi; `lint`/`typecheck`/`build` temiz. Metinler next-intl ile `messages/tr.json` + `en.json`, dil çerez → tarayıcı → Türkçe ([ADR-029](../adr/029-next-intl-without-routing.md), [ADR-030](../adr/030-locale-from-cookie-then-header.md)). Tasarım sistemi Tailwind v4 + shadcn/ui `base-nova` (Base UI, Lucide, Geist); Açık / Koyu / Sistem tema menüsü, Türkçe / English dil menüsü ([ADR-027](../adr/027-shadcn-ui-design-system.md), [ADR-028](../adr/028-theme-choice-and-color-roles.md), [döküm](03-design-system.md)) |
 | `docker-compose.yml` | ✅ Çalışıyor | `db` (postgres:17), `api` (8080), `web` (3000), `mailpit` (8025); api healthcheck'li |
 | `.githooks/pre-commit` | ✅ Devrede | `git config core.hooksPath .githooks` çalıştırıldı |
 | `.github/workflows/ci.yml` | ✅ **4/4 yeşil** | Run `37589772992` (hesap dilimi): `api` 1m23s (79 test, Testcontainers), `web` 1m5s (30 test + build), `docs` 20s, kural denetimi 5s |
@@ -63,6 +63,9 @@ Geliştirme makinesinde 2026-10-06'da doğrulanan sürümler:
 | L15 | Süresi dolmuş token satırları birikir | `email_verification_tokens`, `refresh_tokens`, `login_challenges` için temizleme işi yok; hacim sorun olursa ayrı karar |
 | L16 | `web` derlemesi ağ ister | `next/font` Geist'i derleme sırasında Google Fonts'tan indirir; ağsız ortamda `npm run build` ve Docker imajı derlemesi düşer ([ADR-027](../adr/027-shadcn-ui-design-system.md)) |
 | L17 | `npm audit`: 5 yüksek önem bulgusu | Tamamı `eslint-config-next` → `@next/eslint-plugin-next` → `fast-glob` → `micromatch` → `braces` zincirinde; yalnızca geliştirme aracı (lint), çalışma zamanına girmez. Önerilen düzeltme `eslint-config-next@14`'e indirmek, yani kırıcı; Next yükseltmesiyle birlikte değerlendirilecek |
+| L18 | İngilizce sayfalar ayrı indekslenmez | Dil URL'de görünmez ([ADR-030](../adr/030-locale-from-cookie-then-header.md)): arama motoru her adresi tek dilde (Türkçe) görür; İngilizce SEO yok |
+| L19 | Hesabın dili yalnızca girişte güncellenir | Oturum açıkken dili değiştiren kullanıcının sonraki e-postası (örn. yeni doğrulama bağlantısı) bir sonraki girişe kadar eski dilde gider ([ADR-032](../adr/032-account-locale-stored-and-refreshed-on-login.md)) |
+| L20 | next-intl eklenti sarmalayıcısı kullanılmıyor | `createNextIntlPlugin` yerel ikili (`@swc/core`, `@parcel/watcher`) yüklediği ve bu makinede SWC önbellek izin denetimine takıldığı için takma ad `next.config.ts`'te elle verildi; next-intl yükseltmesinde sarmalayıcının yeni yapılandırması takip edilmeli ([ADR-029](../adr/029-next-intl-without-routing.md)) |
 
 ## 5. Bilinen sapmalar (kod ↔ ADR/spec)
 

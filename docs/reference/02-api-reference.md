@@ -48,7 +48,8 @@ Tüm hatalar aynı şekli kullanır:
 | `RATE_LIMITED` | 429 | Hız sınırı aşıldı ya da girişim başına 5 hatalı kod denendi ([ADR-022](../adr/022-in-memory-fixed-window-rate-limiting.md)) |
 | `INTERNAL_ERROR` | 500 | Beklenmeyen hata; ayrıntı yalnızca sunucu log'unda |
 
-- `message` Türkçedir ve kullanıcıya gösterilebilir.
+- `message` kullanıcıya gösterilebilir ve **isteğin dilindedir**: `Accept-Language` başlığına göre `tr` ya da `en`; başlık yoksa veya yalnızca desteklenmeyen dil bildiriyorsa Türkçe. Alan hataları (`fieldErrors[].message`) ve bilgilendirme yanıtlarındaki `message` alanları da aynı kurala uyar. `code` dilden bağımsızdır ([ADR-031](../adr/031-api-messages-by-accept-language.md)).
+- `web` BFF her çağrıda sayfanın seçili dilini `Accept-Language` olarak iletir ([ADR-030](../adr/030-locale-from-cookie-then-header.md)). Hesaba giden e-postalar ise isteğin değil hesabın dilindedir ([ADR-032](../adr/032-account-locale-stored-and-refreshed-on-login.md)).
 - `fieldErrors` her zaman vardır; alan hatası yoksa boş dizidir.
 - Stack trace, SQL ve iç sınıf adı gövdeye **sızmaz**.
 
@@ -214,6 +215,8 @@ Gövde almaz. Oturum sahibinin kayıtlı adresine yeni bir doğrulama bağlantı
 ```json
 { "message": "E-posta adresinize bir giriş kodu gönderdik.", "expiresAt": "2026-10-07T12:10:00Z" }
 ```
+
+Parola doğruysa hesabın dili isteğin diliyle (`Accept-Language`) güncellenir; giriş kodu e-postası bu dilde gider ([ADR-032](../adr/032-account-locale-stored-and-refreshed-on-login.md)). Hatalı parola hesabın dilini değiştirmez.
 
 ### `POST /api/v1/sessions/challenge`
 

@@ -3,6 +3,8 @@ package com.bahceden.account;
 import com.bahceden.account.domain.Account;
 import com.bahceden.account.domain.EmailVerificationToken;
 import com.bahceden.common.BahcedenProperties;
+import com.bahceden.common.i18n.Messages;
+import com.bahceden.common.i18n.SupportedLocale;
 import com.bahceden.common.mail.MailSender;
 import com.bahceden.common.security.PasswordHasher;
 import com.bahceden.common.security.SecureTokens;
@@ -31,6 +33,9 @@ import org.springframework.transaction.annotation.Transactional;
  *       etkin açılır. Doğrulama bağlantısı gönderilir ama tüketilmemesi girişi
  *       etkilemez; gönderim başarısız olsa bile kayıt başarılıdır.</li>
  * </ul>
+ *
+ * <p>E-postalar <strong>hesabın dilinde</strong> gönderilir (ADR-032); metinler
+ * {@code messages*.properties} içindedir, sınıf yalnızca anahtar bilir.
  */
 @Service
 public class AccountService {
@@ -40,21 +45,13 @@ public class AccountService {
     /** Doğrulama bağlantısının ömrü (design.md D3). */
     private static final Duration VERIFICATION_TOKEN_TTL = Duration.ofHours(24);
 
-    private static final String VERIFICATION_SUBJECT = "Bahçeden: e-posta adresinizi doğrulayın";
-
-    private static final String EXISTING_ACCOUNT_SUBJECT = "Bahçeden: hesabınız zaten var";
-
-    private static final String INVALID_VERIFICATION_MESSAGE =
-            "Doğrulama bağlantısı geçersiz, daha önce kullanılmış ya da süresi dolmuş. "
-                    + "Giriş yaptıktan sonra yeni bir bağlantı isteyebilirsiniz.";
-
-    private static final String ACCOUNT_GONE_MESSAGE = "Oturumunuz geçersiz. Lütfen yeniden giriş yapın.";
 
     private final AccountRepository accounts;
     private final EmailVerificationTokenRepository verificationTokens;
     private final PasswordHasher passwordHasher;
     private final SecureTokens secureTokens;
     private final MailSender mailSender;
+    private final Messages messages;
     private final BahcedenProperties properties;
     private final Clock clock;
 
@@ -63,6 +60,7 @@ public class AccountService {
                    PasswordHasher passwordHasher,
                    SecureTokens secureTokens,
                    MailSender mailSender,
+                   Messages messages,
                    BahcedenProperties properties,
                    Clock clock) {
         this.accounts = accounts;
@@ -70,6 +68,7 @@ public class AccountService {
         this.passwordHasher = passwordHasher;
         this.secureTokens = secureTokens;
         this.mailSender = mailSender;
+        this.messages = messages;
         this.properties = properties;
         this.clock = clock;
     }
@@ -77,21 +76,28 @@ public class AccountService {
     /**
      * Hesap açar. Çağıran hiçbir durumda farklı bir sonuç görmez: dönüş tipi
      * yok, istisna yok (doğrulama hataları controller katmanında yakalanır).
+     *
+     * @param locale isteğin dili; yeni hesabın dili olur. Var olan hesaba giden
+     *               bildirim ise o hesabın kendi dilindedir: e-posta adresin
+     *               sahibine gider, isteği yapan başkası olabilir (ADR-032).
      */
     @Transactional
-    public void register(String rawEmail, String rawPassword) {
+    public void register(String rawEmail, String rawPassword, SupportedLocale locale) {
         var email = Account.normalizeEmail(rawEmail);
         var now = clock.instant();
 
         var existing = accounts.findByEmail(email);
         if (existing.isPresent()) {
             // Hesap açılmaz; bilgilendirme yalnızca adresin gerçek sahibine gider.
-            mailSender.send(email, EXISTING_ACCOUNT_SUBJECT, existingAccountBody());
+            var owner = existing.get();
+            mailSender.send(email,
+                    messages.get("mail.existingAccount.subject", owner.getLocale()),
+                    messages.get("mail.existingAccount.body", owner.getLocale(), properties.webOrigin() + "/giris"));
             log.info("Kayıt isteği var olan hesap için alındı: {}", maskedEmail(email));
             return;
         }
 
-        var account = accounts.save(Account.register(email, passwordHasher.hash(rawPassword), now));
+        var account = accounts.save(Account.register(email, passwordHasher.hash(rawPassword), locale, now));
         // Gönderim başarısız olsa bile hesap açık kalır (ADR-017 §4).
         sendVerificationLink(account, now);
         log.info("Hesap açıldı: {}", maskedEmail(email));
@@ -124,7 +130,9 @@ public class AccountService {
                 secureTokens.hash(plainToken),
                 now,
                 now.plus(VERIFICATION_TOKEN_TTL)));
-        mailSender.send(account.getEmail(), VERIFICATION_SUBJECT, verificationBody(plainToken));
+        mailSender.send(account.getEmail(),
+                messages.get("mail.verification.subject", account.getLocale()),
+                messages.get("mail.verification.body", account.getLocale(), verificationLink(plainToken)));
     }
 
     /**
@@ -141,7 +149,7 @@ public class AccountService {
         var now = clock.instant();
         var token = verificationTokens.findByTokenHash(secureTokens.hash(plainToken))
                 .filter(candidate -> candidate.isUsable(now))
-                .orElseThrow(() -> new ApiException(ApiErrorCode.AUTH_TOKEN_INVALID, INVALID_VERIFICATION_MESSAGE));
+                .orElseThrow(() -> new ApiException(ApiErrorCode.AUTH_TOKEN_INVALID, "error.verificationTokenInvalid"));
 
         var account = accounts.findById(token.getAccountId())
                 // Yabancı anahtar bunu imkânsız kılar; düşerse veri bozulmuştur.
@@ -160,36 +168,11 @@ public class AccountService {
     @Transactional(readOnly = true)
     public Account currentAccount(long accountId) {
         return accounts.findById(accountId)
-                .orElseThrow(() -> new ApiException(ApiErrorCode.AUTH_REQUIRED, ACCOUNT_GONE_MESSAGE));
+                .orElseThrow(() -> new ApiException(ApiErrorCode.AUTH_REQUIRED, "error.sessionInvalid"));
     }
 
-    private String verificationBody(String plainToken) {
-        var link = properties.webOrigin() + "/dogrulama?token="
-                + URLEncoder.encode(plainToken, StandardCharsets.UTF_8);
-        return """
-                Merhaba,
-
-                Bahçeden hesabınızın e-posta adresini doğrulamak için aşağıdaki bağlantıyı açın:
-
-                %s
-
-                Bağlantı 24 saat geçerlidir ve yalnızca bir kez kullanılabilir.
-                Hesabınızla doğrulamayı beklemeden giriş yapabilirsiniz.
-
-                Bu isteği siz yapmadıysanız bu e-postayı yok sayabilirsiniz.
-                """.formatted(link);
-    }
-
-    private String existingAccountBody() {
-        return """
-                Merhaba,
-
-                Bu e-posta adresiyle bir Bahçeden hesabı zaten var. Yeni bir hesap açılmadı.
-
-                Giriş yapmak için: %s/giris
-
-                Bu isteği siz yapmadıysanız bu e-postayı yok sayabilirsiniz.
-                """.formatted(properties.webOrigin());
+    private String verificationLink(String plainToken) {
+        return properties.webOrigin() + "/dogrulama?token=" + URLEncoder.encode(plainToken, StandardCharsets.UTF_8);
     }
 
     /** Kişisel veri log'a maskeli yazılır (K10). */

@@ -3,12 +3,12 @@
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { FieldGroup } from "@/components/ui/field";
 import { bffPaths, type BffLoginResponse } from "@/features/account/bff";
-import { noErrors, toFormErrors, type FormErrors } from "@/features/account/formErrors";
+import { noErrors, toFormErrors, type FormErrors, useFormErrorTexts } from "@/features/account/formErrors";
 import { postToBff } from "@/lib/bffClient";
-import { texts } from "@/lib/texts";
 import { FormField } from "./FormField";
 import { FormMessage } from "./FormMessage";
 
@@ -29,6 +29,8 @@ type LoginFormProps = {
 };
 
 export function LoginForm({ returnPath }: LoginFormProps) {
+  const t = useTranslations();
+  const errorTexts = useFormErrorTexts();
   const router = useRouter();
   const [errors, setErrors] = useState<FormErrors>(noErrors);
   const [pending, setPending] = useState(false);
@@ -47,7 +49,7 @@ export function LoginForm({ returnPath }: LoginFormProps) {
       router.push(returnPath);
       router.refresh();
     } catch (error) {
-      setErrors(toFormErrors(error));
+      setErrors(toFormErrors(error, errorTexts));
       setPending(false);
     }
   }
@@ -72,26 +74,26 @@ export function LoginForm({ returnPath }: LoginFormProps) {
 
   if (challenge !== null) {
     return (
-      <form onSubmit={handleCode} noValidate aria-label={texts.account.login.codeTitle}>
+      <form onSubmit={handleCode} noValidate aria-label={t("account.login.codeTitle")}>
         <FieldGroup>
-          <h2 className="text-lg font-semibold tracking-tight">{texts.account.login.codeTitle}</h2>
+          <h2 className="text-lg font-semibold tracking-tight">{t("account.login.codeTitle")}</h2>
           <FormMessage tone="info">{challenge.message}</FormMessage>
           {alert}
           <FormField
             id="giris-kod"
             name="code"
-            label={texts.account.fields.code}
+            label={t("account.fields.code")}
             type="text"
             autoComplete="one-time-code"
             inputMode="numeric"
             maxLength={6}
-            hint={texts.account.fields.codeHint}
+            hint={t("account.fields.codeHint")}
             error={errors.fields.code}
             className="font-mono text-lg tracking-[0.4em] lg:text-lg"
           />
           <div className="flex flex-col gap-2">
             <Button type="submit" disabled={pending}>
-              {pending ? texts.account.login.codeSubmitting : texts.account.login.codeSubmit}
+              {pending ? t("account.login.codeSubmitting") : t("account.login.codeSubmit")}
             </Button>
             <Button
               variant="ghost"
@@ -101,7 +103,7 @@ export function LoginForm({ returnPath }: LoginFormProps) {
                 setErrors(noErrors);
               }}
             >
-              {texts.account.login.startOver}
+              {t("account.login.startOver")}
             </Button>
           </div>
         </FieldGroup>
@@ -110,13 +112,13 @@ export function LoginForm({ returnPath }: LoginFormProps) {
   }
 
   return (
-    <form onSubmit={handleCredentials} noValidate aria-label={texts.account.login.title}>
+    <form onSubmit={handleCredentials} noValidate aria-label={t("account.login.title")}>
       <FieldGroup>
         {alert}
         <FormField
           id="giris-eposta"
           name="email"
-          label={texts.account.fields.email}
+          label={t("account.fields.email")}
           type="email"
           autoComplete="email"
           error={errors.fields.email}
@@ -124,13 +126,13 @@ export function LoginForm({ returnPath }: LoginFormProps) {
         <FormField
           id="giris-parola"
           name="password"
-          label={texts.account.fields.password}
+          label={t("account.fields.password")}
           type="password"
           autoComplete="current-password"
           error={errors.fields.password}
         />
         <Button type="submit" disabled={pending}>
-          {pending ? texts.account.login.submitting : texts.account.login.submit}
+          {pending ? t("account.login.submitting") : t("account.login.submit")}
         </Button>
       </FieldGroup>
     </form>

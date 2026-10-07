@@ -1,5 +1,6 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { renderWithIntl } from "@/test/intl";
 import type { SessionState } from "@/features/account/api";
 import MyAccountPage from "./page";
 
@@ -48,7 +49,7 @@ describe("Hesabım sayfası", () => {
       account: { email: "alici@ornek.test", roles: ["ROLE_CUSTOMER"], emailVerified: false },
     };
 
-    render(await MyAccountPage());
+    renderWithIntl(await MyAccountPage());
 
     expect(screen.getByText("alici@ornek.test")).toBeDefined();
     expect(screen.getByText("Alıcı")).toBeDefined();

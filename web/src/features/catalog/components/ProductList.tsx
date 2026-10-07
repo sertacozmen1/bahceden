@@ -1,9 +1,9 @@
 import { MapPin, Sprout } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { ProductSummary } from "@/features/catalog/api";
 import { formatMoney } from "@/lib/money";
-import { texts } from "@/lib/texts";
 
 /**
  * Vitrin ürün listesi.
@@ -17,11 +17,16 @@ import { texts } from "@/lib/texts";
  * Ürün görseli bilinçli olarak yok (KALANLAR B3): sahte fotoğraf veya yer
  * tutucu kutu koymak yerine kart tipografiye ve fiyata yaslanır. Fotoğraf
  * kararı gelince kartın üstüne `next/image` eklenecek yer hazır.
+ *
+ * Metinler ve para biçimi seçili dilde (ADR-029); ürün ve satıcı adı kullanıcı
+ * verisidir, çevrilmez.
  */
 
 const LOW_STOCK_THRESHOLD = 10;
 
 export function ProductList({ products }: { readonly products: readonly ProductSummary[] }) {
+  const t = useTranslations("storefront");
+  const locale = useLocale();
   if (products.length === 0) {
     return (
       <section
@@ -32,9 +37,9 @@ export function ProductList({ products }: { readonly products: readonly ProductS
           <Sprout aria-hidden className="size-6" />
         </span>
         <h2 id="empty-title" className="text-lg font-semibold tracking-tight">
-          {texts.storefront.emptyTitle}
+          {t("emptyTitle")}
         </h2>
-        <p className="max-w-sm text-pretty text-muted-foreground">{texts.storefront.emptyBody}</p>
+        <p className="max-w-sm text-pretty text-muted-foreground">{t("emptyBody")}</p>
       </section>
     );
   }
@@ -54,16 +59,18 @@ export function ProductList({ products }: { readonly products: readonly ProductS
                   <span className="font-medium">{product.seller.displayName}</span>
                   <span className="inline-flex items-center gap-1 text-muted-foreground">
                     <MapPin aria-hidden className="size-3.5" />
-                    {texts.storefront.sellerFrom(product.seller.city)}
+                    {t("sellerFrom", { city: product.seller.city })}
                   </span>
                 </p>
               </CardHeader>
               <CardContent className="mt-auto flex items-end justify-between gap-3">
                 <p className="flex items-baseline gap-1">
                   <span className="text-2xl font-semibold tracking-tight tabular-nums">
-                    {formatMoney(product.unitPrice)}
+                    {formatMoney(product.unitPrice, locale)}
                   </span>
-                  <span className="text-sm text-muted-foreground">{texts.storefront.perUnit(product.unit)}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {t("perUnit", { unit: product.unit ?? "other" })}
+                  </span>
                 </p>
                 <StockBadge quantity={product.stockQuantity} />
               </CardContent>
@@ -77,11 +84,12 @@ export function ProductList({ products }: { readonly products: readonly ProductS
 
 /** Stok durumu renkle değil metinle de anlatılır (erişilebilirlik, §12.4). */
 function StockBadge({ quantity }: { readonly quantity: number }) {
+  const t = useTranslations("storefront");
   if (quantity === 0) {
-    return <Badge variant="destructive">{texts.storefront.outOfStock}</Badge>;
+    return <Badge variant="destructive">{t("outOfStock")}</Badge>;
   }
   if (quantity <= LOW_STOCK_THRESHOLD) {
-    return <Badge variant="warning">{texts.storefront.stockLeft(quantity)}</Badge>;
+    return <Badge variant="warning">{t("stockLeft", { count: quantity })}</Badge>;
   }
-  return <Badge variant="success">{texts.storefront.inStock}</Badge>;
+  return <Badge variant="success">{t("inStock")}</Badge>;
 }

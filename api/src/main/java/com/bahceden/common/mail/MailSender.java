@@ -15,7 +15,7 @@ public interface MailSender {
 
     /**
      * @param to      alıcı adresi
-     * @param subject konu (Türkçe)
+     * @param subject konu, alıcı hesabın dilinde (ADR-032)
      * @param body    düz metin gövde; şablon motoru kullanılmaz (D2)
      * @return gönderim başarılıysa {@code true}; başarısızlıkta {@code false}
      *         döner ve uygulama hatayı kendi loglar

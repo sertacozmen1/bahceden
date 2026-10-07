@@ -19,13 +19,13 @@ public record ChallengeRequest(
 
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED,
                 description = "Birinci adımda kullanılan e-posta adresi", example = "alici@ornek.test")
-        @NotBlank(message = "E-posta adresi zorunludur")
-        @Size(max = 320, message = "E-posta adresi en çok 320 karakter olabilir")
+        @NotBlank(message = "{validation.email.required}")
+        @Size(max = 320, message = "{validation.email.max}")
         String email,
 
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED,
                 description = "E-postadaki altı haneli kod", example = "042917")
-        @NotBlank(message = "Kod zorunludur")
-        @Pattern(regexp = "\\d{6}", message = "Kod altı haneli olmalıdır")
+        @NotBlank(message = "{validation.code.required}")
+        @Pattern(regexp = "\\d{6}", message = "{validation.code.format}")
         String code) {
 }

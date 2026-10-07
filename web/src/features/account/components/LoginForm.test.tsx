@@ -1,5 +1,6 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { renderWithIntl } from "@/test/intl";
 import { LoginForm } from "./LoginForm";
 
 /**
@@ -42,7 +43,7 @@ describe("LoginForm", () => {
         }),
       ),
     );
-    render(<LoginForm returnPath="/hesabim" />);
+    renderWithIntl(<LoginForm returnPath="/hesabim" />);
 
     kimlikGonder();
 
@@ -54,7 +55,7 @@ describe("LoginForm", () => {
 
   it("başarıda hedefe gider ve sunucu bileşenlerini yeniler", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse(200, { outcome: "AUTHENTICATED" })));
-    render(<LoginForm returnPath="/hesabim" />);
+    renderWithIntl(<LoginForm returnPath="/hesabim" />);
 
     kimlikGonder();
 
@@ -70,7 +71,7 @@ describe("LoginForm", () => {
       )
       .mockResolvedValueOnce(jsonResponse(200, { outcome: "AUTHENTICATED" }));
     vi.stubGlobal("fetch", fetchMock);
-    render(<LoginForm returnPath="/hesabim" />);
+    renderWithIntl(<LoginForm returnPath="/hesabim" />);
 
     kimlikGonder();
 
@@ -96,7 +97,7 @@ describe("LoginForm", () => {
           jsonResponse(401, { code: "AUTH_CODE_INVALID", message: "Kod hatalı ya da süresi dolmuş.", fieldErrors: [] }),
         ),
     );
-    render(<LoginForm returnPath="/hesabim" />);
+    renderWithIntl(<LoginForm returnPath="/hesabim" />);
 
     kimlikGonder();
     fireEvent.change(await screen.findByLabelText("Giriş kodu"), { target: { value: "000000" } });

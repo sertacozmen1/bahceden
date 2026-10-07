@@ -1,14 +1,18 @@
 import type { Metadata } from "next";
 import { BadgeCheck, CircleAlert } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { requireSignedIn } from "@/features/account/requireSession";
 import { AccountScreen } from "@/features/account/components/AccountScreen";
 import { ResendVerificationButton } from "@/features/account/components/ResendVerificationButton";
 import { SignOutButton } from "@/features/account/components/SignOutButton";
-import { roleLabels, texts } from "@/lib/texts";
 
-export const metadata: Metadata = { title: texts.account.myAccount.title };
+/** Sayfa başlığı seçili dilde (ADR-029). */
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations();
+  return { title: t("account.myAccount.title") };
+}
 
 /**
  * Hesabım: korunan ilk sayfa (account-identity spec'i "Oturum sahibinin kimliği").
@@ -21,30 +25,31 @@ export const metadata: Metadata = { title: texts.account.myAccount.title };
  * ayrılmış: sık kullanılmaz ve birincil eylemle karışmamalı (Fitts).
  */
 export default async function MyAccountPage() {
+  const t = await getTranslations();
   const { account } = await requireSignedIn("/hesabim");
   return (
-    <AccountScreen title={texts.account.myAccount.title}>
+    <AccountScreen title={t("account.myAccount.title")}>
       <dl className="grid gap-4">
         <div className="grid gap-1">
-          <dt className="text-sm text-muted-foreground">{texts.account.myAccount.email}</dt>
+          <dt className="text-sm text-muted-foreground">{t("account.myAccount.email")}</dt>
           <dd className="font-medium break-all">{account.email}</dd>
         </div>
         <div className="grid gap-1">
-          <dt className="text-sm text-muted-foreground">{texts.account.myAccount.roles}</dt>
-          <dd className="font-medium">{account.roles.map((role) => roleLabels[role]).join(", ")}</dd>
+          <dt className="text-sm text-muted-foreground">{t("account.myAccount.roles")}</dt>
+          <dd className="font-medium">{account.roles.map((role) => t("account.myAccount.role", { role: role })).join(", ")}</dd>
         </div>
         <div className="grid gap-1.5">
-          <dt className="text-sm text-muted-foreground">{texts.account.myAccount.verificationStatus}</dt>
+          <dt className="text-sm text-muted-foreground">{t("account.myAccount.verificationStatus")}</dt>
           <dd>
             {account.emailVerified ? (
               <Badge variant="success">
                 <BadgeCheck aria-hidden />
-                {texts.account.myAccount.verified}
+                {t("account.myAccount.verified")}
               </Badge>
             ) : (
               <Badge variant="warning">
                 <CircleAlert aria-hidden />
-                {texts.account.myAccount.notVerified}
+                {t("account.myAccount.notVerified")}
               </Badge>
             )}
           </dd>
@@ -52,7 +57,7 @@ export default async function MyAccountPage() {
       </dl>
       {!account.emailVerified && (
         <div className="flex flex-col gap-3">
-          <p className="text-sm text-pretty text-muted-foreground">{texts.account.myAccount.notVerifiedBody}</p>
+          <p className="text-sm text-pretty text-muted-foreground">{t("account.myAccount.notVerifiedBody")}</p>
           <ResendVerificationButton />
         </div>
       )}

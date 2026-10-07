@@ -16,7 +16,7 @@ import jakarta.validation.constraints.Size;
 public record RefreshTokenRequest(
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED,
                 description = "Opak yenileme token'ı", example = "q3Jx0ornekYenilemeTokeni9Zt")
-        @NotBlank(message = "Yenileme token'ı zorunludur")
-        @Size(max = 200, message = "Yenileme token'ı en çok 200 karakter olabilir")
+        @NotBlank(message = "{validation.refreshToken.required}")
+        @Size(max = 200, message = "{validation.refreshToken.max}")
         String refreshToken) {
 }

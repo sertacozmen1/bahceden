@@ -4,10 +4,10 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { LogOut } from "lucide-react";
 import type { VariantProps } from "class-variance-authority";
+import { useTranslations } from "next-intl";
 import { Button, type buttonVariants } from "@/components/ui/button";
 import { bffPaths } from "@/features/account/bff";
 import { postToBff } from "@/lib/bffClient";
-import { texts } from "@/lib/texts";
 
 /**
  * Çıkış düğmesi. BFF oturum zincirini `api`'de iptal eder ve çerezleri siler;
@@ -19,6 +19,7 @@ import { texts } from "@/lib/texts";
 type SignOutButtonProps = VariantProps<typeof buttonVariants> & { readonly className?: string };
 
 export function SignOutButton({ variant = "outline", size, className }: SignOutButtonProps) {
+  const t = useTranslations();
   const router = useRouter();
   const [pending, setPending] = useState(false);
 
@@ -35,7 +36,7 @@ export function SignOutButton({ variant = "outline", size, className }: SignOutB
   return (
     <Button variant={variant} size={size} className={className} type="button" onClick={signOut} disabled={pending}>
       <LogOut aria-hidden />
-      {pending ? texts.account.nav.signingOut : texts.account.nav.signOut}
+      {pending ? t("account.nav.signingOut") : t("account.nav.signOut")}
     </Button>
   );
 }

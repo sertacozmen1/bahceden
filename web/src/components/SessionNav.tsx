@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { CircleUserRound } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import { buttonVariants } from "@/components/ui/button";
 import { currentSession, type SessionState } from "@/features/account/api";
 import { SignOutButton } from "@/features/account/components/SignOutButton";
 import { maskEmail } from "@/features/account/maskEmail";
-import { texts } from "@/lib/texts";
 import { cn } from "@/lib/utils";
 
 /**
@@ -21,12 +21,13 @@ import { cn } from "@/lib/utils";
 const navClassName = "flex items-center gap-1 sm:gap-2";
 
 export async function SessionNav() {
+  const t = await getTranslations();
   const session = await readSession();
 
   if (session?.kind === "signed-in") {
     const masked = maskEmail(session.account.email);
     return (
-      <nav className={navClassName} aria-label={texts.account.nav.signedInAs(masked)}>
+      <nav className={navClassName} aria-label={t("account.nav.signedInAs", { email: masked })}>
         <Link className={buttonVariants({ variant: "ghost" })} href="/hesabim" aria-label={masked}>
           <CircleUserRound aria-hidden />
           <span className="hidden max-w-52 truncate sm:inline">{masked}</span>
@@ -39,22 +40,22 @@ export async function SessionNav() {
   if (session === null || session.kind === "expired") {
     // Oturum var ama yenilenmeli ya da durum okunamadı: "Hesabım" yenilemeyi tetikler.
     return (
-      <nav className={navClassName} aria-label={texts.account.nav.myAccount}>
+      <nav className={navClassName} aria-label={t("account.nav.myAccount")}>
         <Link className={buttonVariants({ variant: "outline" })} href="/hesabim">
           <CircleUserRound aria-hidden />
-          {texts.account.nav.myAccount}
+          {t("account.nav.myAccount")}
         </Link>
       </nav>
     );
   }
 
   return (
-    <nav className={navClassName} aria-label={texts.account.nav.signIn}>
+    <nav className={navClassName} aria-label={t("account.nav.signIn")}>
       <Link className={cn(buttonVariants({ variant: "ghost" }), "max-sm:px-2.5")} href="/giris">
-        {texts.account.nav.signIn}
+        {t("account.nav.signIn")}
       </Link>
       <Link className={cn(buttonVariants(), "max-sm:px-3")} href="/kayit">
-        {texts.account.nav.register}
+        {t("account.nav.register")}
       </Link>
     </nav>
   );

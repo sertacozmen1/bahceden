@@ -4,6 +4,8 @@ import com.bahceden.account.dto.AccountView;
 import com.bahceden.account.dto.RegisterRequest;
 import com.bahceden.account.dto.RegistrationAccepted;
 import com.bahceden.account.dto.VerifyEmailRequest;
+import com.bahceden.common.i18n.Messages;
+import com.bahceden.common.i18n.SupportedLocale;
 import com.bahceden.common.ratelimit.RateLimitPolicy;
 import com.bahceden.common.ratelimit.RateLimiter;
 import com.bahceden.common.web.ApiError;
@@ -18,6 +20,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import java.util.Locale;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -49,11 +52,13 @@ public class AccountController {
     private final AccountService service;
     private final AccountMapper mapper;
     private final RateLimiter rateLimiter;
+    private final Messages messages;
 
-    AccountController(AccountService service, AccountMapper mapper, RateLimiter rateLimiter) {
+    AccountController(AccountService service, AccountMapper mapper, RateLimiter rateLimiter, Messages messages) {
         this.service = service;
         this.mapper = mapper;
         this.rateLimiter = rateLimiter;
+        this.messages = messages;
     }
 
     @Operation(
@@ -75,10 +80,13 @@ public class AccountController {
     })
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public RegistrationAccepted register(@Valid @RequestBody RegisterRequest request, HttpServletRequest http) {
+    public RegistrationAccepted register(@Valid @RequestBody RegisterRequest request, HttpServletRequest http,
+                                         @Parameter(hidden = true) Locale locale) {
         rateLimiter.check(RateLimitPolicy.REGISTRATION, http.getRemoteAddr());
-        service.register(request.email(), request.password());
-        return RegistrationAccepted.standard();
+        var language = SupportedLocale.from(locale);
+        service.register(request.email(), request.password(), language);
+        // Tüm kayıt sonuçları için tek mesaj (D4); dil isteğin dilidir (ADR-031).
+        return new RegistrationAccepted(messages.get("info.registrationAccepted", language));
     }
 
     @Operation(

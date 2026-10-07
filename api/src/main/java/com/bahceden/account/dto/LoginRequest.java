@@ -19,13 +19,13 @@ public record LoginRequest(
 
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED,
                 description = "E-posta adresi", example = "alici@ornek.test")
-        @NotBlank(message = "E-posta adresi zorunludur")
-        @Size(max = 320, message = "E-posta adresi en çok 320 karakter olabilir")
+        @NotBlank(message = "{validation.email.required}")
+        @Size(max = 320, message = "{validation.email.max}")
         String email,
 
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED,
                 description = "Parola", example = "cok-gizli-parola")
-        @NotBlank(message = "Parola zorunludur")
-        @Size(max = 200, message = "Parola en çok 200 karakter olabilir")
+        @NotBlank(message = "{validation.password.required}")
+        @Size(max = 200, message = "{validation.password.max}")
         String password) {
 }

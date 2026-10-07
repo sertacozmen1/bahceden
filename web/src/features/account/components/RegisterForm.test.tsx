@@ -1,5 +1,6 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { renderWithIntl } from "@/test/intl";
 import { RegisterForm } from "./RegisterForm";
 
 /**
@@ -33,7 +34,7 @@ describe("RegisterForm", () => {
         }),
       ),
     );
-    render(<RegisterForm />);
+    renderWithIntl(<RegisterForm />);
 
     doldurVeGonder("alici@ornek.test", "kisa");
 
@@ -44,7 +45,7 @@ describe("RegisterForm", () => {
 
   it("sunucuya ulaşılamazsa genel bir hata gösterir", async () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("ağ yok")));
-    render(<RegisterForm />);
+    renderWithIntl(<RegisterForm />);
 
     doldurVeGonder("alici@ornek.test", "cok-gizli-parola");
 
@@ -58,7 +59,7 @@ describe("RegisterForm", () => {
       jsonResponse(202, { message: "E-posta adresinize bir bağlantı gönderdik." }),
     );
     vi.stubGlobal("fetch", fetchMock);
-    render(<RegisterForm />);
+    renderWithIntl(<RegisterForm />);
 
     doldurVeGonder("  alici@ornek.test  ", "cok-gizli-parola");
 

@@ -29,10 +29,10 @@
 **Durum:** UNDECIDED.
 
 ### A4 · MVP kapsam sınırları
-**Soru:** Teslimat bölgesi sınırlı mı (tek il / bölge) yoksa Türkiye geneli mi? Çoklu dil MVP'de var mı? Mobil uygulama yol haritasında mı?
-**Neden bloklayıcı:** AGENTS.md §3 "over-engineering yapılmaz" ilkesinin sınırını bu cevap çizer; adres modeli ve metin katmanı buna göre kurulur.
+**Soru:** Teslimat bölgesi sınırlı mı (tek il / bölge) yoksa Türkiye geneli mi? Mobil uygulama yol haritasında mı?
+**Neden bloklayıcı:** AGENTS.md §3 "over-engineering yapılmaz" ilkesinin sınırını bu cevap çizer; adres modeli buna göre kurulur.
 **Kim karar verir:** Ürün sahibi.
-**Durum:** UNDECIDED.
+**Durum:** Kısmen karara bağlandı. **Çoklu dil** sorusu 2026-10-07'de kapandı: MVP Türkçe + İngilizce, URL'de dil öneki yok (`docs/adr/029`…`032`, change `add-i18n`). Teslimat bölgesi ve mobil uygulama soruları UNDECIDED.
 
 ---
 

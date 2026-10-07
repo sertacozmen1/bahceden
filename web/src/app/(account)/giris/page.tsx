@@ -1,13 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { currentSession } from "@/features/account/api";
 import { AccountScreen } from "@/features/account/components/AccountScreen";
 import { LoginForm } from "@/features/account/components/LoginForm";
 import { safeReturnPath } from "@/lib/sameOrigin";
-import { texts } from "@/lib/texts";
 
-export const metadata: Metadata = { title: texts.account.login.title };
+/** Sayfa başlığı seçili dilde (ADR-029). */
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations();
+  return { title: t("account.login.title") };
+}
 
 const DEFAULT_RETURN_PATH = "/hesabim";
 
@@ -21,6 +25,7 @@ export default async function LoginPage({
   readonly searchParams: Promise<{ readonly next?: string }>;
 }) {
   const { next } = await searchParams;
+  const t = await getTranslations();
   const returnPath = safeReturnPath(next, DEFAULT_RETURN_PATH);
 
   if ((await currentSession()).kind === "signed-in") {
@@ -29,13 +34,13 @@ export default async function LoginPage({
 
   return (
     <AccountScreen
-      title={texts.account.login.title}
-      intro={next === undefined ? texts.account.login.intro : texts.account.login.signInRequired}
+      title={t("account.login.title")}
+      intro={next === undefined ? t("account.login.intro") : t("account.login.signInRequired")}
       aside={
         <>
-          {texts.account.login.noAccount}{" "}
+          {t("account.login.noAccount")}{" "}
           <Link className="font-medium text-primary underline-offset-4 hover:underline" href="/kayit">
-            {texts.account.nav.register}
+            {t("account.nav.register")}
           </Link>
         </>
       }

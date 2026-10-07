@@ -9,21 +9,17 @@ import java.time.Instant;
  * <p>Yalnızca ikinci faktör anahtarı açık hesaplarda döner. Token içermez:
  * oturum, e-postayla gönderilen kod doğrulandığında açılır.
  *
- * @param message   kullanıcıya gösterilebilir Türkçe bilgilendirme
+ * @param message   kullanıcıya gösterilebilir bilgilendirme, isteğin dilinde (ADR-031)
  * @param expiresAt kodun bitiş anı (UTC)
  */
 @Schema(name = "LoginChallengeIssued", description = "İkinci adım bekleniyor: e-postayla kod gönderildi")
 public record LoginChallengeIssued(
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED,
-                description = "Kullanıcıya gösterilebilir bilgilendirme",
+                description = "Kullanıcıya gösterilebilir bilgilendirme; isteğin diliyle (Accept-Language) döner",
                 example = "E-posta adresinize bir giriş kodu gönderdik.")
         String message,
 
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED,
                 description = "Kodun bitiş anı (UTC)", example = "2026-10-07T12:10:00Z")
         Instant expiresAt) {
-
-    public static LoginChallengeIssued until(Instant expiresAt) {
-        return new LoginChallengeIssued("E-posta adresinize bir giriş kodu gönderdik.", expiresAt);
-    }
 }

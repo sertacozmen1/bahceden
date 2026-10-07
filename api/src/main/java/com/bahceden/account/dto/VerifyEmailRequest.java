@@ -14,7 +14,7 @@ public record VerifyEmailRequest(
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED,
                 description = "Doğrulama bağlantısındaki tek kullanımlık token",
                 example = "q3Jx0ornekDogrulamaTokeni9Zt")
-        @NotBlank(message = "Doğrulama token'ı zorunludur")
-        @Size(max = 200, message = "Doğrulama token'ı en çok 200 karakter olabilir")
+        @NotBlank(message = "{validation.verificationToken.required}")
+        @Size(max = 200, message = "{validation.verificationToken.max}")
         String token) {
 }

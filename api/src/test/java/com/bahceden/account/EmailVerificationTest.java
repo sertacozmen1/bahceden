@@ -5,6 +5,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.bahceden.common.i18n.SupportedLocale;
 import com.bahceden.common.web.ApiErrorCode;
 import com.bahceden.support.MailContents;
 import com.bahceden.support.MutableClock;
@@ -177,7 +178,7 @@ class EmailVerificationTest {
     }
 
     private String kayitOlVeTokenAl() {
-        accountService.register(EMAIL, PASSWORD);
+        accountService.register(EMAIL, PASSWORD, SupportedLocale.TR);
         return MailContents.verificationToken(mail.lastSent().body());
     }
 

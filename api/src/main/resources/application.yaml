@@ -39,6 +39,14 @@ spring:
       mail.smtp.timeout: 5000
       mail.smtp.writetimeout: 5000
 
+  messages:
+    # Kullanıcıya dönen metinler (ADR-031): messages.properties Türkçe ve
+    # temeldir. Sunucunun işletim sistemi dili sonucu ETKİLEMEZ: İngilizce bir
+    # sunucuda desteklenmeyen dil yine Türkçeye düşer.
+    basename: messages
+    encoding: UTF-8
+    fallback-to-system-locale: false
+
   liquibase:
     enabled: true
     change-log: classpath:db/changelog/db.changelog-master.yaml

@@ -1,0 +1,122 @@
+{
+  "site": {
+    "name": "Bahçeden",
+    "tagline": "Straight from the grower, no wholesale market in between."
+  },
+  "storefront": {
+    "title": "Storefront",
+    "subtitle": "Fresh produce shipped directly by growers",
+    "emptyTitle": "No products in the storefront yet",
+    "emptyBody": "Products will appear here once growers add them.",
+    "loading": "Loading products",
+    "outOfStock": "Out of stock",
+    "stockLeft": "Only {count} left",
+    "inStock": "In stock",
+    "perUnit": "/ {unit, select, KILOGRAM {kg} PIECE {piece} BUNCH {bunch} other {unit}}",
+    "sellerFrom": "Grower from {city}",
+    "resultCount": "{count, plural, one {# product} other {# products}}"
+  },
+  "pagination": {
+    "previous": "Previous page",
+    "next": "Next page",
+    "current": "Page {page} of {totalPages}"
+  },
+  "errors": {
+    "title": "Products could not be loaded",
+    "body": "We could not reach the server. Check your connection and try again.",
+    "retry": "Try again"
+  },
+  "account": {
+    "nav": {
+      "signIn": "Sign in",
+      "register": "Sign up",
+      "myAccount": "My account",
+      "signOut": "Sign out",
+      "signingOut": "Signing out…",
+      "signedInAs": "Signed in as {email}"
+    },
+    "fields": {
+      "email": "Email address",
+      "password": "Password",
+      "passwordHint": "At least 10 characters",
+      "code": "Sign-in code",
+      "codeHint": "The 6-digit code sent to your email"
+    },
+    "register": {
+      "title": "Sign up",
+      "intro": "Create an account with your email address and a password. You can use it right away.",
+      "submit": "Create account",
+      "submitting": "Creating account…",
+      "successTitle": "Your account is ready",
+      "goToSignIn": "Sign in",
+      "haveAccount": "Already have an account?"
+    },
+    "login": {
+      "title": "Sign in",
+      "intro": "Sign in with your email address and password.",
+      "submit": "Sign in",
+      "submitting": "Signing in…",
+      "codeTitle": "Enter your sign-in code",
+      "codeSubmit": "Confirm code",
+      "codeSubmitting": "Checking code…",
+      "startOver": "Start over",
+      "noAccount": "Don't have an account?",
+      "signInRequired": "Sign in to see this page."
+    },
+    "verification": {
+      "title": "Email verification",
+      "successTitle": "Your email address is verified",
+      "successBody": "Thank you. You can keep using your account.",
+      "failedTitle": "This link cannot be used",
+      "missingToken": "The link looks incomplete. Make sure you opened the full link from the email, or request a new link from My account.",
+      "goToAccount": "Go to my account",
+      "goToStorefront": "Back to the storefront"
+    },
+    "myAccount": {
+      "title": "My account",
+      "email": "Email",
+      "roles": "Roles",
+      "role": "{role, select, ROLE_CUSTOMER {Buyer} ROLE_SELLER {Seller} ROLE_ADMIN {Administrator} other {Unknown role}}",
+      "verificationStatus": "Email verification",
+      "verified": "Verified",
+      "notVerified": "Not verified",
+      "notVerifiedBody": "You have not verified your email address. This does not stop you from using your account.",
+      "resend": "Send a new verification link",
+      "resending": "Sending…",
+      "resent": "We sent a new link to your email address.",
+      "loading": "Loading account details"
+    },
+    "errors": {
+      "title": "Something went wrong",
+      "body": "We could not complete your request right now. Please try again in a little while.",
+      "retry": "Try again",
+      "unavailable": "We could not reach the server. Check your connection and try again.",
+      "crossSite": "This request was rejected because it came from another site.",
+      "invalidRequest": "The request could not be read.",
+      "formHasErrors": "Please fix the highlighted fields."
+    }
+  },
+  "footer": {
+    "copyright": "Bahçeden"
+  },
+  "notFound": {
+    "title": "Page not found",
+    "body": "The page you are looking for may have moved or may never have existed.",
+    "backToStorefront": "Back to the storefront"
+  },
+  "theme": {
+    "label": "Theme",
+    "trigger": "Theme: {current}",
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  },
+  "locale": {
+    "label": "Language",
+    "trigger": "Language: {current}",
+    "names": {
+      "tr": "Türkçe",
+      "en": "English"
+    }
+  }
+}

@@ -1,5 +1,6 @@
 package com.bahceden.account.domain;
 
+import com.bahceden.common.i18n.SupportedLocale;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -54,6 +55,10 @@ public class Account {
     @Column(name = "two_factor_enabled", nullable = false)
     private boolean twoFactorEnabled;
 
+    /** Hesaba giden e-postaların dili; etiket olarak saklanır ({@code tr}, {@code en}) (ADR-032). */
+    @Column(nullable = false, length = 8)
+    private String locale;
+
     /**
      * Roller ayrı bir entity değil değer kümesidir: kendi kimliği, yaşam
      * döngüsü veya davranışı yok. Hesapla birlikte yüklenir çünkü yetkilendirme
@@ -80,12 +85,14 @@ public class Account {
      *
      * @param email        normalleştirilmiş (küçük harf, kırpılmış) e-posta
      * @param passwordHash hash'lenmiş parola; düz parola bu sınıfa girmez
+     * @param locale       kayıt isteğinin dili; e-postalar bu dilde gider (ADR-032)
      * @param now          enjekte edilen saatten gelen zaman (AGENTS.md §11.3)
      */
-    public static Account register(String email, String passwordHash, Instant now) {
+    public static Account register(String email, String passwordHash, SupportedLocale locale, Instant now) {
         var account = new Account();
         account.email = email;
         account.passwordHash = passwordHash;
+        account.locale = locale.tag();
         account.status = AccountStatus.ACTIVE;
         account.emailVerified = false;
         account.twoFactorEnabled = false;
@@ -110,6 +117,21 @@ public class Account {
             emailVerified = true;
             updatedAt = now;
         }
+    }
+
+    /**
+     * Kullanıcının en son kullandığı dil: başarılı girişte çağrılır (ADR-032).
+     * Dil değişmediyse kayıt güncellenmez.
+     */
+    public void useLocale(SupportedLocale newLocale, Instant now) {
+        if (!newLocale.tag().equals(locale)) {
+            locale = newLocale.tag();
+            updatedAt = now;
+        }
+    }
+
+    public SupportedLocale getLocale() {
+        return SupportedLocale.fromTag(locale);
     }
 
     public Long getId() {

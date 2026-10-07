@@ -1,5 +1,6 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
+import { renderWithIntl } from "@/test/intl";
 import { parseTheme } from "@/lib/theme";
 import { ThemeMenu } from "./ThemeMenu";
 
@@ -16,14 +17,14 @@ afterEach(() => {
 
 describe("ThemeMenu", () => {
   it("tek ikonlu tetikleyici seçili temayı adıyla söyler", () => {
-    render(<ThemeMenu initialTheme="system" />);
+    renderWithIntl(<ThemeMenu initialTheme="system" />);
 
     expect(screen.getByRole("button", { name: "Tema: Sistem" })).toBeDefined();
     expect(screen.queryByRole("menu")).toBeNull();
   });
 
   it("açılınca üç seçenek sunar ve seçili olanı işaretler", async () => {
-    render(<ThemeMenu initialTheme="light" />);
+    renderWithIntl(<ThemeMenu initialTheme="light" />);
 
     fireEvent.click(screen.getByRole("button", { name: "Tema: Açık" }));
 
@@ -33,7 +34,7 @@ describe("ThemeMenu", () => {
   });
 
   it("seçim temayı hemen değiştirir, çereze yazar ve tetikleyiciyi günceller", async () => {
-    render(<ThemeMenu initialTheme="system" />);
+    renderWithIntl(<ThemeMenu initialTheme="system" />);
 
     fireEvent.click(screen.getByRole("button", { name: "Tema: Sistem" }));
     fireEvent.click(await screen.findByRole("menuitemradio", { name: "Koyu" }));

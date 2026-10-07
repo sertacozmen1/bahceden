@@ -48,8 +48,12 @@ Architecture Decision Records, projedeki önemli mimari kararları ve bu kararla
 | 026 | [Doğrulama bağlantısını yeniden gönderme oturum ister](026-verification-link-resend-requires-session.md) | Accepted | 2026-10-07 |
 | 027 | [Tasarım sistemi: shadcn/ui (Base UI) + Tailwind v4](027-shadcn-ui-design-system.md) | Accepted · tema maddesi [028](028-theme-choice-and-color-roles.md) ile değişti | 2026-10-07 |
 | 028 | [Tema seçimi çerezle sunucuda; renkler iki katmanlı (merdiven + rol)](028-theme-choice-and-color-roles.md) | Accepted | 2026-10-07 |
+| 029 | [`web` çevirisi: next-intl, yönlendirmesiz; metinler ICU biçiminde JSON'da](029-next-intl-without-routing.md) | Accepted | 2026-10-07 |
+| 030 | [Dil seçimi: çerez → `Accept-Language` → Türkçe; aynı dil `api`'ye iletilir](030-locale-from-cookie-then-header.md) | Accepted | 2026-10-07 |
+| 031 | [`api` metinleri `MessageSource` ile, `Accept-Language`'a göre; hata kodları sabit](031-api-messages-by-accept-language.md) | Accepted | 2026-10-07 |
+| 032 | [Hesabın dili saklanır; kayıtta yazılır, girişte güncellenir; e-postalar o dilde](032-account-locale-stored-and-refreshed-on-login.md) | Accepted | 2026-10-07 |
 
-**Sıradaki numara: 029.**
+**Sıradaki numara: 033.**
 
 **Durum değerleri:** `Proposed` (öneri, henüz bağlayıcı değil) · `Accepted` (yürürlükte, bağlayıcı) · `Deprecated` (artık geçerli değil, yerine bir şey gelmedi) · `Superseded by [ADR-XXX]` (yerini başka bir karara bıraktı).
 

@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.bahceden.common.i18n.SupportedLocale;
 import com.bahceden.common.web.ApiErrorCode;
 import com.bahceden.support.MailContents;
 import com.bahceden.support.MutableClock;
@@ -88,7 +89,7 @@ class CurrentAccountTest {
         clock.advance(Duration.ofDays(1));
         jdbc.execute("delete from accounts");
         mail.reset();
-        accountService.register(EMAIL, PASSWORD);
+        accountService.register(EMAIL, PASSWORD, SupportedLocale.TR);
         verificationToken = MailContents.verificationToken(mail.lastSent().body());
     }
 

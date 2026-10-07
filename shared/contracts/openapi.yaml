@@ -400,7 +400,8 @@ components:
       properties:
         message:
           type: string
-          description: Kullanıcıya gösterilebilir bilgilendirme
+          description: Kullanıcıya gösterilebilir bilgilendirme; isteğin diliyle (Accept-Language)
+            döner
           example: E-posta adresinize bir giriş kodu gönderdik.
         expiresAt:
           type: string
@@ -416,11 +417,12 @@ components:
       properties:
         code:
           type: string
-          description: Sabit hata kodu
+          description: Sabit hata kodu; dilden bağımsızdır
           example: VALIDATION_FAILED
         message:
           type: string
-          description: Kullanıcıya gösterilebilir açıklama
+          description: "Kullanıcıya gösterilebilir açıklama; isteğin diliyle (Accept-Language:\
+            \ tr, en) döner, varsayılan Türkçe"
           example: Gönderilen değerler geçersiz.
         fieldErrors:
           type: array
@@ -441,8 +443,8 @@ components:
           example: size
         message:
           type: string
-          description: Alana ait hata açıklaması
-          example: 0 değerinden küçük olamaz
+          description: Alana ait hata açıklaması; isteğin dilinde
+          example: Sayfa boyutu en az 1 olmalıdır
       required:
       - field
       - message
@@ -503,7 +505,8 @@ components:
       properties:
         message:
           type: string
-          description: Kullanıcıya gösterilebilir bilgilendirme
+          description: Kullanıcıya gösterilebilir bilgilendirme; isteğin diliyle (Accept-Language)
+            döner
           example: E-posta adresinize bir bağlantı gönderdik.
       required:
       - message

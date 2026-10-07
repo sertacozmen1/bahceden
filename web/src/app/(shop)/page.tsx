@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import { buttonVariants } from "@/components/ui/button";
 import { fetchPublishedProducts } from "@/features/catalog/api";
 import { ProductList } from "@/features/catalog/components/ProductList";
-import { texts } from "@/lib/texts";
 import { cn } from "@/lib/utils";
 
 /**
@@ -17,10 +17,11 @@ import { cn } from "@/lib/utils";
  * yukarı çıkar ve `error.tsx` devreye girer (§12.5).
  */
 
-export const metadata: Metadata = {
-  title: texts.storefront.title,
-  description: texts.storefront.subtitle,
-};
+/** Sayfa başlığı seçili dilde (ADR-029). */
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations();
+  return { title: t("storefront.title"), description: t("storefront.subtitle") };
+}
 
 const DEFAULT_PAGE_SIZE = 20;
 
@@ -32,16 +33,17 @@ export default async function StorefrontPage({
   readonly searchParams: Promise<SearchParams>;
 }) {
   const { page } = await searchParams;
+  const t = await getTranslations();
   const currentPage = parsePage(page);
   const result = await fetchPublishedProducts(currentPage, DEFAULT_PAGE_SIZE);
 
   return (
     <main className="mx-auto w-full max-w-6xl px-4 pt-8 pb-12 lg:px-6 lg:pt-12">
       <header className="mb-6 flex flex-col gap-2 lg:mb-8">
-        <h1 className="text-3xl font-semibold tracking-tight lg:text-4xl">{texts.storefront.title}</h1>
-        <p className="max-w-prose text-pretty text-muted-foreground">{texts.storefront.subtitle}</p>
+        <h1 className="text-3xl font-semibold tracking-tight lg:text-4xl">{t("storefront.title")}</h1>
+        <p className="max-w-prose text-pretty text-muted-foreground">{t("storefront.subtitle")}</p>
         <p className="text-sm font-medium text-muted-foreground tabular-nums">
-          {texts.storefront.resultCount(result.totalElements)}
+          {t("storefront.resultCount", { count: result.totalElements })}
         </p>
       </header>
 
@@ -50,7 +52,7 @@ export default async function StorefrontPage({
       {result.totalPages > 1 && (
         <nav
           className="mt-8 flex items-center justify-between gap-3"
-          aria-label={texts.pagination.current(result.page + 1, result.totalPages)}
+          aria-label={t("pagination.current", { page: result.page + 1, totalPages: result.totalPages })}
         >
           {result.page > 0 ? (
             <Link
@@ -58,17 +60,17 @@ export default async function StorefrontPage({
               href={{ pathname: "/", query: { page: result.page - 1 } }}
             >
               <ChevronLeft aria-hidden />
-              {texts.pagination.previous}
+              {t("pagination.previous")}
             </Link>
           ) : (
             <span className={cn(buttonVariants({ variant: "outline" }), "opacity-50")} aria-disabled="true">
               <ChevronLeft aria-hidden />
-              {texts.pagination.previous}
+              {t("pagination.previous")}
             </span>
           )}
 
           <span className="text-sm text-muted-foreground tabular-nums">
-            {texts.pagination.current(result.page + 1, result.totalPages)}
+            {t("pagination.current", { page: result.page + 1, totalPages: result.totalPages })}
           </span>
 
           {result.page + 1 < result.totalPages ? (
@@ -76,12 +78,12 @@ export default async function StorefrontPage({
               className={buttonVariants({ variant: "outline" })}
               href={{ pathname: "/", query: { page: result.page + 1 } }}
             >
-              {texts.pagination.next}
+              {t("pagination.next")}
               <ChevronRight aria-hidden />
             </Link>
           ) : (
             <span className={cn(buttonVariants({ variant: "outline" }), "opacity-50")} aria-disabled="true">
-              {texts.pagination.next}
+              {t("pagination.next")}
               <ChevronRight aria-hidden />
             </span>
           )}

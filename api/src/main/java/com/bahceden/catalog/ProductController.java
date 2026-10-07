@@ -59,9 +59,9 @@ public class ProductController {
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public PageResponse<ProductSummary> list(
             @Parameter(description = "Sayfa numarası (sıfırdan başlar)", example = "0")
-            @RequestParam(defaultValue = "0") @Min(value = 0, message = "Sayfa numarası negatif olamaz") int page,
+            @RequestParam(defaultValue = "0") @Min(value = 0, message = "{validation.page.min}") int page,
             @Parameter(description = "Sayfa boyutu; üst sınır sunucuda 50'ye çekilir", example = "20")
-            @RequestParam(defaultValue = "20") @Min(value = 1, message = "Sayfa boyutu en az 1 olmalıdır") int size) {
+            @RequestParam(defaultValue = "20") @Min(value = 1, message = "{validation.pageSize.min}") int size) {
         return service.listPublished(page, size);
     }
 }

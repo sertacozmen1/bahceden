@@ -4,6 +4,8 @@ import com.bahceden.account.domain.Account;
 import com.bahceden.account.domain.AccountRole;
 import com.bahceden.account.domain.LoginChallenge;
 import com.bahceden.account.domain.RefreshToken;
+import com.bahceden.common.i18n.Messages;
+import com.bahceden.common.i18n.SupportedLocale;
 import com.bahceden.common.mail.MailSender;
 import com.bahceden.common.security.AccessTokenIssuer;
 import com.bahceden.common.security.PasswordHasher;
@@ -30,6 +32,10 @@ import org.springframework.transaction.annotation.Transactional;
  * <p>Hatalı e-posta ile hatalı parola ayırt edilemez: ikisi de aynı kodu ve
  * mesajı döner, ikisinde de bir BCrypt karşılaştırması yapılır. Böylece ne
  * yanıt ne de yanıt süresi hesabın var olduğunu söyler (D4).
+ *
+ * <p>Başarılı parola adımı hesabın dilini isteğin diliyle günceller; giriş
+ * kodu e-postası bu dilde gider (ADR-032). Hata metinleri anahtar olarak
+ * fırlatılır ve isteğin dilinde çözülür (ADR-031).
  */
 @Service
 public class SessionService {
@@ -45,18 +51,6 @@ public class SessionService {
     /** Bir giriş girişimi için izin verilen hatalı kod sayısı (design.md D8). */
     static final int MAX_CHALLENGE_ATTEMPTS = 5;
 
-    private static final String INVALID_CREDENTIALS_MESSAGE = "E-posta adresi veya parola hatalı.";
-
-    private static final String INVALID_CODE_MESSAGE =
-            "Kod hatalı ya da süresi dolmuş. Gerekirse yeniden giriş yaparak yeni bir kod isteyin.";
-
-    private static final String TOO_MANY_ATTEMPTS_MESSAGE =
-            "Çok fazla hatalı kod denendi. Yeniden giriş yaparak yeni bir kod isteyin.";
-
-    private static final String INVALID_REFRESH_MESSAGE = "Oturumunuzun süresi doldu. Lütfen yeniden giriş yapın.";
-
-    private static final String CHALLENGE_SUBJECT = "Bahçeden: giriş kodunuz";
-
     private final AccountRepository accounts;
     private final RefreshTokenRepository refreshTokens;
     private final LoginChallengeRepository challenges;
@@ -64,6 +58,7 @@ public class SessionService {
     private final SecureTokens secureTokens;
     private final AccessTokenIssuer accessTokens;
     private final MailSender mailSender;
+    private final Messages messages;
     private final Clock clock;
 
     /**
@@ -80,6 +75,7 @@ public class SessionService {
                    SecureTokens secureTokens,
                    AccessTokenIssuer accessTokens,
                    MailSender mailSender,
+                   Messages messages,
                    Clock clock) {
         this.accounts = accounts;
         this.refreshTokens = refreshTokens;
@@ -88,6 +84,7 @@ public class SessionService {
         this.secureTokens = secureTokens;
         this.accessTokens = accessTokens;
         this.mailSender = mailSender;
+        this.messages = messages;
         this.clock = clock;
         this.timingDecoyHash = passwordHasher.hash(secureTokens.newToken());
     }
@@ -109,20 +106,22 @@ public class SessionService {
     }
 
     /**
+     * @param locale isteğin dili; parola doğruysa hesabın dili olur (ADR-032)
      * @throws ApiException {@code AUTH_INVALID_CREDENTIALS}: e-posta yok ya da parola yanlış
      */
     @Transactional
-    public LoginResult login(String rawEmail, String rawPassword) {
+    public LoginResult login(String rawEmail, String rawPassword, SupportedLocale locale) {
         var account = accounts.findByEmail(Account.normalizeEmail(rawEmail));
         var hash = account.map(Account::getPasswordHash).orElse(timingDecoyHash);
         // Karşılaştırma hesap yokken de yapılır: yanıt süresi hesabı ele vermez.
         boolean passwordMatches = passwordHasher.matches(rawPassword, hash);
         if (account.isEmpty() || !passwordMatches) {
-            throw new ApiException(ApiErrorCode.AUTH_INVALID_CREDENTIALS, INVALID_CREDENTIALS_MESSAGE);
+            throw new ApiException(ApiErrorCode.AUTH_INVALID_CREDENTIALS, "error.invalidCredentials");
         }
 
         var found = account.get();
         var now = clock.instant();
+        found.useLocale(locale, now);
         if (found.isTwoFactorEnabled()) {
             return issueChallenge(found, now);
         }
@@ -148,7 +147,7 @@ public class SessionService {
                 .orElseThrow(SessionService::invalidCode);
 
         if (challenge.attemptsExhausted(MAX_CHALLENGE_ATTEMPTS)) {
-            throw new ApiException(ApiErrorCode.RATE_LIMITED, TOO_MANY_ATTEMPTS_MESSAGE);
+            throw new ApiException(ApiErrorCode.RATE_LIMITED, "error.tooManyCodeAttempts");
         }
         if (!challenge.matches(challengeHash(account.getId(), code))) {
             challenge.recordFailedAttempt();
@@ -244,7 +243,9 @@ public class SessionService {
 
         var expiresAt = now.plus(CHALLENGE_TTL);
         challenges.save(LoginChallenge.issue(account.getId(), codeHash, now, expiresAt));
-        mailSender.send(account.getEmail(), CHALLENGE_SUBJECT, challengeBody(code));
+        mailSender.send(account.getEmail(),
+                messages.get("mail.loginCode.subject", account.getLocale()),
+                messages.get("mail.loginCode.body", account.getLocale(), code));
         log.info("İkinci faktör kodu gönderildi: hesap {}", account.getId());
         return new ChallengeRequired(expiresAt);
     }
@@ -258,23 +259,10 @@ public class SessionService {
     }
 
     private static ApiException invalidCode() {
-        return new ApiException(ApiErrorCode.AUTH_CODE_INVALID, INVALID_CODE_MESSAGE);
+        return new ApiException(ApiErrorCode.AUTH_CODE_INVALID, "error.invalidCode");
     }
 
     private static ApiException invalidRefresh() {
-        return new ApiException(ApiErrorCode.AUTH_TOKEN_INVALID, INVALID_REFRESH_MESSAGE);
-    }
-
-    private static String challengeBody(String code) {
-        return """
-                Merhaba,
-
-                Bahçeden hesabınıza giriş için kodunuz:
-
-                %s
-
-                Kod 10 dakika geçerlidir ve yalnızca bir kez kullanılabilir.
-                Bu girişi siz yapmadıysanız parolanızı değiştirmenizi öneririz.
-                """.formatted(code);
+        return new ApiException(ApiErrorCode.AUTH_TOKEN_INVALID, "error.sessionExpired");
     }
 }

@@ -2,14 +2,18 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { CircleCheck, CircleX } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import { buttonVariants } from "@/components/ui/button";
 import { verifyEmail } from "@/features/account/api";
 import { AccountScreen } from "@/features/account/components/AccountScreen";
 import { ApiRequestError } from "@/lib/apiError";
-import { texts } from "@/lib/texts";
 import { cn } from "@/lib/utils";
 
-export const metadata: Metadata = { title: texts.account.verification.title };
+/** Sayfa başlığı seçili dilde (ADR-029). */
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations();
+  return { title: t("account.verification.title") };
+}
 
 /**
  * E-postadaki doğrulama bağlantısının indiği sayfa (design.md D3, D9).
@@ -27,6 +31,7 @@ export default async function VerificationPage({
   readonly searchParams: Promise<{ readonly token?: string }>;
 }) {
   const { token } = await searchParams;
+  const t = await getTranslations();
   const failure = await consume(token);
   const Icon = failure === null ? CircleCheck : CircleX;
 
@@ -42,16 +47,16 @@ export default async function VerificationPage({
       </span>
       <div className="flex flex-col gap-2">
         <h1 className="text-xl font-semibold tracking-tight">
-          {failure === null ? texts.account.verification.successTitle : texts.account.verification.failedTitle}
+          {failure === null ? t("account.verification.successTitle") : t("account.verification.failedTitle")}
         </h1>
-        <p className="text-pretty text-muted-foreground">{failure ?? texts.account.verification.successBody}</p>
+        <p className="text-pretty text-muted-foreground">{failure ?? t("account.verification.successBody")}</p>
       </div>
       <div className="flex flex-col gap-2 sm:flex-row">
         <Link className={buttonVariants()} href="/hesabim">
-          {texts.account.verification.goToAccount}
+          {t("account.verification.goToAccount")}
         </Link>
         <Link className={buttonVariants({ variant: "ghost" })} href="/">
-          {texts.account.verification.goToStorefront}
+          {t("account.verification.goToStorefront")}
         </Link>
       </div>
     </AccountScreen>
@@ -60,8 +65,9 @@ export default async function VerificationPage({
 
 /** Başarıda `null`, reddedilirse kullanıcıya gösterilecek mesaj. */
 async function consume(token: string | undefined): Promise<string | null> {
+  const t = await getTranslations();
   if (token === undefined || token.trim() === "") {
-    return texts.account.verification.missingToken;
+    return t("account.verification.missingToken");
   }
   try {
     await verifyEmail(token, (await headers()).get("x-forwarded-for"));

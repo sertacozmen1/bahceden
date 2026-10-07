@@ -15,6 +15,7 @@
 | **Altyapı** | Tailwind CSS v4 + shadcn/ui `base-nova` (Base UI primitive'leri) + Lucide ikonları |
 | **Yazı tipi** | Geist (gövde ve başlık), Geist Mono (giriş kodu); `next/font`, `latin` + `latin-ext` |
 | **Tema** | Açık / Koyu / Sistem menüsü (başlıkta, tek ikon); varsayılan Sistem ([ADR-028](../adr/028-theme-choice-and-color-roles.md)) |
+| **Dil** | Türkçe / English menüsü (başlıkta, tema menüsünün yanında, tek ikon); çerez, yoksa tarayıcı dili, yoksa Türkçe ([ADR-030](../adr/030-locale-from-cookie-then-header.md)). Metinler `web/messages/*.json` ([ADR-029](../adr/029-next-intl-without-routing.md)) |
 | **Hareket** | Yalnızca geri bildirim: düğmeye basınca 1px çökme, iskelette nabız (`motion-reduce` ile durur) |
 
 ## 2. Renkler ([ADR-028](../adr/028-theme-choice-and-color-roles.md))
@@ -86,7 +87,7 @@ Tercih `bahceden_theme` çerezinde (bir yıl). Kök düzen onu sunucuda okur; il
 | Dokunma hedefi | Düğme ve girdi mobilde `h-11` (44px), `lg` ve üstünde `h-10` (40px) |
 | Kırılımlar | Tailwind varsayılanları; düzen mobil önce, `sm` (640) ızgarayı ikiye, `lg` (1024) üçe açar |
 | Sayfa genişliği | Vitrin `max-w-6xl`; hesap ve durum ekranları `max-w-md` tek sütun |
-| Başlık çubuğu | 64px, yapışkan, yarı saydam zemin; her genişlikte tek satır. 375px'de oturumsuz başlık (marka + "Giriş yap" + "Kayıt ol" + tema ikonu) sığsın diye mobilde yan boşluk 12px, düğme iç boşluğu daraltılmış; başlığa öğe eklemeden önce bu genişlik kontrol edilir |
+| Başlık çubuğu | 64px, yapışkan, yarı saydam zemin; her genişlikte tek satır. 375px'de oturumsuz başlık (logo + "Giriş yap" + "Kayıt ol" + dil ve tema ikonları) sığsın diye mobilde yan boşluk 12px, düğme iç boşluğu daraltılmış ve 420px altında marka yazısı yalnızca ekran okuyucuya bırakılmış (logo görünür); başlığa öğe eklemeden önce bu genişlik kontrol edilir |
 
 ## 4. Bileşenler
 
@@ -110,6 +111,7 @@ Tercih `bahceden_theme` çerezinde (bir yıl). Kök düzen onu sunucuda okur; il
 | Bileşen | Yer | Görev |
 |---|---|---|
 | `AppShell` | `components/` | Başlık (marka işareti `Sprout`, slogan yalnızca masaüstünde, oturum alanı + tema menüsü) ve alt bilgi (marka) |
+| `LocaleMenu` | `components/` | Tek ikonlu tetikleyici + dil menüsü; seçenekler kendi dilinde, seçim çereze yazılır ve sayfa sunucuda yenilenir |
 | `ThemeMenu` | `components/` | Tek ikonlu tetikleyici + Açık / Koyu / Sistem menüsü; seçimi `data-theme`'ya ve çereze yazar |
 | `SessionNav` | `components/` | Oturum durumuna göre "Giriş yap / Kayıt ol" veya maskeli e-posta + çıkış |
 | `StatusPanel` | `components/` | Tam sayfa hata ve bulunamadı kutusu: ikon (hatada `destructive` tonlu), başlık, tek cümle, tek eylem |

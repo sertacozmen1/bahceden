@@ -7,6 +7,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.bahceden.common.i18n.SupportedLocale;
 import com.bahceden.common.security.AccessTokenIssuer;
 import com.bahceden.common.web.ApiErrorCode;
 import com.bahceden.support.MutableClock;
@@ -71,7 +72,7 @@ class SessionRefreshTest {
         // Önceki testlerin hız sınırı pencerelerini geride bırakır.
         clock.advance(Duration.ofDays(1));
         jdbc.execute("delete from accounts");
-        accountService.register(EMAIL, PASSWORD);
+        accountService.register(EMAIL, PASSWORD, SupportedLocale.TR);
     }
 
     @Test

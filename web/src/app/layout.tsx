@@ -1,16 +1,19 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { cookies } from "next/headers";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getTranslations } from "next-intl/server";
 import { AppShell } from "@/components/AppShell";
-import { texts } from "@/lib/texts";
 import { parseTheme, THEME_COOKIE } from "@/lib/theme";
 import "./globals.css";
 
 /**
  * Kök düzen.
  *
- * Dil `tr` olarak sabittir: çoklu dil bugün kapsam dışıdır (KALANLAR A4) ve
- * yanlış `lang` değeri ekran okuyucuyu yanıltır.
+ * Dil istek başına seçilir (çerez → tarayıcı dili → Türkçe; ADR-030) ve
+ * `<html lang>`'a yazılır: yanlış `lang` değeri ekran okuyucuyu yanıltır.
+ * `NextIntlClientProvider` aynı dili ve mesajları istemci bileşenlerine geçirir
+ * (ADR-029).
  *
  * Yazı tipi Geist (ADR-027): `next/font` derleme sırasında indirir ve kendi
  * sunucumuzdan verir; tarayıcı çalışma anında Google'a gitmez. `latin-ext`
@@ -19,13 +22,16 @@ import "./globals.css";
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin", "latin-ext"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin", "latin-ext"] });
 
-export const metadata: Metadata = {
-  title: {
-    default: texts.siteName,
-    template: `%s · ${texts.siteName}`,
-  },
-  description: texts.siteTagline,
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations("site");
+  return {
+    title: {
+      default: t("name"),
+      template: `%s · ${t("name")}`,
+    },
+    description: t("tagline"),
+  };
+}
 
 /**
  * Tema tercihi çerezden sunucuda okunur ve `data-theme` olarak basılır
@@ -33,10 +39,13 @@ export const metadata: Metadata = {
  */
 export default async function RootLayout({ children }: { readonly children: React.ReactNode }) {
   const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value);
+  const locale = await getLocale();
   return (
-    <html lang="tr" data-theme={theme} className={`${geistSans.variable} ${geistMono.variable}`}>
+    <html lang={locale} data-theme={theme} className={`${geistSans.variable} ${geistMono.variable}`}>
       <body className="flex min-h-dvh flex-col">
-        <AppShell theme={theme}>{children}</AppShell>
+        <NextIntlClientProvider>
+          <AppShell theme={theme}>{children}</AppShell>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

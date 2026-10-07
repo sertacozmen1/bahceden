@@ -1,6 +1,6 @@
+import { getTranslations } from "next-intl/server";
 import { ApiRequestError } from "@/lib/apiError";
 import { isSameOriginRequest } from "@/lib/sameOrigin";
-import { texts } from "@/lib/texts";
 import { bffErrorCodes } from "./bff";
 
 /**
@@ -20,13 +20,15 @@ export async function handleBffMutation(
   request: Request,
   action: (body: Record<string, unknown>) => Promise<Response>,
 ): Promise<Response> {
+  // BFF'in kendi ürettiği hatalar da sayfanın dilinde (ADR-030); `api` hataları zaten o dilde gelir.
+  const t = await getTranslations();
   if (!isSameOriginRequest(request)) {
-    return errorResponse(HTTP_FORBIDDEN, bffErrorCodes.crossSite, texts.account.errors.crossSite);
+    return errorResponse(HTTP_FORBIDDEN, bffErrorCodes.crossSite, t("account.errors.crossSite"));
   }
 
   const body = await readJsonObject(request);
   if (body === undefined) {
-    return errorResponse(HTTP_BAD_REQUEST, bffErrorCodes.invalidBody, texts.account.errors.invalidRequest);
+    return errorResponse(HTTP_BAD_REQUEST, bffErrorCodes.invalidBody, t("account.errors.invalidRequest"));
   }
 
   try {
@@ -39,7 +41,7 @@ export async function handleBffMutation(
       );
     }
     // Ayrıntı yalnızca sunucu tarafında; tarayıcıya genel mesaj (K10).
-    return errorResponse(HTTP_BAD_GATEWAY, bffErrorCodes.unavailable, texts.account.errors.unavailable);
+    return errorResponse(HTTP_BAD_GATEWAY, bffErrorCodes.unavailable, t("account.errors.unavailable"));
   }
 }
 

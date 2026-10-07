@@ -1,3 +1,4 @@
+import { getLocale } from "next-intl/server";
 import { ApiUnavailableError, toApiError } from "@/lib/apiError";
 import { apiBaseUrl } from "@/lib/env";
 
@@ -51,7 +52,7 @@ export async function apiGet<T>(path: string, options: RequestOptions = {}): Pro
     }
   }
 
-  const headers: Record<string, string> = { Accept: "application/json" };
+  const headers = await baseHeaders();
   if (options.accessToken !== undefined) {
     headers.Authorization = `Bearer ${options.accessToken}`;
   }
@@ -77,7 +78,7 @@ export async function apiSend<T>(
   path: string,
   options: SendOptions = {},
 ): Promise<SendResult<T>> {
-  const headers: Record<string, string> = { Accept: "application/json" };
+  const headers = await baseHeaders();
   if (options.body !== undefined) {
     headers["Content-Type"] = "application/json";
   }
@@ -99,6 +100,15 @@ export async function apiSend<T>(
     throw await toApiError(response);
   }
   return { status: response.status, data: await readOptionalJson<T>(response) };
+}
+
+/**
+ * Her isteğin ortak başlıkları. Sayfanın seçili dili `Accept-Language` olarak
+ * iletilir (ADR-030): `api` tarayıcının başlığını değil `web`'in seçtiği dili
+ * görür, hata ve bilgi mesajları ekranla aynı dilde gelir.
+ */
+async function baseHeaders(): Promise<Record<string, string>> {
+  return { Accept: "application/json", "Accept-Language": await getLocale() };
 }
 
 async function send(url: URL, init: RequestInit): Promise<Response> {

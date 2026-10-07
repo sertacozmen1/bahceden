@@ -1,9 +1,9 @@
 "use client";
 
 import { CloudOff, RotateCcw } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { StatusPanel } from "@/components/StatusPanel";
-import { texts } from "@/lib/texts";
 
 /**
  * Hata durumu (AGENTS.md §12.5).
@@ -15,11 +15,12 @@ import { texts } from "@/lib/texts";
  * İstemci bileşeni olmak zorunda: `reset` ile yeniden denemeyi sunar.
  */
 export default function StorefrontError({ reset }: { readonly reset: () => void }) {
+  const t = useTranslations();
   return (
-    <StatusPanel role="alert" icon={CloudOff} title={texts.errors.title} body={texts.errors.body}>
+    <StatusPanel role="alert" icon={CloudOff} title={t("errors.title")} body={t("errors.body")}>
       <Button type="button" onClick={reset}>
         <RotateCcw aria-hidden />
-        {texts.errors.retry}
+        {t("errors.retry")}
       </Button>
     </StatusPanel>
   );

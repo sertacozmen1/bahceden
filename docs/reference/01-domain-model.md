@@ -102,7 +102,7 @@ Satılan ürün ilanı.
 
 ## Hesap bölgesi
 
-Changeset: `003-create-account.sql`. Geliştirme hesapları: `004-dev-seed-account.sql` (yalnızca dev bağlamı).
+Changeset: `003-create-account.sql`, `005-account-locale.sql` (`locale` kolonu). Geliştirme hesapları: `004-dev-seed-account.sql` (yalnızca dev bağlamı).
 
 ```mermaid
 erDiagram
@@ -118,6 +118,7 @@ erDiagram
         varchar(20) status "ACTIVE"
         boolean email_verified "bilgi; girişi engellemez"
         boolean two_factor_enabled "varsayılan false"
+        varchar(8) locale "tr | en, varsayılan tr"
         timestamptz created_at
         timestamptz updated_at
     }
@@ -169,6 +170,7 @@ Tek hesap tablosu; aynı kişi hem alıcı hem satıcı olabilir ([ADR-008](../a
 | `status` | `varchar(20)` | Bugün tek değer `ACTIVE` ([ADR-017](../adr/017-email-verification-non-blocking-and-2fa-switch.md)); enum olarak tutulur ki askıya alma şema göçü gerektirmesin |
 | `email_verified` | `boolean` | Doğrulama bağlantısı kullanıldı mı. **Girişi engellemez** |
 | `two_factor_enabled` | `boolean` | E-posta ile ikinci faktör. Varsayılan `false`; ürün yüzeyinden değiştirilemez ([ADR-025](../adr/025-second-factor-code-bound-to-account.md)) |
+| `locale` | `varchar(8)` | Hesabın dili (`tr`, `en`; `CHECK`). Kayıtta isteğin dili yazılır, her başarılı girişte güncellenir; hesaba giden e-postalar bu dilde ([ADR-032](../adr/032-account-locale-stored-and-refreshed-on-login.md)). Changeset `005-account-locale.sql` |
 
 ### `account_roles`
 

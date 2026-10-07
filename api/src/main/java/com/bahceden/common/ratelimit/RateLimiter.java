@@ -25,8 +25,6 @@ public class RateLimiter {
     /** Bu sayıyı aşınca süresi geçmiş pencereler temizlenir; bellek sınırsız büyümez. */
     private static final int SWEEP_THRESHOLD = 10_000;
 
-    private static final String MESSAGE = "Çok fazla deneme yaptınız. Lütfen biraz sonra tekrar deneyin.";
-
     private record Window(Instant start, int count) {
     }
 
@@ -55,7 +53,7 @@ public class RateLimiter {
             sweep(now);
         }
         if (window.count() > policy.limit()) {
-            throw new ApiException(ApiErrorCode.RATE_LIMITED, MESSAGE);
+            throw new ApiException(ApiErrorCode.RATE_LIMITED, "error.rateLimited");
         }
     }
 

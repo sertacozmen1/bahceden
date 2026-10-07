@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
+import { useTranslations } from "next-intl";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { FieldGroup } from "@/components/ui/field";
 import { bffPaths, type BffMessageResponse } from "@/features/account/bff";
-import { noErrors, toFormErrors, type FormErrors } from "@/features/account/formErrors";
+import { noErrors, toFormErrors, type FormErrors, useFormErrorTexts } from "@/features/account/formErrors";
 import { postToBff } from "@/lib/bffClient";
-import { texts } from "@/lib/texts";
 import { FormField } from "./FormField";
 import { FormMessage } from "./FormMessage";
 
@@ -22,6 +22,8 @@ import { FormMessage } from "./FormMessage";
  * mesajı sunucudan geldiği gibi gösterilir.
  */
 export function RegisterForm() {
+  const t = useTranslations();
+  const errorTexts = useFormErrorTexts();
   const [errors, setErrors] = useState<FormErrors>(noErrors);
   const [pending, setPending] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -38,7 +40,7 @@ export function RegisterForm() {
       });
       setSuccessMessage(response?.message ?? "");
     } catch (error) {
-      setErrors(toFormErrors(error));
+      setErrors(toFormErrors(error, errorTexts));
     } finally {
       setPending(false);
     }
@@ -47,10 +49,10 @@ export function RegisterForm() {
   if (successMessage !== null) {
     return (
       <section className="flex flex-col gap-5" aria-live="polite">
-        <h2 className="text-lg font-semibold tracking-tight">{texts.account.register.successTitle}</h2>
+        <h2 className="text-lg font-semibold tracking-tight">{t("account.register.successTitle")}</h2>
         <FormMessage tone="success">{successMessage}</FormMessage>
         <Link className={buttonVariants()} href="/giris">
-          {texts.account.register.goToSignIn}
+          {t("account.register.goToSignIn")}
         </Link>
       </section>
     );
@@ -63,7 +65,7 @@ export function RegisterForm() {
         <FormField
           id="kayit-eposta"
           name="email"
-          label={texts.account.fields.email}
+          label={t("account.fields.email")}
           type="email"
           autoComplete="email"
           error={errors.fields.email}
@@ -71,14 +73,14 @@ export function RegisterForm() {
         <FormField
           id="kayit-parola"
           name="password"
-          label={texts.account.fields.password}
+          label={t("account.fields.password")}
           type="password"
           autoComplete="new-password"
-          hint={texts.account.fields.passwordHint}
+          hint={t("account.fields.passwordHint")}
           error={errors.fields.password}
         />
         <Button type="submit" disabled={pending}>
-          {pending ? texts.account.register.submitting : texts.account.register.submit}
+          {pending ? t("account.register.submitting") : t("account.register.submit")}
         </Button>
       </FieldGroup>
     </form>
