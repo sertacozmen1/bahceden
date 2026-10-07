@@ -1,7 +1,7 @@
 # [ADR-027] Tasarım sistemi: shadcn/ui (Base UI) + Tailwind v4
 
 **Tarih:** 2026-10-07
-**Durum:** Accepted · [ADR-002](002-dependency-budget.md)'nin `web/` bütçesini genişletir ve oradaki "Tailwind CSS veya UI kütüphanesi" reddini bu kapsamda kaldırır
+**Durum:** Accepted · tema maddesi (6) [ADR-028](028-theme-choice-and-color-roles.md) ile değişti · [ADR-002](002-dependency-budget.md)'nin `web/` bütçesini genişletir ve oradaki "Tailwind CSS veya UI kütüphanesi" reddini bu kapsamda kaldırır
 
 ---
 

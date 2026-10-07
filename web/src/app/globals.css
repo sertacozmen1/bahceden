@@ -1,21 +1,39 @@
-/* Bahçeden: tasarım token'ları ve temel stiller (ADR-027).
+/* Bahçeden: tasarım token'ları ve temel stiller (ADR-027, ADR-028).
  *
- * Tailwind v4 + shadcn/ui (base-nova stili, Base UI primitive'leri). Renkler
- * shadcn'in anlamsal token adlarıyla tanımlanır (`--primary`, `--muted` …);
- * bileşenler sabit renk yazmaz, yalnızca bu token'ları kullanır.
+ * İki katman:
+ *   1. Ham merdivenler (`--green-50` … `--green-950`, `--neutral-*`, durum
+ *      renkleri). Yalnızca bu dosyada kullanılır; Tailwind sınıfına açılmaz.
+ *   2. Anlamsal roller (shadcn/ui sözleşmesi + durum rolleri). Her zemin
+ *      rolünün okunur metin eşi vardır (`--primary` / `--primary-foreground`).
+ *      Bileşenler yalnızca bu rolleri kullanır.
+ * Merdiven adımlarının görevi Radix ölçeğini izler: 50–100 zemin, 200–300
+ * kenar, 600–700 dolu zemin, 900–950 metin.
  *
- * Palet "Orman": koyu yaprak yeşili marka rengi, hafif yeşile çalan kırık
- * beyaz zemin. Kehribar yalnızca anlamsal uyarı rengidir (az kalan stok), süs
- * değildir. Renk tek başına anlam taşımaz; durum her zaman metinle de
+ * Palet "Orman": koyu yaprak yeşili marka rengi, yeşile çalan nötrler.
+ * Durum renkleri (başarı, uyarı, hata, bilgi) yalnızca anlam taşır, süs
+ * değildir; renk tek başına anlam taşımaz, durum her zaman metinle de
  * söylenir (AGENTS.md §12.4).
  *
- * Tema işletim sistemi tercihini izler: Tailwind'in `dark:` varyantı varsayılan
- * olarak `prefers-color-scheme` medya sorgusudur. Elle tema değiştirici yok;
- * ihtiyaç doğarsa ayrı karar (next-themes bütçede değil).
+ * Tema: `<html data-theme="light|dark|system">` sunucuda basılır (ADR-028).
+ * Roller `light-dark()` ile tek yerde iki değer taşır; hangisinin
+ * seçileceğini `color-scheme` belirler. "Sistem" işletim sistemini izler.
  */
 
 @import "tailwindcss";
 @import "tw-animate-css";
+
+/* `dark:` varyantı kullanıcının seçimini izler: "Koyu" seçiliyse her zaman,
+ * "Sistem" seçiliyse işletim sistemi koyu temadaysa. */
+@custom-variant dark {
+  &:where([data-theme="dark"], [data-theme="dark"] *) {
+    @slot;
+  }
+  @media (prefers-color-scheme: dark) {
+    &:where([data-theme="system"], [data-theme="system"] *) {
+      @slot;
+    }
+  }
+}
 
 /* shadcn'in `shadcn/tailwind.css` dosyasındaki özel varyantların kullandığımız
  * alt kümesi (MIT). Paketi bağımlılık olarak almamak için buraya kopyalandı
@@ -30,6 +48,13 @@
 @custom-variant data-closed {
   &:where([data-state="closed"]),
   &:where([data-closed]:not([data-closed="false"])) {
+    @slot;
+  }
+}
+
+@custom-variant data-checked {
+  &:where([data-state="checked"]),
+  &:where([data-checked]:not([data-checked="false"])) {
     @slot;
   }
 }
@@ -53,7 +78,7 @@
   }
 }
 
-/* Token → Tailwind yardımcı sınıfı eşlemesi (`bg-primary`, `rounded-lg` …). */
+/* Rol → Tailwind yardımcı sınıfı eşlemesi (`bg-primary`, `text-warning` …). */
 @theme inline {
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
@@ -73,7 +98,13 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
   --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -85,63 +116,106 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* Açık tema. Saf beyaz ve saf siyah kullanılmaz; nötrler yeşile çalar. */
 :root {
   --radius: 0.5rem;
 
-  --background: oklch(0.982 0.005 130);
-  --foreground: oklch(0.22 0.025 152);
-  --card: oklch(0.997 0.002 130);
-  --card-foreground: oklch(0.22 0.025 152);
-  --popover: oklch(0.997 0.002 130);
-  --popover-foreground: oklch(0.22 0.025 152);
-  --primary: oklch(0.45 0.105 150);
-  --primary-foreground: oklch(0.985 0.01 140);
-  --secondary: oklch(0.95 0.022 145);
-  --secondary-foreground: oklch(0.3 0.06 150);
-  --muted: oklch(0.955 0.008 135);
-  --muted-foreground: oklch(0.47 0.022 150);
-  --accent: oklch(0.94 0.03 145);
-  --accent-foreground: oklch(0.3 0.06 150);
-  --destructive: oklch(0.53 0.19 27);
-  --warning: oklch(0.52 0.12 62);
-  --border: oklch(0.9 0.012 140);
-  --input: oklch(0.86 0.014 140);
-  --ring: oklch(0.55 0.11 150);
+  /* ── 1. Ham merdivenler ─────────────────────────────────────────── */
+
+  /* Marka: yaprak yeşili (ton 145–153). */
+  --green-50: oklch(0.975 0.015 145);
+  --green-100: oklch(0.95 0.03 145);
+  --green-200: oklch(0.9 0.06 147);
+  --green-300: oklch(0.83 0.1 148);
+  --green-400: oklch(0.76 0.13 148);
+  --green-500: oklch(0.64 0.14 149);
+  --green-600: oklch(0.54 0.13 150);
+  --green-700: oklch(0.45 0.105 150);
+  --green-800: oklch(0.37 0.085 151);
+  --green-900: oklch(0.29 0.055 152);
+  --green-950: oklch(0.21 0.035 153);
+
+  /* Nötr: yeşile çalan gri. Saf beyaz ve saf siyah yok. */
+  --neutral-0: oklch(0.997 0.002 130);
+  --neutral-50: oklch(0.982 0.005 130);
+  --neutral-100: oklch(0.96 0.007 135);
+  --neutral-200: oklch(0.91 0.01 140);
+  --neutral-300: oklch(0.86 0.013 140);
+  --neutral-400: oklch(0.73 0.016 140);
+  --neutral-500: oklch(0.56 0.018 148);
+  --neutral-600: oklch(0.47 0.02 150);
+  --neutral-700: oklch(0.37 0.019 152);
+  --neutral-800: oklch(0.26 0.016 154);
+  --neutral-900: oklch(0.205 0.015 155);
+  --neutral-950: oklch(0.17 0.012 155);
+
+  /* Durum renkleri: her biri açık zemin, dolu zemin ve koyu temada metin. */
+  --amber-50: oklch(0.97 0.03 85);
+  --amber-400: oklch(0.82 0.14 78);
+  --amber-700: oklch(0.5 0.115 60);
+  --amber-950: oklch(0.25 0.05 55);
+  --red-50: oklch(0.97 0.015 25);
+  --red-400: oklch(0.72 0.16 25);
+  --red-600: oklch(0.53 0.19 27);
+  --red-950: oklch(0.24 0.06 25);
+  --blue-50: oklch(0.97 0.015 240);
+  --blue-400: oklch(0.74 0.11 240);
+  --blue-600: oklch(0.5 0.13 245);
+  --blue-950: oklch(0.24 0.05 245);
+
+  /* ── 2. Anlamsal roller: light-dark(açık, koyu) ─────────────────── */
+
+  color-scheme: light dark;
+
+  --background: light-dark(var(--neutral-50), var(--neutral-950));
+  --foreground: light-dark(var(--neutral-950), var(--neutral-50));
+  --card: light-dark(var(--neutral-0), var(--neutral-900));
+  --card-foreground: var(--foreground);
+  --popover: var(--card);
+  --popover-foreground: var(--foreground);
+
+  /* Birincil: markanın tek vurgusu. Birincil düğme, bağlantı, seçili durum. */
+  --primary: light-dark(var(--green-700), var(--green-400));
+  --primary-foreground: light-dark(var(--green-50), var(--green-950));
+
+  /* İkincil: düşük vurgulu eylem ve yumuşak marka zemini (shadcn anlamı; ikinci bir renk değil). */
+  --secondary: light-dark(var(--green-100), var(--green-900));
+  --secondary-foreground: light-dark(var(--green-900), var(--green-100));
+
+  /* Sessiz: iskelet, devre dışı zemin, ikincil metin. */
+  --muted: light-dark(var(--neutral-100), var(--neutral-800));
+  --muted-foreground: light-dark(var(--neutral-600), var(--neutral-400));
+
+  /* Vurgu: üzerine gelme ve seçili öğe zemini. */
+  --accent: light-dark(var(--neutral-100), var(--neutral-800));
+  --accent-foreground: var(--foreground);
+
+  /* Durum rolleri. `*` zemin/metin rengi, `*-foreground` dolu zemin üstündeki metin. */
+  --destructive: light-dark(var(--red-600), var(--red-400));
+  --destructive-foreground: light-dark(var(--red-50), var(--red-950));
+  --success: light-dark(var(--green-700), var(--green-400));
+  --success-foreground: light-dark(var(--green-50), var(--green-950));
+  --warning: light-dark(var(--amber-700), var(--amber-400));
+  --warning-foreground: light-dark(var(--amber-50), var(--amber-950));
+  --info: light-dark(var(--blue-600), var(--blue-400));
+  --info-foreground: light-dark(var(--blue-50), var(--blue-950));
+
+  --border: light-dark(var(--neutral-200), oklch(1 0 0 / 10%));
+  --input: light-dark(var(--neutral-300), oklch(1 0 0 / 16%));
+  --ring: light-dark(var(--green-600), var(--green-500));
 }
 
-/* Koyu tema: marka yeşili soluklaşmaz, açılır; hiyerarşi açık temayla aynı. */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: oklch(0.17 0.012 155);
-    --foreground: oklch(0.95 0.008 130);
-    --card: oklch(0.205 0.015 155);
-    --card-foreground: oklch(0.95 0.008 130);
-    --popover: oklch(0.205 0.015 155);
-    --popover-foreground: oklch(0.95 0.008 130);
-    --primary: oklch(0.76 0.13 148);
-    --primary-foreground: oklch(0.2 0.035 152);
-    --secondary: oklch(0.27 0.025 152);
-    --secondary-foreground: oklch(0.92 0.02 140);
-    --muted: oklch(0.25 0.015 155);
-    --muted-foreground: oklch(0.73 0.016 140);
-    --accent: oklch(0.28 0.03 152);
-    --accent-foreground: oklch(0.92 0.02 140);
-    --destructive: oklch(0.7 0.17 25);
-    --warning: oklch(0.8 0.13 75);
-    --border: oklch(1 0 0 / 10%);
-    --input: oklch(1 0 0 / 16%);
-    --ring: oklch(0.62 0.11 148);
-  }
+/* Kullanıcının seçimi işletim sistemini ezer. */
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
-  }
-
-  html {
-    color-scheme: light dark;
   }
 
   body {

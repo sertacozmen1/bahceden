@@ -83,8 +83,8 @@ export const texts = {
       successTitle: "E-posta adresiniz doğrulandı",
       successBody: "Teşekkürler. Hesabınızı kullanmaya devam edebilirsiniz.",
       failedTitle: "Bağlantı kullanılamadı",
-      missingToken: "Bağlantı eksik görünüyor. E-postadaki bağlantıyı tam olarak açtığınızdan emin olun.",
-      requestNewLink: "Hesabım sayfasından yeni bir bağlantı isteyebilirsiniz.",
+      missingToken:
+        "Bağlantı eksik görünüyor. E-postadaki bağlantıyı tam olarak açtığınızdan emin olun ya da Hesabım sayfasından yeni bir bağlantı isteyin.",
       goToAccount: "Hesabıma git",
       goToStorefront: "Vitrine dön",
     },
@@ -114,7 +114,14 @@ export const texts = {
 
   footer: {
     copyright: "Bahçeden",
-    note: "Üreticiden doğrudan gönderim",
+  },
+
+  theme: {
+    label: "Tema",
+    trigger: (current: string) => `Tema: ${current}`,
+    light: "Açık",
+    dark: "Koyu",
+    system: "Sistem",
   },
 
   notFound: {

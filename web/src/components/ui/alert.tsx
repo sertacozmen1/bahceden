@@ -7,7 +7,8 @@ import { cn } from "@/lib/utils";
  *
  * Rolü çağıran belirler: hata `role="alert"` (varsayılan), bilgi ve başarı
  * `role="status"`. Böylece ekran okuyucu yalnızca gerçek hatada sözü keser.
- * `success` varyantı projeye özgüdür.
+ * `success` ve `info` varyantları projeye özgüdür (ADR-028): metin ön plan
+ * renginde kalır, durumu ikon ve kenar rengi taşır.
  */
 const alertVariants = cva(
   "group/alert relative grid w-full gap-0.5 rounded-lg border px-3.5 py-3 text-left text-sm has-[>svg]:grid-cols-[auto_1fr] has-[>svg]:gap-x-2.5 *:[svg]:row-span-2 *:[svg]:translate-y-0.5 *:[svg]:text-current *:[svg:not([class*='size-'])]:size-4",
@@ -15,7 +16,8 @@ const alertVariants = cva(
     variants: {
       variant: {
         default: "bg-card text-card-foreground",
-        success: "border-primary/25 bg-secondary text-secondary-foreground",
+        success: "border-success/25 bg-success/8 text-foreground *:[svg]:text-success",
+        info: "border-info/25 bg-info/8 text-foreground *:[svg]:text-info",
         destructive: "border-destructive/30 bg-destructive/5 text-destructive dark:bg-destructive/10",
       },
     },

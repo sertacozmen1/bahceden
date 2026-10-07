@@ -16,9 +16,10 @@ export const metadata: Metadata = { title: texts.account.verification.title };
  *
  * Token sunucu tarafında tüketilir. Sonuç girişi etkilemez (ADR-017):
  * başarıda da başarısızlıkta da kullanıcı yoluna devam edebilir. `api`
- * reddederse sunucunun mesajı gösterilir ve yeni bağlantının nereden
- * isteneceği söylenir. `api`'ye ulaşılamazsa istisna yukarı çıkar ve hata
- * durumu (`error.tsx`) yeniden denemeyi sunar.
+ * reddederse sunucunun mesajı olduğu gibi gösterilir; o mesaj yeni bağlantının
+ * nasıl isteneceğini zaten söyler, sayfa aynı cümleyi tekrar etmez. `api`'ye
+ * ulaşılamazsa istisna yukarı çıkar ve hata durumu (`error.tsx`) yeniden
+ * denemeyi sunar.
  */
 export default async function VerificationPage({
   searchParams,
@@ -34,7 +35,7 @@ export default async function VerificationPage({
       <span
         className={cn(
           "grid size-11 place-items-center rounded-full",
-          failure === null ? "bg-secondary text-primary" : "bg-destructive/10 text-destructive",
+          failure === null ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive",
         )}
       >
         <Icon aria-hidden className="size-5.5" />
@@ -44,7 +45,6 @@ export default async function VerificationPage({
           {failure === null ? texts.account.verification.successTitle : texts.account.verification.failedTitle}
         </h1>
         <p className="text-pretty text-muted-foreground">{failure ?? texts.account.verification.successBody}</p>
-        {failure !== null && <p className="text-pretty">{texts.account.verification.requestNewLink}</p>}
       </div>
       <div className="flex flex-col gap-2 sm:flex-row">
         <Link className={buttonVariants()} href="/hesabim">

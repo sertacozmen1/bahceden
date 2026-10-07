@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { cookies } from "next/headers";
 import { AppShell } from "@/components/AppShell";
 import { texts } from "@/lib/texts";
+import { parseTheme, THEME_COOKIE } from "@/lib/theme";
 import "./globals.css";
 
 /**
@@ -25,11 +27,16 @@ export const metadata: Metadata = {
   description: texts.siteTagline,
 };
 
-export default function RootLayout({ children }: { readonly children: React.ReactNode }) {
+/**
+ * Tema tercihi çerezden sunucuda okunur ve `data-theme` olarak basılır
+ * (ADR-028): ilk boyama doğru temayla gelir, sonradan düzelten betik yok.
+ */
+export default async function RootLayout({ children }: { readonly children: React.ReactNode }) {
+  const theme = parseTheme((await cookies()).get(THEME_COOKIE)?.value);
   return (
-    <html lang="tr" className={`${geistSans.variable} ${geistMono.variable}`}>
+    <html lang="tr" data-theme={theme} className={`${geistSans.variable} ${geistMono.variable}`}>
       <body className="flex min-h-dvh flex-col">
-        <AppShell>{children}</AppShell>
+        <AppShell theme={theme}>{children}</AppShell>
       </body>
     </html>
   );

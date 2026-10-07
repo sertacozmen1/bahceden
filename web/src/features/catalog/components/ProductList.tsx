@@ -83,5 +83,5 @@ function StockBadge({ quantity }: { readonly quantity: number }) {
   if (quantity <= LOW_STOCK_THRESHOLD) {
     return <Badge variant="warning">{texts.storefront.stockLeft(quantity)}</Badge>;
   }
-  return <Badge variant="secondary">{texts.storefront.inStock}</Badge>;
+  return <Badge variant="success">{texts.storefront.inStock}</Badge>;
 }

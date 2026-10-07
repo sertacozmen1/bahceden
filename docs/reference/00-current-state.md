@@ -9,20 +9,20 @@
 
 ## 1. Tek cümlelik özet
 
-**İki dikey dilim çalışıyor:** `docker compose up` ile vitrin ve hesap uçtan uca ayakta — PostgreSQL + Spring Boot `api` + Next.js `web` + `mailpit`. Kullanıcı kayıt olur, e-postasını doğrular (girişi engellemez), giriş yapar, oturumu arka planda yenilenir ve çıkış yapar; ikinci faktörü veritabanından açılmış hesap e-postayla kod girer. 79 `api` testi ve 30 `web` testi yeşil. Sepet, sipariş, ödeme ve kargo **yok**; bunlar `openspec/KALANLAR.md` maddelerine bağlı.
+**İki dikey dilim çalışıyor:** `docker compose up` ile vitrin ve hesap uçtan uca ayakta — PostgreSQL + Spring Boot `api` + Next.js `web` + `mailpit`. Kullanıcı kayıt olur, e-postasını doğrular (girişi engellemez), giriş yapar, oturumu arka planda yenilenir ve çıkış yapar; ikinci faktörü veritabanından açılmış hesap e-postayla kod girer. 79 `api` testi ve 35 `web` testi yeşil. Sepet, sipariş, ödeme ve kargo **yok**; bunlar `openspec/KALANLAR.md` maddelerine bağlı.
 
 ## 2. Katman durumu
 
 | Katman | Durum | Kanıt |
 |---|---|---|
 | `AGENTS.md` (anayasa) | ✅ Yazıldı, yürürlükte | Depo kökü, 500 satır |
-| `docs/adr/` | ✅ ADR-001…027 (004 superseded; 008 §4, 017 ile değişti; 002'nin `web/` bütçesi 027 ile değişti) | [ADR index](../adr/index.md) |
+| `docs/adr/` | ✅ ADR-001…028 (004 superseded; 008 §4, 017 ile değişti; 002'nin `web/` bütçesi 027 ile, 027'nin tema maddesi 028 ile değişti) | [ADR index](../adr/index.md) |
 | `docs/` (Diátaxis) | ✅ İskelet + şablonlar + dört how-to + iki feature kaydı + tasarım sistemi dökümü | `docs/` ağacı |
 | `openspec/` | ✅ İki change **archive edildi** | `changes/archive/2026-10-06-add-storefront-product-listing/`, `changes/archive/2026-10-07-add-account-and-session/`; açık change yok; `specs/storefront-catalog` ve `specs/account-identity` geçerli davranış sözleşmeleri |
 | `.claude/` (opsx komutları + skill'ler) | ✅ Kurulu | `.claude/commands/opsx/`, `.claude/skills/` |
 | `shared/contracts/openapi.yaml` | ✅ Üretildi ve commit'lendi | 674 satır, 10 uç, `bearerAuth` güvenlik şeması; `api` DTO'larından üretilir, tazeliği `OpenApiContractTest` ile zorunlu ([ADR-009](../adr/009-contract-generated-from-spring.md), [ADR-015](../adr/015-contract-freshness-enforced-by-test.md)) |
 | `api/` (Spring Boot 3.5.16) | ✅ Çalışıyor | `catalog` ve `account` domainleri; JWT resource server, hız sınırlayıcı, SMTP; **Liquibase** changelog'ları `001`…`004` ([ADR-016](../adr/016-liquibase-for-schema-migrations.md)); 79 test yeşil (`./mvnw -B verify`) |
-| `web/` (Next.js 16.3.8, React 19.3, TS 5.9.3) | ✅ Çalışıyor | Vitrin + hesap ekranları (`/kayit`, `/giris`, `/dogrulama`, `/hesabim`) + BFF Route Handler'ları (`/api/auth/*`); tipler sözleşmeden üretilir; 30 Vitest testi; `lint`/`typecheck`/`build` temiz. Tasarım sistemi Tailwind v4 + shadcn/ui `base-nova` (Base UI, Lucide, Geist) ([ADR-027](../adr/027-shadcn-ui-design-system.md), [döküm](03-design-system.md)) |
+| `web/` (Next.js 16.3.8, React 19.3, TS 5.9.3) | ✅ Çalışıyor | Vitrin + hesap ekranları (`/kayit`, `/giris`, `/dogrulama`, `/hesabim`) + BFF Route Handler'ları (`/api/auth/*`); tipler sözleşmeden üretilir; 35 Vitest testi; `lint`/`typecheck`/`build` temiz. Tasarım sistemi Tailwind v4 + shadcn/ui `base-nova` (Base UI, Lucide, Geist); Açık / Koyu / Sistem tema menüsü ([ADR-027](../adr/027-shadcn-ui-design-system.md), [ADR-028](../adr/028-theme-choice-and-color-roles.md), [döküm](03-design-system.md)) |
 | `docker-compose.yml` | ✅ Çalışıyor | `db` (postgres:17), `api` (8080), `web` (3000), `mailpit` (8025); api healthcheck'li |
 | `.githooks/pre-commit` | ✅ Devrede | `git config core.hooksPath .githooks` çalıştırıldı |
 | `.github/workflows/ci.yml` | ✅ **4/4 yeşil** | Run `37589772992` (hesap dilimi): `api` 1m23s (79 test, Testcontainers), `web` 1m5s (30 test + build), `docs` 20s, kural denetimi 5s |

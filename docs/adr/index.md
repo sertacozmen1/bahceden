@@ -46,9 +46,10 @@ Architecture Decision Records, projedeki önemli mimari kararları ve bu kararla
 | 024 | [Yetkilendirme JWT iddialarıyla; `/accounts/me` taze okunur](024-roles-in-jwt-claims-fresh-me-endpoint.md) | Accepted | 2026-10-07 |
 | 025 | [İkinci faktör kodu hesaba bağlı; ikinci adım e-posta + kod](025-second-factor-code-bound-to-account.md) | Accepted | 2026-10-07 |
 | 026 | [Doğrulama bağlantısını yeniden gönderme oturum ister](026-verification-link-resend-requires-session.md) | Accepted | 2026-10-07 |
-| 027 | [Tasarım sistemi: shadcn/ui (Base UI) + Tailwind v4](027-shadcn-ui-design-system.md) | Accepted | 2026-10-07 |
+| 027 | [Tasarım sistemi: shadcn/ui (Base UI) + Tailwind v4](027-shadcn-ui-design-system.md) | Accepted · tema maddesi [028](028-theme-choice-and-color-roles.md) ile değişti | 2026-10-07 |
+| 028 | [Tema seçimi çerezle sunucuda; renkler iki katmanlı (merdiven + rol)](028-theme-choice-and-color-roles.md) | Accepted | 2026-10-07 |
 
-**Sıradaki numara: 028.**
+**Sıradaki numara: 029.**
 
 **Durum değerleri:** `Proposed` (öneri, henüz bağlayıcı değil) · `Accepted` (yürürlükte, bağlayıcı) · `Deprecated` (artık geçerli değil, yerine bir şey gelmedi) · `Superseded by [ADR-XXX]` (yerini başka bir karara bıraktı).
 

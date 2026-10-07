@@ -37,7 +37,7 @@ export default async function MyAccountPage() {
           <dt className="text-sm text-muted-foreground">{texts.account.myAccount.verificationStatus}</dt>
           <dd>
             {account.emailVerified ? (
-              <Badge variant="secondary">
+              <Badge variant="success">
                 <BadgeCheck aria-hidden />
                 {texts.account.myAccount.verified}
               </Badge>

@@ -117,6 +117,7 @@ nav:
     - "ADR-025 · İkinci faktör kodu": adr/025-second-factor-code-bound-to-account.md
     - "ADR-026 · Bağlantıyı yeniden gönderme": adr/026-verification-link-resend-requires-session.md
     - "ADR-027 · Tasarım sistemi: shadcn/ui": adr/027-shadcn-ui-design-system.md
+    - "ADR-028 · Tema seçimi ve renk rolleri": adr/028-theme-choice-and-color-roles.md
   - Nasıl Yapılır (How-to):
     - Genel Bakış: how-to/index.md
     - Yerel Geliştirme Ortamı: how-to/yerel-gelistirme.md

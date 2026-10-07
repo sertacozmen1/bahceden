@@ -24,7 +24,7 @@ export function FormMessage({ tone, children }: FormMessageProps) {
   }
   const Icon = tone === "success" ? CircleCheck : Mail;
   return (
-    <Alert variant={tone === "success" ? "success" : "default"} role="status">
+    <Alert variant={tone} role="status">
       <Icon aria-hidden />
       <AlertDescription>{children}</AlertDescription>
     </Alert>

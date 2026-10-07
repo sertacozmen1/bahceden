@@ -5,6 +5,7 @@ import { currentSession, type SessionState } from "@/features/account/api";
 import { SignOutButton } from "@/features/account/components/SignOutButton";
 import { maskEmail } from "@/features/account/maskEmail";
 import { texts } from "@/lib/texts";
+import { cn } from "@/lib/utils";
 
 /**
  * Üst başlıktaki oturum alanı (tasks 4.6).
@@ -17,7 +18,7 @@ import { texts } from "@/lib/texts";
  * Dar ekranda maskeli e-posta gizlenir, ikon kalır; erişilebilir ad
  * `aria-label` ile korunur.
  */
-const navClassName = "ml-auto flex items-center gap-2";
+const navClassName = "flex items-center gap-1 sm:gap-2";
 
 export async function SessionNav() {
   const session = await readSession();
@@ -49,10 +50,10 @@ export async function SessionNav() {
 
   return (
     <nav className={navClassName} aria-label={texts.account.nav.signIn}>
-      <Link className={buttonVariants({ variant: "ghost" })} href="/giris">
+      <Link className={cn(buttonVariants({ variant: "ghost" }), "max-sm:px-2.5")} href="/giris">
         {texts.account.nav.signIn}
       </Link>
-      <Link className={buttonVariants()} href="/kayit">
+      <Link className={cn(buttonVariants(), "max-sm:px-3")} href="/kayit">
         {texts.account.nav.register}
       </Link>
     </nav>
