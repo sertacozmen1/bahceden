@@ -1,11 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import { MailPlus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { bffPaths, type BffMessageResponse } from "@/features/account/bff";
 import { toFormErrors } from "@/features/account/formErrors";
 import { postToBff } from "@/lib/bffClient";
 import { texts } from "@/lib/texts";
-import styles from "./AccountForm.module.css";
+import { FormMessage } from "./FormMessage";
 
 /**
  * Yeni doğrulama bağlantısı isteği (design.md D9). Sonuç metinle bildirilir;
@@ -28,15 +30,12 @@ export function ResendVerificationButton() {
   }
 
   return (
-    <div className={styles.form}>
-      <button className={styles.secondary} type="button" onClick={() => void resend()} disabled={pending}>
+    <div className="flex flex-col gap-3">
+      <Button variant="secondary" type="button" onClick={() => void resend()} disabled={pending}>
+        <MailPlus aria-hidden />
         {pending ? texts.account.myAccount.resending : texts.account.myAccount.resend}
-      </button>
-      {result !== null && (
-        <p className={result.ok ? styles.notice : styles.alert} role={result.ok ? "status" : "alert"}>
-          {result.message}
-        </p>
-      )}
+      </Button>
+      {result !== null && <FormMessage tone={result.ok ? "success" : "error"}>{result.message}</FormMessage>}
     </div>
   );
 }

@@ -1,7 +1,7 @@
 # [ADR-002] Bağımlılık bütçesi: Spring starters, Liquibase, Next.js çekirdeği
 
 **Tarih:** 2026-10-06
-**Durum:** Accepted · bütçe [ADR-009](009-contract-generated-from-spring.md) ile bir kalem genişletildi (2026-10-06)
+**Durum:** Accepted · bütçe [ADR-009](009-contract-generated-from-spring.md) ile bir kalem genişletildi (2026-10-06) · `web/` bütçesi ve stil yöntemi [ADR-027](027-shadcn-ui-design-system.md) ile değişti (2026-10-07)
 
 ---
 
@@ -14,6 +14,7 @@
 > | 2026-10-06 | `api/` runtime: `spring-boot-starter-oauth2-resource-server` (JWT; Nimbus JOSE dahil) | [ADR-008](008-jwt-auth-with-opaque-refresh.md) §6 |
 > | 2026-10-06 | **Değişim:** `flyway-core` + `flyway-database-postgresql` → `liquibase-core` | [ADR-016](016-liquibase-for-schema-migrations.md) |
 > | 2026-10-06 | `api/` runtime: `spring-boot-starter-mail` (SMTP; doğrulama bağlantısı ve ikinci faktör kodu). K7'nin dört sorusu `openspec/changes/archive/2026-10-07-add-account-and-session/proposal.md` içinde cevaplandı; kullanıcı onayı alındı. Sağlayıcı seçimi yapılmadı: SMTP sağlayıcıdan bağımsızdır, geliştirmede `mailpit` | [ADR-017](017-email-verification-non-blocking-and-2fa-switch.md) |
+> | 2026-10-07 | `web/` runtime: `@base-ui/react`, `class-variance-authority`, `clsx`, `tailwind-merge`, `lucide-react`; `web/` dev: `tailwindcss`, `@tailwindcss/postcss`, `tw-animate-css`. Aşağıdaki "Tailwind CSS veya UI kütüphanesi" reddi bu kapsamda kalktı: CSS Modules yerine Tailwind v4 + shadcn/ui. K7'nin dört sorusu cevaplandı, kullanıcı onayı alındı | [ADR-027](027-shadcn-ui-design-system.md) |
 
 ## Context
 

@@ -142,8 +142,8 @@ Bağımlılık bütçesi bir ADR'dir: [ADR-002](docs/adr/002-dependency-budget.m
 |---|---|---|
 | `api/` runtime | `spring-boot-starter-web`, `spring-boot-starter-data-jpa`, `spring-boot-starter-validation`, `spring-boot-starter-security`, `postgresql` sürücüsü, `liquibase-core`, `springdoc-openapi-starter-webmvc-api` (spec üretimi; UI paketi **değil**), `spring-boot-starter-oauth2-resource-server` (JWT imzalama/doğrulama; Nimbus JOSE dahil), `spring-boot-starter-mail` (SMTP; ADR-017) | Java 21, Maven, Spring Boot 3.x. Üçüncü parti JWT kütüphanesi (jjwt vb.) **alınmaz**: Spring'in kendi paketi yeterli |
 | `api/` test | `spring-boot-starter-test` (JUnit 5 + AssertJ + MockMvc), `spring-security-test`, Testcontainers (PostgreSQL) | Test gerçek PostgreSQL'e karşı koşar; H2 ile sapma kabul edilmez |
-| `web/` runtime | `next`, `react`, `react-dom` | TypeScript, App Router |
-| `web/` dev | `typescript`, `eslint` (+ `eslint-config-next`), `vitest` + `@testing-library/react`, `@playwright/test`, OpenAPI → TS tip üreteci | |
+| `web/` runtime | `next`, `react`, `react-dom`, `@base-ui/react`, `class-variance-authority`, `clsx`, `tailwind-merge`, `lucide-react` | TypeScript, App Router. UI: shadcn/ui `base-nova` bileşenleri projeye kopyalanır, primitive Base UI, ikon Lucide ([ADR-027](docs/adr/027-shadcn-ui-design-system.md)); `cn` ve `shadcn` paketleri **alınmaz** |
+| `web/` dev | `typescript`, `eslint` (+ `eslint-config-next`), `vitest` + `@testing-library/react`, `@playwright/test`, OpenAPI → TS tip üreteci, `tailwindcss` + `@tailwindcss/postcss`, `tw-animate-css` | Tailwind v4 ([ADR-027](docs/adr/027-shadcn-ui-design-system.md)) |
 | Sistem | PostgreSQL 17, Docker Compose, `mailpit` (geliştirme e-postası) | |
 
 Bu listenin **dışındaki** her paket / servis / Docker imajı **mimari karardır.** Eklemeden önce kullanıcıya yaz ve **onay al**:
@@ -440,7 +440,7 @@ Kullanıcıya sormadan yapma:
 
 ### 12.4 Stil ve metin
 
-- Stil yöntemi: CSS Modules + global token dosyası (renk, aralık, tipografi, yarıçap, gölge CSS değişkenleri). CSS framework'ü, UI kütüphanesi, ikon seti ve CDN **ADR gerektirir** (K7); ihtiyaç mimari kararı yeniden değerlendirme tetikleyicisidir, `npm install` değil.
+- Stil yöntemi ([ADR-027](docs/adr/027-shadcn-ui-design-system.md)): Tailwind v4 + shadcn/ui. Tasarım token'ları tek dosyada (`web/src/app/globals.css`, anlamsal adlar: `--primary`, `--muted`, `--destructive`, `--warning` …); bileşen ve sayfa yalnızca token sınıflarını kullanır, sabit renk (`bg-green-700`, `#fff`) yazmaz. Temel bileşenler `web/src/components/ui/` altındadır; yeni bileşen [UI bileşeni ekleme](docs/how-to/ui-bileseni-ekleme.md) rehberiyle eklenir ve varsayılan halde bırakılmaz (dokunma hedefi mobilde 44px). Koşullu sınıf yalnızca `cn()` (`@/lib/utils`) ile kurulur. Döküm: [`docs/reference/03-design-system.md`](docs/reference/03-design-system.md). Bütçe dışı UI kütüphanesi, ikinci ikon seti, hareket kütüphanesi ve CDN **ADR gerektirir** (K7); ihtiyaç mimari kararı yeniden değerlendirme tetikleyicisidir, `npm install` değil.
 - Mobil önce; tek ek kırılım (`min-width: 1024px`). Satıcılar sahada telefonla çalışır: satıcı paneli mobilde eksiksiz çalışır, "masaüstünde kullanın" uyarısı kabul edilmez.
 - `[hidden] { display: none !important }` globaldir; görünürlük `hidden` / koşullu render ile sağlanır. Inline `style` ve `onclick` yasak; JS'in belirlediği düzen değerleri CSS özel özelliği olarak geçirilir.
 - Kullanıcıya görünen metinler tek bir metin modülünden gelir (Türkçe, kaynak dil); bileşen içine serpiştirilmiş hardcode metin **yasaktır**. Çoklu dil bugün kapsam dışıdır ([KALANLAR A4](openspec/KALANLAR.md)); metinlerin tek yerde olması bu kapıyı açık tutar.

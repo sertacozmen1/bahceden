@@ -1,7 +1,9 @@
 "use client";
 
+import { CloudOff, RotateCcw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { StatusPanel } from "@/components/StatusPanel";
 import { texts } from "@/lib/texts";
-import styles from "./error.module.css";
 
 /**
  * Hata durumu (AGENTS.md §12.5).
@@ -14,14 +16,11 @@ import styles from "./error.module.css";
  */
 export default function StorefrontError({ reset }: { readonly reset: () => void }) {
   return (
-    <main className={styles.page}>
-      <section className={styles.box} role="alert">
-        <h1 className={styles.title}>{texts.errors.title}</h1>
-        <p className={styles.body}>{texts.errors.body}</p>
-        <button type="button" className={styles.retry} onClick={reset}>
-          {texts.errors.retry}
-        </button>
-      </section>
-    </main>
+    <StatusPanel role="alert" icon={CloudOff} title={texts.errors.title} body={texts.errors.body}>
+      <Button type="button" onClick={reset}>
+        <RotateCcw aria-hidden />
+        {texts.errors.retry}
+      </Button>
+    </StatusPanel>
   );
 }

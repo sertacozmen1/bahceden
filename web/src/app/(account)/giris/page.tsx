@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { currentSession } from "@/features/account/api";
+import { AccountScreen } from "@/features/account/components/AccountScreen";
 import { LoginForm } from "@/features/account/components/LoginForm";
 import { safeReturnPath } from "@/lib/sameOrigin";
 import { texts } from "@/lib/texts";
-import styles from "../account.module.css";
 
 export const metadata: Metadata = { title: texts.account.login.title };
 
@@ -28,17 +28,19 @@ export default async function LoginPage({
   }
 
   return (
-    <main className={styles.page}>
-      <h1 className={styles.title}>{texts.account.login.title}</h1>
-      <p className={styles.intro}>
-        {next === undefined ? texts.account.login.intro : texts.account.login.signInRequired}
-      </p>
-      <div className={styles.panel}>
-        <LoginForm returnPath={returnPath} />
-      </div>
-      <p className={styles.aside}>
-        {texts.account.login.noAccount} <Link href="/kayit">{texts.account.nav.register}</Link>
-      </p>
-    </main>
+    <AccountScreen
+      title={texts.account.login.title}
+      intro={next === undefined ? texts.account.login.intro : texts.account.login.signInRequired}
+      aside={
+        <>
+          {texts.account.login.noAccount}{" "}
+          <Link className="font-medium text-primary underline-offset-4 hover:underline" href="/kayit">
+            {texts.account.nav.register}
+          </Link>
+        </>
+      }
+    >
+      <LoginForm returnPath={returnPath} />
+    </AccountScreen>
   );
 }

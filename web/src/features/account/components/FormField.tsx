@@ -1,9 +1,10 @@
-import styles from "./AccountForm.module.css";
+import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 
 /**
  * Etiketli form alanı (AGENTS.md §12.4: her input etiketli). Hata metni alanla
  * `aria-describedby` üzerinden ilişkilendirilir; renk tek başına anlam taşımaz,
- * hata her zaman metinle söylenir.
+ * hata her zaman metinle söylenir. Etiket üstte, yardım ve hata altta.
  */
 type FormFieldProps = {
   readonly id: string;
@@ -15,20 +16,30 @@ type FormFieldProps = {
   readonly error?: string;
   readonly inputMode?: "numeric";
   readonly maxLength?: number;
+  readonly className?: string;
 };
 
-export function FormField({ id, name, label, type, autoComplete, hint, error, inputMode, maxLength }: FormFieldProps) {
+export function FormField({
+  id,
+  name,
+  label,
+  type,
+  autoComplete,
+  hint,
+  error,
+  inputMode,
+  maxLength,
+  className,
+}: FormFieldProps) {
   const hintId = hint === undefined ? undefined : `${id}-ipucu`;
   const errorId = error === undefined ? undefined : `${id}-hata`;
   const describedBy = [hintId, errorId].filter((value) => value !== undefined).join(" ") || undefined;
 
   return (
-    <div className={styles.field}>
-      <label className={styles.label} htmlFor={id}>
-        {label}
-      </label>
-      <input
-        className={styles.input}
+    <Field data-invalid={error !== undefined}>
+      <FieldLabel htmlFor={id}>{label}</FieldLabel>
+      <Input
+        className={className}
         id={id}
         name={name}
         type={type}
@@ -39,16 +50,8 @@ export function FormField({ id, name, label, type, autoComplete, hint, error, in
         aria-invalid={error !== undefined}
         aria-describedby={describedBy}
       />
-      {hint !== undefined && (
-        <p className={styles.hint} id={hintId}>
-          {hint}
-        </p>
-      )}
-      {error !== undefined && (
-        <p className={styles.fieldError} id={errorId}>
-          {error}
-        </p>
-      )}
-    </div>
+      {hint !== undefined && <FieldDescription id={hintId}>{hint}</FieldDescription>}
+      {error !== undefined && <FieldError id={errorId}>{error}</FieldError>}
+    </Field>
   );
 }

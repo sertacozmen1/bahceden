@@ -87,6 +87,7 @@ nav:
     - Güncel Durum ve Sınırlamalar: reference/00-current-state.md
     - Domain Modeli ve Şema: reference/01-domain-model.md
     - API Referansı: reference/02-api-reference.md
+    - Tasarım Sistemi: reference/03-design-system.md
   - ADR:
     - Genel Bakış: adr/index.md
     - "ADR-001 · Spring API + Next.js web": adr/001-spring-api-and-next-web.md
@@ -115,11 +116,13 @@ nav:
     - "ADR-024 · JWT iddiaları ve /me": adr/024-roles-in-jwt-claims-fresh-me-endpoint.md
     - "ADR-025 · İkinci faktör kodu": adr/025-second-factor-code-bound-to-account.md
     - "ADR-026 · Bağlantıyı yeniden gönderme": adr/026-verification-link-resend-requires-session.md
+    - "ADR-027 · Tasarım sistemi: shadcn/ui": adr/027-shadcn-ui-design-system.md
   - Nasıl Yapılır (How-to):
     - Genel Bakış: how-to/index.md
     - Yerel Geliştirme Ortamı: how-to/yerel-gelistirme.md
     - Yeni API Ucu Ekleme: how-to/yeni-api-ucu-ekleme.md
     - Korunan API Ucu Ekleme: how-to/korunan-uc-ekleme.md
+    - UI Bileşeni Ekleme: how-to/ui-bileseni-ekleme.md
   - Ürün & Strateji: product/index.md
   - Araştırma (Research): research/index.md
   - Eğitimler (Tutorials): tutorials/index.md

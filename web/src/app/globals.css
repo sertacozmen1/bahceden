@@ -1,82 +1,164 @@
-/* Bahçeden: tasarım token'ları ve temel stiller.
+/* Bahçeden: tasarım token'ları ve temel stiller (ADR-027).
  *
- * Tek token dosyası + CSS Modules (ADR-002): CSS framework'ü ve UI kütüphanesi
- * bütçede yok. Renk, aralık ve tipografi burada tanımlanır; bileşenler sabit
- * değer yazmaz.
+ * Tailwind v4 + shadcn/ui (base-nova stili, Base UI primitive'leri). Renkler
+ * shadcn'in anlamsal token adlarıyla tanımlanır (`--primary`, `--muted` …);
+ * bileşenler sabit renk yazmaz, yalnızca bu token'ları kullanır.
  *
- * Açık ve koyu tema: işletim sistemi tercihi izlenir. Renkler durum bildirir
- * (uyarı, hata); tek başına anlam taşımaz, metin eşlik eder (AGENTS.md §12.4).
+ * Palet "Orman": koyu yaprak yeşili marka rengi, hafif yeşile çalan kırık
+ * beyaz zemin. Kehribar yalnızca anlamsal uyarı rengidir (az kalan stok), süs
+ * değildir. Renk tek başına anlam taşımaz; durum her zaman metinle de
+ * söylenir (AGENTS.md §12.4).
+ *
+ * Tema işletim sistemi tercihini izler: Tailwind'in `dark:` varyantı varsayılan
+ * olarak `prefers-color-scheme` medya sorgusudur. Elle tema değiştirici yok;
+ * ihtiyaç doğarsa ayrı karar (next-themes bütçede değil).
  */
 
-:root {
-  --bg: #f7f7f4;
-  --surface: #ffffff;
-  --border: #e2e0d8;
-  --text: #1c1b18;
-  --text-muted: #5f5c54;
-  --accent: #2f6b3a;
-  --accent-contrast: #ffffff;
-  --warning: #8a5a00;
-  --danger: #9a2a21;
+@import "tailwindcss";
+@import "tw-animate-css";
 
-  --space-1: 0.25rem;
-  --space-2: 0.5rem;
-  --space-3: 1rem;
-  --space-4: 1.5rem;
-  --space-5: 2.5rem;
-
-  --text-sm: 0.875rem;
-  --text-base: 1rem;
-  --text-lg: 1.125rem;
-  --text-xl: 1.5rem;
-
-  --radius: 0.5rem;
-  --max-width: 72rem;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #15161a;
-    --surface: #1e2026;
-    --border: #2f323a;
-    --text: #f2f1ee;
-    --text-muted: #a8a69f;
-    --accent: #7cc08a;
-    --accent-contrast: #10120f;
-    --warning: #e0a94a;
-    --danger: #e98a80;
+/* shadcn'in `shadcn/tailwind.css` dosyasındaki özel varyantların kullandığımız
+ * alt kümesi (MIT). Paketi bağımlılık olarak almamak için buraya kopyalandı
+ * (ADR-027): Base UI durumları `data-*` öznitelikleriyle bildirir. */
+@custom-variant data-open {
+  &:where([data-state="open"]),
+  &:where([data-open]:not([data-open="false"])) {
+    @slot;
   }
 }
 
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
+@custom-variant data-closed {
+  &:where([data-state="closed"]),
+  &:where([data-closed]:not([data-closed="false"])) {
+    @slot;
+  }
 }
 
-html {
-  color-scheme: light dark;
+@custom-variant data-disabled {
+  &:where([data-disabled="true"]),
+  &:where([data-disabled]:not([data-disabled="false"])) {
+    @slot;
+  }
 }
 
-body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  font-size: var(--text-base);
-  line-height: 1.5;
+@custom-variant data-horizontal {
+  &:where([data-orientation="horizontal"]) {
+    @slot;
+  }
 }
 
-/* Odak her zaman görünür: akış klavyeyle tamamlanabilir (AGENTS.md §12.4). */
-:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 2px;
+@custom-variant data-vertical {
+  &:where([data-orientation="vertical"]) {
+    @slot;
+  }
 }
 
-a {
-  color: inherit;
+/* Token → Tailwind yardımcı sınıfı eşlemesi (`bg-primary`, `rounded-lg` …). */
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-warning: var(--warning);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Tek köşe ölçeği: girdi ve düğme 8px (`rounded-lg`), kart 12px (`rounded-xl`). */
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
 }
 
-[hidden] {
-  display: none !important;
+/* Açık tema. Saf beyaz ve saf siyah kullanılmaz; nötrler yeşile çalar. */
+:root {
+  --radius: 0.5rem;
+
+  --background: oklch(0.982 0.005 130);
+  --foreground: oklch(0.22 0.025 152);
+  --card: oklch(0.997 0.002 130);
+  --card-foreground: oklch(0.22 0.025 152);
+  --popover: oklch(0.997 0.002 130);
+  --popover-foreground: oklch(0.22 0.025 152);
+  --primary: oklch(0.45 0.105 150);
+  --primary-foreground: oklch(0.985 0.01 140);
+  --secondary: oklch(0.95 0.022 145);
+  --secondary-foreground: oklch(0.3 0.06 150);
+  --muted: oklch(0.955 0.008 135);
+  --muted-foreground: oklch(0.47 0.022 150);
+  --accent: oklch(0.94 0.03 145);
+  --accent-foreground: oklch(0.3 0.06 150);
+  --destructive: oklch(0.53 0.19 27);
+  --warning: oklch(0.52 0.12 62);
+  --border: oklch(0.9 0.012 140);
+  --input: oklch(0.86 0.014 140);
+  --ring: oklch(0.55 0.11 150);
+}
+
+/* Koyu tema: marka yeşili soluklaşmaz, açılır; hiyerarşi açık temayla aynı. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: oklch(0.17 0.012 155);
+    --foreground: oklch(0.95 0.008 130);
+    --card: oklch(0.205 0.015 155);
+    --card-foreground: oklch(0.95 0.008 130);
+    --popover: oklch(0.205 0.015 155);
+    --popover-foreground: oklch(0.95 0.008 130);
+    --primary: oklch(0.76 0.13 148);
+    --primary-foreground: oklch(0.2 0.035 152);
+    --secondary: oklch(0.27 0.025 152);
+    --secondary-foreground: oklch(0.92 0.02 140);
+    --muted: oklch(0.25 0.015 155);
+    --muted-foreground: oklch(0.73 0.016 140);
+    --accent: oklch(0.28 0.03 152);
+    --accent-foreground: oklch(0.92 0.02 140);
+    --destructive: oklch(0.7 0.17 25);
+    --warning: oklch(0.8 0.13 75);
+    --border: oklch(1 0 0 / 10%);
+    --input: oklch(1 0 0 / 16%);
+    --ring: oklch(0.62 0.11 148);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    color-scheme: light dark;
+  }
+
+  body {
+    @apply bg-background font-sans text-foreground antialiased;
+  }
+
+  /* Odak her zaman görünür: akış klavyeyle tamamlanabilir (AGENTS.md §12.4). */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-ring;
+  }
+
+  /* İkonlar tek çizgi kalınlığıyla (Lucide, ADR-027). */
+  .lucide {
+    stroke-width: 1.75;
+  }
+
+  [hidden] {
+    display: none !important;
+  }
 }

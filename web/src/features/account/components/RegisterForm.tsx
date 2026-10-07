@@ -2,12 +2,14 @@
 
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { FieldGroup } from "@/components/ui/field";
 import { bffPaths, type BffMessageResponse } from "@/features/account/bff";
 import { noErrors, toFormErrors, type FormErrors } from "@/features/account/formErrors";
 import { postToBff } from "@/lib/bffClient";
 import { texts } from "@/lib/texts";
-import styles from "./AccountForm.module.css";
 import { FormField } from "./FormField";
+import { FormMessage } from "./FormMessage";
 
 /**
  * Kayıt formu. İstemci bileşeni: gönderim durumu ve sunucu hatalarının alanlara
@@ -44,10 +46,10 @@ export function RegisterForm() {
 
   if (successMessage !== null) {
     return (
-      <section className={styles.form} aria-live="polite">
-        <h2>{texts.account.register.successTitle}</h2>
-        <p className={styles.notice}>{successMessage}</p>
-        <Link className={styles.primary} href="/giris">
+      <section className="flex flex-col gap-5" aria-live="polite">
+        <h2 className="text-lg font-semibold tracking-tight">{texts.account.register.successTitle}</h2>
+        <FormMessage tone="success">{successMessage}</FormMessage>
+        <Link className={buttonVariants()} href="/giris">
           {texts.account.register.goToSignIn}
         </Link>
       </section>
@@ -55,32 +57,30 @@ export function RegisterForm() {
   }
 
   return (
-    <form className={styles.form} onSubmit={handleSubmit} noValidate>
-      {errors.general !== undefined && (
-        <p className={styles.alert} role="alert">
-          {errors.general}
-        </p>
-      )}
-      <FormField
-        id="kayit-eposta"
-        name="email"
-        label={texts.account.fields.email}
-        type="email"
-        autoComplete="email"
-        error={errors.fields.email}
-      />
-      <FormField
-        id="kayit-parola"
-        name="password"
-        label={texts.account.fields.password}
-        type="password"
-        autoComplete="new-password"
-        hint={texts.account.fields.passwordHint}
-        error={errors.fields.password}
-      />
-      <button className={styles.primary} type="submit" disabled={pending}>
-        {pending ? texts.account.register.submitting : texts.account.register.submit}
-      </button>
+    <form onSubmit={handleSubmit} noValidate>
+      <FieldGroup>
+        {errors.general !== undefined && <FormMessage tone="error">{errors.general}</FormMessage>}
+        <FormField
+          id="kayit-eposta"
+          name="email"
+          label={texts.account.fields.email}
+          type="email"
+          autoComplete="email"
+          error={errors.fields.email}
+        />
+        <FormField
+          id="kayit-parola"
+          name="password"
+          label={texts.account.fields.password}
+          type="password"
+          autoComplete="new-password"
+          hint={texts.account.fields.passwordHint}
+          error={errors.fields.password}
+        />
+        <Button type="submit" disabled={pending}>
+          {pending ? texts.account.register.submitting : texts.account.register.submit}
+        </Button>
+      </FieldGroup>
     </form>
   );
 }

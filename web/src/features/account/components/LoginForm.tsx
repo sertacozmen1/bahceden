@@ -3,12 +3,14 @@
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
+import { Button } from "@/components/ui/button";
+import { FieldGroup } from "@/components/ui/field";
 import { bffPaths, type BffLoginResponse } from "@/features/account/bff";
 import { noErrors, toFormErrors, type FormErrors } from "@/features/account/formErrors";
 import { postToBff } from "@/lib/bffClient";
 import { texts } from "@/lib/texts";
-import styles from "./AccountForm.module.css";
 import { FormField } from "./FormField";
+import { FormMessage } from "./FormMessage";
 
 /**
  * Giriş formu, iki adımlı (ADR-017, design.md D8).
@@ -66,70 +68,71 @@ export function LoginForm({ returnPath }: LoginFormProps) {
     void submit(bffPaths.challenge, { email: challenge.email, code: String(data.get("code") ?? "").trim() }, challenge.email);
   }
 
-  const alert = errors.general !== undefined && (
-    <p className={styles.alert} role="alert">
-      {errors.general}
-    </p>
-  );
+  const alert = errors.general !== undefined && <FormMessage tone="error">{errors.general}</FormMessage>;
 
   if (challenge !== null) {
     return (
-      <form className={styles.form} onSubmit={handleCode} noValidate aria-label={texts.account.login.codeTitle}>
-        <h2>{texts.account.login.codeTitle}</h2>
-        <p className={styles.notice} aria-live="polite">
-          {challenge.message}
-        </p>
-        {alert}
-        <FormField
-          id="giris-kod"
-          name="code"
-          label={texts.account.fields.code}
-          type="text"
-          autoComplete="one-time-code"
-          inputMode="numeric"
-          maxLength={6}
-          hint={texts.account.fields.codeHint}
-          error={errors.fields.code}
-        />
-        <button className={styles.primary} type="submit" disabled={pending}>
-          {pending ? texts.account.login.codeSubmitting : texts.account.login.codeSubmit}
-        </button>
-        <button
-          className={styles.secondary}
-          type="button"
-          onClick={() => {
-            setChallenge(null);
-            setErrors(noErrors);
-          }}
-        >
-          {texts.account.login.startOver}
-        </button>
+      <form onSubmit={handleCode} noValidate aria-label={texts.account.login.codeTitle}>
+        <FieldGroup>
+          <h2 className="text-lg font-semibold tracking-tight">{texts.account.login.codeTitle}</h2>
+          <FormMessage tone="info">{challenge.message}</FormMessage>
+          {alert}
+          <FormField
+            id="giris-kod"
+            name="code"
+            label={texts.account.fields.code}
+            type="text"
+            autoComplete="one-time-code"
+            inputMode="numeric"
+            maxLength={6}
+            hint={texts.account.fields.codeHint}
+            error={errors.fields.code}
+            className="font-mono text-lg tracking-[0.4em] lg:text-lg"
+          />
+          <div className="flex flex-col gap-2">
+            <Button type="submit" disabled={pending}>
+              {pending ? texts.account.login.codeSubmitting : texts.account.login.codeSubmit}
+            </Button>
+            <Button
+              variant="ghost"
+              type="button"
+              onClick={() => {
+                setChallenge(null);
+                setErrors(noErrors);
+              }}
+            >
+              {texts.account.login.startOver}
+            </Button>
+          </div>
+        </FieldGroup>
       </form>
     );
   }
 
   return (
-    <form className={styles.form} onSubmit={handleCredentials} noValidate aria-label={texts.account.login.title}>
-      {alert}
-      <FormField
-        id="giris-eposta"
-        name="email"
-        label={texts.account.fields.email}
-        type="email"
-        autoComplete="email"
-        error={errors.fields.email}
-      />
-      <FormField
-        id="giris-parola"
-        name="password"
-        label={texts.account.fields.password}
-        type="password"
-        autoComplete="current-password"
-        error={errors.fields.password}
-      />
-      <button className={styles.primary} type="submit" disabled={pending}>
-        {pending ? texts.account.login.submitting : texts.account.login.submit}
-      </button>
+    <form onSubmit={handleCredentials} noValidate aria-label={texts.account.login.title}>
+      <FieldGroup>
+        {alert}
+        <FormField
+          id="giris-eposta"
+          name="email"
+          label={texts.account.fields.email}
+          type="email"
+          autoComplete="email"
+          error={errors.fields.email}
+        />
+        <FormField
+          id="giris-parola"
+          name="password"
+          label={texts.account.fields.password}
+          type="password"
+          autoComplete="current-password"
+          error={errors.fields.password}
+        />
+        <Button type="submit" disabled={pending}>
+          {pending ? texts.account.login.submitting : texts.account.login.submit}
+        </Button>
+      </FieldGroup>
     </form>
   );
 }

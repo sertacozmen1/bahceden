@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { headers } from "next/headers";
+import { CircleCheck, CircleX } from "lucide-react";
+import { buttonVariants } from "@/components/ui/button";
 import { verifyEmail } from "@/features/account/api";
+import { AccountScreen } from "@/features/account/components/AccountScreen";
 import { ApiRequestError } from "@/lib/apiError";
 import { texts } from "@/lib/texts";
-import styles from "../account.module.css";
+import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: texts.account.verification.title };
 
@@ -24,21 +27,34 @@ export default async function VerificationPage({
 }) {
   const { token } = await searchParams;
   const failure = await consume(token);
+  const Icon = failure === null ? CircleCheck : CircleX;
 
   return (
-    <main className={styles.page}>
-      <section className={styles.panel} role={failure === null ? "status" : "alert"}>
-        <h1 className={styles.title}>
+    <AccountScreen panelRole={failure === null ? "status" : "alert"}>
+      <span
+        className={cn(
+          "grid size-11 place-items-center rounded-full",
+          failure === null ? "bg-secondary text-primary" : "bg-destructive/10 text-destructive",
+        )}
+      >
+        <Icon aria-hidden className="size-5.5" />
+      </span>
+      <div className="flex flex-col gap-2">
+        <h1 className="text-xl font-semibold tracking-tight">
           {failure === null ? texts.account.verification.successTitle : texts.account.verification.failedTitle}
         </h1>
-        <p className={styles.intro}>{failure ?? texts.account.verification.successBody}</p>
-        {failure !== null && <p>{texts.account.verification.requestNewLink}</p>}
-        <Link className={styles.action} href="/hesabim">
+        <p className="text-pretty text-muted-foreground">{failure ?? texts.account.verification.successBody}</p>
+        {failure !== null && <p className="text-pretty">{texts.account.verification.requestNewLink}</p>}
+      </div>
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <Link className={buttonVariants()} href="/hesabim">
           {texts.account.verification.goToAccount}
         </Link>
-        <Link href="/">{texts.account.verification.goToStorefront}</Link>
-      </section>
-    </main>
+        <Link className={buttonVariants({ variant: "ghost" })} href="/">
+          {texts.account.verification.goToStorefront}
+        </Link>
+      </div>
+    </AccountScreen>
   );
 }
 

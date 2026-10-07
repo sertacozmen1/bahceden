@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
+import { BadgeCheck, CircleAlert } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { requireSignedIn } from "@/features/account/requireSession";
+import { AccountScreen } from "@/features/account/components/AccountScreen";
 import { ResendVerificationButton } from "@/features/account/components/ResendVerificationButton";
 import { SignOutButton } from "@/features/account/components/SignOutButton";
 import { roleLabels, texts } from "@/lib/texts";
-import styles from "../account.module.css";
 
 export const metadata: Metadata = { title: texts.account.myAccount.title };
 
@@ -12,31 +15,49 @@ export const metadata: Metadata = { title: texts.account.myAccount.title };
  *
  * Yetkisiz durum (AGENTS.md §12.5) `layout.tsx` kapısında ele alınır; sayfa
  * aynı kapıdan oturumu alır. Veri her istekte `api`'den taze okunur (D7).
+ *
+ * Doğrulama durumu bir etikettir ve metniyle okunur; doğrulanmamışsa yeni
+ * bağlantı eylemi hemen altında durur (tek odak). Çıkış en altta, ayraçla
+ * ayrılmış: sık kullanılmaz ve birincil eylemle karışmamalı (Fitts).
  */
 export default async function MyAccountPage() {
   const { account } = await requireSignedIn("/hesabim");
   return (
-    <main className={styles.page}>
-      <h1 className={styles.title}>{texts.account.myAccount.title}</h1>
-      <section className={styles.panel}>
-        <dl className={styles.details}>
-          <dt>{texts.account.myAccount.email}</dt>
-          <dd>{account.email}</dd>
-          <dt>{texts.account.myAccount.roles}</dt>
-          <dd>{account.roles.map((role) => roleLabels[role]).join(", ")}</dd>
-          <dt>{texts.account.myAccount.verificationStatus}</dt>
-          <dd className={account.emailVerified ? undefined : styles.statusWarning}>
-            {account.emailVerified ? texts.account.myAccount.verified : texts.account.myAccount.notVerified}
+    <AccountScreen title={texts.account.myAccount.title}>
+      <dl className="grid gap-4">
+        <div className="grid gap-1">
+          <dt className="text-sm text-muted-foreground">{texts.account.myAccount.email}</dt>
+          <dd className="font-medium break-all">{account.email}</dd>
+        </div>
+        <div className="grid gap-1">
+          <dt className="text-sm text-muted-foreground">{texts.account.myAccount.roles}</dt>
+          <dd className="font-medium">{account.roles.map((role) => roleLabels[role]).join(", ")}</dd>
+        </div>
+        <div className="grid gap-1.5">
+          <dt className="text-sm text-muted-foreground">{texts.account.myAccount.verificationStatus}</dt>
+          <dd>
+            {account.emailVerified ? (
+              <Badge variant="secondary">
+                <BadgeCheck aria-hidden />
+                {texts.account.myAccount.verified}
+              </Badge>
+            ) : (
+              <Badge variant="warning">
+                <CircleAlert aria-hidden />
+                {texts.account.myAccount.notVerified}
+              </Badge>
+            )}
           </dd>
-        </dl>
-        {!account.emailVerified && (
-          <>
-            <p>{texts.account.myAccount.notVerifiedBody}</p>
-            <ResendVerificationButton />
-          </>
-        )}
-        <SignOutButton className={styles.action} />
-      </section>
-    </main>
+        </div>
+      </dl>
+      {!account.emailVerified && (
+        <div className="flex flex-col gap-3">
+          <p className="text-sm text-pretty text-muted-foreground">{texts.account.myAccount.notVerifiedBody}</p>
+          <ResendVerificationButton />
+        </div>
+      )}
+      <Separator />
+      <SignOutButton variant="ghost" className="self-start" />
+    </AccountScreen>
   );
 }

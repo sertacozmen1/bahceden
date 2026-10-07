@@ -16,13 +16,13 @@
 | Katman | Durum | Kanıt |
 |---|---|---|
 | `AGENTS.md` (anayasa) | ✅ Yazıldı, yürürlükte | Depo kökü, 500 satır |
-| `docs/adr/` | ✅ ADR-001…026 (004 superseded; 008 §4, 017 ile değişti) | [ADR index](../adr/index.md) |
-| `docs/` (Diátaxis) | ✅ İskelet + şablonlar + üç how-to + iki feature kaydı | `docs/` ağacı |
+| `docs/adr/` | ✅ ADR-001…027 (004 superseded; 008 §4, 017 ile değişti; 002'nin `web/` bütçesi 027 ile değişti) | [ADR index](../adr/index.md) |
+| `docs/` (Diátaxis) | ✅ İskelet + şablonlar + dört how-to + iki feature kaydı + tasarım sistemi dökümü | `docs/` ağacı |
 | `openspec/` | ✅ İki change **archive edildi** | `changes/archive/2026-10-06-add-storefront-product-listing/`, `changes/archive/2026-10-07-add-account-and-session/`; açık change yok; `specs/storefront-catalog` ve `specs/account-identity` geçerli davranış sözleşmeleri |
 | `.claude/` (opsx komutları + skill'ler) | ✅ Kurulu | `.claude/commands/opsx/`, `.claude/skills/` |
 | `shared/contracts/openapi.yaml` | ✅ Üretildi ve commit'lendi | 674 satır, 10 uç, `bearerAuth` güvenlik şeması; `api` DTO'larından üretilir, tazeliği `OpenApiContractTest` ile zorunlu ([ADR-009](../adr/009-contract-generated-from-spring.md), [ADR-015](../adr/015-contract-freshness-enforced-by-test.md)) |
 | `api/` (Spring Boot 3.5.16) | ✅ Çalışıyor | `catalog` ve `account` domainleri; JWT resource server, hız sınırlayıcı, SMTP; **Liquibase** changelog'ları `001`…`004` ([ADR-016](../adr/016-liquibase-for-schema-migrations.md)); 79 test yeşil (`./mvnw -B verify`) |
-| `web/` (Next.js 16.3.8, React 19.3, TS 5.9.3) | ✅ Çalışıyor | Vitrin + hesap ekranları (`/kayit`, `/giris`, `/dogrulama`, `/hesabim`) + BFF Route Handler'ları (`/api/auth/*`); tipler sözleşmeden üretilir; 30 Vitest testi; `lint`/`typecheck`/`build` temiz |
+| `web/` (Next.js 16.3.8, React 19.3, TS 5.9.3) | ✅ Çalışıyor | Vitrin + hesap ekranları (`/kayit`, `/giris`, `/dogrulama`, `/hesabim`) + BFF Route Handler'ları (`/api/auth/*`); tipler sözleşmeden üretilir; 30 Vitest testi; `lint`/`typecheck`/`build` temiz. Tasarım sistemi Tailwind v4 + shadcn/ui `base-nova` (Base UI, Lucide, Geist) ([ADR-027](../adr/027-shadcn-ui-design-system.md), [döküm](03-design-system.md)) |
 | `docker-compose.yml` | ✅ Çalışıyor | `db` (postgres:17), `api` (8080), `web` (3000), `mailpit` (8025); api healthcheck'li |
 | `.githooks/pre-commit` | ✅ Devrede | `git config core.hooksPath .githooks` çalıştırıldı |
 | `.github/workflows/ci.yml` | ✅ **4/4 yeşil** | Run `37589772992` (hesap dilimi): `api` 1m23s (79 test, Testcontainers), `web` 1m5s (30 test + build), `docs` 20s, kural denetimi 5s |
@@ -59,8 +59,10 @@ Geliştirme makinesinde 2026-10-06'da doğrulanan sürümler:
 | L11 | Doğrulanmamış e-postayla hesap açılabilir | [ADR-017](../adr/017-email-verification-non-blocking-and-2fa-switch.md)'nin kabul ettiği borç: sipariş dilimi `email_verified` kapısını değerlendirmek zorunda |
 | L12 | Parola sıfırlama yok | Parolasını unutan kullanıcı hesabına giremez ve yeni doğrulama bağlantısı da isteyemez (oturum ister, [ADR-026](../adr/026-verification-link-resend-requires-session.md)); sıradaki en küçük dilim |
 | L13 | İkinci faktör ürün yüzeyinde kapalı | Anahtar yalnızca veritabanından veya dev seed'inden açılır; akış uygulanmış ve testli ama kullanıcı açamaz ([ADR-025](../adr/025-second-factor-code-bound-to-account.md)) |
-| L14 | Hesap ekranları gözle doğrulanmadı | Akış `docker compose` üzerinde curl ile (tarayıcı başlıkları taklit edilerek) doğrulandı; gerçek tarayıcıda 375 / 1440 px ve iki temada insan doğrulaması yapılmadı |
+| L14 | Hesap ekranları gözle doğrulanmadı | Akış `docker compose` üzerinde curl ile (tarayıcı başlıkları taklit edilerek) doğrulandı. Tasarım sistemi geçişinde (2026-10-07) vitrin, giriş, kayıt, geçersiz doğrulama bağlantısı ve bulunamadı ekranları başsız Chrome ekran görüntüsüyle 375 / 1440 px ve iki temada kontrol edildi; oturum açık başlık, "Hesabım" ve form hata durumları görüntülenmedi, gerçek cihazda insan doğrulaması hâlâ yapılmadı |
 | L15 | Süresi dolmuş token satırları birikir | `email_verification_tokens`, `refresh_tokens`, `login_challenges` için temizleme işi yok; hacim sorun olursa ayrı karar |
+| L16 | `web` derlemesi ağ ister | `next/font` Geist'i derleme sırasında Google Fonts'tan indirir; ağsız ortamda `npm run build` ve Docker imajı derlemesi düşer ([ADR-027](../adr/027-shadcn-ui-design-system.md)) |
+| L17 | `npm audit`: 5 yüksek önem bulgusu | Tamamı `eslint-config-next` → `@next/eslint-plugin-next` → `fast-glob` → `micromatch` → `braces` zincirinde; yalnızca geliştirme aracı (lint), çalışma zamanına girmez. Önerilen düzeltme `eslint-config-next@14`'e indirmek, yani kırıcı; Next yükseltmesiyle birlikte değerlendirilecek |
 
 ## 5. Bilinen sapmalar (kod ↔ ADR/spec)
 
