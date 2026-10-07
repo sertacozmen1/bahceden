@@ -57,6 +57,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/sessions").permitAll()
                         // Oturum sahibi: geçerli erişim token'ı ister; rol fark etmez.
                         .requestMatchers(HttpMethod.GET, "/api/v1/accounts/me").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/accounts/me/verification-requests").authenticated()
                         // Operasyon: konteyner sağlık kontrolü ve sözleşme çıktısı.
                         .requestMatchers(HttpMethod.GET, "/api/v1/health").permitAll()
                         .requestMatchers(HttpMethod.GET, "/v3/api-docs", "/v3/api-docs/**", "/v3/api-docs.yaml").permitAll()

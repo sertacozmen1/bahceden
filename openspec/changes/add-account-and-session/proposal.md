@@ -27,6 +27,7 @@ Bu dilim kimliği uçtan uca ayağa kaldırır: **kayıt → e-posta doğrulama 
 - `POST /api/v1/sessions/refresh` — yenileme (rotasyonlu, tekrar kullanım tespitli).
 - `DELETE /api/v1/sessions/current` — çıkış; yenileme token'ı iptal edilir.
 - `GET /api/v1/accounts/me` — oturum sahibinin kimliği ve rolleri. **Korunan ilk uç.**
+- `POST /api/v1/accounts/me/verification-requests` — oturum sahibine yeni bir doğrulama bağlantısı gönderir (süresi dolan veya ulaşmayan bağlantı için). Oturum ister; e-posta almaz (design.md D9).
 - JWT imzalama/doğrulama (`spring-boot-starter-oauth2-resource-server`, bütçede **mevcut**), BCrypt parola hash'i, hız sınırlama, e-posta gönderimi.
 
 **`web/` (ince BFF + ekranlar):**
@@ -76,7 +77,6 @@ Bu change **kapsam dışı** bırakır:
 
 - **Parola sıfırlama.** Token mekanizması bu dilimde kuruluyor (doğrulama için) ve sıfırlama onun üstüne oturacak; ama akış, ekranlar ve e-posta şablonu ikiye katlıyor. **Hemen sonraki dilim adayı.** Bugün parolasını unutan kullanıcı kilitlenir; gerçek kullanıcı olmadığı için kabul edilebilir bir boşluk.
 - **Sosyal giriş** (Google vb.) — ADR-008 §5 bunu zaten kapsam dışı bıraktı.
-- **İki aşamalı doğrulama (2FA).**
 - **Satıcı olma akışı:** `ROLE_SELLER` modelde var ama rolü veren akış `KALANLAR` A3'e bağlı. Kayıt olan herkes `ROLE_CUSTOMER` alır.
 - **Hesap silme / KVKK veri dışa aktarma.** Yasal gereklilik; ayrı bir dilim ve karar konusu.
 - **Yönetici ekranları** (kullanıcı listesi, rol atama).

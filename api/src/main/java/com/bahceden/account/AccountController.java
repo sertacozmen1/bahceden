@@ -109,6 +109,32 @@ public class AccountController {
     })
     @GetMapping(path = "/me", produces = MediaType.APPLICATION_JSON_VALUE)
     public AccountView currentAccount(@Parameter(hidden = true) @AuthenticationPrincipal Jwt token) {
-        return mapper.toView(service.currentAccount(Long.parseLong(token.getSubject())));
+        return mapper.toView(service.currentAccount(accountId(token)));
+    }
+
+    @Operation(
+            operationId = "requestVerificationLink",
+            summary = "Yeni doğrulama bağlantısı gönderir",
+            description = """
+                    Oturum sahibinin kayıtlı e-posta adresine yeni bir doğrulama bağlantısı
+                    gönderir. Adres istekten alınmaz. E-posta zaten doğrulanmışsa bir şey
+                    gönderilmez; yanıt yine aynıdır.
+                    """,
+            security = @SecurityRequirement(name = OpenApiConfig.BEARER_SCHEME))
+    @ApiResponses({
+            @ApiResponse(responseCode = "202", description = "İstek alındı"),
+            @ApiResponse(responseCode = "401", description = "Erişim token'ı yok, geçersiz ya da süresi dolmuş (AUTH_REQUIRED)",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ApiError.class)))
+    })
+    @ResponseStatus(HttpStatus.ACCEPTED)
+    @PostMapping(path = "/me/verification-requests")
+    public void requestVerificationLink(@Parameter(hidden = true) @AuthenticationPrincipal Jwt token) {
+        service.requestVerificationLink(accountId(token));
+    }
+
+    /** Token'ın {@code sub} iddiası hesap kimliğidir (design.md D7). */
+    private static long accountId(Jwt token) {
+        return Long.parseLong(token.getSubject());
     }
 }

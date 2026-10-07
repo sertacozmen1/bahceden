@@ -35,6 +35,9 @@
 - [x] 2.8 **Test (`critical`):** hatalı parola ile hatalı e-posta **aynı** kodu ve mesajı döner; doğrulanmamış hesap **giriş yapabilir** (ADR-017); doğrulama token'ı **iki kez** kullanılamaz; süresi dolmuş token reddedilir; `me` kimliksiz 401, geçerli token ile doğru rolleri ve `emailVerified` değerini döner.
 - [x] 2.9 **Doğrulama:** `./mvnw -B verify` temiz; uçtan uca `curl` ile kayıt → giriş → `me` akışı (e-postaya hiç dokunmadan) ve ayrıca `mailpit`ten token → doğrulama → `me` içinde `emailVerified: true`.
 
+- [x] 2.10 `POST /api/v1/accounts/me/verification-requests` (D9): oturum ister, gövde almaz, `202`. Doğrulanmamış hesaba yeni token üretilip gönderilir; doğrulanmış hesapta e-posta gönderilmez. `AUTH_TOKEN_INVALID` mesajı kullanıcıyı bu uca yönlendirir. **Eklenme sebebi:** spec'teki "süresi dolmuş token" senaryosu yeni bağlantı istemeyi vaat ediyordu ama bunu yapan bir uç yoktu (2026-10-07, kullanıcı onayıyla).
+- [x] 2.11 **Test (`critical`):** doğrulanmamış hesap yeni bağlantı alır ve bu bağlantı hesabı doğrular; doğrulanmış hesapta e-posta gönderilmez; oturumsuz istek 401.
+
 > **Faz 2 tamamlandı (2026-10-07).** 55 `api` testi yeşil (24'ü yeni: doğrulama 5, giriş 8, `me` 8, imza anahtarı 3).
 > Uçtan uca `docker compose` doğrulandı: kayıt 202 → e-postaya dokunmadan giriş 200 → `me` `emailVerified:false`;
 > hatalı parola ile olmayan e-posta birebir aynı 401; token'sız `me` 401 `AUTH_REQUIRED`; `mailpit`ten token → 204 →
@@ -49,7 +52,7 @@
 - [ ] 3.0 `SessionService.completeChallenge(...)` + `POST /api/v1/sessions/challenge`: kodu hash ile arar, süre / tek kullanımlık / deneme sayısı kontrolü, başarılıysa token'ları verir ve kodu tüketir (D8). Anahtar kapalı olduğu sürece ürün yüzeyinde kullanılmaz ama uygulanır ve testlenir (K6).
 - [ ] 3.1 `SessionService.refresh(...)`: hash ile arar; süre/iptal/kullanım kontrolü; **rotasyon** (eski kayıt `used_at`, yeni token aynı ailede); **tekrar kullanım tespitinde ailenin tamamı iptal** (D1).
 - [ ] 3.2 `POST /api/v1/sessions/refresh` ve `DELETE /api/v1/sessions/current` uçları (çıkış ailenin tamamını iptal eder).
-- [ ] 3.3 `common/ratelimit/`: sabit pencere sayacı (`ConcurrentHashMap` + enjekte edilen `Clock`, D5); kayıt / giriş / doğrulama / yenileme uçlarına uygulanır; aşımda 429 + `RATE_LIMITED`.
+- [ ] 3.3 `common/ratelimit/`: sabit pencere sayacı (`ConcurrentHashMap` + enjekte edilen `Clock`, D5); kayıt / giriş / doğrulama / yenileme / doğrulama bağlantısı talebi uçlarına uygulanır; aşımda 429 + `RATE_LIMITED`.
 - [ ] 3.4 **Test (`critical`):** yenileme token'ı tek kullanımlıktır; **tekrar kullanım ailenin tamamını iptal eder** ve sonraki yenileme reddedilir; çıkış sonrası yenileme reddedilir; iptal edilmiş aileyle `me` çağrısı erişim token'ı süresi dolunca başarısız olur.
 - [ ] 3.5 **Test (`critical`):** hız sınırı — sabit `Clock` ile pencere içinde N+1. istek 429 döner, pencere kayınca yeniden açılır.
 - [ ] 3.5b **Test (`critical`, D8):** ikinci faktörü **kapalı** hesap tek adımda token alır ve e-posta gönderilmez; **açık** hesapta birinci adım token döndürmez ve kod gönderilir; geçerli kod token verir; kod **iki kez** kullanılamaz; süresi dolmuş kod reddedilir; hatalı deneme sayısı sınırı aşılınca 429.
@@ -69,10 +72,10 @@
 
 ## Faz 5 · Doküman ve kapanış
 
-- [ ] 5.1 ADR-018…025: D1–D8 kararları (`docs/adr/` + `index.md` + nav). [ADR-017](../../../docs/adr/017-email-verification-non-blocking-and-2fa-switch.md) ve `spring-boot-starter-mail` bütçe kaydı bu dilim başlarken yazıldı.
+- [ ] 5.1 ADR-018…026: D1–D9 kararları (`docs/adr/` + `index.md` + nav). [ADR-017](../../../docs/adr/017-email-verification-non-blocking-and-2fa-switch.md) ve `spring-boot-starter-mail` bütçe kaydı bu dilim başlarken yazıldı.
 - [ ] 5.2 `docs/features/hesap-ve-oturum.md` (yeni feature dosyası) + `features/index.md` tablosu + nav; `features/index.md` "Planlanan" tablosundan satır düşer.
 - [ ] 5.3 `docs/reference/01-domain-model.md`: dört yeni tablo + ER diyagramı; `products.seller_id` ↔ `accounts` ilişkisinin **bilinçli yokluğu** not edilir.
-- [ ] 5.4 `docs/reference/02-api-reference.md`: yedi yeni uç, yeni hata kodları, çerez/BFF akışı.
+- [ ] 5.4 `docs/reference/02-api-reference.md`: sekiz yeni uç, yeni hata kodları, çerez/BFF akışı.
 - [ ] 5.5 `docs/how-to/korunan-uc-ekleme.md`: yetkilendirme kuralı yazma, rol kontrolü, sahiplik kapsamı, dört zorunlu test; `how-to/index.md` + nav.
 - [ ] 5.6 `docs/reference/00-current-state.md`: katman durumları, hız sınırlama tek örnek sınırlaması (D5), parola sıfırlama boşluğu, **doğrulanmamış e-postayla hesap açılabilmesi** (ADR-017 kabul edilen borcu) ve ürün yüzeyinde kapalı 2FA akışı.
 - [ ] 5.7 `docs/features/_genel.md` *Tarihçe*: tek satır (K1).

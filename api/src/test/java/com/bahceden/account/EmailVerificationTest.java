@@ -9,6 +9,8 @@ import com.bahceden.common.web.ApiErrorCode;
 import com.bahceden.support.MailContents;
 import com.bahceden.support.RecordingMailSender;
 import com.bahceden.support.TestcontainersConfig;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -17,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
@@ -41,6 +44,7 @@ import org.springframework.test.web.servlet.ResultActions;
 class EmailVerificationTest {
 
     private static final String EMAIL = "alici@ornek.test";
+    private static final String PASSWORD = "cok-gizli-parola";
 
     @Autowired
     private MockMvc mockMvc;
@@ -53,6 +57,9 @@ class EmailVerificationTest {
 
     @Autowired
     private AccountService accountService;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @BeforeEach
     void temizle() {
@@ -121,9 +128,66 @@ class EmailVerificationTest {
                 .andExpect(jsonPath("$.fieldErrors[0].field").value("token"));
     }
 
+    @Test
+    @DisplayName("Doğrulanmamış hesap yeni bağlantı ister: yeni bağlantı hesabı doğrular (D9)")
+    void yeni_baglanti_istenir_ve_dogrular() throws Exception {
+        var ilkToken = kayitOlVeTokenAl();
+        mail.reset();
+
+        yeniBaglantiIste(girisYap()).andExpect(status().isAccepted());
+
+        assertThat(mail.lastSent().to()).as("adres istekten değil hesaptan gelir").isEqualTo(EMAIL);
+        var yeniToken = MailContents.verificationToken(mail.lastSent().body());
+        assertThat(yeniToken).isNotEqualTo(ilkToken);
+
+        dogrula(yeniToken).andExpect(status().isNoContent());
+        assertThat(emailVerified()).isTrue();
+    }
+
+    @Test
+    @DisplayName("Doğrulanmış hesap yeni bağlantı isterse e-posta gönderilmez")
+    void dogrulanmis_hesaba_baglanti_gonderilmez() throws Exception {
+        dogrula(kayitOlVeTokenAl()).andExpect(status().isNoContent());
+        var accessToken = girisYap();
+        mail.reset();
+
+        yeniBaglantiIste(accessToken).andExpect(status().isAccepted());
+
+        assertThat(mail.sent()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Oturumsuz yeni bağlantı isteği 401 alır ve e-posta gönderilmez")
+    void oturumsuz_baglanti_istegi_401() throws Exception {
+        kayitOlVeTokenAl();
+        mail.reset();
+
+        mockMvc.perform(post("/api/v1/accounts/me/verification-requests"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value(ApiErrorCode.AUTH_REQUIRED.name()));
+
+        assertThat(mail.sent()).isEmpty();
+    }
+
     private String kayitOlVeTokenAl() {
-        accountService.register(EMAIL, "cok-gizli-parola");
+        accountService.register(EMAIL, PASSWORD);
         return MailContents.verificationToken(mail.lastSent().body());
+    }
+
+    private String girisYap() throws Exception {
+        var json = mockMvc.perform(post("/api/v1/sessions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"email": "%s", "password": "%s"}
+                                """.formatted(EMAIL, PASSWORD)))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
+        return objectMapper.readTree(json).get("accessToken").asText();
+    }
+
+    private ResultActions yeniBaglantiIste(String accessToken) throws Exception {
+        return mockMvc.perform(post("/api/v1/accounts/me/verification-requests")
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken));
     }
 
     private ResultActions dogrula(String token) throws Exception {

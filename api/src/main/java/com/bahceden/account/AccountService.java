@@ -12,6 +12,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Duration;
+import java.time.Instant;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -44,7 +45,8 @@ public class AccountService {
     private static final String EXISTING_ACCOUNT_SUBJECT = "Bahçeden: hesabınız zaten var";
 
     private static final String INVALID_VERIFICATION_MESSAGE =
-            "Doğrulama bağlantısı geçersiz, daha önce kullanılmış ya da süresi dolmuş.";
+            "Doğrulama bağlantısı geçersiz, daha önce kullanılmış ya da süresi dolmuş. "
+                    + "Giriş yaptıktan sonra yeni bir bağlantı isteyebilirsiniz.";
 
     private static final String ACCOUNT_GONE_MESSAGE = "Oturumunuz geçersiz. Lütfen yeniden giriş yapın.";
 
@@ -90,16 +92,39 @@ public class AccountService {
         }
 
         var account = accounts.save(Account.register(email, passwordHasher.hash(rawPassword), now));
+        // Gönderim başarısız olsa bile hesap açık kalır (ADR-017 §4).
+        sendVerificationLink(account, now);
+        log.info("Hesap açıldı: {}", maskedEmail(email));
+    }
+
+    /**
+     * Oturum sahibine yeni bir doğrulama bağlantısı gönderir (design.md D9).
+     *
+     * <p>Adres istekten değil hesaptan gelir: başkasının adresine gönderim ve
+     * hesap keşfi mümkün değildir. E-posta zaten doğrulanmışsa bir şey
+     * gönderilmez. Önceki bağlantılar süreleri dolana kadar geçerli kalır.
+     *
+     * @throws ApiException {@code AUTH_REQUIRED}: token geçerli ama hesap artık yok
+     */
+    @Transactional
+    public void requestVerificationLink(long accountId) {
+        var account = currentAccount(accountId);
+        if (account.isEmailVerified()) {
+            return;
+        }
+        sendVerificationLink(account, clock.instant());
+        log.info("Doğrulama bağlantısı yeniden gönderildi: hesap {}", account.getId());
+    }
+
+    /** Tek kullanımlık token üretir, hash'ini saklar ve bağlantıyı gönderir (D3). */
+    private void sendVerificationLink(Account account, Instant now) {
         var plainToken = secureTokens.newToken();
         verificationTokens.save(EmailVerificationToken.issue(
                 account.getId(),
                 secureTokens.hash(plainToken),
                 now,
                 now.plus(VERIFICATION_TOKEN_TTL)));
-
-        // Gönderim başarısız olsa bile hesap açık kalır (ADR-017 §4).
-        mailSender.send(email, VERIFICATION_SUBJECT, verificationBody(plainToken));
-        log.info("Hesap açıldı: {}", maskedEmail(email));
+        mailSender.send(account.getEmail(), VERIFICATION_SUBJECT, verificationBody(plainToken));
     }
 
     /**

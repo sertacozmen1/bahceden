@@ -102,6 +102,16 @@ Arayüzün ihtiyaç duyduğu "kim bağlı?" bilgisi `GET /api/v1/accounts/me` il
 
 **Reddedilen alternatifler:** (a) Rolleri her istekte DB'den okumak — durumsuzluk kaybı. (b) Rolleri yalnızca `me` ucundan vermek ve token'a koymamak — her yetkilendirme kararı bir DB okuması demek. (c) Token'a kullanıcı adı/adres gibi kişisel veri koymak — JWT imzalı ama **şifreli değil**; tarayıcıya gitmese de gereksiz veri taşımak K10'a aykırı.
 
+### D9 · Doğrulama bağlantısını yeniden gönderme oturum ister
+
+*(2026-10-07, uygulama sırasında eklendi: spec'teki "süresi dolmuş token" senaryosu kullanıcıyı yeni bağlantı istemeye yönlendiriyordu ama bunu yapan bir uç yoktu.)*
+
+`POST /api/v1/accounts/me/verification-requests` yalnızca oturum sahibine, onun kayıtlı adresine yeni bir doğrulama bağlantısı gönderir. Gövde almaz ve her durumda `202` döner. E-posta zaten doğrulanmışsa e-posta gönderilmez. Önceki bağlantılar kendi süreleri dolana kadar geçerli kalır: hepsi aynı hesabı aynı şekilde işaretler, iptal etmek ek bir kazanç getirmez.
+
+**Gerekçe:** [ADR-017](../../../docs/adr/017-email-verification-non-blocking-and-2fa-switch.md) sonrası doğrulanmamış kullanıcı da giriş yapabildiği için oturum şartı kimseyi dışarıda bırakmaz. E-posta adresi istekten değil token'dan geldiği için iki yüzey baştan kapanır: hangi adreslerin kayıtlı olduğunun öğrenilmesi (enumeration) ve başkasının adresine e-posta yağdırılması. Yine de uç Faz 3'teki hız sınırlayıcıya bağlanır; bu bağ sahibinin kendi kutusunu korur.
+
+**Reddedilen alternatifler:** (a) E-posta alan, herkese açık bir uç. Enumeration'a karşı her durumda aynı yanıtı vermek gerekir ve başkasının adresine e-posta gönderilebilir; hız sınırlama tek savunma olarak kalır. (b) Aynı e-postayla tekrar kayıt olunca yeni bağlantı göndermek. Bu yol kayıt ucunun "hesabınız zaten var" davranışını (D4) değiştirir ve kayıtla doğrulamayı birbirine karıştırır.
+
 ## Mevcut ADR'lerden türeyen, yeni karar içermeyen detaylar
 
 | Detay | Dayanak |

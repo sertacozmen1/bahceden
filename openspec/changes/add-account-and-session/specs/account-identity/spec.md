@@ -47,7 +47,19 @@ Sistem, e-posta adresinin doğrulanmasını SHALL sağlar. Doğrulama token'ı t
 
 #### Scenario: Süresi dolmuş token
 - **WHEN** kullanıcı süresi dolmuş bir doğrulama token'ı gönderir
-- **THEN** istek reddedilir ve kullanıcıya yeni bir bağlantı talep etmesi gerektiği bildirilir
+- **THEN** istek reddedilir ve kullanıcıya yeni bir bağlantı isteyebileceği bildirilir
+
+#### Scenario: Yeni doğrulama bağlantısı talebi
+- **WHEN** e-postası doğrulanmamış, oturum açmış bir kullanıcı yeni bir doğrulama bağlantısı ister
+- **THEN** kendi e-posta adresine yeni, tek kullanımlık ve süreli bir bağlantı gönderilir
+
+#### Scenario: Doğrulanmış hesap için bağlantı talebi
+- **WHEN** e-postası zaten doğrulanmış bir kullanıcı yeni bağlantı ister
+- **THEN** istek kabul edilir ama e-posta gönderilmez
+
+#### Scenario: Oturumsuz bağlantı talebi
+- **WHEN** oturum açmamış biri yeni doğrulama bağlantısı ister
+- **THEN** istek kimlik doğrulama hatasıyla reddedilir; bir e-posta adresi verilerek bağlantı istenemez
 
 #### Scenario: Doğrulama durumu kullanıcıya görünür
 - **WHEN** oturum açmış kullanıcı kendi kimlik bilgisini talep eder
