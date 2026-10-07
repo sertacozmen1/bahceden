@@ -7,10 +7,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.bahceden.common.web.ApiErrorCode;
 import com.bahceden.support.MailContents;
+import com.bahceden.support.MutableClock;
 import com.bahceden.support.RecordingMailSender;
 import com.bahceden.support.TestcontainersConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -39,7 +41,7 @@ import org.springframework.test.web.servlet.ResultActions;
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import({TestcontainersConfig.class, RecordingMailSender.Config.class})
+@Import({TestcontainersConfig.class, RecordingMailSender.Config.class, MutableClock.Config.class})
 @DisplayName("POST /api/v1/accounts/verifications (e-posta doğrulama)")
 class EmailVerificationTest {
 
@@ -56,6 +58,9 @@ class EmailVerificationTest {
     private RecordingMailSender mail;
 
     @Autowired
+    private MutableClock clock;
+
+    @Autowired
     private AccountService accountService;
 
     @Autowired
@@ -63,6 +68,8 @@ class EmailVerificationTest {
 
     @BeforeEach
     void temizle() {
+        // Önceki testlerin hız sınırı pencerelerini geride bırakır.
+        clock.advance(Duration.ofDays(1));
         jdbc.execute("delete from accounts");
         mail.reset();
     }

@@ -6,6 +6,8 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.time.Instant;
 
 /**
@@ -54,6 +56,29 @@ public class LoginChallenge {
         challenge.expiresAt = expiresAt;
         challenge.attemptCount = 0;
         return challenge;
+    }
+
+    /** Bu girişim için izin verilen hatalı kod denemesi doldu mu. */
+    public boolean attemptsExhausted(int maxAttempts) {
+        return attemptCount >= maxAttempts;
+    }
+
+    /**
+     * Sunulan kodun hash'i saklananla eşleşiyor mu. Karşılaştırma sabit
+     * sürelidir: eşleşen önek uzunluğu yanıt süresinden okunamaz.
+     */
+    public boolean matches(String candidateHash) {
+        return MessageDigest.isEqual(
+                codeHash.getBytes(StandardCharsets.US_ASCII),
+                candidateHash.getBytes(StandardCharsets.US_ASCII));
+    }
+
+    public void recordFailedAttempt() {
+        attemptCount++;
+    }
+
+    public void markUsed(Instant now) {
+        usedAt = now;
     }
 
     public Long getId() {

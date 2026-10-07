@@ -50,6 +50,11 @@ spring:
 
 server:
   port: 8080
+  # Hız sınırı istemci adresine dayanır (design.md D5). web BFF arkasında tüm
+  # istekler web konteynerinden gelir; gerçek adres X-Forwarded-For'dadır.
+  # Tomcat bu başlığa yalnızca iç ağdaki (özel IP aralığı) proxy'den gelirse
+  # güvenir, dışarıdan gönderilen sahte başlık adresi değiştiremez.
+  forward-headers-strategy: native
   error:
     # Hata gövdesi tek yerden üretilir (GlobalExceptionHandler, AGENTS.md §11.5):
     # Spring'in varsayılan gövdesi iç detay sızdırabilir.

@@ -9,9 +9,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.bahceden.common.security.SecureTokens;
 import com.bahceden.common.web.ApiErrorCode;
 import com.bahceden.support.MailContents;
+import com.bahceden.support.MutableClock;
 import com.bahceden.support.RecordingMailSender;
 import com.bahceden.support.TestcontainersConfig;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
@@ -38,7 +40,7 @@ import org.springframework.test.web.servlet.MockMvc;
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import({TestcontainersConfig.class, RecordingMailSender.Config.class})
+@Import({TestcontainersConfig.class, RecordingMailSender.Config.class, MutableClock.Config.class})
 @DisplayName("POST /api/v1/accounts (kayıt)")
 class AccountRegistrationTest {
 
@@ -55,10 +57,15 @@ class AccountRegistrationTest {
     private RecordingMailSender mail;
 
     @Autowired
+    private MutableClock clock;
+
+    @Autowired
     private SecureTokens secureTokens;
 
     @BeforeEach
     void temizle() {
+        // Önceki testlerin hız sınırı pencerelerini geride bırakır.
+        clock.advance(Duration.ofDays(1));
         jdbc.execute("delete from email_verification_tokens");
         jdbc.execute("delete from account_roles");
         jdbc.execute("delete from accounts");

@@ -36,6 +36,16 @@ public enum ApiErrorCode {
      */
     AUTH_REQUIRED(HttpStatus.UNAUTHORIZED),
 
+    /**
+     * İkinci faktör kodu hatalı, süresi dolmuş, kullanılmış ya da açık bir giriş
+     * girişimi yok (401). Durumlar ayrıştırılmaz; kullanıcı için çözüm aynıdır:
+     * kodu yeniden girmek veya yeniden giriş yapıp yeni kod almak (design.md D8).
+     */
+    AUTH_CODE_INVALID(HttpStatus.UNAUTHORIZED),
+
+    /** Kısa sürede çok fazla istek ya da çok fazla hatalı kod denemesi (429, design.md D5). */
+    RATE_LIMITED(HttpStatus.TOO_MANY_REQUESTS),
+
     /** Beklenmeyen sunucu hatası (500); ayrıntı yalnızca sunucu log'unda. */
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR);
 

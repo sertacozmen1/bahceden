@@ -64,6 +64,8 @@ Sayaç `ConcurrentHashMap` + enjekte edilen `Clock` ile yazılır; yeni paket ek
 
 **Bilinen sınırlama:** iki örnek çalıştırıldığında sınır örnek başına uygulanır. Bu, `00-current-state.md` sınırlamalar tablosuna yazılır.
 
+**İstemci adresi (2026-10-07, uygulama sırasında):** `web` BFF arkasında tüm istekler web konteynerinden gelir. Adres `X-Forwarded-For`'dan alınır (`server.forward-headers-strategy: native`), ama Tomcat bu başlığa yalnızca iç ağdaki proxy'den gelirse güvenir; dışarıdan sahte başlık gönderen biri sınırı aşamaz. BFF bu başlığı iletmekle yükümlüdür (Faz 4).
+
 ### D6 · `web` BFF: üç Route Handler, iki çerez, başlık tabanlı CSRF savunması
 
 Token'lar `web`'in kendi origin'inde iki `HttpOnly` + `Secure` + `SameSite=Lax` çerezde taşınır: `bahceden_at` (erişim, kısa ömür) ve `bahceden_rt` (yenileme, uzun ömür, `path=/api/auth`). Yenileme çerezi yalnızca yenileme yolunda gönderilir: XSS olmayan bir ortamda bile yüzey daraltılır.

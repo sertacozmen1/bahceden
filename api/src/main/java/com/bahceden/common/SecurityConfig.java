@@ -55,6 +55,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/accounts").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/accounts/verifications").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/sessions").permitAll()
+                        // İkinci adım, yenileme ve çıkış: kimlik kanıtı gövdedeki kod veya yenileme token'ıdır.
+                        .requestMatchers(HttpMethod.POST, "/api/v1/sessions/challenge", "/api/v1/sessions/refresh").permitAll()
+                        .requestMatchers(HttpMethod.DELETE, "/api/v1/sessions/current").permitAll()
                         // Oturum sahibi: geçerli erişim token'ı ister; rol fark etmez.
                         .requestMatchers(HttpMethod.GET, "/api/v1/accounts/me").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/v1/accounts/me/verification-requests").authenticated()

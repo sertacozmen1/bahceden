@@ -6,13 +6,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.bahceden.common.ratelimit.RateLimitPolicy;
 import com.bahceden.common.security.SecureTokens;
 import com.bahceden.common.web.ApiErrorCode;
 import com.bahceden.support.MailContents;
+import com.bahceden.support.MutableClock;
 import com.bahceden.support.RecordingMailSender;
 import com.bahceden.support.TestcontainersConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -40,7 +43,7 @@ import org.springframework.test.web.servlet.ResultActions;
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import({TestcontainersConfig.class, RecordingMailSender.Config.class})
+@Import({TestcontainersConfig.class, RecordingMailSender.Config.class, MutableClock.Config.class})
 @DisplayName("POST /api/v1/sessions (giriş)")
 class SessionLoginTest {
 
@@ -57,6 +60,9 @@ class SessionLoginTest {
     private RecordingMailSender mail;
 
     @Autowired
+    private MutableClock clock;
+
+    @Autowired
     private AccountService accountService;
 
     @Autowired
@@ -67,6 +73,8 @@ class SessionLoginTest {
 
     @BeforeEach
     void temizle() {
+        // Önceki testlerin hız sınırı pencerelerini geride bırakır.
+        clock.advance(Duration.ofDays(1));
         jdbc.execute("delete from accounts");
         accountService.register(EMAIL, PASSWORD);
         mail.reset();
@@ -180,6 +188,21 @@ class SessionLoginTest {
 
         assertThat(mail.sent()).isEmpty();
         assertThat(jdbc.queryForObject("select count(*) from login_challenges", Integer.class)).isZero();
+    }
+
+    @Test
+    @DisplayName("Aynı istemci ve e-postayla sınırı aşan giriş denemesi 429 alır (D5)")
+    void giris_hiz_siniri_asilinca_429() throws Exception {
+        for (int i = 0; i < RateLimitPolicy.LOGIN.limit(); i++) {
+            giris(EMAIL, "yanlis-parola-123").andExpect(status().isUnauthorized());
+        }
+
+        giris(EMAIL, PASSWORD)
+                .andExpect(status().isTooManyRequests())
+                .andExpect(jsonPath("$.code").value(ApiErrorCode.RATE_LIMITED.name()));
+
+        clock.advance(RateLimitPolicy.LOGIN.window());
+        giris(EMAIL, PASSWORD).andExpect(status().isOk());
     }
 
     private ResultActions giris(String email, String password) throws Exception {

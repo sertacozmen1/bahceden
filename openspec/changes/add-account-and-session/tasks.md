@@ -49,21 +49,28 @@
 
 ## Faz 3 · İkinci faktör, yenileme, çıkış ve hız sınırlama
 
-- [ ] 3.0 `SessionService.completeChallenge(...)` + `POST /api/v1/sessions/challenge`: kodu hash ile arar, süre / tek kullanımlık / deneme sayısı kontrolü, başarılıysa token'ları verir ve kodu tüketir (D8). Anahtar kapalı olduğu sürece ürün yüzeyinde kullanılmaz ama uygulanır ve testlenir (K6).
-- [ ] 3.1 `SessionService.refresh(...)`: hash ile arar; süre/iptal/kullanım kontrolü; **rotasyon** (eski kayıt `used_at`, yeni token aynı ailede); **tekrar kullanım tespitinde ailenin tamamı iptal** (D1).
-- [ ] 3.2 `POST /api/v1/sessions/refresh` ve `DELETE /api/v1/sessions/current` uçları (çıkış ailenin tamamını iptal eder).
-- [ ] 3.3 `common/ratelimit/`: sabit pencere sayacı (`ConcurrentHashMap` + enjekte edilen `Clock`, D5); kayıt / giriş / doğrulama / yenileme / doğrulama bağlantısı talebi uçlarına uygulanır; aşımda 429 + `RATE_LIMITED`.
-- [ ] 3.4 **Test (`critical`):** yenileme token'ı tek kullanımlıktır; **tekrar kullanım ailenin tamamını iptal eder** ve sonraki yenileme reddedilir; çıkış sonrası yenileme reddedilir; iptal edilmiş aileyle `me` çağrısı erişim token'ı süresi dolunca başarısız olur.
-- [ ] 3.5 **Test (`critical`):** hız sınırı — sabit `Clock` ile pencere içinde N+1. istek 429 döner, pencere kayınca yeniden açılır.
-- [ ] 3.5b **Test (`critical`, D8):** ikinci faktörü **kapalı** hesap tek adımda token alır ve e-posta gönderilmez; **açık** hesapta birinci adım token döndürmez ve kod gönderilir; geçerli kod token verir; kod **iki kez** kullanılamaz; süresi dolmuş kod reddedilir; hatalı deneme sayısı sınırı aşılınca 429.
-- [ ] 3.6 **Doğrulama:** `./mvnw -B verify` temiz; sözleşme yeniden üretilir (`-Dopenapi.write=true`) ve diff commit'e dahil edilir.
+- [x] 3.0 `SessionService.completeChallenge(...)` + `POST /api/v1/sessions/challenge`: kodu hash ile arar, süre / tek kullanımlık / deneme sayısı kontrolü, başarılıysa token'ları verir ve kodu tüketir (D8). Anahtar kapalı olduğu sürece ürün yüzeyinde kullanılmaz ama uygulanır ve testlenir (K6).
+- [x] 3.1 `SessionService.refresh(...)`: hash ile arar; süre/iptal/kullanım kontrolü; **rotasyon** (eski kayıt `used_at`, yeni token aynı ailede); **tekrar kullanım tespitinde ailenin tamamı iptal** (D1).
+- [x] 3.2 `POST /api/v1/sessions/refresh` ve `DELETE /api/v1/sessions/current` uçları (çıkış ailenin tamamını iptal eder).
+- [x] 3.3 `common/ratelimit/`: sabit pencere sayacı (`ConcurrentHashMap` + enjekte edilen `Clock`, D5); kayıt / giriş / doğrulama / yenileme / doğrulama bağlantısı talebi uçlarına uygulanır; aşımda 429 + `RATE_LIMITED`.
+- [x] 3.4 **Test (`critical`):** yenileme token'ı tek kullanımlıktır; **tekrar kullanım ailenin tamamını iptal eder** ve sonraki yenileme reddedilir; çıkış sonrası yenileme reddedilir; iptal edilmiş aileyle `me` çağrısı erişim token'ı süresi dolunca başarısız olur.
+- [x] 3.5 **Test (`critical`):** hız sınırı — sabit `Clock` ile pencere içinde N+1. istek 429 döner, pencere kayınca yeniden açılır.
+- [x] 3.5b **Test (`critical`, D8):** ikinci faktörü **kapalı** hesap tek adımda token alır ve e-posta gönderilmez; **açık** hesapta birinci adım token döndürmez ve kod gönderilir; geçerli kod token verir; kod **iki kez** kullanılamaz; süresi dolmuş kod reddedilir; hatalı deneme sayısı sınırı aşılınca 429.
+- [x] 3.6 **Doğrulama:** `./mvnw -B verify` temiz; sözleşme yeniden üretilir (`-Dopenapi.write=true`) ve diff commit'e dahil edilir.
+
+> **Faz 3 tamamlandı (2026-10-07).** 78 `api` testi yeşil (ikinci adım 7, yenileme/çıkış 9, hız sınırı 3 birim + 1 uçtan uca, yeniden gönderme 3).
+> Uçtan uca `docker compose`: yenileme 200; eski token tekrar sunulunca 400 ve **yeni token da geçersiz** (aile iptali); çıkış 204 → yenileme 400;
+> ikinci faktör açık hesapta 1. adım 202 → `mailpit`teki kodla 200 → aynı kod 401 `AUTH_CODE_INVALID`; aynı istemci + e-postayla 10 denemeden sonra 429.
+> **Uygulama kararları:** çıkış `DELETE /sessions/current` gövdesinde yenileme token'ını alır, bilinmeyen token için de 204 (erişim token'ı dolmuş olsa da çıkış gerçek olur).
+> `AUTH_CODE_INVALID` 401. Hız sınırı değerleri `RateLimitPolicy`de; istemci adresi `server.forward-headers-strategy: native` ile yalnızca iç ağdaki proxy'nin `X-Forwarded-For` başlığından alınır.
+> Testler ileri sarılabilir `MutableClock` kullanır; hız sınırı penceresi her testten önce saat ilerletilerek sıfırlanır (üretim koduna test için sıfırlama metodu eklenmedi).
 
 ## Faz 4 · `web` BFF ve ekranlar
 
 - [ ] 4.1 `npm run gen:api` ile tipler yeniden üretilir; `apiClient` POST desteği ve §11.5 hata gövdesi çözümü genişletilir (ikinci sarmalayıcı yazılmaz — K9).
 - [ ] 4.2 `web/src/lib/session.ts`: çerez okuma/yazma/silme (`bahceden_at`, `bahceden_rt`; `HttpOnly` + `Secure` + `SameSite=Lax`, yenileme çerezi `path=/api/auth` — D6).
 - [ ] 4.3 Route Handler'lar: `/api/auth/login`, `/api/auth/logout`, `/api/auth/refresh`. Her biri `Sec-Fetch-Site` / `Origin` doğrular (D6); token'ı istemciye **döndürmez**, yalnızca çereze yazar.
-- [ ] 4.4 Sunucu tarafı veri çekme: erişim çerezi `Bearer` olarak iletilir; 401 alınırsa **bir kez** yenileme denenir, başarısızsa `/giris`e yönlendirilir.
+- [ ] 4.4 Sunucu tarafı veri çekme: erişim çerezi `Bearer` olarak iletilir; 401 alınırsa **bir kez** yenileme denenir, başarısızsa `/giris`e yönlendirilir. **Faz 3'ten not:** iki eşzamanlı yenileme aynı token'ı sunarsa ikincisi tekrar kullanım sayılır ve aile iptal edilir (D1). BFF yenilemeyi istek başına tekilleştirmeli (aynı çerez için tek uçuşta yenileme).
 - [ ] 4.5 Ekranlar: `/kayit`, `/giris` (sunucu ikinci adım beklediğini bildirirse aynı ekranda kod alanı açılır), `/dogrulama` (e-postadaki bağlantının indiği sayfa; token'ı sunucu tarafında tüketir), `/hesabim` (korunan; `me` verisini ve e-posta doğrulama durumunu gösterir). Her biri için **dört durum** (§12.5).
 - [ ] 4.6 `AppShell` oturum durumunu gösterir: girişliyse maskeli e-posta + çıkış, değilse giriş bağlantısı. Oturum bilgisi düzende **bir kez** okunur (design.md Open Questions).
 - [ ] 4.7 Metinler `texts.ts` içine; form hataları sunucudan gelen `fieldErrors` ile alanlara bağlanır (§12.3).

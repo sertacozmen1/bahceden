@@ -11,10 +11,10 @@ servers:
 tags:
 - name: Sağlık
   description: Operasyonel sağlık kontrolü
-- name: Oturum
-  description: Oturum açma
 - name: Ürünler
   description: Vitrindeki ürünlerin listelenmesi
+- name: Oturum
+  description: "Oturum açma, yenileme ve kapatma"
 - name: Hesap
   description: "Hesap açma, e-posta doğrulama ve oturum sahibinin kimliği"
 paths:
@@ -60,6 +60,90 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiError"
+        "429":
+          description: Çok fazla deneme (RATE_LIMITED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+  /api/v1/sessions/refresh:
+    post:
+      tags:
+      - Oturum
+      summary: Oturumu yeniler
+      description: |
+        Yenileme token'ını tüketir; yeni bir erişim token'ı ve yeni bir yenileme
+        token'ı döner. Sunulan token bir daha kullanılamaz. Kullanılmış bir token
+        yeniden sunulursa oturum zincirinin tamamı iptal edilir.
+      operationId: refreshSession
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshTokenRequest"
+        required: true
+      responses:
+        "200":
+          description: Oturum yenilendi
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionTokens"
+        "400":
+          description: "Token eksik (VALIDATION_FAILED) ya da geçersiz, kullanılmı\
+            ş, iptal edilmiş veya süresi dolmuş (AUTH_TOKEN_INVALID)"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "429":
+          description: Çok fazla istek (RATE_LIMITED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+  /api/v1/sessions/challenge:
+    post:
+      tags:
+      - Oturum
+      summary: İkinci faktör koduyla oturum açar
+      description: |
+        Girişin birinci adımı 202 döndüyse e-postaya gelen altı haneli kod burada
+        sunulur. Yalnızca son gönderilen kod geçerlidir; kod 10 dakika geçerlidir
+        ve bir kez kullanılabilir. Beş hatalı denemeden sonra girişim kilitlenir.
+      operationId: completeLoginChallenge
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChallengeRequest"
+        required: true
+      responses:
+        "200":
+          description: Oturum açıldı
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionTokens"
+        "400":
+          description: İstek gövdesi geçersiz (VALIDATION_FAILED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: "Kod hatalı, kullanılmış, süresi dolmuş ya da açık girişim\
+            \ yok (AUTH_CODE_INVALID)"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "429":
+          description: Çok fazla hatalı deneme (RATE_LIMITED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
   /api/v1/accounts:
     post:
       tags:
@@ -85,6 +169,12 @@ paths:
                 $ref: "#/components/schemas/RegistrationAccepted"
         "400":
           description: E-posta veya parola geçersiz
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "429":
+          description: Çok fazla istek (RATE_LIMITED)
           content:
             application/json:
               schema:
@@ -115,6 +205,12 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiError"
+        "429":
+          description: Çok fazla istek (RATE_LIMITED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
   /api/v1/accounts/me/verification-requests:
     post:
       tags:
@@ -130,6 +226,12 @@ paths:
           description: İstek alındı
         "401":
           description: "Erişim token'ı yok, geçersiz ya da süresi dolmuş (AUTH_REQUIRED)"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "429":
+          description: Çok fazla istek (RATE_LIMITED)
           content:
             application/json:
               schema:
@@ -218,6 +320,31 @@ paths:
                 $ref: "#/components/schemas/ApiError"
       security:
       - bearerAuth: []
+  /api/v1/sessions/current:
+    delete:
+      tags:
+      - Oturum
+      summary: Oturumu kapatır
+      description: |
+        Yenileme token'ının ait olduğu oturum zincirinin tamamını iptal eder.
+        Erişim token'ı en fazla 15 dakika daha geçerli kalır. Bilinmeyen veya
+        zaten iptal edilmiş token için de 204 döner.
+      operationId: logout
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshTokenRequest"
+        required: true
+      responses:
+        "204":
+          description: Oturum kapatıldı
+        "400":
+          description: Token eksik (VALIDATION_FAILED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
 components:
   schemas:
     LoginRequest:
@@ -319,6 +446,37 @@ components:
       required:
       - field
       - message
+    RefreshTokenRequest:
+      type: object
+      description: Yenileme token'ı
+      properties:
+        refreshToken:
+          type: string
+          description: Opak yenileme token'ı
+          example: q3Jx0ornekYenilemeTokeni9Zt
+          maxLength: 200
+          minLength: 0
+      required:
+      - refreshToken
+    ChallengeRequest:
+      type: object
+      description: İkinci faktör kodu
+      properties:
+        email:
+          type: string
+          description: Birinci adımda kullanılan e-posta adresi
+          example: alici@ornek.test
+          maxLength: 320
+          minLength: 0
+        code:
+          type: string
+          description: E-postadaki altı haneli kod
+          example: "042917"
+          minLength: 1
+          pattern: "\\d{6}"
+      required:
+      - code
+      - email
     RegisterRequest:
       type: object
       description: Hesap açma isteği

@@ -8,12 +8,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.bahceden.common.web.ApiErrorCode;
 import com.bahceden.support.MailContents;
+import com.bahceden.support.MutableClock;
 import com.bahceden.support.RecordingMailSender;
 import com.bahceden.support.TestcontainersConfig;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import javax.crypto.spec.SecretKeySpec;
@@ -50,7 +52,7 @@ import org.springframework.test.web.servlet.ResultActions;
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Import({TestcontainersConfig.class, RecordingMailSender.Config.class})
+@Import({TestcontainersConfig.class, RecordingMailSender.Config.class, MutableClock.Config.class})
 @DisplayName("GET /api/v1/accounts/me (oturum sahibi)")
 class CurrentAccountTest {
 
@@ -67,6 +69,9 @@ class CurrentAccountTest {
     private RecordingMailSender mail;
 
     @Autowired
+    private MutableClock clock;
+
+    @Autowired
     private AccountService accountService;
 
     @Autowired
@@ -79,6 +84,8 @@ class CurrentAccountTest {
 
     @BeforeEach
     void hazirla() {
+        // Önceki testlerin hız sınırı pencerelerini geride bırakır.
+        clock.advance(Duration.ofDays(1));
         jdbc.execute("delete from accounts");
         mail.reset();
         accountService.register(EMAIL, PASSWORD);

@@ -4,6 +4,8 @@ import com.bahceden.account.dto.AccountView;
 import com.bahceden.account.dto.RegisterRequest;
 import com.bahceden.account.dto.RegistrationAccepted;
 import com.bahceden.account.dto.VerifyEmailRequest;
+import com.bahceden.common.ratelimit.RateLimitPolicy;
+import com.bahceden.common.ratelimit.RateLimiter;
 import com.bahceden.common.web.ApiError;
 import com.bahceden.common.web.OpenApiConfig;
 import io.swagger.v3.oas.annotations.Operation;
@@ -14,6 +16,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -45,10 +48,12 @@ public class AccountController {
 
     private final AccountService service;
     private final AccountMapper mapper;
+    private final RateLimiter rateLimiter;
 
-    AccountController(AccountService service, AccountMapper mapper) {
+    AccountController(AccountService service, AccountMapper mapper, RateLimiter rateLimiter) {
         this.service = service;
         this.mapper = mapper;
+        this.rateLimiter = rateLimiter;
     }
 
     @Operation(
@@ -63,11 +68,15 @@ public class AccountController {
             @ApiResponse(responseCode = "202", description = "İstek alındı"),
             @ApiResponse(responseCode = "400", description = "E-posta veya parola geçersiz",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ApiError.class))),
+            @ApiResponse(responseCode = "429", description = "Çok fazla istek (RATE_LIMITED)",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = ApiError.class)))
     })
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public RegistrationAccepted register(@Valid @RequestBody RegisterRequest request) {
+    public RegistrationAccepted register(@Valid @RequestBody RegisterRequest request, HttpServletRequest http) {
+        rateLimiter.check(RateLimitPolicy.REGISTRATION, http.getRemoteAddr());
         service.register(request.email(), request.password());
         return RegistrationAccepted.standard();
     }
@@ -85,11 +94,15 @@ public class AccountController {
             @ApiResponse(responseCode = "400",
                     description = "Token eksik (VALIDATION_FAILED) ya da geçersiz, kullanılmış veya süresi dolmuş (AUTH_TOKEN_INVALID)",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ApiError.class))),
+            @ApiResponse(responseCode = "429", description = "Çok fazla istek (RATE_LIMITED)",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = ApiError.class)))
     })
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PostMapping(path = "/verifications", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public void verifyEmail(@Valid @RequestBody VerifyEmailRequest request) {
+    public void verifyEmail(@Valid @RequestBody VerifyEmailRequest request, HttpServletRequest http) {
+        rateLimiter.check(RateLimitPolicy.EMAIL_VERIFICATION, http.getRemoteAddr());
         service.confirmVerification(request.token());
     }
 
@@ -125,12 +138,17 @@ public class AccountController {
             @ApiResponse(responseCode = "202", description = "İstek alındı"),
             @ApiResponse(responseCode = "401", description = "Erişim token'ı yok, geçersiz ya da süresi dolmuş (AUTH_REQUIRED)",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ApiError.class))),
+            @ApiResponse(responseCode = "429", description = "Çok fazla istek (RATE_LIMITED)",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = ApiError.class)))
     })
     @ResponseStatus(HttpStatus.ACCEPTED)
     @PostMapping(path = "/me/verification-requests")
     public void requestVerificationLink(@Parameter(hidden = true) @AuthenticationPrincipal Jwt token) {
-        service.requestVerificationLink(accountId(token));
+        var accountId = accountId(token);
+        rateLimiter.check(RateLimitPolicy.VERIFICATION_REQUEST, Long.toString(accountId));
+        service.requestVerificationLink(accountId);
     }
 
     /** Token'ın {@code sub} iddiası hesap kimliğidir (design.md D7). */

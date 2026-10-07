@@ -63,7 +63,33 @@ public class RefreshToken {
         return token;
     }
 
+    /** Kullanılmış token'ın tekrar sunulması sızıntı işaretidir (D1). */
+    public boolean isUsed() {
+        return usedAt != null;
+    }
+
+    public boolean isRevoked() {
+        return revokedAt != null;
+    }
+
+    public boolean isExpired(Instant now) {
+        return !now.isBefore(expiresAt);
+    }
+
+    /** Rotasyon: bu token bir daha kabul edilmez, yerine aynı ailede yenisi üretilir. */
+    public void markUsed(Instant now) {
+        usedAt = now;
+    }
+
     public Long getId() {
         return id;
+    }
+
+    public Long getAccountId() {
+        return accountId;
+    }
+
+    public UUID getFamilyId() {
+        return familyId;
     }
 }

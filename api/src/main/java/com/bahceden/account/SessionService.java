@@ -20,7 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Oturum açma (ADR-008, ADR-017, design.md D1, D4, D8).
+ * Oturum açma, ikinci adım, yenileme ve çıkış (ADR-008, ADR-017, design.md D1, D4, D8).
  *
  * <p>Giriş iki sonuçtan birini verir ({@link LoginResult}): hesabın ikinci faktör
  * anahtarı kapalıysa (varsayılan) token'lar tek adımda; açıksa token verilmez,
@@ -42,7 +42,18 @@ public class SessionService {
     /** İkinci faktör kodunun ömrü (design.md D8). */
     static final Duration CHALLENGE_TTL = Duration.ofMinutes(10);
 
+    /** Bir giriş girişimi için izin verilen hatalı kod sayısı (design.md D8). */
+    static final int MAX_CHALLENGE_ATTEMPTS = 5;
+
     private static final String INVALID_CREDENTIALS_MESSAGE = "E-posta adresi veya parola hatalı.";
+
+    private static final String INVALID_CODE_MESSAGE =
+            "Kod hatalı ya da süresi dolmuş. Gerekirse yeniden giriş yaparak yeni bir kod isteyin.";
+
+    private static final String TOO_MANY_ATTEMPTS_MESSAGE =
+            "Çok fazla hatalı kod denendi. Yeniden giriş yaparak yeni bir kod isteyin.";
+
+    private static final String INVALID_REFRESH_MESSAGE = "Oturumunuzun süresi doldu. Lütfen yeniden giriş yapın.";
 
     private static final String CHALLENGE_SUBJECT = "Bahçeden: giriş kodunuz";
 
@@ -116,11 +127,94 @@ public class SessionService {
             return issueChallenge(found, now);
         }
         log.info("Oturum açıldı: hesap {}", found.getId());
-        return openSession(found, now);
+        return issueTokens(found, UUID.randomUUID(), now);
     }
 
-    /** Erişim + yenileme token'ı; yenileme token'ı yeni bir aile başlatır (D1). */
-    private Authenticated openSession(Account account, Instant now) {
+    /**
+     * İkinci adım: e-postayla gönderilen kodu hesabın <strong>en son</strong> açık
+     * girişimine karşı doğrular (D8). Hatalı deneme sayılır ve sayı, istisna
+     * fırlatılsa da kalıcıdır ({@code noRollbackFor}); sınır dolunca doğru kod
+     * bile reddedilir.
+     *
+     * @throws ApiException {@code AUTH_CODE_INVALID} ya da {@code RATE_LIMITED}
+     */
+    @Transactional(noRollbackFor = ApiException.class)
+    public Authenticated completeChallenge(String rawEmail, String code) {
+        var now = clock.instant();
+        var account = accounts.findByEmail(Account.normalizeEmail(rawEmail))
+                .orElseThrow(SessionService::invalidCode);
+        var challenge = challenges
+                .findFirstByAccountIdAndUsedAtIsNullAndExpiresAtAfterOrderByCreatedAtDescIdDesc(account.getId(), now)
+                .orElseThrow(SessionService::invalidCode);
+
+        if (challenge.attemptsExhausted(MAX_CHALLENGE_ATTEMPTS)) {
+            throw new ApiException(ApiErrorCode.RATE_LIMITED, TOO_MANY_ATTEMPTS_MESSAGE);
+        }
+        if (!challenge.matches(challengeHash(account.getId(), code))) {
+            challenge.recordFailedAttempt();
+            log.info("Hatalı ikinci faktör kodu: hesap {}", account.getId());
+            throw invalidCode();
+        }
+
+        challenge.markUsed(now);
+        log.info("Oturum açıldı (ikinci faktör): hesap {}", account.getId());
+        return issueTokens(account, UUID.randomUUID(), now);
+    }
+
+    /**
+     * Rotasyonlu yenileme (D1): sunulan token tüketilir, aynı ailede yenisi
+     * verilir. Erişim token'ı hesabın <em>güncel</em> rolleriyle üretilir.
+     *
+     * <p>Zaten kullanılmış bir token gelirse bu bir sızıntı işaretidir: ailenin
+     * tamamı iptal edilir ve iptal, istisnaya rağmen kalıcıdır.
+     *
+     * @throws ApiException {@code AUTH_TOKEN_INVALID}
+     */
+    @Transactional(noRollbackFor = ApiException.class)
+    public Authenticated refresh(String plainRefreshToken) {
+        var now = clock.instant();
+        var token = refreshTokens.findByTokenHash(secureTokens.hash(plainRefreshToken))
+                .orElseThrow(SessionService::invalidRefresh);
+
+        if (token.isRevoked()) {
+            throw invalidRefresh();
+        }
+        if (token.isUsed()) {
+            int revoked = refreshTokens.revokeFamily(token.getFamilyId(), now);
+            log.warn("Kullanılmış yenileme token'ı tekrar sunuldu; aile iptal edildi: hesap {}, {} token",
+                    token.getAccountId(), revoked);
+            throw invalidRefresh();
+        }
+        if (token.isExpired(now)) {
+            throw invalidRefresh();
+        }
+
+        token.markUsed(now);
+        // Yabancı anahtar hesabı silinen token'ı da siler; yine de güvenli tarafta kalıyoruz.
+        var account = accounts.findById(token.getAccountId()).orElseThrow(SessionService::invalidRefresh);
+        return issueTokens(account, token.getFamilyId(), now);
+    }
+
+    /**
+     * Çıkış: token'ın ailesinin tamamı iptal edilir, sonraki yenilemeler
+     * reddedilir. Bilinmeyen veya zaten iptal edilmiş token sessizce kabul
+     * edilir: çıkış idempotenttir ve token hakkında bilgi vermez.
+     */
+    @Transactional
+    public void logout(String plainRefreshToken) {
+        refreshTokens.findByTokenHash(secureTokens.hash(plainRefreshToken))
+                .filter(token -> !token.isRevoked())
+                .ifPresent(token -> {
+                    refreshTokens.revokeFamily(token.getFamilyId(), clock.instant());
+                    log.info("Oturum kapatıldı: hesap {}", token.getAccountId());
+                });
+    }
+
+    /**
+     * Erişim + yenileme token'ı. Girişte yeni bir aile, yenilemede mevcut aile
+     * verilir (D1).
+     */
+    private Authenticated issueTokens(Account account, UUID familyId, Instant now) {
         var access = accessTokens.issue(
                 account.getId(),
                 account.getEmail(),
@@ -129,7 +223,7 @@ public class SessionService {
         var plainRefresh = secureTokens.newToken();
         var refreshExpiresAt = now.plus(REFRESH_TOKEN_TTL);
         refreshTokens.save(RefreshToken.issue(
-                account.getId(), UUID.randomUUID(), secureTokens.hash(plainRefresh), now, refreshExpiresAt));
+                account.getId(), familyId, secureTokens.hash(plainRefresh), now, refreshExpiresAt));
 
         return new Authenticated(access.value(), access.expiresAt(), plainRefresh, refreshExpiresAt);
     }
@@ -161,6 +255,14 @@ public class SessionService {
      */
     private String challengeHash(long accountId, String code) {
         return secureTokens.hash(accountId + ":" + code);
+    }
+
+    private static ApiException invalidCode() {
+        return new ApiException(ApiErrorCode.AUTH_CODE_INVALID, INVALID_CODE_MESSAGE);
+    }
+
+    private static ApiException invalidRefresh() {
+        return new ApiException(ApiErrorCode.AUTH_TOKEN_INVALID, INVALID_REFRESH_MESSAGE);
     }
 
     private static String challengeBody(String code) {
