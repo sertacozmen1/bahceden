@@ -6,6 +6,7 @@ import { Pagination, parsePage } from "@/components/Pagination";
 import { Card, CardContent } from "@/components/ui/card";
 import { requireRole } from "@/features/account/requireSession";
 import { adminSellerStatuses, listSellersForAdmin } from "@/features/admin/api";
+import { AdminNav } from "@/features/admin/components/AdminNav";
 import { SellerStatusBadge } from "@/features/seller/components/SellerStatusBadge";
 import { formatDateTime } from "@/lib/datetime";
 import { cn } from "@/lib/utils";
@@ -37,6 +38,7 @@ export default async function AdminSellersPage({ searchParams }: { readonly sear
 
   return (
     <main className="mx-auto w-full max-w-3xl px-4 pt-8 pb-12 lg:pt-12">
+      <AdminNav current="sellers" />
       <header className="mb-6 flex flex-col gap-2">
         <h1 className="text-2xl font-semibold tracking-tight lg:text-3xl">{t("admin.sellers.title")}</h1>
         <p className="text-pretty text-muted-foreground">{t("admin.sellers.intro")}</p>

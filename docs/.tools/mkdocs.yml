@@ -136,6 +136,13 @@ nav:
     - "ADR-044 · Satıcı rolü ve onaylı satıcı kapısı": adr/044-seller-role-follows-status-with-query-gate.md
     - "ADR-045 · Başvuru belgesi saklama ve sunum": adr/045-seller-documents-table-content-sniffing-protected-serving.md
     - "ADR-046 · Admin yüzeyi": adr/046-admin-surface-in-web-first-admin-by-sql.md
+    - "ADR-047 · İlan durumları": adr/047-listing-states-removed-and-named-transitions.md
+    - "ADR-048 · Satıcı ilan uçları": adr/048-seller-listing-endpoints-gate-then-ownership.md
+    - "ADR-049 · İlan fotoğrafları": adr/049-listing-photos-table-one-by-one-position.md
+    - "ADR-050 · Fotoğraf işleme": adr/050-photo-processing-exif-orientation-two-sizes.md
+    - "ADR-051 · Fotoğraf sunumu": adr/051-photo-serving-public-key-registered-web-proxy.md
+    - "ADR-052 · Vitrin kapağı ve ürün detayı": adr/052-storefront-cover-second-query-detail-by-slug.md
+    - "ADR-053 · Admin ilan denetimi": adr/053-admin-listing-moderation-shared-reason-dialog.md
   - Nasıl Yapılır (How-to):
     - Genel Bakış: how-to/index.md
     - Yerel Geliştirme Ortamı: how-to/yerel-gelistirme.md
@@ -146,6 +153,7 @@ nav:
   - Ürün & Strateji:
     - Genel Bakış: product/index.md
     - Satıcı Kaydı ve Onayı: product/satici-kaydi.md
+    - Ürün İlanları: product/urun-ilanlari.md
   - Araştırma (Research): research/index.md
   - Eğitimler (Tutorials): tutorials/index.md
   - Açıklamalar (Explanation): explanation/index.md
@@ -154,6 +162,7 @@ nav:
     - Vitrin ve Arama: features/vitrin-ve-arama.md
     - Hesap ve Oturum: features/hesap-ve-oturum.md
     - Satıcı Kaydı ve Onayı: features/satici-kaydi-ve-onayi.md
+    - Ürün İlanları: features/urun-ilanlari.md
     - "Genel (feature dışı işler)": features/_genel.md
 
 copyright: Bahçeden Internal Documentation

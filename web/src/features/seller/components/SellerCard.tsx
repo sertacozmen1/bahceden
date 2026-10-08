@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Store } from "lucide-react";
+import { PackageOpen, Store } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { buttonVariants } from "@/components/ui/button";
 import type { SellerSelfView } from "@/features/seller/api";
@@ -24,10 +24,18 @@ export function SellerCard({ seller }: { readonly seller: SellerSelfView | null 
           <SellerStatusBadge status={seller.status} />
         </div>
       )}
-      <Link className={buttonVariants({ variant: "secondary", className: "self-start" })} href="/seller/application">
-        <Store aria-hidden />
-        {seller === null ? t("inviteAction") : t("statusAction")}
-      </Link>
+      <div className="flex flex-col gap-2 sm:flex-row">
+        {seller?.status === "APPROVED" && (
+          <Link className={buttonVariants({ className: "self-start" })} href="/seller/products">
+            <PackageOpen aria-hidden />
+            {t("productsAction")}
+          </Link>
+        )}
+        <Link className={buttonVariants({ variant: "secondary", className: "self-start" })} href="/seller/application">
+          <Store aria-hidden />
+          {seller === null ? t("inviteAction") : t("statusAction")}
+        </Link>
+      </div>
     </section>
   );
 }

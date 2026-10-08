@@ -11,8 +11,12 @@ servers:
 tags:
 - name: Sağlık
   description: Operasyonel sağlık kontrolü
+- name: Satıcı ilanları
+  description: Onaylı satıcının kendi ürün ilanları
 - name: Satıcı başvurusu
   description: Oturum sahibinin satıcı başvurusu ve kaydı
+- name: "Admin: ilanlar"
+  description: "İlanların listelenmesi, kaldırılması ve yeniden açılması"
 - name: "Admin: satıcılar"
   description: Satıcı başvurularının listelenmesi ve karara bağlanması
 - name: Ürünler
@@ -156,6 +160,162 @@ paths:
                 $ref: "#/components/schemas/ApiError"
       security:
       - bearerAuth: []
+  /api/v1/sellers/me/products/{id}:
+    get:
+      tags:
+      - Satıcı ilanları
+      summary: Satıcının tek ilanını döner
+      operationId: getOwnListing
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: İlan veya ilanlar
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SellerListingView"
+        "400":
+          description: Alan geçersiz (VALIDATION_FAILED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Oturum yok (AUTH_REQUIRED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "403":
+          description: Satıcı rolü yok (AUTH_FORBIDDEN) veya satıcı kaydı onaylı değil
+            (SELLER_NOT_APPROVED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: İlan yok veya başkasına ait (PRODUCT_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+      security:
+      - bearerAuth: []
+    put:
+      tags:
+      - Satıcı ilanları
+      summary: İlanın bilgilerini günceller
+      description: Durum ve kalıcı ad değişmez. Yayındaki ilanın değişikliği vitrinde
+        hemen görünür.
+      operationId: updateListing
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ListingRequest"
+        required: true
+      responses:
+        "200":
+          description: İlan veya ilanlar
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SellerListingView"
+        "400":
+          description: Alan geçersiz (VALIDATION_FAILED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Oturum yok (AUTH_REQUIRED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "403":
+          description: Satıcı rolü yok (AUTH_FORBIDDEN) veya satıcı kaydı onaylı değil
+            (SELLER_NOT_APPROVED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: İlan yok veya başkasına ait (PRODUCT_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+      security:
+      - bearerAuth: []
+  /api/v1/sellers/me/products/{id}/photos/order:
+    put:
+      tags:
+      - Satıcı ilanları
+      summary: Fotoğrafların sırasını değiştirir
+      description: Liste ilanın bütün fotoğraflarını eksiksiz ve tekrarsız içermelidir;
+        ilk eleman kapak olur.
+      operationId: reorderListingPhotos
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PhotoOrderRequest"
+        required: true
+      responses:
+        "200":
+          description: İlan veya ilanlar
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SellerListingView"
+        "400":
+          description: Alan geçersiz (VALIDATION_FAILED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Oturum yok (AUTH_REQUIRED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "403":
+          description: Satıcı rolü yok (AUTH_FORBIDDEN) veya satıcı kaydı onaylı değil
+            (SELLER_NOT_APPROVED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: İlan yok veya başkasına ait (PRODUCT_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+      security:
+      - bearerAuth: []
   /api/v1/sessions:
     post:
       tags:
@@ -282,6 +442,403 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiError"
+  /api/v1/sellers/me/products:
+    get:
+      tags:
+      - Satıcı ilanları
+      summary: Satıcının ilanlarını listeler
+      description: En son güncellenen üstte. Sayfa boyutunun üst sınırı sunucuda 50'dir.
+      operationId: listOwnListings
+      parameters:
+      - name: page
+        in: query
+        description: Sayfa numarası (sıfırdan başlar)
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+          minimum: 0
+        example: 0
+      - name: size
+        in: query
+        description: Sayfa boyutu; üst sınır sunucuda 50'ye çekilir
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+          minimum: 1
+        example: 20
+      responses:
+        "200":
+          description: İlan veya ilanlar
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PageResponseSellerListingView"
+        "400":
+          description: Alan geçersiz (VALIDATION_FAILED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Oturum yok (AUTH_REQUIRED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "403":
+          description: Satıcı rolü yok (AUTH_FORBIDDEN) veya satıcı kaydı onaylı değil
+            (SELLER_NOT_APPROVED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: İlan yok veya başkasına ait (PRODUCT_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - Satıcı ilanları
+      summary: Taslak ilan oluşturur
+      description: İlan DRAFT açılır ve vitrinde görünmez; yayına almak için en az
+        bir fotoğraf gerekir.
+      operationId: createListing
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ListingRequest"
+        required: true
+      responses:
+        "201":
+          description: İlan oluşturuldu; Location başlığı ilanın adresi
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SellerListingView"
+        "200":
+          description: İlan veya ilanlar
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SellerListingView"
+        "400":
+          description: Alan geçersiz (VALIDATION_FAILED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Oturum yok (AUTH_REQUIRED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "403":
+          description: Satıcı rolü yok (AUTH_FORBIDDEN) veya satıcı kaydı onaylı değil
+            (SELLER_NOT_APPROVED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: İlan yok veya başkasına ait (PRODUCT_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+      security:
+      - bearerAuth: []
+  /api/v1/sellers/me/products/{id}/unpublish:
+    post:
+      tags:
+      - Satıcı ilanları
+      summary: İlanı yayından çeker
+      description: PUBLISHED → DRAFT.
+      operationId: unpublishListing
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "409":
+          description: Bu durumdan bu geçiş yapılamaz (PRODUCT_INVALID_TRANSITION)
+            veya fotoğraf gerekiyor (PRODUCT_PHOTO_REQUIRED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: İlan veya ilanlar
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SellerListingView"
+        "400":
+          description: Alan geçersiz (VALIDATION_FAILED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Oturum yok (AUTH_REQUIRED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "403":
+          description: Satıcı rolü yok (AUTH_FORBIDDEN) veya satıcı kaydı onaylı değil
+            (SELLER_NOT_APPROVED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: İlan yok veya başkasına ait (PRODUCT_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+      security:
+      - bearerAuth: []
+  /api/v1/sellers/me/products/{id}/restore:
+    post:
+      tags:
+      - Satıcı ilanları
+      summary: İlanı arşivden geri alır
+      description: ARCHIVED → DRAFT.
+      operationId: restoreListing
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "409":
+          description: Bu durumdan bu geçiş yapılamaz (PRODUCT_INVALID_TRANSITION)
+            veya fotoğraf gerekiyor (PRODUCT_PHOTO_REQUIRED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: İlan veya ilanlar
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SellerListingView"
+        "400":
+          description: Alan geçersiz (VALIDATION_FAILED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Oturum yok (AUTH_REQUIRED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "403":
+          description: Satıcı rolü yok (AUTH_FORBIDDEN) veya satıcı kaydı onaylı değil
+            (SELLER_NOT_APPROVED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: İlan yok veya başkasına ait (PRODUCT_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+      security:
+      - bearerAuth: []
+  /api/v1/sellers/me/products/{id}/publish:
+    post:
+      tags:
+      - Satıcı ilanları
+      summary: Taslağı yayına alır
+      description: DRAFT → PUBLISHED; en az bir fotoğraf gerekir. İlk yayın tarihi
+        sonra değişmez.
+      operationId: publishListing
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "409":
+          description: Bu durumdan bu geçiş yapılamaz (PRODUCT_INVALID_TRANSITION)
+            veya fotoğraf gerekiyor (PRODUCT_PHOTO_REQUIRED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: İlan veya ilanlar
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SellerListingView"
+        "400":
+          description: Alan geçersiz (VALIDATION_FAILED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Oturum yok (AUTH_REQUIRED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "403":
+          description: Satıcı rolü yok (AUTH_FORBIDDEN) veya satıcı kaydı onaylı değil
+            (SELLER_NOT_APPROVED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: İlan yok veya başkasına ait (PRODUCT_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+      security:
+      - bearerAuth: []
+  /api/v1/sellers/me/products/{id}/photos:
+    post:
+      tags:
+      - Satıcı ilanları
+      summary: İlana fotoğraf ekler
+      description: |
+        Tek dosya, multipart. Fotoğraf sona eklenir; ilan başına en çok 5. Sunucuda EXIF yönü
+        uygulanır, iki boyutta JPEG olarak yeniden kodlanır ve meta veri atılır.
+      operationId: addListingPhoto
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/PhotoUploadRequest"
+      responses:
+        "409":
+          description: Fotoğraf sınırı doldu (PRODUCT_PHOTO_LIMIT_REACHED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: İlan veya ilanlar
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SellerListingView"
+        "400":
+          description: Alan geçersiz (VALIDATION_FAILED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Oturum yok (AUTH_REQUIRED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "403":
+          description: Satıcı rolü yok (AUTH_FORBIDDEN) veya satıcı kaydı onaylı değil
+            (SELLER_NOT_APPROVED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: İlan yok veya başkasına ait (PRODUCT_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+      security:
+      - bearerAuth: []
+  /api/v1/sellers/me/products/{id}/archive:
+    post:
+      tags:
+      - Satıcı ilanları
+      summary: İlanı arşivler
+      description: DRAFT veya PUBLISHED → ARCHIVED.
+      operationId: archiveListing
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "409":
+          description: Bu durumdan bu geçiş yapılamaz (PRODUCT_INVALID_TRANSITION)
+            veya fotoğraf gerekiyor (PRODUCT_PHOTO_REQUIRED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: İlan veya ilanlar
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SellerListingView"
+        "400":
+          description: Alan geçersiz (VALIDATION_FAILED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Oturum yok (AUTH_REQUIRED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "403":
+          description: Satıcı rolü yok (AUTH_FORBIDDEN) veya satıcı kaydı onaylı değil
+            (SELLER_NOT_APPROVED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: İlan yok veya başkasına ait (PRODUCT_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+      security:
+      - bearerAuth: []
   /api/v1/admin/sellers/{id}/suspend:
     post:
       tags:
@@ -504,6 +1061,121 @@ paths:
                 $ref: "#/components/schemas/ApiError"
         "409":
           description: Bu durumdan bu geçiş yapılamaz (SELLER_INVALID_TRANSITION)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+      security:
+      - bearerAuth: []
+  /api/v1/admin/products/{id}/remove:
+    post:
+      tags:
+      - "Admin: ilanlar"
+      summary: İlanı gerekçeyle kaldırır
+      description: DRAFT veya PUBLISHED → REMOVED. Gerekçe satıcıya gösterilir ve
+        e-postayla bildirilir.
+      operationId: removeProduct
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ListingRemovalRequest"
+        required: true
+      responses:
+        "409":
+          description: Bu durumdan kaldırılamaz (PRODUCT_INVALID_TRANSITION)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: İlan veya ilanlar
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminProductSummary"
+        "400":
+          description: Gerekçe veya süzgeç geçersiz (VALIDATION_FAILED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Oturum yok (AUTH_REQUIRED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "403":
+          description: Admin rolü yok (AUTH_FORBIDDEN)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: İlan yok (PRODUCT_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+      security:
+      - bearerAuth: []
+  /api/v1/admin/products/{id}/reinstate:
+    post:
+      tags:
+      - "Admin: ilanlar"
+      summary: Kaldırılmış ilanı yeniden açar
+      description: "REMOVED → PUBLISHED; en az bir fotoğraf gerekir. Gerekçe temizlenir,\
+        \ satıcıya bildirilir."
+      operationId: reinstateProduct
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "409":
+          description: Bu durumdan açılamaz (PRODUCT_INVALID_TRANSITION) veya fotoğraf
+            yok (PRODUCT_PHOTO_REQUIRED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: İlan veya ilanlar
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminProductSummary"
+        "400":
+          description: Gerekçe veya süzgeç geçersiz (VALIDATION_FAILED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Oturum yok (AUTH_REQUIRED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "403":
+          description: Admin rolü yok (AUTH_FORBIDDEN)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: İlan yok (PRODUCT_NOT_FOUND)
           content:
             application/json:
               schema:
@@ -757,6 +1429,62 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiError"
+  /api/v1/products/{slug}:
+    get:
+      tags:
+      - Ürünler
+      summary: Vitrindeki ürünün detayını döner
+      description: |
+        Yalnızca yayında olan ve satıcısı onaylı ürün döner; taslak, arşivlenmiş,
+        kaldırılmış ya da satıcısı onaylı olmayan ürün 404 olur. Fotoğraflar sıralıdır.
+      operationId: getProduct
+      parameters:
+      - name: slug
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Ürün detayı
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProductDetail"
+        "404":
+          description: Ürün yok veya vitrinde görünmüyor (PRODUCT_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+  /api/v1/product-photos/{key}:
+    get:
+      tags:
+      - Ürünler
+      summary: İlan fotoğrafını döner
+      description: "JPEG; değişmez anahtar, bir yıllık önbellek. Anahtar yalnızca\
+        \ ilan fotoğrafına aitse sunulur."
+      operationId: getProductPhoto
+      parameters:
+      - name: key
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: Fotoğraf
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+        "404":
+          description: Fotoğraf yok (PRODUCT_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
   /api/v1/health:
     get:
       tags:
@@ -928,6 +1656,81 @@ paths:
                 $ref: "#/components/schemas/ApiError"
       security:
       - bearerAuth: []
+  /api/v1/admin/products:
+    get:
+      tags:
+      - "Admin: ilanlar"
+      summary: İlanları duruma göre listeler
+      description: Varsayılan durum PUBLISHED; en son değişen üstte. Sayfa boyutunun
+        üst sınırı sunucuda 50'dir.
+      operationId: listProductsForAdmin
+      parameters:
+      - name: status
+        in: query
+        description: Durum süzgeci
+        required: false
+        schema:
+          type: string
+          default: PUBLISHED
+          enum:
+          - DRAFT
+          - PUBLISHED
+          - ARCHIVED
+          - REMOVED
+        example: PUBLISHED
+      - name: page
+        in: query
+        description: Sayfa numarası (sıfırdan başlar)
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+          minimum: 0
+        example: 0
+      - name: size
+        in: query
+        description: Sayfa boyutu; üst sınır sunucuda 50'ye çekilir
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+          minimum: 1
+        example: 20
+      responses:
+        "200":
+          description: İlan veya ilanlar
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PageResponseAdminProductSummary"
+        "400":
+          description: Gerekçe veya süzgeç geçersiz (VALIDATION_FAILED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Oturum yok (AUTH_REQUIRED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "403":
+          description: Admin rolü yok (AUTH_FORBIDDEN)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: İlan yok (PRODUCT_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+      security:
+      - bearerAuth: []
   /api/v1/accounts/me:
     get:
       tags:
@@ -977,6 +1780,67 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiError"
+  /api/v1/sellers/me/products/{id}/photos/{photoId}:
+    delete:
+      tags:
+      - Satıcı ilanları
+      summary: İlanın fotoğrafını siler
+      description: Kalan fotoğraflar sıkıştırılır. Yayındaki veya kaldırılmış ilanın
+        son fotoğrafı silinemez.
+      operationId: deleteListingPhoto
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: photoId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "409":
+          description: Son fotoğraf silinemez (PRODUCT_PHOTO_REQUIRED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: İlan veya ilanlar
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SellerListingView"
+        "400":
+          description: Alan geçersiz (VALIDATION_FAILED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Oturum yok (AUTH_REQUIRED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "403":
+          description: Satıcı rolü yok (AUTH_FORBIDDEN) veya satıcı kaydı onaylı değil
+            (SELLER_NOT_APPROVED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: İlan yok veya başkasına ait (PRODUCT_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+      security:
+      - bearerAuth: []
 components:
   schemas:
     SellerApplicationRequest:
@@ -1113,6 +1977,201 @@ components:
       - slug
       - status
       - statusChangedAt
+    ListingRequest:
+      type: object
+      description: İlan oluşturma veya güncelleme isteği
+      properties:
+        name:
+          type: string
+          description: İlan adı
+          example: Salkım Domates
+          maxLength: 200
+          minLength: 2
+        description:
+          type:
+          - string
+          - "null"
+          description: Açıklama; düz metin
+          example: "Tarla domatesi, sabah toplandı."
+          maxLength: 2000
+          minLength: 0
+        unit:
+          type: string
+          description: Satış birimi
+          enum:
+          - KILOGRAM
+          - PIECE
+          - BUNCH
+          example: KILOGRAM
+          minLength: 1
+          pattern: KILOGRAM|PIECE|BUNCH
+        priceAmount:
+          type: integer
+          format: int64
+          description: "Birim fiyat, kuruş (2450 = 24,50 TL); para birimi her zaman\
+            \ TRY"
+          example: 2450
+          maximum: 10000000
+          minimum: 1
+        stockQuantity:
+          type: integer
+          format: int32
+          description: Eldeki miktar; sıfır stokta yok demek
+          example: 80
+          maximum: 100000
+          minimum: 0
+      required:
+      - name
+      - priceAmount
+      - stockQuantity
+      - unit
+    Money:
+      type: object
+      description: "Para değeri: kuruş cinsinden tamsayı tutar ve para birimi"
+      properties:
+        amount:
+          type: integer
+          format: int64
+          description: "Tutar, kuruş cinsinden"
+          example: 12550
+        currency:
+          type: string
+          description: ISO 4217 para birimi kodu
+          example: TRY
+      required:
+      - amount
+      - currency
+    ProductPhotoView:
+      type: object
+      description: "İlan fotoğrafı; anahtarlar GET /api/v1/product-photos/{key} ile\
+        \ sunulur"
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Fotoğrafın kimliği
+          example: 15
+        cardKey:
+          type: string
+          description: Kart boyutunun anahtarı (uzun kenar 400 px)
+          example: 3f9a1c0b7d2e4f6a8b1c2d3e4f5a6b7c
+        largeKey:
+          type: string
+          description: Büyük boyutun anahtarı (uzun kenar 1600 px)
+          example: 8b1c2d3e4f5a6b7c3f9a1c0b7d2e4f6a
+        width:
+          type: integer
+          format: int32
+          description: Büyük boyutun genişliği (px)
+          example: 1600
+        height:
+          type: integer
+          format: int32
+          description: Büyük boyutun yüksekliği (px)
+          example: 1200
+      required:
+      - cardKey
+      - height
+      - id
+      - largeKey
+      - width
+    SellerListingView:
+      type: object
+      description: Satıcının kendi ilanı
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: İlanın kimliği
+          example: 42
+        slug:
+          type: string
+          description: Vitrin adresindeki kalıcı ad
+          example: salkim-domates
+        name:
+          type: string
+          description: İlan adı
+          example: Salkım Domates
+        description:
+          type:
+          - string
+          - "null"
+          description: Açıklama
+          example: "Tarla domatesi, sabah toplandı."
+        unit:
+          type: string
+          description: Satış birimi
+          enum:
+          - KILOGRAM
+          - PIECE
+          - BUNCH
+          example: KILOGRAM
+        unitPrice:
+          $ref: "#/components/schemas/Money"
+          description: Birim fiyat
+        stockQuantity:
+          type: integer
+          format: int32
+          description: Eldeki miktar
+          example: 80
+        status:
+          type: string
+          description: İlanın durumu
+          enum:
+          - DRAFT
+          - PUBLISHED
+          - ARCHIVED
+          - REMOVED
+          example: DRAFT
+        statusReason:
+          type:
+          - string
+          - "null"
+          description: Admin kaldırma gerekçesi; yalnızca REMOVED durumunda
+          example: Fotoğraflar ürünü göstermiyor.
+        publishedAt:
+          type:
+          - string
+          - "null"
+          format: date-time
+          description: "İlk yayın anı (UTC, ISO-8601); hiç yayınlanmadıysa boş"
+          example: 2026-10-08T09:30:00Z
+        updatedAt:
+          type: string
+          format: date-time
+          description: "Son değişiklik anı (UTC, ISO-8601)"
+          example: 2026-10-08T09:30:00Z
+        photos:
+          type: array
+          description: "Fotoğraflar, sırayla; ilki kapak"
+          items:
+            $ref: "#/components/schemas/ProductPhotoView"
+      required:
+      - id
+      - name
+      - photos
+      - slug
+      - status
+      - stockQuantity
+      - unit
+      - unitPrice
+      - updatedAt
+    PhotoOrderRequest:
+      type: object
+      description: Fotoğrafların yeni sırası; ilk eleman kapak
+      properties:
+        photoIds:
+          type: array
+          description: "İlanın bütün fotoğraf kimlikleri, yeni sırayla"
+          items:
+            type: integer
+            format: int64
+            description: Fotoğraf kimliği
+            example: 15
+          maxItems: 5
+          minItems: 1
+      required:
+      - photoIds
     LoginRequest:
       type: object
       description: Oturum açma isteği
@@ -1208,6 +2267,16 @@ components:
       required:
       - code
       - email
+    PhotoUploadRequest:
+      type: object
+      description: İlana tek fotoğraf yükleme
+      properties:
+        photo:
+          type: string
+          format: binary
+          description: "Fotoğraf: JPEG veya PNG; en çok 10 MB ve 40 megapiksel"
+      required:
+      - photo
     SellerDecisionReason:
       type: object
       description: Ret veya askı gerekçesi; satıcıya gösterilir
@@ -1347,6 +2416,89 @@ components:
       - actorEmail
       - createdAt
       - toStatus
+    ListingRemovalRequest:
+      type: object
+      description: İlan kaldırma gerekçesi; satıcıya gösterilir
+      properties:
+        reason:
+          type: string
+          description: Satıcıya gösterilecek gerekçe
+          example: Fotoğraflar ilandaki ürünü göstermiyor.
+          maxLength: 500
+          minLength: 10
+      required:
+      - reason
+    AdminProductSummary:
+      type: object
+      description: Admin ilan listesinde ilan özeti
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: İlanın kimliği
+          example: 42
+        slug:
+          type: string
+          description: Vitrin adresindeki kalıcı ad
+          example: salkim-domates
+        name:
+          type: string
+          description: İlan adı
+          example: Salkım Domates
+        status:
+          type: string
+          description: İlanın durumu
+          enum:
+          - DRAFT
+          - PUBLISHED
+          - ARCHIVED
+          - REMOVED
+          example: PUBLISHED
+        statusReason:
+          type:
+          - string
+          - "null"
+          description: Kaldırma gerekçesi
+          example: Fotoğraflar ürünü göstermiyor.
+        seller:
+          $ref: "#/components/schemas/SellerSummary"
+          description: Üretici
+        coverPhoto:
+          type: "null"
+          $ref: "#/components/schemas/ProductPhotoView"
+          description: Kapak fotoğrafı
+        updatedAt:
+          type: string
+          format: date-time
+          description: "Son değişiklik anı (UTC, ISO-8601)"
+          example: 2026-10-08T09:30:00Z
+      required:
+      - id
+      - name
+      - seller
+      - slug
+      - status
+      - updatedAt
+    SellerSummary:
+      type: object
+      description: Ürünün üreticisi
+      properties:
+        slug:
+          type: string
+          description: Üreticinin kalıcı tanımlayıcısı
+          example: ornek-uretici-manisa
+        displayName:
+          type: string
+          description: Vitrinde gösterilen ad
+          example: Örnek Üretici (Manisa)
+        city:
+          type: string
+          description: Üretim yapılan il
+          example: Manisa
+      required:
+      - city
+      - displayName
+      - slug
     RegisterRequest:
       type: object
       description: Hesap açma isteği
@@ -1433,22 +2585,41 @@ components:
       required:
       - password
       - token
-    Money:
+    PageResponseSellerListingView:
       type: object
-      description: "Para değeri: kuruş cinsinden tamsayı tutar ve para birimi"
+      description: Sayfalı liste yanıtı
       properties:
-        amount:
+        items:
+          type: array
+          description: Sayfadaki kayıtlar
+          items:
+            $ref: "#/components/schemas/SellerListingView"
+        page:
+          type: integer
+          format: int32
+          description: Geçerli sayfa numarası (sıfırdan başlar)
+          example: 0
+        size:
+          type: integer
+          format: int32
+          description: Uygulanan sayfa boyutu
+          example: 20
+        totalElements:
           type: integer
           format: int64
-          description: "Tutar, kuruş cinsinden"
-          example: 12550
-        currency:
-          type: string
-          description: ISO 4217 para birimi kodu
-          example: TRY
+          description: Süzgeçten geçen toplam kayıt sayısı
+          example: 137
+        totalPages:
+          type: integer
+          format: int32
+          description: Toplam sayfa sayısı
+          example: 7
       required:
-      - amount
-      - currency
+      - items
+      - page
+      - size
+      - totalElements
+      - totalPages
     PageResponseProductSummary:
       type: object
       description: Sayfalı liste yanıtı
@@ -1515,6 +2686,11 @@ components:
         seller:
           $ref: "#/components/schemas/SellerSummary"
           description: Ürünü üreten ve gönderen üretici
+        coverPhoto:
+          type: "null"
+          $ref: "#/components/schemas/ProductPhotoView"
+          description: Kapak fotoğrafı (sıradaki ilk fotoğraf); fotoğrafı olmayan
+            üründe boş
       required:
       - name
       - seller
@@ -1522,26 +2698,56 @@ components:
       - stockQuantity
       - unit
       - unitPrice
-    SellerSummary:
+    ProductDetail:
       type: object
-      description: Ürünün üreticisi
+      description: Vitrindeki ürünün detayı
       properties:
         slug:
           type: string
-          description: Üreticinin kalıcı tanımlayıcısı
-          example: ornek-uretici-manisa
-        displayName:
+          description: Ürünün kalıcı tanımlayıcısı
+          example: salkim-domates
+        name:
           type: string
-          description: Vitrinde gösterilen ad
-          example: Örnek Üretici (Manisa)
-        city:
+          description: Ürün adı
+          example: Salkım Domates
+        description:
+          type:
+          - string
+          - "null"
+          description: Açıklama; düz metin
+          example: "Tarla domatesi, sabah toplandı."
+        unit:
           type: string
-          description: Üretim yapılan il
-          example: Manisa
+          description: Satış birimi
+          enum:
+          - KILOGRAM
+          - PIECE
+          - BUNCH
+          example: KILOGRAM
+        unitPrice:
+          $ref: "#/components/schemas/Money"
+          description: Birim fiyat
+        stockQuantity:
+          type: integer
+          format: int32
+          description: Eldeki miktar; sıfırsa stokta değil
+          example: 80
+        seller:
+          $ref: "#/components/schemas/SellerSummary"
+          description: Ürünü üreten ve gönderen üretici
+        photos:
+          type: array
+          description: "Fotoğraflar, sırayla; ilki kapak"
+          items:
+            $ref: "#/components/schemas/ProductPhotoView"
       required:
-      - city
-      - displayName
+      - name
+      - photos
+      - seller
       - slug
+      - stockQuantity
+      - unit
+      - unitPrice
     HealthResponse:
       type: object
       description: Uygulama sağlık durumu
@@ -1607,6 +2813,41 @@ components:
           description: Sayfadaki kayıtlar
           items:
             $ref: "#/components/schemas/AdminSellerSummary"
+        page:
+          type: integer
+          format: int32
+          description: Geçerli sayfa numarası (sıfırdan başlar)
+          example: 0
+        size:
+          type: integer
+          format: int32
+          description: Uygulanan sayfa boyutu
+          example: 20
+        totalElements:
+          type: integer
+          format: int64
+          description: Süzgeçten geçen toplam kayıt sayısı
+          example: 137
+        totalPages:
+          type: integer
+          format: int32
+          description: Toplam sayfa sayısı
+          example: 7
+      required:
+      - items
+      - page
+      - size
+      - totalElements
+      - totalPages
+    PageResponseAdminProductSummary:
+      type: object
+      description: Sayfalı liste yanıtı
+      properties:
+        items:
+          type: array
+          description: Sayfadaki kayıtlar
+          items:
+            $ref: "#/components/schemas/AdminProductSummary"
         page:
           type: integer
           format: int32

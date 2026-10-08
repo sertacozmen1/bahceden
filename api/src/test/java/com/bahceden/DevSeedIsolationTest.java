@@ -77,4 +77,15 @@ class DevSeedIsolationTest {
                 .as("ROLE_ADMIN taşıyan sabit parolalı hesap yalnızca dev bağlamında oluşmalı (ADR-014)")
                 .isZero();
     }
+
+    @Test
+    @DisplayName("Dev satıcı seed'i test bağlamında uygulanmaz")
+    void dev_satici_seedi_test_baglaminda_uygulanmaz() {
+        Integer applied = jdbc.queryForObject(
+                "select count(*) from databasechangelog where id = ?", Integer.class, "010-dev-seed-product-listings");
+
+        assertThat(applied)
+                .as("sabit parolalı hesaba bağlı onaylı satıcı yalnızca dev bağlamında oluşmalı (ADR-014)")
+                .isZero();
+    }
 }

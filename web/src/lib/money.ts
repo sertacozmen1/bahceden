@@ -41,3 +41,38 @@ function formatterFor(locale: Locale, currency: string): Intl.NumberFormat {
 export function formatMoney(money: Money, locale: Locale): string {
   return formatterFor(locale, money.currency).format(money.amount / MINOR_UNITS_PER_MAJOR);
 }
+
+/**
+ * Satıcının yazdığı TL tutarını kuruşa çevirir (add-product-listings varsayımı).
+ * Bu bir hesap değil, girdi ayrıştırmadır; otorite yine `api`'dir ve tamsayı
+ * kuruş alır (ADR-006). Kabul edilenler: `24`, `24,5`, `24,50`, `24.50`,
+ * `1.250,50`, `1,250.50`, `₺24,50`. Son ayraçtan sonra 1–2 hane varsa kuruştur;
+ * 3 hane varsa binlik ayracıdır. Geçersiz girdi `undefined` döner.
+ */
+export function parseMinorUnits(input: string): number | undefined {
+  const cleaned = input.replace(/[\s₺]|TL/gi, "");
+  if (!/^\d+([.,]\d+)*$/.test(cleaned)) {
+    return undefined;
+  }
+  const lastSeparator = Math.max(cleaned.lastIndexOf(","), cleaned.lastIndexOf("."));
+  const fractionLength = lastSeparator < 0 ? 0 : cleaned.length - lastSeparator - 1;
+  const hasFraction = fractionLength === 1 || fractionLength === 2;
+  const integerPart = (hasFraction ? cleaned.slice(0, lastSeparator) : cleaned).replace(/[.,]/g, "");
+  const groups = (hasFraction ? cleaned.slice(0, lastSeparator) : cleaned).split(/[.,]/);
+  // Binlik gruplar ilk grup dışında tam 3 hane olmalı: "12.34.567" geçersiz.
+  if (groups.slice(1).some((group) => group.length !== 3)) {
+    return undefined;
+  }
+  const fraction = hasFraction ? cleaned.slice(lastSeparator + 1).padEnd(2, "0") : "00";
+  const minor = Number(integerPart) * MINOR_UNITS_PER_MAJOR + Number(fraction);
+  return Number.isSafeInteger(minor) ? minor : undefined;
+}
+
+/** Formdaki başlangıç değeri: kuruş → seçili dilde, binlik ayracı olmadan (`2450` → `24,50` / `24.50`). */
+export function toPriceInput(amount: number, locale: Locale): string {
+  return new Intl.NumberFormat(locale, {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+    useGrouping: false,
+  }).format(amount / MINOR_UNITS_PER_MAJOR);
+}

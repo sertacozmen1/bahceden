@@ -32,3 +32,9 @@ databaseChangeLog:
   - include:
       file: 008-dev-seed-seller-onboarding.sql
       relativeToChangelogFile: true
+  - include:
+      file: 009-product-listings.sql
+      relativeToChangelogFile: true
+  - include:
+      file: 010-dev-seed-product-listings.sql
+      relativeToChangelogFile: true

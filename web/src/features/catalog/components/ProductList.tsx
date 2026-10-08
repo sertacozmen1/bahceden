@@ -1,9 +1,12 @@
+import Image from "next/image";
+import Link from "next/link";
 import { MapPin, Sprout } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { ProductSummary } from "@/features/catalog/api";
 import { formatMoney } from "@/lib/money";
+import { cardSize, photoUrl } from "@/lib/productPhotos";
 
 /**
  * Vitrin ürün listesi.
@@ -14,9 +17,10 @@ import { formatMoney } from "@/lib/money";
  * Boş durum burada ele alınır: boş beyaz sayfa yasaktır (AGENTS.md §12.5) ve
  * kullanıcı ne olduğunu, ne beklemesi gerektiğini okur.
  *
- * Ürün görseli bilinçli olarak yok (KALANLAR B3): sahte fotoğraf veya yer
- * tutucu kutu koymak yerine kart tipografiye ve fiyata yaslanır. Fotoğraf
- * kararı gelince kartın üstüne `next/image` eklenecek yer hazır.
+ * Kapak fotoğrafı varsa kartın üstünde durur (add-product-listings D5, D6).
+ * Fotoğrafı olmayan eski ürünlerde sahte fotoğraf veya yer tutucu kutu yoktur:
+ * kart tipografiye ve fiyata yaslanır. Kartın tamamı detay sayfasına götürür;
+ * bağlantı başlıktadır ve kartı kaplar (erişilebilir ad ürün adıdır).
  *
  * Metinler ve para biçimi seçili dilde (ADR-029); ürün ve satıcı adı kullanıcı
  * verisidir, çevrilmez.
@@ -48,12 +52,28 @@ export function ProductList({ products }: { readonly products: readonly ProductS
     <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-5">
       {products.map((product) => (
         <li key={product.slug}>
-          {/* Ürün detay sayfası yok: kart tıklanabilir görünmez (hover yok), olmayan yere götürmez. */}
-          <article className="flex h-full">
-            <Card className="w-full">
+          <article className="relative flex h-full">
+            <Card className="w-full overflow-hidden transition-colors hover:bg-muted/40">
+              {product.coverPhoto !== undefined && product.coverPhoto !== null && (
+                <Image
+                  src={photoUrl(product.coverPhoto.cardKey)}
+                  alt={product.name}
+                  width={cardSize(product.coverPhoto).width}
+                  height={cardSize(product.coverPhoto).height}
+                  unoptimized
+                  className="-mt-(--card-spacing) aspect-[4/3] h-auto w-full object-cover"
+                />
+              )}
               <CardHeader>
                 <CardTitle>
-                  <h2 className="text-lg leading-snug">{product.name}</h2>
+                  <h2 className="text-lg leading-snug">
+                    <Link
+                      href={`/products/${product.slug}`}
+                      className="outline-none after:absolute after:inset-0 after:rounded-xl focus-visible:after:ring-3 focus-visible:after:ring-ring/50"
+                    >
+                      {product.name}
+                    </Link>
+                  </h2>
                 </CardTitle>
                 <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
                   <span className="font-medium">{product.seller.displayName}</span>

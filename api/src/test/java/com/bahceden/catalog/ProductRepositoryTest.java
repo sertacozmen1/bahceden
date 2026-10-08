@@ -44,6 +44,8 @@ class ProductRepositoryTest {
 
     @BeforeEach
     void cleanUp() {
+        jdbc.execute("delete from product_status_changes");
+        jdbc.execute("delete from product_photos");
         jdbc.execute("delete from products");
         jdbc.execute("delete from seller_status_changes");
         jdbc.execute("delete from seller_documents");

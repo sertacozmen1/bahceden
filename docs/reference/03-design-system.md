@@ -142,7 +142,9 @@ Tercih `bahceden_theme` çerezinde (bir yıl). Kök düzen onu sunucuda okur; il
 | `LocaleMenu` | `components/` | Tek ikonlu tetikleyici + dil menüsü; seçenekler kendi dilinde, seçim çereze yazılır ve sayfa sunucuda yenilenir |
 | `ThemeMenu` | `components/` | Tek ikonlu tetikleyici + Açık / Koyu / Sistem menüsü; seçimi `data-theme`'ya ve çereze yazar |
 | `SessionNav` | `components/` | Oturum durumuna göre "Giriş yap / Kayıt ol" veya maskeli e-posta + çıkış; `ROLE_ADMIN`'de "Yönetim" bağlantısı |
-| `Pagination` | `components/` | Sayfalı listelerin önceki / sonraki gezintisi; diğer sorgu parametrelerini korur. Vitrin ve admin satıcı listesi paylaşır |
+| `Pagination` | `components/` | Sayfalı listelerin önceki / sonraki gezintisi; diğer sorgu parametrelerini korur. Vitrin, satıcı ilanları ve admin listeleri paylaşır |
+| `ListSkeleton` | `components/` | Liste sayfalarının yükleniyor iskeleti (isteğe bağlı sekmelerle) |
+| `ReasonDialog` | `components/` | Gerekçe isteyen yıkıcı admin eylemi; satıcı reddi, satıcı askısı ve ilan kaldırma paylaşır ([ADR-053](../adr/053-admin-listing-moderation-shared-reason-dialog.md)) |
 | `StatusPanel` | `components/` | Tam sayfa hata ve bulunamadı kutusu: ikon (hatada `destructive` tonlu), başlık, tek cümle, tek eylem |
 | `AccountScreen` | `features/account/components/` | Hesap ekranlarının ortak tek sütun iskeleti |
 | `AccountSkeleton` | `features/account/components/` | Hesap sayfalarının yükleniyor iskeleti |
@@ -153,6 +155,11 @@ Tercih `bahceden_theme` çerezinde (bir yıl). Kök düzen onu sunucuda okur; il
 | `SellerApplicationForm` | `features/seller/components/` | Başvuru ve yeniden gönderim formu; belge türü radyo grubu, dosya alanı, istemcide erken tür/boyut uyarısı |
 | `SellerRecordSummary`, `SellerCard` | `features/seller/components/` | Satıcının kendi kaydı ve "Hesabım"daki satıcılık bölümü |
 | `SellerDecisionActions` | `features/admin/components/` | Admin karar eylemleri: onay birincil ve büyük; ret ve askı yıkıcı, gerekçe isteyen diyalogla |
+| `AdminNav`, `ProductModerationActions` | `features/admin/components/` | Admin bölümleri arası sekmeler; ilan kaldırma (diyalog) ve yeniden açma |
+| `ListingForm`, `ListingStatusBadge` | `features/listings/components/` | İlan bilgileri formu (fiyat TL girilir, kuruşa çevrilir; birim radyo grubu) ve durum rozeti |
+| `PhotoManager` | `features/listings/components/` | Fotoğraf yükleme, öne / arkaya düğmeleriyle sıralama (sürükle-bırak yok), onaylı silme, kapak etiketi |
+| `ListingActions` | `features/listings/components/` | Yayın eylemleri: yayına al birincil; fotoğraf yoksa pasif ve nedeni yazılı |
+| `ProductGallery` | `features/catalog/components/` | Ürün detayında büyük görsel ve küçük resim düğmeleri (`aria-current`) |
 
 ## 5. Dört durum
 
@@ -165,6 +172,6 @@ Tercih `bahceden_theme` çerezinde (bir yıl). Kök düzen onu sunucuda okur; il
 
 ## 6. Bilinçli olarak olmayanlar
 
-- **Ürün fotoğrafı:** depolama kararı alındı ([ADR-039](../adr/039-uploads-on-local-volume-served-by-api.md)) ama ilan change'i gelene kadar kart tipografiye ve fiyata yaslanır; yer tutucu veya stok görsel kullanılmaz.
+- **Fotoğrafsız ürün görseli:** kapak fotoğrafı varsa kartın üstünde durur. Fotoğrafı olmayan eski ürünlerde kart tipografiye ve fiyata yaslanır; yer tutucu veya stok görsel kullanılmaz. Görseller sunucuda boyutlandırılır, `next/image` `unoptimized` kullanılır ([ADR-051](../adr/051-photo-serving-public-key-registered-web-proxy.md)).
 - **Dosya seçici metni:** dosya girdisinin içindeki "Dosya seç / Dosya seçilmedi" metni tarayıcının dilindedir, uygulamanın dilinde değil. Yerel denetim bilinçli olarak korunuyor; özel bir yükleme bileşeni ihtiyaç doğunca gelir.
 - **Hareket kütüphanesi:** hareket yalnızca CSS geçişi; `motion` paketi bütçede değil.

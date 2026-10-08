@@ -58,3 +58,39 @@ export async function decideSeller(
 export async function downloadSellerDocumentForAdmin(accessToken: string | undefined, id: number): Promise<Response> {
   return apiDownload(`${ADMIN_SELLERS_PATH}/${id}/document`, accessToken);
 }
+
+export type AdminProductSummary = components["schemas"]["AdminProductSummary"];
+export type AdminProductPage = components["schemas"]["PageResponseAdminProductSummary"];
+
+/** Admin ilan sekmeleri (add-product-listings D7). */
+export const adminProductStatuses = ["PUBLISHED", "REMOVED"] as const satisfies readonly AdminProductSummary["status"][];
+export type AdminProductStatus = (typeof adminProductStatuses)[number];
+
+/** İlan denetim eylemleri; BFF beyaz listesi. */
+export const productDecisions = ["remove", "reinstate"] as const;
+export type ProductDecision = (typeof productDecisions)[number];
+
+const ADMIN_PRODUCTS_PATH = "/api/v1/admin/products";
+
+export async function listProductsForAdmin(
+  accessToken: string,
+  status: AdminProductStatus,
+  page: number,
+  size: number,
+): Promise<AdminProductPage> {
+  return apiGet<AdminProductPage>(ADMIN_PRODUCTS_PATH, { accessToken, query: { status, page, size } });
+}
+
+/** Kaldırma gerekçe ister; yeniden açma gövdesizdir. */
+export async function decideProduct(
+  accessToken: string | undefined,
+  id: number,
+  decision: ProductDecision,
+  reason: string,
+): Promise<AdminProductSummary | undefined> {
+  const result = await apiSend<AdminProductSummary>("POST", `${ADMIN_PRODUCTS_PATH}/${id}/${decision}`, {
+    accessToken,
+    body: decision === "remove" ? { reason } : undefined,
+  });
+  return result.data;
+}

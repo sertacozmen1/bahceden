@@ -13,7 +13,7 @@ import { ApiUnavailableError, toApiError } from "@/lib/apiError";
 export async function postToBff<T>(
   path: string,
   body?: unknown,
-  method: "POST" | "PUT" = "POST",
+  method: "POST" | "PUT" | "DELETE" = "POST",
 ): Promise<T | undefined> {
   // `FormData` (dosya yükleme) olduğu gibi gider; tarayıcı multipart sınırını kendisi yazar.
   const isForm = body instanceof FormData;

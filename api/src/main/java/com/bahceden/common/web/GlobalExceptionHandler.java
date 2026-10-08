@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -67,6 +68,17 @@ public class GlobalExceptionHandler {
                 .toList();
         return ResponseEntity.badRequest()
                 .body(ApiError.of(ApiErrorCode.VALIDATION_FAILED, text("error.validation", locale), fieldErrors));
+    }
+
+    /**
+     * Gövde okunamadı: bozuk JSON ya da beklenen tipte olmayan değer. Önceden
+     * beklenmeyen hata (500) olarak dönüyordu; istemci hatasıdır (400).
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiError> handleUnreadableBody(HttpMessageNotReadableException exception, Locale locale) {
+        log.warn("İstek gövdesi okunamadı: {}", exception.getClass().getSimpleName());
+        return ResponseEntity.badRequest()
+                .body(ApiError.of(ApiErrorCode.VALIDATION_FAILED, text("error.unreadableBody", locale)));
     }
 
     /** Tip uyuşmazlığı: sayı beklenen parametreye metin gönderilmesi gibi. */

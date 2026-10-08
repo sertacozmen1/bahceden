@@ -157,7 +157,8 @@ class ProductControllerTest {
                 ProductUnit.KILOGRAM,
                 new MoneyView(4250, "TRY"),
                 120,
-                new SellerSummary("ornek-uretici-manisa", "Örnek Üretici (Manisa)", "Manisa"));
+                new SellerSummary("ornek-uretici-manisa", "Örnek Üretici (Manisa)", "Manisa"),
+                null);
         return new PageResponse<>(List.of(product), 0, 20, 1, 1);
     }
 

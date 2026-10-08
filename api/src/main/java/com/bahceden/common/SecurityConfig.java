@@ -53,6 +53,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Vitrin: alıcı giriş yapmadan ürünleri görebilir (storefront-catalog spec'i).
                         .requestMatchers(HttpMethod.GET, "/api/v1/products").permitAll()
+                        // Ürün detayı ve fotoğraflar herkese açık; görünürlük sorguda (add-product-listings D5, D6).
+                        .requestMatchers(HttpMethod.GET, "/api/v1/products/*", "/api/v1/product-photos/*").permitAll()
                         // Kimlik: hesap açma, doğrulama ve giriş oturumdan önce gelir, doğal olarak açıktır.
                         .requestMatchers(HttpMethod.POST, "/api/v1/accounts").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/accounts/verifications").permitAll()
@@ -70,9 +72,14 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/sellers/me", "/api/v1/sellers/me/document").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/v1/sellers/me").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/v1/sellers/me").authenticated()
+                        // Satıcı ilanları: rol token'dan; otorite serviste denetlenen satıcı durumudur (ADR-044).
+                        .requestMatchers("/api/v1/sellers/me/products", "/api/v1/sellers/me/products/**").hasRole("SELLER")
                         // Admin: satıcı başvurularını karara bağlama (add-seller-onboarding D7). Rol token'dan gelir.
                         .requestMatchers(HttpMethod.GET, "/api/v1/admin/sellers", "/api/v1/admin/sellers/*",
                                 "/api/v1/admin/sellers/*/document").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/admin/products").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/admin/products/*/remove",
+                                "/api/v1/admin/products/*/reinstate").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/v1/admin/sellers/*/approve", "/api/v1/admin/sellers/*/reject",
                                 "/api/v1/admin/sellers/*/suspend", "/api/v1/admin/sellers/*/reinstate").hasRole("ADMIN")
                         // Operasyon: konteyner sağlık kontrolü ve sözleşme çıktısı.

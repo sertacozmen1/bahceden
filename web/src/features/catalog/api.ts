@@ -1,5 +1,5 @@
 import type { components } from "@contract";
-import { apiGet } from "@/lib/apiClient";
+import { ApiRequestError, apiGet } from "@/lib/apiClient";
 
 /**
  * Katalog verisi çekme.
@@ -11,6 +11,9 @@ import { apiGet } from "@/lib/apiClient";
 
 export type ProductSummary = components["schemas"]["ProductSummary"];
 export type ProductPage = components["schemas"]["PageResponseProductSummary"];
+export type ProductDetail = components["schemas"]["ProductDetail"];
+
+const HTTP_NOT_FOUND = 404;
 
 /** Vitrinde yayınlanmış ürünlerin sayfası. */
 export async function fetchPublishedProducts(page: number, size: number): Promise<ProductPage> {
@@ -20,4 +23,20 @@ export async function fetchPublishedProducts(page: number, size: number): Promis
     // gitmek zorunda değil, ama fiyat değişikliği de dakikalarca beklemez.
     revalidateSeconds: 30,
   });
+}
+
+/**
+ * Ürün detayı (storefront-catalog "Ürün detayı"). Vitrinde görünmeyen ürün
+ * `api`'de 404'tür; burada `null` olur ve sayfa "bulunamadı" gösterir.
+ * Liste gibi kısa süre önbelleklenir.
+ */
+export async function fetchProduct(slug: string): Promise<ProductDetail | null> {
+  try {
+    return await apiGet<ProductDetail>(`/api/v1/products/${encodeURIComponent(slug)}`, { revalidateSeconds: 30 });
+  } catch (error) {
+    if (error instanceof ApiRequestError && error.status === HTTP_NOT_FOUND) {
+      return null;
+    }
+    throw error;
+  }
 }

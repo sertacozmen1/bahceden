@@ -97,6 +97,8 @@ bahceden:
     dir: ${BAHCEDEN_STORAGE_DIR}
     # Başvuru belgesinin üst sınırı: 10 MB (yukarıdaki multipart sınırıyla aynı).
     max-document-bytes: 10485760
+    # İlan fotoğrafının üst sınırı: 10 MB. Orijinal saklanmaz; iki küçük JPEG üretilir (add-product-listings D4).
+    max-photo-bytes: 10485760
 
 logging:
   level:

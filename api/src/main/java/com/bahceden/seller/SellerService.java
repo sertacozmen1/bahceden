@@ -8,6 +8,7 @@ import com.bahceden.common.i18n.Messages;
 import com.bahceden.common.mail.MailSender;
 import com.bahceden.common.storage.FileStorage;
 import com.bahceden.common.storage.FileType;
+import com.bahceden.common.text.Slugs;
 import com.bahceden.common.web.ApiErrorCode;
 import com.bahceden.common.web.ApiException;
 import com.bahceden.common.web.PageResponse;
@@ -24,10 +25,8 @@ import com.bahceden.seller.dto.SellerSelfView;
 import com.bahceden.seller.dto.SellerStatusChangeView;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.text.Normalizer;
 import java.time.Clock;
 import java.time.Instant;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -68,8 +67,6 @@ public class SellerService {
     private static final Pattern PHONE_SEPARATORS = Pattern.compile("[\\s\\-.()]");
 
     private static final String COUNTRY_PREFIX = "+90";
-
-    private static final int SLUG_MAX_LENGTH = 100;
 
     /** Ad yalnızca Latin dışı karakterlerden oluşuyorsa kullanılan taban. */
     private static final String SLUG_FALLBACK = "uretici";
@@ -402,31 +399,12 @@ public class SellerService {
      * çakışmada sona {@code -2}, {@code -3} … eklenir.
      */
     private String uniqueSlug(String displayName) {
-        var base = slugify(displayName);
+        var base = Slugs.slugify(displayName, SLUG_FALLBACK);
         var candidate = base;
         for (int suffix = 2; sellers.existsBySlug(candidate); suffix++) {
             candidate = base + "-" + suffix;
         }
         return candidate;
-    }
-
-    static String slugify(String text) {
-        var turkishFolded = text.trim()
-                .replace('ı', 'i').replace('İ', 'i')
-                .replace('ş', 's').replace('Ş', 's')
-                .replace('ğ', 'g').replace('Ğ', 'g')
-                .replace('ç', 'c').replace('Ç', 'c')
-                .replace('ö', 'o').replace('Ö', 'o')
-                .replace('ü', 'u').replace('Ü', 'u');
-        var ascii = Normalizer.normalize(turkishFolded, Normalizer.Form.NFD)
-                .replaceAll("\\p{M}", "")
-                .toLowerCase(Locale.ROOT)
-                .replaceAll("[^a-z0-9]+", "-")
-                .replaceAll("(^-+)|(-+$)", "");
-        if (ascii.length() > SLUG_MAX_LENGTH) {
-            ascii = ascii.substring(0, SLUG_MAX_LENGTH).replaceAll("-+$", "");
-        }
-        return ascii.isEmpty() ? SLUG_FALLBACK : ascii;
     }
 
     private static String maskedPhone(String phone) {

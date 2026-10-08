@@ -90,4 +90,22 @@ describe("ProductList", () => {
     // İngilizcede ondalık ayırıcı nokta; simge her dilde ₺ (lib/money.ts).
     expect(screen.getByText("₺42.50")).toBeDefined();
   });
+  it("kapak fotoğrafını ürün adıyla gösterir ve detay sayfasına bağlar", () => {
+    renderWithIntl(
+      <ProductList
+        products={[aProduct({ coverPhoto: { id: 3, cardKey: "a".repeat(32), largeKey: "b".repeat(32), width: 1600, height: 1200 } })]}
+      />,
+    );
+
+    const image = screen.getByRole("img", { name: "Sultani Üzüm" });
+    expect(image.getAttribute("src")).toBe(`/media/product-photos/${"a".repeat(32)}`);
+    expect(image.getAttribute("width")).toBe("400");
+    expect(screen.getByRole("link", { name: "Sultani Üzüm" }).getAttribute("href")).toBe("/products/sultani-uzum");
+  });
+
+  it("fotoğrafı olmayan üründe yer tutucu görsel çizmez", () => {
+    renderWithIntl(<ProductList products={[aProduct()]} />);
+
+    expect(screen.queryByRole("img")).toBeNull();
+  });
 });

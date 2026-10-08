@@ -1,6 +1,8 @@
 package com.bahceden.catalog;
 
 import com.bahceden.catalog.domain.Product;
+import com.bahceden.catalog.domain.ProductStatus;
+import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -41,4 +43,42 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
               and s.status = com.bahceden.seller.domain.SellerStatus.APPROVED
             """)
     Page<Product> findPublished(Pageable pageable);
+
+    /**
+     * Satıcının kendi ilanı: sahiplik sorgu seviyesinde (ADR-007). Başka
+     * satıcının ilanı boş döner ve uç 404 verir; varlık açığa çıkmaz.
+     */
+    Optional<Product> findByIdAndSellerId(long id, long sellerId);
+
+    /** Satıcı paneli listesi: en son güncellenen üstte. Satıcı zaten bilinir, birleştirme yok. */
+    @Query("select p from Product p where p.seller.id = :sellerId order by p.updatedAt desc, p.id desc")
+    Page<Product> findOwnNewestFirst(long sellerId, Pageable pageable);
+
+    boolean existsBySlug(String slug);
+
+    /**
+     * Ürün detayı: vitrin listesiyle aynı görünürlük koşulu (D6, ADR-041).
+     * Listede görünmeyen ürün doğrudan adresle de açılmaz.
+     */
+    @Query("""
+            select p from Product p
+            join fetch p.seller s
+            where p.slug = :slug
+              and p.status = com.bahceden.catalog.domain.ProductStatus.PUBLISHED
+              and s.status = com.bahceden.seller.domain.SellerStatus.APPROVED
+            """)
+    Optional<Product> findVisibleBySlug(String slug);
+
+    /**
+     * Admin ilan listesi (add-product-listings D7): durumla süzülür, üretici
+     * tek sorguda gelir; en son değişen üstte.
+     */
+    @Query(value = """
+            select p from Product p
+            join fetch p.seller
+            where p.status = :status
+            order by p.updatedAt desc, p.id desc
+            """,
+            countQuery = "select count(p) from Product p where p.status = :status")
+    Page<Product> findForModeration(ProductStatus status, Pageable pageable);
 }

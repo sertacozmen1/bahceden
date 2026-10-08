@@ -10,6 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.bahceden.common.security.AccessTokenIssuer;
+import com.bahceden.common.text.Slugs;
 import com.bahceden.common.web.ApiErrorCode;
 import com.bahceden.common.web.ApiException;
 import com.bahceden.seller.domain.SellerStatus;
@@ -343,9 +344,9 @@ class SellerApplicationTest {
     @Test
     @DisplayName("Üretici adından vitrin adresi: Türkçe karakterler çevrilir, çakışmada sayı eklenir")
     void slug_uretimi() throws Exception {
-        assertThat(SellerService.slugify("  Çiğdem'in Şirin Bahçesi! ")).isEqualTo("cigdem-in-sirin-bahcesi");
-        assertThat(SellerService.slugify("ÖĞÜ İŞÇ")).isEqualTo("ogu-isc");
-        assertThat(SellerService.slugify("***")).isEqualTo("uretici");
+        assertThat(Slugs.slugify("  Çiğdem'in Şirin Bahçesi! ", "uretici")).isEqualTo("cigdem-in-sirin-bahcesi");
+        assertThat(Slugs.slugify("ÖĞÜ İŞÇ", "uretici")).isEqualTo("ogu-isc");
+        assertThat(Slugs.slugify("***", "uretici")).isEqualTo("uretici");
 
         validApply(tokenFor(verifiedAccount(APPLICANT))).andExpect(status().isCreated());
         validApply(tokenFor(verifiedAccount(OTHER)))

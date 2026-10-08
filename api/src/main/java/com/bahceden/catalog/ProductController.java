@@ -1,5 +1,6 @@
 package com.bahceden.catalog;
 
+import com.bahceden.catalog.dto.ProductDetail;
 import com.bahceden.catalog.dto.ProductSummary;
 import com.bahceden.common.web.ApiError;
 import com.bahceden.common.web.PageResponse;
@@ -13,6 +14,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Min;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -63,5 +65,23 @@ public class ProductController {
             @Parameter(description = "Sayfa boyutu; üst sınır sunucuda 50'ye çekilir", example = "20")
             @RequestParam(defaultValue = "20") @Min(value = 1, message = "{validation.pageSize.min}") int size) {
         return service.listPublished(page, size);
+    }
+
+    @Operation(
+            operationId = "getProduct",
+            summary = "Vitrindeki ürünün detayını döner",
+            description = """
+                    Yalnızca yayında olan ve satıcısı onaylı ürün döner; taslak, arşivlenmiş,
+                    kaldırılmış ya da satıcısı onaylı olmayan ürün 404 olur. Fotoğraflar sıralıdır.
+                    """)
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Ürün detayı"),
+            @ApiResponse(responseCode = "404", description = "Ürün yok veya vitrinde görünmüyor (PRODUCT_NOT_FOUND)",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ApiError.class)))
+    })
+    @GetMapping(path = "/{slug}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ProductDetail detail(@PathVariable String slug) {
+        return service.detail(slug);
     }
 }

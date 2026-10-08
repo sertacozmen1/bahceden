@@ -40,7 +40,10 @@ public enum RateLimitPolicy {
     PASSWORD_RESET(20, Duration.ofMinutes(15)),
 
     /** Satıcı başvurusu veya yeniden gönderim: aynı hesap için saatte 5; her biri bir dosya yazar (add-seller-onboarding). */
-    SELLER_APPLICATION(5, Duration.ofHours(1));
+    SELLER_APPLICATION(5, Duration.ofHours(1)),
+
+    /** İlan fotoğrafı yükleme: aynı hesap için saatte 60; her biri görüntü işler (add-product-listings D3). */
+    PRODUCT_PHOTO_UPLOAD(60, Duration.ofHours(1));
 
     private final int limit;
     private final Duration window;

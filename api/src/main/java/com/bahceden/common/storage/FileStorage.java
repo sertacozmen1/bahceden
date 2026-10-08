@@ -1,6 +1,7 @@
 package com.bahceden.common.storage;
 
 import com.bahceden.common.BahcedenProperties;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
@@ -90,6 +91,31 @@ public class FileStorage {
         } catch (IOException cause) {
             throw new UncheckedIOException("Dosya okunamadı: " + key, cause);
         }
+    }
+
+    /**
+     * Dosya varsa açar; anahtar biçimi geçersizse veya dosya yoksa boş döner.
+     * Herkese açık uçlar dışarıdan gelen anahtarı bununla açar: geçersiz değer
+     * hata değil "bulunamadı"dır.
+     */
+    public Optional<InputStream> openIfExists(String key) {
+        if (!KEY_FORMAT.matcher(key).matches()) {
+            return Optional.empty();
+        }
+        var path = root.resolve(key);
+        if (!Files.isRegularFile(path)) {
+            return Optional.empty();
+        }
+        try {
+            return Optional.of(Files.newInputStream(path));
+        } catch (IOException cause) {
+            throw new UncheckedIOException("Dosya okunamadı: " + key, cause);
+        }
+    }
+
+    /** İçeriği bellekteki baytlardan yazar (işlenmiş fotoğraflar); {@link #write(InputStream)} ile aynı garanti. */
+    public String write(byte[] content) {
+        return write(new ByteArrayInputStream(content));
     }
 
     /**
