@@ -42,6 +42,11 @@ type SendOptions = {
    * sunucusunun adresini paylaşır (design.md D5).
    */
   readonly forwardedFor?: string | null;
+  /**
+   * Tekrar anahtarı (`Idempotency-Key`): aynı anahtarla tekrarlanan istek
+   * ikinci kez işlenmez (AGENTS.md §11.5, add-cart-and-checkout D6).
+   */
+  readonly idempotencyKey?: string;
 };
 
 /** Gönderimin sonucu: başarılı durum kodu ve varsa gövde (204'te yok). */
@@ -91,6 +96,9 @@ export async function apiSend<T>(
   }
   if (options.forwardedFor) {
     headers["X-Forwarded-For"] = options.forwardedFor;
+  }
+  if (options.idempotencyKey !== undefined) {
+    headers["Idempotency-Key"] = options.idempotencyKey;
   }
 
   const response = await send(new URL(`${apiBaseUrl()}${path}`), {

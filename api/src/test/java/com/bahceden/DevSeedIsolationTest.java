@@ -88,4 +88,15 @@ class DevSeedIsolationTest {
                 .as("sabit parolalı hesaba bağlı onaylı satıcı yalnızca dev bağlamında oluşmalı (ADR-014)")
                 .isZero();
     }
+
+    @Test
+    @DisplayName("Dev ödeme hesabı ve adres seed'i test bağlamında uygulanmaz")
+    void dev_odeme_ve_adres_seedi_test_baglaminda_uygulanmaz() {
+        Integer applied = jdbc.queryForObject(
+                "select count(*) from databasechangelog where id = ?", Integer.class, "012-dev-seed-cart-and-checkout");
+
+        assertThat(applied)
+                .as("sabit parolalı hesaplara bağlı ödeme hesabı ve adres yalnızca dev bağlamında oluşmalı (ADR-014)")
+                .isZero();
+    }
 }

@@ -17,7 +17,10 @@ const notFound = vi.hoisted(() =>
     throw new Error("bulunamadı");
   }),
 );
-vi.mock("next/navigation", () => ({ notFound }));
+vi.mock("next/navigation", () => ({ notFound, useRouter: () => ({ refresh: vi.fn() }) }));
+
+const session = vi.hoisted(() => ({ current: { kind: "anonymous" } as { kind: string } }));
+vi.mock("@/features/account/api", () => ({ currentSession: async () => session.current }));
 
 function aPhoto(id: number) {
   return { id, cardKey: String(id).padStart(32, "c"), largeKey: String(id).padStart(32, "l"), width: 1600, height: 1200 };
@@ -32,9 +35,13 @@ const product: ProductDetail = {
   stockQuantity: 4,
   seller: { slug: "uretici", displayName: "Üretici Bahçesi", city: "Manisa" },
   photos: [aPhoto(1), aPhoto(2)],
+  dispatchDays: 2,
+  purchasable: true,
+  id: 42,
 };
 
 beforeEach(() => {
+  session.current = { kind: "anonymous" };
   fetchProduct.mockReset();
   notFound.mockClear();
 });
@@ -67,6 +74,39 @@ describe("Ürün detayı sayfası", () => {
 
     expect(screen.queryByRole("img")).toBeNull();
     expect(screen.getByText("Üretici açıklama eklemedi.")).toBeDefined();
+  });
+
+  it("kargoya verme süresini gösterir; satın alınabilir üründe 'hazır değil' uyarısı yoktur", async () => {
+    fetchProduct.mockResolvedValue(product);
+
+    renderWithIntl(await ProductPage(params("dut")));
+
+    expect(screen.getByText("Üretici 2 iş günü içinde kargoya verir")).toBeDefined();
+    expect(screen.queryByText(/Satıcı henüz satışa hazır değil/)).toBeNull();
+  });
+
+  it("oturumsuz alıcıya girişe ve geri ürüne götüren bağlantı, oturumluya adet ve 'Sepete ekle' gösterir", async () => {
+    fetchProduct.mockResolvedValue(product);
+
+    const { unmount } = renderWithIntl(await ProductPage(params("dut")));
+    expect(screen.getByRole("link", { name: "Sepete eklemek için giriş yapın" }).getAttribute("href")).toBe(
+      "/login?next=%2Fproducts%2Fdut",
+    );
+    unmount();
+
+    session.current = { kind: "signed-in" };
+    renderWithIntl(await ProductPage(params("dut")));
+    expect(screen.getByRole("button", { name: "Sepete ekle" })).toBeDefined();
+    expect(screen.getByRole("group", { name: "Adet" })).toBeDefined();
+  });
+
+  it("satın alınamayan ama stokta olan üründe satıcının hazır olmadığını söyler", async () => {
+    fetchProduct.mockResolvedValue({ ...product, purchasable: false });
+
+    renderWithIntl(await ProductPage(params("dut")));
+
+    expect(screen.getByText(/Satıcı henüz satışa hazır değil/)).toBeDefined();
+    expect(screen.queryByRole("link", { name: "Sepete eklemek için giriş yapın" })).toBeNull();
   });
 
   it("vitrinde görünmeyen ürün bulunamadı olur", async () => {

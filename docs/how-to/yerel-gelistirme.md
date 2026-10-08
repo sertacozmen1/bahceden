@@ -131,11 +131,12 @@ docker compose up -d --build --wait   # db + api (8080) + web (3000) + mailpit (
 
 | Hesap | Ne için |
 |---|---|
-| `alici@ornek.test` | Olağan alıcı; e-postası doğrulanmamış |
+| `alici@ornek.test` | Olağan alıcı; e-postası doğrulanmamış. İzmir'de sahte bir teslimat adresi var (`012` seed'i): sepetten sipariş vermek için |
 | `iki-adim@ornek.test` | İkinci faktör açık |
 | `admin@ornek.test` | `ROLE_ADMIN`: satıcı başvurularını karara bağlamak için (`/admin/sellers`) |
-| `uretici@ornek.test` | E-postası doğrulanmış, **onaylı satıcı** (`010` seed'i; kaydı yoksa "Üretici Bahçesi" açılır): "Ürünlerim" ekranından ilan ve fotoğraf eklemek için. Başvuru akışını sıfırdan denemek için `admin@ornek.test`'in satıcı kaydı yoktur |
+| `uretici@ornek.test` | E-postası doğrulanmış, **onaylı satıcı** (`010` seed'i; kaydı yoksa "Üretici Bahçesi" açılır) ve sahte ödeme hesabı (`012` seed'i): "Ürünlerim" ekranından ilan ve fotoğraf eklemek, ürünleri satın alınabilir kılmak için. Başvuru akışını sıfırdan denemek için `admin@ornek.test`'in satıcı kaydı yoktur |
 
+- **Sipariş akışı:** `alici@ornek.test` ile `uretici@ornek.test`'in yayındaki bir ürününü sepete ekleyin, **Sepetim → Siparişe geç** ile adresi seçip **Ödemeye geç**'e basın. Ödeme sahte sağlayıcıyla (`bahceden.payment.provider: fake`) anında onaylanır ve dönüş sayfası sonucu gösterir; e-postalar mailpit'te görünür. Satıcı **Ürünlerim → Gelen siparişler**'de siparişi görür; alıcı **Hesabım → Siparişlerim**'den, satıcı sipariş detayından kargodan önce iptal edebilir. Seed satıcılarının hesabı ve ödeme hesabı olmadığı için ürünleri satın alınamaz.
 - **İlan ekleme:** `uretici@ornek.test` ile **Ürünlerim → Yeni ilan**; taslağa JPEG/PNG fotoğraf yükleyip yayına alın. Fotoğraflar volume'a yazılır; seed ürünlerinin fotoğrafı yoktur.
 - **Satıcı başvurusunu elle deneme:** `uretici@ornek.test` ile giriş yapın. **Hesabım → Satıcı olarak başvur** yolundan herhangi bir PDF, JPEG ya da PNG dosyası (en çok 10 MB) yükleyin. Sonra `admin@ornek.test` ile **Yönetim** ekranından karar verin. Seed başvuru içermez, çünkü belge dosyası Liquibase ile volume'a yazılamaz.
 - **Yüklenen dosyalar** `api` konteynerinde `/app/uploads`'a bağlı `uploads` volume'unda durur (`BAHCEDEN_STORAGE_DIR`; [ADR-039](../adr/039-uploads-on-local-volume-served-by-api.md)). Konteyner yeniden kurulduğunda kaybolmazlar. Sıfırlamak için `docker compose down -v` hem veritabanını hem dosyaları siler.

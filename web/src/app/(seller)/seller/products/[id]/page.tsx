@@ -13,6 +13,8 @@ import { ListingForm } from "@/features/listings/components/ListingForm";
 import { ListingStatusBadge } from "@/features/listings/components/ListingStatusBadge";
 import { PhotoManager } from "@/features/listings/components/PhotoManager";
 import { isSellerNotApproved, SellerNotApproved } from "@/features/listings/components/SellerNotApproved";
+import { acceptsPayments, getOwnPayoutAccount } from "@/features/payout/api";
+import { PayoutMissingNotice } from "@/features/payout/components/PayoutMissingNotice";
 
 /** Sayfa başlığı seçili dilde (ADR-029). */
 export async function generateMetadata(): Promise<Metadata> {
@@ -36,8 +38,11 @@ export default async function EditListingPage({ params }: { readonly params: Pro
   const { accessToken } = await requireRole("/seller/products", "ROLE_SELLER");
 
   let listing: SellerListingView | null;
+  let paymentsReady: boolean;
   try {
-    listing = await getOwnListing(accessToken, id);
+    const [found, payoutAccount] = await Promise.all([getOwnListing(accessToken, id), getOwnPayoutAccount(accessToken)]);
+    listing = found;
+    paymentsReady = acceptsPayments(payoutAccount);
   } catch (error) {
     if (isSellerNotApproved(error)) {
       return <SellerNotApproved />;
@@ -60,6 +65,7 @@ export default async function EditListingPage({ params }: { readonly params: Pro
           <ListingStatusBadge status={listing.status} />
         </div>
       </header>
+      {!paymentsReady && <PayoutMissingNotice />}
       {listing.status === "REMOVED" && (
         <div className="mb-6 flex flex-col gap-1">
           <FormMessage tone="error">

@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, MapPin } from "lucide-react";
+import { ArrowLeft, MapPin, Truck } from "lucide-react";
 import { getLocale, getTranslations } from "next-intl/server";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
+import { currentSession } from "@/features/account/api";
+import { AddToCart, SignInToBuy } from "@/features/cart/components/AddToCart";
 import { fetchProduct } from "@/features/catalog/api";
 import { ProductGallery } from "@/features/catalog/components/ProductGallery";
 import { formatMoney } from "@/lib/money";
@@ -27,7 +29,9 @@ const LOW_STOCK_THRESHOLD = 10;
  * Ürün detayı (storefront-catalog "Ürün detayı", add-product-listings D6).
  * Server Component: veri sunucuda çekilir, sayfa arama motorunda bulunur.
  * Vitrinde görünmeyen ürün `not-found.tsx`'e düşer. Fotoğrafı olmayan eski
- * ürünlerde galeri çizilmez; yer tutucu görsel yoktur.
+ * ürünlerde galeri çizilmez; yer tutucu görsel yoktur. Satın alınamayan ürün
+ * nedenini söyler: tükendi (stok rozeti) ya da satıcı henüz satışa hazır değil
+ * (add-cart-and-checkout D1).
  */
 export default async function ProductPage({ params }: Params) {
   const product = await fetchProduct((await params).slug);
@@ -36,6 +40,7 @@ export default async function ProductPage({ params }: Params) {
   }
   const t = await getTranslations();
   const locale = await getLocale();
+  const signedIn = await isSignedIn();
   const stock =
     product.stockQuantity === 0
       ? { variant: "destructive" as const, label: t("storefront.outOfStock") }
@@ -71,6 +76,17 @@ export default async function ProductPage({ params }: Params) {
             </p>
             <Badge variant={stock.variant}>{stock.label}</Badge>
           </div>
+          <p className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Truck aria-hidden className="size-4" />
+            {t("storefront.detail.dispatch", { days: product.dispatchDays })}
+          </p>
+          {!product.purchasable && product.stockQuantity > 0 && (
+            <p className="rounded-lg border border-border bg-muted px-3 py-2 text-sm text-muted-foreground">
+              {t("storefront.detail.notReady")}
+            </p>
+          )}
+          {product.purchasable &&
+            (signedIn ? <AddToCart productId={product.id} stock={product.stockQuantity} /> : <SignInToBuy slug={product.slug} />)}
           <section aria-labelledby="description-title" className="flex flex-col gap-2">
             <h2 id="description-title" className="text-base font-semibold tracking-tight">
               {t("storefront.detail.description")}
@@ -83,4 +99,13 @@ export default async function ProductPage({ params }: Params) {
       </div>
     </main>
   );
+}
+
+/** Sepete ekleme oturum ister (D4); oturum okunamazsa ürün yine gösterilir, eylem girişe yönlendirir. */
+async function isSignedIn(): Promise<boolean> {
+  try {
+    return (await currentSession()).kind === "signed-in";
+  } catch {
+    return false;
+  }
 }

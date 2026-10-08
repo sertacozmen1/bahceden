@@ -74,6 +74,16 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/v1/sellers/me").authenticated()
                         // Satıcı ilanları: rol token'dan; otorite serviste denetlenen satıcı durumudur (ADR-044).
                         .requestMatchers("/api/v1/sellers/me/products", "/api/v1/sellers/me/products/**").hasRole("SELLER")
+                        // Satıcının ödeme hesabı: ilanlarla aynı kural (add-cart-and-checkout D2).
+                        .requestMatchers(HttpMethod.GET, "/api/v1/sellers/me/payout-account").hasRole("SELLER")
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/sellers/me/payout-account").hasRole("SELLER")
+                        // Teslimat illeri herkese açık; sepet ve adresler oturum ister (add-cart-and-checkout D4, D5).
+                        .requestMatchers(HttpMethod.GET, "/api/v1/delivery/provinces").permitAll()
+                        .requestMatchers("/api/v1/cart", "/api/v1/cart/**").authenticated()
+                        .requestMatchers("/api/v1/addresses", "/api/v1/addresses/**").authenticated()
+                        // Siparişler: alıcı oturum ister; satıcı siparişleri satıcı rolü (D6, ADR-044).
+                        .requestMatchers("/api/v1/orders", "/api/v1/orders/**").authenticated()
+                        .requestMatchers("/api/v1/sellers/me/orders", "/api/v1/sellers/me/orders/**").hasRole("SELLER")
                         // Admin: satıcı başvurularını karara bağlama (add-seller-onboarding D7). Rol token'dan gelir.
                         .requestMatchers(HttpMethod.GET, "/api/v1/admin/sellers", "/api/v1/admin/sellers/*",
                                 "/api/v1/admin/sellers/*/document").hasRole("ADMIN")

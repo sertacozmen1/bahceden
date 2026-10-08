@@ -1,11 +1,19 @@
 package com.bahceden.common;
 
+import com.bahceden.common.geo.TurkishProvinces;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
+import java.time.Duration;
 import java.util.Base64;
+import java.util.List;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
@@ -23,6 +31,8 @@ import org.springframework.validation.annotation.Validated;
  * @param mailFrom  giden e-postaların gönderen adresi
  * @param jwt       erişim token'ı imza ayarları (ADR-008)
  * @param storage   yüklenen dosyaların dizini ve sınırları (ADR-039)
+ * @param payment   ödeme sağlayıcısı seçimi (ADR-054)
+ * @param commerce  komisyon, kargo ücreti, ödeme süresi ve teslimat illeri (ADR-055, ADR-058)
  */
 @Validated
 @ConfigurationProperties(prefix = "bahceden")
@@ -30,7 +40,55 @@ public record BahcedenProperties(
         @NotBlank String webOrigin,
         @NotBlank @Email String mailFrom,
         @NotNull @Valid Jwt jwt,
-        @NotNull @Valid Storage storage) {
+        @NotNull @Valid Storage storage,
+        @NotNull @Valid Payment payment,
+        @NotNull @Valid Commerce commerce) {
+
+    /**
+     * Ödeme sağlayıcısı (ADR-054, add-cart-and-checkout D8).
+     *
+     * <p>Gerçek sağlayıcı seçilene kadar tek geçerli değer {@code fake}'tir
+     * (KALANLAR A1): bilinmeyen bir değerle uygulama açılmaz; yanlış yazılmış
+     * bir ad sessizce sahte sağlayıcıya düşmez.
+     *
+     * @param provider sağlayıcı adı
+     */
+    public record Payment(@NotBlank @Pattern(regexp = "fake") String provider) {
+    }
+
+    /**
+     * Sipariş fiyatlaması ve teslimat kuralları (add-cart-and-checkout D5, D7).
+     *
+     * <p>Değerler sipariş anında satıcı siparişine yazılır; burada değişmesi
+     * geçmiş siparişi etkilemez (ADR-055 §5).
+     *
+     * @param commissionRateBp           komisyon oranı, baz puan (%5 = 500)
+     * @param commissionFixedMinor       satıcı siparişi başına sabit komisyon, kuruş
+     * @param shippingFeeMinor           satıcı başına kargo ücreti, kuruş (ADR-058)
+     * @param freeShippingThresholdMinor bu ürün tutarı ve üzerinde kargo ücretsiz, kuruş
+     * @param paymentTimeout             ödemenin tamamlanması için süre (D8)
+     * @param deliveryProvinces          teslimat yapılan illerin plaka kodları; her biri il kataloğunda olmalı
+     */
+    public record Commerce(
+            @Min(0) @Max(10_000) int commissionRateBp,
+            @PositiveOrZero long commissionFixedMinor,
+            @PositiveOrZero long shippingFeeMinor,
+            @Positive long freeShippingThresholdMinor,
+            @NotNull Duration paymentTimeout,
+            @NotEmpty List<String> deliveryProvinces) {
+
+        public Commerce {
+            if (deliveryProvinces != null) {
+                for (var code : deliveryProvinces) {
+                    if (!TurkishProvinces.exists(code)) {
+                        throw new IllegalArgumentException(
+                                "bahceden.commerce.delivery-provinces içinde bilinmeyen il kodu: " + code);
+                    }
+                }
+                deliveryProvinces = List.copyOf(deliveryProvinces);
+            }
+        }
+    }
 
     /**
      * Yüklenen dosyaların saklandığı dizin (ADR-039, add-seller-onboarding D6).

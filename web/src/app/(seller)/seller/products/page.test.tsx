@@ -15,9 +15,14 @@ const session = vi.hoisted(() => {
   return state;
 });
 const listOwnListings = vi.hoisted(() => vi.fn());
+const getOwnPayoutAccount = vi.hoisted(() => vi.fn());
 
 vi.mock("@/features/account/api", () => ({ currentSession: async () => session.current }));
 vi.mock("@/features/listings/api", () => ({ listOwnListings }));
+vi.mock("@/features/payout/api", () => ({
+  getOwnPayoutAccount,
+  acceptsPayments: (account: { status: string } | null) => account?.status === "ACTIVE",
+}));
 
 const notFound = vi.hoisted(() =>
   vi.fn(() => {
@@ -39,6 +44,8 @@ const empty = { items: [], page: 0, size: 20, totalElements: 0, totalPages: 0 };
 beforeEach(() => {
   notFound.mockClear();
   listOwnListings.mockReset();
+  getOwnPayoutAccount.mockReset();
+  getOwnPayoutAccount.mockResolvedValue({ status: "ACTIVE" });
 });
 
 describe("Ürünlerim sayfası", () => {
@@ -84,6 +91,18 @@ describe("Ürünlerim sayfası", () => {
     renderWithIntl(await SellerProductsPage({ searchParams: Promise.resolve({}) }));
 
     expect(screen.getByRole("heading", { name: "Henüz ilanınız yok" })).toBeDefined();
+    expect(screen.queryByText("Ürünleriniz henüz satın alınamıyor")).toBeNull();
+  });
+
+  it("ödeme hesabı yoksa ilanların satın alınamayacağını söyler ve ödeme bilgilerine götürür", async () => {
+    session.current = signedIn(["ROLE_SELLER"]);
+    listOwnListings.mockResolvedValue(empty);
+    getOwnPayoutAccount.mockResolvedValue(null);
+
+    renderWithIntl(await SellerProductsPage({ searchParams: Promise.resolve({}) }));
+
+    expect(screen.getByText("Ürünleriniz henüz satın alınamıyor")).toBeDefined();
+    expect(screen.getByRole("link", { name: "Ödeme bilgilerine git" }).getAttribute("href")).toBe("/seller/payout");
   });
 
   it("api satıcıyı onaylı saymazsa hata yerine başvuru yönlendirmesi gösterir", async () => {

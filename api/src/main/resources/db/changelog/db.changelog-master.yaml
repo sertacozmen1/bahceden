@@ -38,3 +38,9 @@ databaseChangeLog:
   - include:
       file: 010-dev-seed-product-listings.sql
       relativeToChangelogFile: true
+  - include:
+      file: 011-cart-and-checkout.sql
+      relativeToChangelogFile: true
+  - include:
+      file: 012-dev-seed-cart-and-checkout.sql
+      relativeToChangelogFile: true

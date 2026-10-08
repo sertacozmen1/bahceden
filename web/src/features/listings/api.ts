@@ -14,6 +14,12 @@ export type ProductUnit = SellerListingView["unit"];
 /** Formdaki birim seçenekleri; sözleşmedeki enum ile aynı. */
 export const productUnits = ["KILOGRAM", "PIECE", "BUNCH"] as const satisfies readonly ProductUnit[];
 
+/** Kargoya verme süresi seçenekleri, iş günü (ADR-058); sınır `api`'dedir. */
+export const dispatchDayOptions = [1, 2, 3] as const;
+
+/** Süre gönderilmeyen yeni ilanın varsayılanı; `api` ile aynı (add-cart-and-checkout D3). */
+export const defaultDispatchDays = 2;
+
 const HTTP_NOT_FOUND = 404;
 const OWN_LISTINGS_PATH = "/api/v1/sellers/me/products";
 

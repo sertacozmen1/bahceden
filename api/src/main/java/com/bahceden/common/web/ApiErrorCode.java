@@ -79,6 +79,48 @@ public enum ApiErrorCode {
     /** İlan başına fotoğraf sınırı (5) doldu (409, D3). */
     PRODUCT_PHOTO_LIMIT_REACHED(HttpStatus.CONFLICT),
 
+    /** Onaylı satıcının ödeme hesabı yok (404, add-cart-and-checkout D2). */
+    PAYOUT_ACCOUNT_NOT_FOUND(HttpStatus.NOT_FOUND),
+
+    /** Ödeme sağlayıcısı alt üye kaydını reddetti; bilgiler saklandı, satış kapalı (422, D2). */
+    PAYOUT_ACCOUNT_REJECTED(HttpStatus.UNPROCESSABLE_ENTITY),
+
+    /** Ödeme sağlayıcısına ulaşılamadı veya işlem reddedildi; kayıt değişmedi (502, D8, D9). */
+    PAYMENT_PROVIDER_ERROR(HttpStatus.BAD_GATEWAY),
+
+    /** Ürün şu an satın alınamaz: yayında değil, satıcı onaylı değil, ödeme hesabı etkin değil veya tükendi (422, D1). */
+    PRODUCT_NOT_PURCHASABLE(HttpStatus.UNPROCESSABLE_ENTITY),
+
+    /** Satıcı kendi ürününü sepete ekleyemez (422, D4). */
+    CANNOT_BUY_OWN_PRODUCT(HttpStatus.UNPROCESSABLE_ENTITY),
+
+    /** Sepette en çok 50 farklı ürün olur (422, D4). */
+    CART_FULL(HttpStatus.UNPROCESSABLE_ENTITY),
+
+    /** Adres yok veya başkasına ait (404, D5). */
+    ADDRESS_NOT_FOUND(HttpStatus.NOT_FOUND),
+
+    /** Hesap başına adres sınırı (10) doldu (422, D5). */
+    ADDRESS_LIMIT_REACHED(HttpStatus.UNPROCESSABLE_ENTITY),
+
+    /** Seçilen adresin iline bugün teslimat yok (422, D5). */
+    ADDRESS_NOT_DELIVERABLE(HttpStatus.UNPROCESSABLE_ENTITY),
+
+    /** Sepet boş; sipariş oluşturulamaz (422, D6). */
+    CART_EMPTY(HttpStatus.UNPROCESSABLE_ENTITY),
+
+    /** Sepette satın alınamayan veya stoğu aşan satır var (422, D6). */
+    CART_HAS_UNAVAILABLE_ITEMS(HttpStatus.UNPROCESSABLE_ENTITY),
+
+    /** Sipariş yok veya başkasına ait (404, D6). */
+    ORDER_NOT_FOUND(HttpStatus.NOT_FOUND),
+
+    /** Satıcı siparişi yok, başkasına ait veya ödenmemiş (404, D6). */
+    SELLER_ORDER_NOT_FOUND(HttpStatus.NOT_FOUND),
+
+    /** Satıcı siparişi bu durumdan iptal edilemez: zaten iptal edilmiş veya ödenmemiş (409, D9). */
+    ORDER_INVALID_TRANSITION(HttpStatus.CONFLICT),
+
     /** Kısa sürede çok fazla istek ya da çok fazla hatalı kod denemesi (429, design.md D5). */
     RATE_LIMITED(HttpStatus.TOO_MANY_REQUESTS),
 

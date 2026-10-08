@@ -27,16 +27,16 @@ Feature dosyası içerik üretmez; yukarıdakilere **link verir** ve zaman için
 | [Vitrin ve Arama](vitrin-ve-arama.md) | Yayında | 2026-10-06 | 2026-10-08 | storefront-catalog |
 | [Hesap ve Oturum](hesap-ve-oturum.md) | Yayında | 2026-10-07 | 2026-10-08 | account-identity |
 | [Satıcı Kaydı ve Onayı](satici-kaydi-ve-onayi.md) | Yayında | 2026-10-08 | 2026-10-08 | seller-onboarding |
-| [Ürün İlanları](urun-ilanlari.md) | Geliştirmede | 2026-10-08 | 2026-10-08 | product-listings |
+| [Ürün İlanları](urun-ilanlari.md) | Yayında | 2026-10-08 | 2026-10-08 | product-listings |
+| [Sepet ve Sipariş](sepet-ve-siparis.md) | Yayında | 2026-10-08 | 2026-10-08 | cart-and-checkout, orders |
+| [Ödeme ve Hakediş](odeme-ve-hakedis.md) | Yayında | 2026-10-08 | 2026-10-08 | seller-payout-details |
 | [Genel: feature'a bağlı olmayan işler](_genel.md) | - | - | 2026-10-08 | (dokümantasyon, araçlar, altyapı, AI kuralları) |
 
 **Planlanan feature'lar** (ilk dilimlerle birlikte dosyaları açılacak):
 
 | Feature | Kapsam | Bloke eden karar |
 |---|---|---|
-| Sepet ve Sipariş | Sepet, adres, sipariş oluşturma, durum makinesi | KALANLAR A1 |
-| Ödeme ve Hakediş | Tahsilat, komisyon, satıcı ödemesi, iade | KALANLAR A1 |
-| Kargo ve Teslimat | Gönderi oluşturma, takip, teslim bildirimi | KALANLAR A2 |
+| Kargo ve Teslimat | Gönderi oluşturma, etiket, takip, teslim bildirimi | Yok: ADR-057 ile `fake` entegratörle başlayabilir; gerçek entegratör için KALANLAR A2 |
 | Bildirimler | Sipariş/kargo e-postası, satıcı bildirimi | KALANLAR B4 |
 
 **Durum değerleri:** `Fikir` (yalnızca product belgesi var) · `Geliştirmede` (change açık) · `Yayında` (change archive edildi, `main`'de) · `Kaldırıldı`.

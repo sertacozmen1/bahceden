@@ -21,8 +21,21 @@ public final class ListingFixtures {
         this.accessTokens = accessTokens;
     }
 
-    /** Hesaplı satıcıların ürünleri ve geçmişleri, satıcı kayıtları ve bütün hesaplar silinir. */
+    /**
+     * Sipariş, ödeme, sepet ve adres kayıtları; hesaplı satıcıların ürünleri ve
+     * geçmişleri, ödeme hesapları, satıcı kayıtları ve bütün hesaplar silinir.
+     */
     public void cleanUp() {
+        jdbc.execute("delete from refunds");
+        jdbc.execute("delete from payments");
+        jdbc.execute("delete from order_status_changes");
+        jdbc.execute("delete from order_items");
+        jdbc.execute("delete from seller_orders");
+        jdbc.execute("delete from orders");
+        jdbc.execute("delete from cart_items");
+        jdbc.execute("delete from carts");
+        jdbc.execute("delete from addresses");
+        jdbc.execute("delete from seller_payout_accounts");
         jdbc.execute("delete from product_status_changes");
         jdbc.execute("delete from product_photos");
         jdbc.execute("delete from products where seller_id in (select id from sellers where account_id is not null)");
@@ -57,6 +70,48 @@ public final class ListingFixtures {
         var accountId = account(email, "tr", "ROLE_CUSTOMER", "ROLE_SELLER");
         seller(accountId, email.substring(0, email.indexOf('@')), "APPROVED");
         return accountId;
+    }
+
+    public long sellerIdOf(long accountId) {
+        return jdbc.queryForObject("select id from sellers where account_id = ?", Long.class, accountId);
+    }
+
+    /** Satıcıya etkin bir ödeme hesabı (sahte, sağlaması geçerli değerler; add-cart-and-checkout D2). */
+    public void activePayoutAccount(long sellerAccountId) {
+        jdbc.update("""
+                insert into seller_payout_accounts (seller_id, legal_type, legal_name, tax_id, iban, status,
+                                                    provider_sub_merchant_key)
+                values (?, 'INDIVIDUAL', 'Örnek Üretici', '10000000078', 'TR330006100519786457841326', 'ACTIVE', ?)""",
+                sellerIdOf(sellerAccountId), "test-sub-seller-" + sellerAccountId);
+    }
+
+    /**
+     * Doğrudan yayında bir ürün; fotoğraf yoktur (vitrin fotoğrafsız ürünü de
+     * gösterir). Dönen değer ürün kimliği.
+     */
+    public long publishedProduct(long sellerAccountId, String slug, long priceAmount, int stock) {
+        jdbc.update("""
+                insert into products (seller_id, slug, name, status, unit, price_amount, price_currency,
+                                      stock_quantity, published_at, status_changed_at)
+                values (?, ?, ?, 'PUBLISHED', 'KILOGRAM', ?, 'TRY', ?, now(), now())""",
+                sellerIdOf(sellerAccountId), slug, "Ürün " + slug, priceAmount, stock);
+        return jdbc.queryForObject("select id from products where slug = ?", Long.class, slug);
+    }
+
+    /** Hesaba sahte bir teslimat adresi (add-cart-and-checkout D5); dönen değer adres kimliği. */
+    public long address(long accountId, String provinceCode) {
+        jdbc.update("""
+                insert into addresses (account_id, title, recipient_name, phone, province_code, district, address_line)
+                values (?, 'Ev', 'Örnek Alıcı', '+905550000000', ?, 'Bornova', 'Ornek Mahallesi No: 1')""",
+                accountId, provinceCode);
+        return jdbc.queryForObject("select max(id) from addresses where account_id = ?", Long.class, accountId);
+    }
+
+    /** Sepete satır; sepet yoksa açılır (D4). */
+    public void cartItem(long accountId, long productId, int quantity) {
+        jdbc.update("insert into carts (account_id) values (?) on conflict (account_id) do nothing", accountId);
+        var cartId = jdbc.queryForObject("select id from carts where account_id = ?", Long.class, accountId);
+        jdbc.update("insert into cart_items (cart_id, product_id, quantity) values (?, ?, ?)", cartId, productId, quantity);
     }
 
     public String token(long accountId, String... roles) {

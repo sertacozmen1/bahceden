@@ -8,13 +8,14 @@
 
 ## Mevcut durum
 
-Şemada bugün üç bölge vardır:
+Şemada bugün dört bölge vardır:
 
 - **katalog:** ürün;
 - **satıcı:** üretici kaydı, başvuru belgeleri, durum geçmişi;
+- **sipariş ve ödeme:** satıcının ödeme hesabı, sepet, adresler, sipariş, satıcı siparişi, satırlar, geçmiş, ödeme ve iade (aşağıda);
 - **hesap:** hesap, roller, tek kullanımlık token'lar, oturum zinciri, ikinci faktör girişimleri.
 
-Sipariş, ödeme ve gönderim tabloları henüz yok ([güncel durum](00-current-state.md)).
+Gönderim (kargo) tabloları henüz yok ([güncel durum](00-current-state.md)).
 
 Satıcı ile hesap `sellers.account_id` üzerinden bağlıdır ([ADR-037](../adr/037-seller-application-with-document-and-manual-approval.md), [ADR-040](../adr/040-seller-application-is-the-seller-record.md)). Bu kolon NULL olabilir, çünkü dev seed'inden gelen satıcıların hesabı yok. Tekil kısıt, bir hesabın en fazla bir satıcı kaydı olmasını sağlar.
 
@@ -151,7 +152,8 @@ Satılan ürün ilanı.
 | `unit` | `varchar(20)` | `KILOGRAM` / `PIECE` / `BUNCH` |
 | `price_amount` | `bigint` | **Kuruş** cinsinden tamsayı ([ADR-006](../adr/006-money-as-minor-unit.md)) |
 | `price_currency` | `varchar(3)` | ISO 4217. `char(3)` değil: `bpchar` Hibernate şema doğrulamasıyla uyumsuz |
-| `stock_quantity` | `integer` | Negatif olamaz |
+| `stock_quantity` | `integer` | Negatif olamaz; ödeme başarılı olunca kilitle düşer, iptalde geri eklenir ([ADR-066](../adr/066-payment-redirect-verify-lock-stock-on-success.md), [ADR-067](../adr/067-cancel-before-shipment-full-refund-restock.md)) |
+| `dispatch_days` | `integer` | Kargoya verme süresi, 1–3 iş günü; varsayılan 2 ([ADR-061](../adr/061-listing-dispatch-days-business-days-weekends-only.md)) |
 | `published_at` | `timestamptz` | `PUBLISHED` ise zorunlu (kısıt). İlk yayında yazılır, yeniden yayında değişmez |
 | `status_reason` | `varchar(500)` | Admin kaldırma gerekçesi; satıcıya gösterilir (ADR-038 §3) |
 | `status_changed_at` | `timestamptz` | Durumun son değiştiği an |
@@ -165,6 +167,7 @@ Satılan ürün ilanı.
 | `products_unit_check` | Birim yalnızca üç değerden biri olabilir |
 | `products_price_amount_check` | Fiyat negatif olamaz |
 | `products_stock_check` | Stok negatif olamaz |
+| `products_dispatch_days_check` | Kargoya verme süresi 1–3; `011` changeset'i ekledi |
 | `products_published_requires_date` | Yayınlanmış ürünün yayın tarihi olmak zorunda: vitrin sıralaması buna dayanıyor ve geçersiz durum veritabanında temsil edilemez |
 
 ### İndeksler
@@ -185,6 +188,54 @@ Satılan ürün ilanı.
 ## `product_status_changes`
 
 İlanın durum geçişleri, yalnızca eklenir ([ADR-047](../adr/047-listing-states-removed-and-named-transitions.md)). `actor_account_id` satıcı geçişlerinde satıcının hesabı, kaldırma ve yeniden açmada admin'in hesabıdır.
+
+## Sipariş ve ödeme bölgesi
+
+`011-cart-and-checkout.sql` ile eklendi ([ADR-059](../adr/059-payment-and-order-packages-single-purchasability-rule.md)…[ADR-067](../adr/067-cancel-before-shipment-full-refund-restock.md)). Tutarlar kuruş cinsinden `bigint`'tir; siparişin para birimi `orders.currency` kolonundadır. Sipariş, ödeme ve iade kayıtları silinmez (§11.4).
+
+```mermaid
+erDiagram
+    SELLERS ||--o| SELLER_PAYOUT_ACCOUNTS : "ödeme hesabı"
+    ACCOUNTS ||--o| CARTS : "sepet"
+    CARTS ||--o{ CART_ITEMS : "satır"
+    PRODUCTS ||--o{ CART_ITEMS : "sepette"
+    ACCOUNTS ||--o{ ADDRESSES : "adres"
+    ACCOUNTS ||--o{ ORDERS : "verir"
+    ORDERS ||--|{ SELLER_ORDERS : "satıcıya bölünür"
+    SELLERS ||--o{ SELLER_ORDERS : "alır"
+    SELLER_ORDERS ||--|{ ORDER_ITEMS : "satır"
+    SELLER_ORDERS ||--o{ ORDER_STATUS_CHANGES : "geçmiş"
+    ORDERS ||--|| PAYMENTS : "ödeme"
+    PAYMENTS ||--o{ REFUNDS : "iade"
+
+    SELLER_ORDERS {
+        bigserial id PK
+        bigint order_id FK
+        bigint seller_id FK
+        varchar(20) status "PENDING_PAYMENT | NEW | CANCELLED | VOID"
+        bigint items_total "kuruş"
+        bigint shipping_fee "kuruş"
+        integer commission_rate_bp "sipariş anındaki oran"
+        bigint commission_amount
+        bigint seller_payout "items_total - commission_amount"
+        integer dispatch_days
+        timestamptz dispatch_due_at "ödeme anında hesaplanır"
+    }
+```
+
+| Tablo | İçerik | Not |
+|---|---|---|
+| `seller_payout_accounts` | Satıcı başına bir satır: tür, yasal ad, TCKN/VKN, vergi dairesi, IBAN, `ACTIVE` / `PROVIDER_REJECTED`, sağlayıcının alt üye anahtarı | IBAN ve kimlik numarası yanıtta maskeli, log'a yazılmaz; düz metin saklanır ([ADR-060](../adr/060-seller-payout-account-validated-masked-sync-submerchant.md)) |
+| `carts`, `cart_items` | Hesabın tek sepeti; satır ürün ve adet (1–99), `(cart_id, product_id)` tekil | Fiyat tutulmaz ([ADR-062](../adr/062-server-side-cart-prices-read-live.md)) |
+| `addresses` | Hesabın teslimat adresleri: başlık, alıcı, telefon (E.164), il plaka kodu, ilçe, açık adres, posta kodu | En çok 10; il teslimat listesinde olmalı ([ADR-063](../adr/063-delivery-provinces-config-address-book.md)) |
+| `orders` | İş anahtarı `order_number`, alıcı, durum (`PENDING_PAYMENT`, `PAID`, `PAYMENT_FAILED`, `PAYMENT_EXPIRED`, `CANCELLED_OUT_OF_STOCK`), adres kopyası (`ship_*`), toplamlar, `idempotency_key` (alıcıyla tekil), `payment_expires_at`, `paid_at` | `grand_total = items_total + shipping_total` kısıtı ([ADR-064](../adr/064-three-level-order-snapshot-idempotency-key.md)) |
+| `seller_orders` | Siparişin bir satıcıya düşen kısmı: kargo, komisyon, hakediş, kargoya verme süresi ve son tarihi, iptal eden taraf ve gerekçe | `seller_payout = items_total - commission_amount` ve `commission_amount <= items_total` kısıtları |
+| `order_items` | Sipariş anındaki ürün adı, adresi, birimi, birim fiyatı, adet, satır tutarı | `line_total = unit_price * quantity` kısıtı |
+| `order_status_changes` | Satıcı siparişi durum geçişleri, yalnızca eklenir | Repository çıplak `Repository` |
+| `payments` | Siparişin ödemesi: sağlayıcı, referans, yönlendirme adresi, `INITIATED` / `SUCCEEDED` / `FAILED`, tutar | Sipariş başına bir ödeme ([ADR-066](../adr/066-payment-redirect-verify-lock-stock-on-success.md)) |
+| `refunds` | İadeler: neden (`OUT_OF_STOCK`, `PAYMENT_EXPIRED`, `CANCELLED`), tutar, sağlayıcı referansı; `seller_order_id` boşsa ödemenin tamamı | Yalnızca eklenir ([ADR-067](../adr/067-cancel-before-shipment-full-refund-restock.md)) |
+
+İndeksler: `orders (buyer_account_id, created_at desc, id desc)`, `seller_orders (seller_id, created_at desc, id desc)`, `addresses (account_id, id)`, `order_items (seller_order_id, id)`, `order_status_changes (seller_order_id, created_at, id)`, `refunds (payment_id)`.
 
 ## Hesap bölgesi
 
@@ -311,6 +362,12 @@ Hesaba bağlı token ve girişim tablolarında yabancı anahtar `on delete casca
 | `com.bahceden.catalog.domain.ProductPhoto` | `product_photos` | Ürüne kimlikle (`productId`) bağlı; kapaklar ve listeler tek sorguda toplu okunur ([ADR-052](../adr/052-storefront-cover-second-query-detail-by-slug.md)) |
 | `com.bahceden.catalog.domain.ProductStatusChange` | `product_status_changes` | Yalnızca ekleme; repository çıplak `Repository` |
 | `com.bahceden.common.money.Money` | `products.price_amount`, `products.price_currency` | `@Embeddable`; ayrı tablo yok |
+| `com.bahceden.payment.domain.SellerPayoutAccount` | `seller_payout_accounts` | Satıcıya kimlikle bağlı; `Product.sellerAcceptsPayments` bu tablodan `@Formula` alt sorgusuyla okunur |
+| `com.bahceden.payment.domain.Payment`, `Refund` | `payments`, `refunds` | Siparişe kimlikle bağlı; `Refund` repository'si çıplak `Repository` |
+| `com.bahceden.order.domain.Cart`, `CartItem` | `carts`, `cart_items` | `CartItem.product` `LAZY`; sepet sorgusu ürün ve satıcıyı `join fetch` ile çeker |
+| `com.bahceden.order.domain.Address` | `addresses` | Hesaba kimlikle bağlı |
+| `com.bahceden.order.domain.Order`, `SellerOrder`, `OrderItem` | `orders`, `seller_orders`, `order_items` | Satıcı siparişleri ve satırlar `PERSIST` cascade ile siparişle yazılır; durum `SellerOrderTransition` ile değişir |
+| `com.bahceden.order.domain.OrderStatusChange` | `order_status_changes` | Yalnızca ekleme |
 | `com.bahceden.account.domain.Account` | `accounts` + `account_roles` | Roller `@ElementCollection` (`EAGER`): yetkilendirme her zaman rollere ihtiyaç duyar |
 | `com.bahceden.account.domain.EmailVerificationToken` | `email_verification_tokens` | |
 | `com.bahceden.account.domain.PasswordResetToken` | `password_reset_tokens` | |

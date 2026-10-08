@@ -24,7 +24,7 @@ Alıcı, giriş yapmadan vitrine girer ve üreticilerin yayınladığı ürünle
 - **Arama, filtre, sıralama ve kategori yok.** Liste sabit sırada; bunlar sonraki dilimde gelecek.
 - **Ürün detay sayfası yok.** Liste tek ekrandır; ürün açıklaması şemada var ama sözleşmede yok.
 - **Ürün görseli yok** (`openspec/KALANLAR.md` B3 kararı bekliyor). Tasarım yer tutucu gri kutular koymak yerine tipografiye yaslanıyor.
-- **Sepet ve satın alma yok** (KALANLAR A1, A2).
+- **Sepet ve satın alma** artık var: [Sepet ve Sipariş](sepet-ve-siparis.md).
 - **Üretici kaydı yok** ([ADR-013](../adr/013-minimal-seller-table-ahead-of-onboarding.md)): üreticiler bugün yalnızca geliştirme seed'i ile oluşur; satıcı başvuru ve onay akışı KALANLAR A3'e bağlı.
 - **Tek dil (Türkçe)** (KALANLAR A4); metinler tek modülde toplandı, kapı açık.
 
@@ -37,6 +37,7 @@ Alıcı, giriş yapmadan vitrine girer ve üreticilerin yayınladığı ürünle
 
 ## Tarihçe
 
+- 2026-10-08: Vitrin listesi ve ürün detayı `purchasable` alanını taşıyor; satın alınamayan ürün görünmeye devam eder, detayda "Tükendi" veya "Satıcı henüz satışa hazır değil" yazar ([ADR-059](../adr/059-payment-and-order-packages-single-purchasability-rule.md)). Ürün detayında kargoya verme süresi, adet seçimi ve "Sepete ekle" (oturumsuz alıcıya giriş bağlantısı); detay yanıtına ürün kimliği eklendi. Change `add-cart-and-checkout`.
 - 2026-10-08: Vitrin kartında kapak fotoğrafı ve ürün detay sayfası (`/products/[slug]`, galeri) eklendi; kart detaya bağlanıyor. Detay ucu vitrinle aynı görünürlük koşulunu taşıyor. Kapaklar tek ek sorguyla geliyor (sorgu sayısı ≤ 3). Fotoğrafsız seed ürünleri yer tutucusuz kalıyor. `REMOVED` ilanlar listede yok ([ADR-052](../adr/052-storefront-cover-second-query-detail-by-slug.md); change `add-product-listings`).
 - 2026-10-08: Vitrin yalnızca satıcısı `APPROVED` olan ürünleri gösteriyor. Bekleyen, reddedilen ve askıdaki satıcının `PUBLISHED` ürünleri listeden ve toplamdan düşer; satıcı askıdan çıkınca ürünleri kendiliğinden geri gelir ([ADR-038](../adr/038-listings-publish-immediately-with-admin-takedown.md) §4, [ADR-041](../adr/041-storefront-filters-seller-status-in-query.md); change `add-seller-onboarding`). Seed satıcıları göçle `APPROVED` oldu. Sayfalama gezintisi ortak `Pagination` bileşenine taşındı (admin listesiyle paylaşılıyor); görünüm değişmedi. Sözleşmede liste şeması `PageResponse` adından `PageResponseProductSummary` adına geçti; JSON gövdesi aynı.
 - 2026-10-06: `add-storefront-product-listing` change'i archive edildi; delta spec ana spec'e (`openspec/specs/storefront-catalog/spec.md`) sync edildi. Açık kalan tek iş vitrinin iki ekran genişliği ve iki temada gözle doğrulanması.

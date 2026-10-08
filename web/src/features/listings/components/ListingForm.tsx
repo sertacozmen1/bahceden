@@ -10,15 +10,21 @@ import { Textarea } from "@/components/ui/textarea";
 import { FormField } from "@/features/account/components/FormField";
 import { FormMessage } from "@/features/account/components/FormMessage";
 import { noErrors, toFormErrors, type FormErrors, useFormErrorTexts } from "@/features/account/formErrors";
-import { productUnits, type ProductUnit, type SellerListingView } from "@/features/listings/api";
+import {
+  defaultDispatchDays,
+  dispatchDayOptions,
+  productUnits,
+  type ProductUnit,
+  type SellerListingView,
+} from "@/features/listings/api";
 import { listingBffPaths } from "@/features/listings/bff";
 import { postToBff } from "@/lib/bffClient";
 import { parseMinorUnits, toPriceInput } from "@/lib/money";
 
 /**
  * İlan bilgileri formu (product-listings spec'i "Onaylı satıcı ilan oluşturur
- * ve düzenler"). Az alan, tek ekran: ad, birim, fiyat, stok, isteğe bağlı
- * açıklama (Miller).
+ * ve düzenler"). Az alan, tek ekran: ad, birim, fiyat, stok, kargoya verme
+ * süresi, isteğe bağlı açıklama (Miller).
  *
  * Fiyat TL olarak yazılır ve gönderilmeden önce kuruşa çevrilir; bu girdi
  * ayrıştırmasıdır, otorite `api`'dir (ADR-006). Sunucunun alan hataları ilgili
@@ -38,6 +44,7 @@ export function ListingForm(props: ListingFormProps) {
   const router = useRouter();
   const initial = props.mode === "edit" ? props.listing : undefined;
   const [unit, setUnit] = useState<ProductUnit>(initial?.unit ?? "KILOGRAM");
+  const [dispatchDays, setDispatchDays] = useState<number>(initial?.dispatchDays ?? defaultDispatchDays);
   const [errors, setErrors] = useState<FormErrors>(noErrors);
   const [pending, setPending] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -65,6 +72,7 @@ export function ListingForm(props: ListingFormProps) {
       unit,
       priceAmount,
       stockQuantity: Number(stockText),
+      dispatchDays,
     };
     setPending(true);
     setErrors(noErrors);
@@ -88,6 +96,7 @@ export function ListingForm(props: ListingFormProps) {
   }
 
   const unitError = errors.fields.unit;
+  const dispatchError = errors.fields.dispatchDays;
   const descriptionError = errors.fields.description;
   return (
     <form onSubmit={handleSubmit} noValidate>
@@ -148,6 +157,30 @@ export function ListingForm(props: ListingFormProps) {
             error={errors.fields.stockQuantity}
           />
         </div>
+        <Field data-invalid={dispatchError !== undefined}>
+          <FieldLabel id="listing-dispatch-label">{t("dispatchDays")}</FieldLabel>
+          <RadioGroup
+            aria-labelledby="listing-dispatch-label"
+            aria-describedby="listing-dispatch-ipucu"
+            className="grid-cols-3"
+            value={String(dispatchDays)}
+            onValueChange={(value) =>
+              setDispatchDays(dispatchDayOptions.find((candidate) => String(candidate) === value) ?? dispatchDays)
+            }
+          >
+            {dispatchDayOptions.map((option) => (
+              <label
+                key={option}
+                className="flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium has-[[data-checked]]:border-primary"
+              >
+                <RadioGroupItem value={String(option)} />
+                {t("dispatchOption", { days: option })}
+              </label>
+            ))}
+          </RadioGroup>
+          <FieldDescription id="listing-dispatch-ipucu">{t("dispatchHint")}</FieldDescription>
+          {dispatchError !== undefined && <FieldError>{dispatchError}</FieldError>}
+        </Field>
         <Field data-invalid={descriptionError !== undefined}>
           <FieldLabel htmlFor="listing-description">{t("description")}</FieldLabel>
           <Textarea

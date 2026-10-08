@@ -1,6 +1,6 @@
 # Ürün İlanları
 
-**Durum:** Geliştirmede
+**Durum:** Yayında
 **İlk sürüm:** 2026-10-08
 **Son değişiklik:** 2026-10-08
 
@@ -9,7 +9,7 @@
 | **Ürün belgesi** | [Ürün İlanları](../product/urun-ilanlari.md) |
 | **Kararlar** | Çerçeve: [ADR-038](../adr/038-listings-publish-immediately-with-admin-takedown.md), [ADR-039](../adr/039-uploads-on-local-volume-served-by-api.md), [ADR-044](../adr/044-seller-role-follows-status-with-query-gate.md). Uygulama: [ADR-047](../adr/047-listing-states-removed-and-named-transitions.md) … [ADR-053](../adr/053-admin-listing-moderation-shared-reason-dialog.md) |
 | **Spec (capability)** | `openspec/specs/product-listings` (yeni); `openspec/specs/storefront-catalog` (kapak fotoğrafı, ürün detayı) |
-| **Change'ler** | `openspec/changes/add-product-listings` (açık; archive kullanıcı onayı bekliyor) |
+| **Change'ler** | `openspec/changes/archive/2026-10-08-add-product-listings` (archive edildi) |
 | **Rehberler** | [Yerel geliştirme](../how-to/yerel-gelistirme.md), [Admin yetkisi verme](../how-to/admin-yetkisi-verme.md) |
 | **Referans** | [Domain modeli](../reference/01-domain-model.md), [API referansı](../reference/02-api-reference.md), [Tasarım sistemi](../reference/03-design-system.md) |
 | **Kod** | `api/src/main/java/com/bahceden/catalog/` (`ListingService`, `PhotoProcessor`, `ExifOrientation`, `ProductModerationService`), `web/src/app/(seller)/seller/products/`, `web/src/app/(shop)/products/`, `web/src/app/(admin)/admin/products/`, `web/src/app/media/`, `web/src/features/listings/` |
@@ -34,10 +34,11 @@ Onaylı üretici "Ürünlerim" ekranından yeni ilan açar: ad, birim, fiyat ve 
 
 - Gerçek cihazda, özellikle telefon kamerasından yükleme akışında insan doğrulaması. Başsız Chrome ile 375 / 1440 px ve iki temada ekran görüntüsü alındı.
 - Fotoğraf işleme süresi ölçülecek; gerekirse sınırlar ayarlanır.
-- Change `add-product-listings`'in archive'ı kullanıcı onayı bekliyor.
 
 ## Tarihçe
 
+- 2026-10-08: İlana kargoya verme süresi (1–3 iş günü; istekte isteğe bağlı, varsayılan 2) eklendi ([ADR-061](../adr/061-listing-dispatch-days-business-days-weekends-only.md)). "Ürünlerim" ve ilan detayında ödeme hesabı etkin değilse "ürünleriniz henüz satın alınamıyor" uyarısı; satıcı panelinde sekmeler (Ürünlerim · Gelen siparişler · Ödeme bilgileri). Change `add-cart-and-checkout`.
+- 2026-10-08: `add-product-listings` change'i kullanıcı onayıyla archive edildi (`openspec/changes/archive/2026-10-08-add-product-listings/`). Ön koşullar: PR #2 `main`'e merge edildi ve CI 4/4 yeşil (run `37792192822`); delta spec'ler ana spec'lere sync edildi; D1–D7 → ADR-047…053; dokümanlar güncel. Taşımada göreli linkler bir seviye uzatıldı. Gerçek cihaz doğrulaması açık ve notlu.
 - 2026-10-08: İlk sürüm (change `add-product-listings`).
   - `api`:
     - satıcı ilanları (`/api/v1/sellers/me/products`): taslak, düzenleme, fotoğraf yükleme / silme / sıralama, yayına alma / çekme / arşiv / geri alma;

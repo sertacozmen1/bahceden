@@ -19,6 +19,7 @@ import java.util.List;
  * @param unit          satış birimi
  * @param unitPrice     birim fiyat
  * @param stockQuantity eldeki miktar
+ * @param dispatchDays  kargoya verme süresi, iş günü
  * @param status        ilanın durumu
  * @param statusReason  admin kaldırma gerekçesi
  * @param publishedAt   ilk yayın anı; hiç yayınlanmadıysa boş
@@ -50,6 +51,10 @@ public record SellerListingView(
 
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Eldeki miktar", example = "80")
         int stockQuantity,
+
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Kargoya verme süresi, iş günü (1–3)",
+                example = "2")
+        int dispatchDays,
 
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "İlanın durumu", example = "DRAFT")
         ProductStatus status,

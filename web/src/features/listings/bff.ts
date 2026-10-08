@@ -24,5 +24,6 @@ export function listingBodyFrom(body: Record<string, unknown>): Record<string, u
     unit: pick("unit"),
     priceAmount: pick("priceAmount"),
     stockQuantity: pick("stockQuantity"),
+    dispatchDays: pick("dispatchDays"),
   };
 }

@@ -62,6 +62,9 @@ public class ListingService {
     /** İlan başına fotoğraf üst sınırı (D3); şemadaki {@code position between 0 and 4} ile aynı. */
     static final int MAX_PHOTOS = 5;
 
+    /** İstekte süre gönderilmezse yeni ilanın kargoya verme süresi (D3, ADR-058 olumsuz sonucu). */
+    static final int DEFAULT_DISPATCH_DAYS = 2;
+
     private final ProductRepository products;
     private final ProductPhotoRepository photos;
     private final ProductStatusChangeRepository statusChanges;
@@ -96,7 +99,8 @@ public class ListingService {
         var now = clock.instant();
         var product = products.save(Product.draft(seller, uniqueSlug(request.name()), request.name().trim(),
                 description(request), ProductUnit.valueOf(request.unit()),
-                Money.of(request.priceAmount(), CURRENCY), request.stockQuantity(), now));
+                Money.of(request.priceAmount(), CURRENCY), request.stockQuantity(),
+                request.dispatchDays() == null ? DEFAULT_DISPATCH_DAYS : request.dispatchDays(), now));
         statusChanges.save(ProductStatusChange.record(product.getId(), null, ProductStatus.DRAFT, null, accountId, now));
         log.info("İlan oluşturuldu: satıcı {}, ilan {}", seller.getId(), product.getId());
         return mapper.toSellerListingView(product, List.of());
@@ -107,7 +111,8 @@ public class ListingService {
     public SellerListingView update(long accountId, long productId, ListingRequest request) {
         var product = ownProduct(accountId, productId);
         product.update(request.name().trim(), description(request), ProductUnit.valueOf(request.unit()),
-                Money.of(request.priceAmount(), CURRENCY), request.stockQuantity(), clock.instant());
+                Money.of(request.priceAmount(), CURRENCY), request.stockQuantity(),
+                request.dispatchDays() == null ? product.getDispatchDays() : request.dispatchDays(), clock.instant());
         return view(product);
     }
 

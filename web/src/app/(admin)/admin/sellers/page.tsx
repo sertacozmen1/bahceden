@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Inbox } from "lucide-react";
 import { getLocale, getTranslations } from "next-intl/server";
+import { FilterTabs } from "@/components/FilterTabs";
 import { Pagination, parsePage } from "@/components/Pagination";
 import { Card, CardContent } from "@/components/ui/card";
 import { requireRole } from "@/features/account/requireSession";
@@ -9,7 +10,6 @@ import { adminSellerStatuses, listSellersForAdmin } from "@/features/admin/api";
 import { AdminNav } from "@/features/admin/components/AdminNav";
 import { SellerStatusBadge } from "@/features/seller/components/SellerStatusBadge";
 import { formatDateTime } from "@/lib/datetime";
-import { cn } from "@/lib/utils";
 
 /** Sayfa başlığı seçili dilde (ADR-029). */
 export async function generateMetadata(): Promise<Metadata> {
@@ -44,26 +44,12 @@ export default async function AdminSellersPage({ searchParams }: { readonly sear
         <p className="text-pretty text-muted-foreground">{t("admin.sellers.intro")}</p>
       </header>
 
-      <nav aria-label={t("admin.sellers.tabsLabel")} className="mb-5 -mx-4 overflow-x-auto px-4">
-        <ul className="flex gap-2">
-          {adminSellerStatuses.map((candidate) => (
-            <li key={candidate}>
-              <Link
-                href={{ pathname: "/admin/sellers", query: { status: candidate } }}
-                aria-current={candidate === status ? "page" : undefined}
-                className={cn(
-                  "inline-flex h-11 items-center rounded-lg border px-4 text-sm font-medium whitespace-nowrap lg:h-10",
-                  candidate === status
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border bg-card hover:bg-muted",
-                )}
-              >
-                {t("admin.sellers.tab", { status: candidate })}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </nav>
+      <FilterTabs
+        label={t("admin.sellers.tabsLabel")}
+        pathname="/admin/sellers"
+        current={status}
+        options={adminSellerStatuses.map((candidate) => ({ value: candidate, label: t("admin.sellers.tab", { status: candidate }) }))}
+      />
 
       {result.items.length === 0 ? (
         <Card>

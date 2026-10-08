@@ -405,6 +405,38 @@ Change `add-product-listings`; kararlar [ADR-047](../adr/047-listing-states-remo
 
 ---
 
+## Ödeme hesabı, sepet, adres ve sipariş uçları
+
+Change `add-cart-and-checkout`; kararlar [ADR-054](../adr/054-split-payment-via-provider-port-provider-pending.md)…[ADR-058](../adr/058-flat-shipping-fee-per-seller-and-declared-handover.md) (çerçeve) ve [ADR-059](../adr/059-payment-and-order-packages-single-purchasability-rule.md)…[ADR-068](../adr/068-checkout-web-routes-server-cart-count.md).
+
+| Uç | Kimlik | Başarı | Hatalar | Hız sınırı |
+|---|---|---|---|---|
+| `GET /api/v1/sellers/me/payout-account` | `ROLE_SELLER` + onaylı satıcı | `200` `PayoutAccountView` (maskeli) | 401, 403, 404 (`PAYOUT_ACCOUNT_NOT_FOUND`) | - |
+| `PUT /api/v1/sellers/me/payout-account` | aynı | `200` `PayoutAccountView` | 400 (`taxId`, `taxOffice`, `iban`, `legalType`…), 401, 403, 422 (`PAYOUT_ACCOUNT_REJECTED`), 502 (`PAYMENT_PROVIDER_ERROR`) | - |
+| `GET /api/v1/cart` | oturum | `200` `CartView` | 401 | - |
+| `PUT /api/v1/cart/items/{productId}` | oturum | `200` `CartView` | 400 (`quantity`), 401, 404, 422 (`PRODUCT_NOT_PURCHASABLE`, `CANNOT_BUY_OWN_PRODUCT`, `CART_FULL`) | - |
+| `DELETE /api/v1/cart/items/{productId}` | oturum | `200` `CartView` | 401 | - |
+| `GET /api/v1/delivery/provinces` | açık | `200` `PageResponseDeliveryProvince` | - | - |
+| `GET`, `POST /api/v1/addresses` | oturum | `200` liste / `201` `AddressView` + `Location` | 400 (`provinceCode`, `phone`…), 401, 422 (`ADDRESS_LIMIT_REACHED`) | - |
+| `PUT`, `DELETE /api/v1/addresses/{id}` | oturum | `200` / `204` | 400, 401, 404 (`ADDRESS_NOT_FOUND`) | - |
+| `POST /api/v1/orders` (+ `Idempotency-Key` başlığı) | oturum | `201` `OrderPlaced` + `Location` | 400 (`Idempotency-Key`, `addressId`), 401, 404 (`ADDRESS_NOT_FOUND`), 422 (`CART_EMPTY`, `CART_HAS_UNAVAILABLE_ITEMS`, `ADDRESS_NOT_DELIVERABLE`), 429, 502 | hesap: saatte 20 |
+| `POST /api/v1/orders/{orderNumber}/payment` | oturum | `200` `OrderDetail` | 401, 404 (`ORDER_NOT_FOUND`), 502 | - |
+| `GET /api/v1/orders` | oturum | `200` `PageResponseOrderSummary` | 400, 401 | - |
+| `GET /api/v1/orders/{orderNumber}` | oturum | `200` `OrderDetail` | 401, 404 | - |
+| `POST /api/v1/orders/{orderNumber}/seller-orders/{id}/cancel` | oturum | `200` `OrderDetail` | 400, 401, 404, 409 (`ORDER_INVALID_TRANSITION`), 502 | - |
+| `GET /api/v1/sellers/me/orders?status=` | `ROLE_SELLER` + onaylı satıcı | `200` `PageResponseSellerOrderSummary` | 400, 401, 403 | - |
+| `GET /api/v1/sellers/me/orders/{id}` | aynı | `200` `SellerOrderDetail` | 401, 403, 404 (`SELLER_ORDER_NOT_FOUND`) | - |
+| `POST /api/v1/sellers/me/orders/{id}/cancel` | aynı | `200` `SellerOrderDetail` | 400 (`reason`), 401, 403, 404, 409, 502 | - |
+
+- **Vitrin:** `ProductSummary` ve `ProductDetail` `purchasable` taşır; `ProductDetail` ayrıca `dispatchDays` ve `id` (sepete ekleme için). `ListingRequest.dispatchDays` isteğe bağlıdır (1–3; yoksa yeni ilanda 2).
+- **Sepet:** fiyat ve stok her okumada üründen gelir; satıcı grubu başına `itemsTotal`, `shippingFee`, `freeShippingRemaining`, `dispatchDays`; sepet için `itemCount`, toplamlar ve `hasUnavailableItems`. Satın alınamaz hale gelen satır `available = false` ile kalır ve toplama girmez.
+- **Kargo ücreti:** satıcı başına 9900 kuruş; satıcının ürün tutarı 100000 kuruş ve üzerindeyse 0. **Komisyon:** satıcı siparişi başına `min(tutar, yuvarla(tutar × %5) + 300)`, hakediş = tutar − komisyon. Değerler sipariş anında yazılır.
+- **Ödeme:** `POST /orders` yanıtındaki `paymentRedirectUrl` adresine gidilir; dönüşte `POST /orders/{n}/payment` sonucu sağlayıcıdan doğrular. Stok bu anda kilitle düşer; yetmezse ödemenin tamamı iade edilir (`CANCELLED_OUT_OF_STOCK`). 30 dakikada tamamlanmayan ödeme `PAYMENT_EXPIRED`. Çağrı tekrarlanabilir.
+- **İptal:** yalnızca `NEW` durumundaki satıcı siparişi; alıcıda gerekçe isteğe bağlı, satıcıda 10–500 karakter zorunlu. Satıcı siparişinin ürün tutarı ve kargo ücreti iade edilir, stok geri eklenir.
+- **Gizlilik:** satıcı yanıtlarında alıcının adı, telefonu ve açık adresi yoktur; yalnızca il ve ilçe. Ödeme hesabında IBAN ve kimlik numarası maskelidir.
+
+---
+
 ## Henüz olmayan uçlar
 
-Oturum açıkken parola değiştirme, sepet, sipariş, ödeme ve gönderim uçları **yoktur**. Parola değiştirme karara bağlandı, change bekliyor; sipariş, ödeme ve gönderim `openspec/KALANLAR.md` A1 ve A2'ye bağlı.
+Oturum açıkken parola değiştirme, gönderim (kargo etiketi, takip) ve ayıplı ürün iadesi uçları **yoktur**. Parola değiştirme karara bağlandı, change bekliyor; gönderim ADR-057 ile karara bağlandı, entegratör seçimi KALANLAR A2'de açık.

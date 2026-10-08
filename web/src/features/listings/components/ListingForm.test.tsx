@@ -25,6 +25,7 @@ const listing: SellerListingView = {
   unit: "KILOGRAM",
   unitPrice: { amount: 2450, currency: "TRY" },
   stockQuantity: 80,
+  dispatchDays: 3,
   status: "DRAFT",
   updatedAt: "2026-10-08T09:30:00Z",
   photos: [],
@@ -66,6 +67,7 @@ describe("ListingForm", () => {
 
     fill("Salkım Domates", "24,50", "80");
     fireEvent.click(screen.getByRole("radio", { name: "Demet" }));
+    fireEvent.click(screen.getByRole("radio", { name: "1 iş günü" }));
     fireEvent.click(screen.getByRole("button", { name: "Taslak olarak kaydet" }));
 
     await waitFor(() => expect(router.push).toHaveBeenCalledWith("/seller/products/7"));
@@ -77,6 +79,7 @@ describe("ListingForm", () => {
       unit: "BUNCH",
       priceAmount: 2450,
       stockQuantity: 80,
+      dispatchDays: 1,
     });
   });
 
@@ -114,6 +117,8 @@ describe("ListingForm", () => {
     const [path, init] = fetchMock.mock.calls[0] as [string, RequestInit];
     expect(path).toBe("/api/seller/products/7");
     expect(init.method).toBe("PUT");
+    // Kayıtlı kargoya verme süresi (3) seçili gelir ve aynen gönderilir.
+    expect(JSON.parse(String(init.body))).toMatchObject({ dispatchDays: 3 });
     expect(router.refresh).toHaveBeenCalled();
   });
 });

@@ -99,6 +99,21 @@ bahceden:
     max-document-bytes: 10485760
     # İlan fotoğrafının üst sınırı: 10 MB. Orijinal saklanmaz; iki küçük JPEG üretilir (add-product-listings D4).
     max-photo-bytes: 10485760
+  payment:
+    # Ödeme sağlayıcısı (ADR-054). Gerçek sağlayıcı seçilene kadar (KALANLAR A1)
+    # tek değer `fake`: gerçek ağ çağrısı yapmaz, her ödemeyi onaylar.
+    provider: fake
+  commerce:
+    # Komisyon: ürün tutarının %5'i + satıcı siparişi başına 3 TL (ADR-055).
+    commission-rate-bp: 500
+    commission-fixed-minor: 300
+    # Kargo: satıcı başına 99 TL; satıcının ürün tutarı 1000 TL ve üzeriyse ücretsiz (ADR-058).
+    shipping-fee-minor: 9900
+    free-shipping-threshold-minor: 100000
+    # Ödeme bu süre içinde tamamlanmazsa sipariş düşer (add-cart-and-checkout D8).
+    payment-timeout: PT30M
+    # Teslimat yapılan iller, plaka koduyla: İstanbul, İzmir, Ankara, Manisa (KALANLAR A4, D5).
+    delivery-provinces: ["34", "35", "06", "45"]
 
 logging:
   level:
