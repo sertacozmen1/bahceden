@@ -14,7 +14,18 @@
     "inStock": "Stokta",
     "perUnit": "/ {unit, select, KILOGRAM {kg} PIECE {adet} BUNCH {demet} other {birim}}",
     "sellerFrom": "{city} üreticisi",
-    "resultCount": "{count, plural, other {# ürün}}"
+    "resultCount": "{count, plural, other {# ürün}}",
+    "detail": {
+      "back": "Vitrine dön",
+      "description": "Açıklama",
+      "noDescription": "Üretici açıklama eklemedi.",
+      "seller": "Üretici",
+      "galleryLabel": "Ürün fotoğrafları",
+      "showPhoto": "{position}. fotoğrafı göster",
+      "loading": "Ürün yükleniyor",
+      "notFoundTitle": "Ürün bulunamadı",
+      "notFoundBody": "Bu ürün yayından kaldırılmış ya da hiç var olmamış olabilir."
+    }
   },
   "pagination": {
     "previous": "Önceki sayfa",
@@ -122,7 +133,8 @@
       "title": "Satıcılık",
       "inviteBody": "Ürettiklerinizi aracısız satmak için üretici olarak başvurun.",
       "inviteAction": "Satıcı olarak başvur",
-      "statusAction": "Başvuru ayrıntıları"
+      "statusAction": "Başvuru ayrıntıları",
+      "productsAction": "Ürünlerim"
     },
     "application": {
       "title": "Satıcı başvurusu",
@@ -168,6 +180,80 @@
       }
     }
   },
+  "listings": {
+    "nav": "Ürünlerim",
+    "list": {
+      "title": "Ürünlerim",
+      "intro": "İlanlarınızı buradan ekleyin ve yönetin. Fotoğrafı olan taslağı yayına aldığınız anda vitrinde görünür.",
+      "new": "Yeni ilan",
+      "emptyTitle": "Henüz ilanınız yok",
+      "emptyBody": "İlk ürününüzü ekleyin; fotoğraf yükleyip yayına aldığınızda alıcılar görür.",
+      "loading": "İlanlar yükleniyor",
+      "stock": "Stok: {count}",
+      "notApprovedTitle": "Satıcı kaydınız onaylı değil",
+      "notApprovedBody": "İlan eklemek ve yönetmek için onaylı bir satıcı kaydı gerekiyor.",
+      "notApprovedAction": "Başvuru durumunu gör"
+    },
+    "status": "{status, select, DRAFT {Taslak} PUBLISHED {Yayında} ARCHIVED {Arşivde} REMOVED {Kaldırıldı} other {Bilinmiyor}}",
+    "form": {
+      "newTitle": "Yeni ilan",
+      "newIntro": "Önce bilgileri girin; ilan taslak olarak kaydedilir. Ardından fotoğraf ekleyip yayına alabilirsiniz.",
+      "editTitle": "İlanı düzenle",
+      "name": "Ürün adı",
+      "description": "Açıklama",
+      "descriptionHint": "İsteğe bağlı. Nasıl yetiştirildiği, ne zaman toplandığı gibi alıcının bilmek isteyeceği bilgiler.",
+      "unit": "Satış birimi",
+      "unitOption": "{unit, select, KILOGRAM {Kilogram} PIECE {Adet} BUNCH {Demet} other {Birim}}",
+      "price": "Birim fiyat (TL)",
+      "priceHint": "Örnek: 24,50",
+      "priceInvalid": "Geçerli bir fiyat girin (örn. 24,50).",
+      "stock": "Stok miktarı",
+      "stockHint": "Elinizdeki miktar; sıfır yazarsanız ilan \"stokta yok\" görünür.",
+      "stockInvalid": "Stok için 0 veya daha büyük bir tam sayı girin.",
+      "create": "Taslak olarak kaydet",
+      "save": "Değişiklikleri kaydet",
+      "saving": "Kaydediliyor…",
+      "saved": "Değişiklikler kaydedildi.",
+      "backToList": "Ürünlerime dön",
+      "removedTitle": "Bu ilan yönetici tarafından kaldırıldı",
+      "removedBody": "İlanı düzeltebilirsiniz, ama yayına yeniden yönetici alır. Gerekçe: {reason}"
+    },
+    "photos": {
+      "title": "Fotoğraflar",
+      "intro": "En fazla 5 fotoğraf. İlk fotoğraf kapaktır; vitrin kartında o görünür.",
+      "empty": "Henüz fotoğraf yok. Yayına almak için en az bir fotoğraf ekleyin.",
+      "add": "Fotoğraf ekle",
+      "uploading": "Yükleniyor…",
+      "fileLabel": "Fotoğraf dosyası",
+      "hint": "JPEG veya PNG, en çok 10 MB. Konum bilgisi silinir.",
+      "cover": "Kapak",
+      "moveUp": "{position}. fotoğrafı öne al",
+      "moveDown": "{position}. fotoğrafı arkaya al",
+      "delete": "{position}. fotoğrafı sil",
+      "deleteTitle": "Fotoğraf silinsin mi?",
+      "deleteBody": "Bu işlem geri alınamaz.",
+      "deleteConfirm": "Sil",
+      "cancel": "Vazgeç",
+      "alt": "{name}, fotoğraf {position}",
+      "limitReached": "5 fotoğraf sınırına ulaştınız.",
+      "tooLarge": "Fotoğraf en çok 10 MB olabilir.",
+      "wrongType": "Fotoğraf JPEG veya PNG olmalıdır."
+    },
+    "actions": {
+      "title": "Yayın",
+      "publish": "Yayına al",
+      "unpublish": "Yayından çek",
+      "archive": "Arşivle",
+      "restore": "Arşivden geri al",
+      "working": "İşleniyor…",
+      "needsPhoto": "Yayına almak için önce bir fotoğraf ekleyin.",
+      "draftBody": "Taslak vitrinde görünmez.",
+      "publishedBody": "İlan vitrinde görünüyor.",
+      "archivedBody": "Arşivdeki ilan vitrinde görünmez; geri alınca taslak olur.",
+      "removedBody": "Yönetici yeniden açana kadar ilan vitrinde görünmez.",
+      "viewInStore": "Vitrinde gör"
+    }
+  },
   "admin": {
     "nav": "Yönetim",
     "sellers": {
@@ -207,14 +293,31 @@
         "suspendTitle": "Satıcıyı askıya al",
         "rejectBody": "Başvuran gerekçeyi görecek ve e-postayla alacak; düzeltip yeniden gönderebilir.",
         "suspendBody": "Satıcı rolü kaldırılır ve ürünleri vitrinden düşer. Gerekçe satıcıya gösterilir ve e-postayla gönderilir.",
-        "reason": "Gerekçe",
-        "reasonHint": "En az 10, en çok 500 karakter. Satıcıya olduğu gibi gösterilir.",
-        "reasonRequired": "Gerekçe en az 10 karakter olmalıdır.",
-        "cancel": "Vazgeç",
         "confirmReject": "Reddet",
-        "confirmSuspend": "Askıya al",
-        "sending": "Kaydediliyor…"
+        "confirmSuspend": "Askıya al"
       }
+    },
+    "tabs": {
+      "label": "Yönetim bölümleri",
+      "sellers": "Satıcı başvuruları",
+      "products": "İlanlar"
+    },
+    "products": {
+      "title": "İlanlar",
+      "intro": "Yayındaki ilanları denetleyin. Kaldırdığınız ilan vitrinden düşer; satıcı gerekçeyi görür ve e-postayla alır.",
+      "tabsLabel": "Duruma göre süz",
+      "tab": "{status, select, PUBLISHED {Yayında} REMOVED {Kaldırılan} other {Diğer}}",
+      "emptyTitle": "Bu durumda ilan yok",
+      "emptyBody": "Başka bir sekmeye bakabilirsiniz.",
+      "loading": "İlanlar yükleniyor",
+      "viewInStore": "Vitrinde gör",
+      "remove": "Kaldır",
+      "removeTitle": "İlanı kaldır",
+      "removeBody": "İlan vitrinden düşer. Satıcı gerekçeyi görür, ilanı düzeltebilir; yeniden siz açarsınız.",
+      "confirmRemove": "Kaldır",
+      "reinstate": "Yeniden aç",
+      "reinstating": "Açılıyor…",
+      "reason": "Gerekçe: {reason}"
     }
   },
   "footer": {
@@ -239,5 +342,12 @@
       "tr": "Türkçe",
       "en": "English"
     }
+  },
+  "reasonDialog": {
+    "label": "Gerekçe",
+    "hint": "En az 10, en çok 500 karakter. Karşı tarafa olduğu gibi gösterilir.",
+    "required": "Gerekçe en az 10 karakter olmalıdır.",
+    "cancel": "Vazgeç",
+    "sending": "Kaydediliyor…"
   }
 }

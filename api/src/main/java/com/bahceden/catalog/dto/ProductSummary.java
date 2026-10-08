@@ -8,7 +8,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
  *
  * <p>Alanlar storefront-catalog spec'inin gerektirdiği kadardır: ad, birim,
  * birim fiyat, stok ve üretici. Spec'te olmayan alan sözleşmeye eklenmez
- * (AGENTS.md K2); ürün açıklaması ve görsel, detay sayfası dilimiyle gelir.
+ * (AGENTS.md K2). Kapak fotoğrafı add-product-listings ile eklendi ve boş
+ * olabilir: dev seed'inden gelen eski ürünlerin fotoğrafı yoktur (D6).
  *
  * @param slug          ürünün kalıcı tanımlayıcısı
  * @param name          ürün adı
@@ -16,6 +17,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
  * @param unitPrice     birim fiyat (kuruş cinsinden)
  * @param stockQuantity eldeki miktar; sıfırsa ürün stokta değildir
  * @param seller        ürünü üreten ve gönderen üretici
+ * @param coverPhoto    kapak fotoğrafı; yoksa {@code null}
  */
 @Schema(name = "ProductSummary", description = "Vitrin listesindeki ürün")
 public record ProductSummary(
@@ -24,5 +26,7 @@ public record ProductSummary(
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Satış birimi", example = "KILOGRAM") ProductUnit unit,
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Birim fiyat") MoneyView unitPrice,
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Eldeki miktar; sıfırsa stokta değil", example = "120") int stockQuantity,
-        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Ürünü üreten ve gönderen üretici") SellerSummary seller) {
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Ürünü üreten ve gönderen üretici") SellerSummary seller,
+        @Schema(requiredMode = Schema.RequiredMode.NOT_REQUIRED, nullable = true,
+                description = "Kapak fotoğrafı (sıradaki ilk fotoğraf); fotoğrafı olmayan üründe boş") ProductPhotoView coverPhoto) {
 }

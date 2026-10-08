@@ -15,6 +15,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.Instant;
+import java.util.Optional;
 
 /**
  * Satılan ürün ilanı.
@@ -23,8 +24,10 @@ import java.time.Instant;
  * (storefront-catalog spec'i). Fiyat minor unit olarak {@link Money} içinde
  * saklanır (ADR-006); istemci fiyat hesaplamaz, yalnızca gösterir.
  *
- * <p>Entity veri taşır, iş kuralı taşımaz: yayına alma, stok düşme gibi
- * davranışlar ilgili service'te yaşar (AGENTS.md §11.2).
+ * <p>Durum yalnızca {@link #apply(ProductTransition, String, Instant)} ile, izinli
+ * geçişlerden biri üzerinden değişir (add-product-listings D1). Kimin hangi
+ * geçişi yapabileceği ve fotoğraf koşulu servistedir; entity yalnızca geçişin
+ * şimdiki durumdan yapılabildiğini garanti eder.
  */
 @Entity
 @Table(name = "products")
@@ -73,6 +76,13 @@ public class Product {
     @Column(name = "published_at")
     private Instant publishedAt;
 
+    /** Admin kaldırma gerekçesi; satıcıya gösterilir (ADR-038 §3). */
+    @Column(name = "status_reason", length = 500)
+    private String statusReason;
+
+    @Column(name = "status_changed_at")
+    private Instant statusChangedAt;
+
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -80,6 +90,58 @@ public class Product {
     private Instant updatedAt;
 
     protected Product() {
+    }
+
+    /** Yeni ilan: {@link ProductStatus#DRAFT} açılır, vitrinde görünmez. */
+    public static Product draft(Seller seller, String slug, String name, String description, ProductUnit unit,
+                                Money price, int stockQuantity, Instant now) {
+        var product = new Product();
+        product.seller = seller;
+        product.slug = slug;
+        product.status = ProductStatus.DRAFT;
+        product.statusChangedAt = now;
+        product.createdAt = now;
+        product.update(name, description, unit, price, stockQuantity, now);
+        return product;
+    }
+
+    /** İlan bilgilerini günceller; durum ve {@code slug} değişmez (D2). */
+    public void update(String name, String description, ProductUnit unit, Money price, int stockQuantity,
+                       Instant now) {
+        this.name = name;
+        this.description = description;
+        this.unit = unit;
+        this.price = price;
+        this.stockQuantity = stockQuantity;
+        this.updatedAt = now;
+    }
+
+    /** Fotoğraf değişince ilanın son değişiklik anı güncellenir (satıcı paneli sıralaması). */
+    public void touch(Instant now) {
+        updatedAt = now;
+    }
+
+    public boolean allows(ProductTransition transition) {
+        return transition.allowsFrom(status);
+    }
+
+    /**
+     * Durumu bir geçişle değiştirir. İlk yayında {@code publishedAt} yazılır ve
+     * sonra değişmez: aç-kapa ile vitrinde öne çıkılamaz (D1).
+     *
+     * @param reason kaldırma gerekçesi; gerekçe istemeyen geçişte önceki gerekçe temizlenir
+     */
+    public void apply(ProductTransition transition, String reason, Instant now) {
+        if (!allows(transition)) {
+            throw new IllegalStateException("İzinsiz ilan geçişi: " + status + " -> " + transition);
+        }
+        status = transition.to();
+        statusReason = transition.requiresReason() ? reason : null;
+        if (status == ProductStatus.PUBLISHED && publishedAt == null) {
+            publishedAt = now;
+        }
+        statusChangedAt = now;
+        updatedAt = now;
     }
 
     public Long getId() {
@@ -120,6 +182,14 @@ public class Product {
 
     public Instant getPublishedAt() {
         return publishedAt;
+    }
+
+    public Optional<String> getStatusReason() {
+        return Optional.ofNullable(statusReason);
+    }
+
+    public Instant getStatusChangedAt() {
+        return statusChangedAt;
     }
 
     public Instant getCreatedAt() {

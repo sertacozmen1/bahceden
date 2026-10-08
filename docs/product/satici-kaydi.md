@@ -2,7 +2,7 @@
 
 **Tarih:** 2026-10-08
 **Sahibi:** Ürün sahibi
-**Durum:** Geliştirmede (change `add-seller-onboarding`)
+**Durum:** Yayında (change `add-seller-onboarding`, archive edildi)
 
 ## 1. Kullanıcı Problemi ve Değer Önerisi
 

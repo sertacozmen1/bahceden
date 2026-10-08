@@ -16,6 +16,12 @@ public enum ProductStatus {
     /** Vitrinde görünür ve satın alınabilir. */
     PUBLISHED,
 
-    /** Sezonu kapanmış veya kaldırılmış; vitrinde görünmez, geçmiş siparişlerde kalır. */
-    ARCHIVED
+    /** Satıcı sezonu kapattı; vitrinde görünmez, geçmiş siparişlerde kalır. Satıcı geri alabilir. */
+    ARCHIVED,
+
+    /**
+     * Admin gerekçeyle kaldırdı (ADR-038 §3, add-product-listings D1); vitrinde
+     * görünmez. Satıcı düzenleyebilir ama bu durumdan kendisi çıkamaz.
+     */
+    REMOVED
 }

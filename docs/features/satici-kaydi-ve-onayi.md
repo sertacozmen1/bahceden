@@ -37,6 +37,7 @@ Bir üretici, alıcı olarak açtığı hesaptan "Hesabım → Satıcı olarak b
 
 ## Tarihçe
 
+- 2026-10-08: Onaylı satıcı kapısı (`requireApprovedSeller`) ilk kez gerçek uçlarda kullanılıyor: ilan uçları rolü token'da duran ama onaylı olmayan satıcıya 403 `SELLER_NOT_APPROVED` döner ([ADR-048](../adr/048-seller-listing-endpoints-gate-then-ownership.md)). "Hesabım" satıcılık kartına "Ürünlerim" bağlantısı eklendi. Gerekçe diyaloğu ilan kaldırmayla paylaşılan `ReasonDialog`'a çıkarıldı; davranış aynı. `slug` üretimi `common/text/Slugs`'a taşındı. Change `add-product-listings`.
 - 2026-10-08: `add-seller-onboarding` change'i kullanıcı onayıyla archive edildi (`openspec/changes/archive/2026-10-08-add-seller-onboarding/`). Ön koşullar: PR #1 `main`'e merge edildi ve CI 4/4 yeşil (run `37760518873`); delta spec'ler ana spec'lere sync edildi; D1–D7 → ADR-040…046; dokümanlar güncel. Taşımada göreli linkler bir seviye uzatıldı. Hukuk teyidi (A5) açık ve notlu.
 - 2026-10-08: İlk sürüm (change `add-seller-onboarding`).
   - `api`:

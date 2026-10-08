@@ -21,7 +21,8 @@ Bahçeden, meyve-sebze üreticisini son tüketiciyle **doğrudan** buluşturan �
 
 | Belge | Durum |
 |---|---|
-| [Satıcı Kaydı ve Onayı](satici-kaydi.md) | Geliştirmede |
+| [Satıcı Kaydı ve Onayı](satici-kaydi.md) | Yayında |
+| [Ürün İlanları](urun-ilanlari.md) | Geliştirmede |
 
 İlk ürün belgeleri, `openspec/KALANLAR.md` A1–A4 maddeleri (ödeme, kargo, satıcı onboarding, kapsam) karara bağlandıkça yazılacaktır. Yeni belge `template.md` dosyasından kopyalanır ve bu tabloya eklenir.
 

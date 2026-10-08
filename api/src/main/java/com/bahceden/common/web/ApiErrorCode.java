@@ -67,6 +67,18 @@ public enum ApiErrorCode {
      */
     SELLER_NOT_APPROVED(HttpStatus.FORBIDDEN),
 
+    /** İlan yok, başkasına ait ya da vitrinde görünmüyor (404, add-product-listings D2, D6). */
+    PRODUCT_NOT_FOUND(HttpStatus.NOT_FOUND),
+
+    /** İlanın şimdiki durumundan bu geçiş yapılamaz (409, add-product-listings D1). */
+    PRODUCT_INVALID_TRANSITION(HttpStatus.CONFLICT),
+
+    /** Vitrine çıkaran geçiş fotoğraf ister ya da vitrine çıkabilen ilanın son fotoğrafı silinemez (409, D1, D3). */
+    PRODUCT_PHOTO_REQUIRED(HttpStatus.CONFLICT),
+
+    /** İlan başına fotoğraf sınırı (5) doldu (409, D3). */
+    PRODUCT_PHOTO_LIMIT_REACHED(HttpStatus.CONFLICT),
+
     /** Kısa sürede çok fazla istek ya da çok fazla hatalı kod denemesi (429, design.md D5). */
     RATE_LIMITED(HttpStatus.TOO_MANY_REQUESTS),
 

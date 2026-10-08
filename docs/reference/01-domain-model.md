@@ -1,6 +1,6 @@
 # Domain Modeli ve Veritabanı Şeması
 
-**Son doğrulama:** 2026-10-08 · Kaynak: `api/src/main/resources/db/changelog/`
+**Son doğrulama:** 2026-10-08 (ürün ilanları) · Kaynak: `api/src/main/resources/db/changelog/`
 
 > Bu sayfa şemanın **mevcut halini** anlatır, hedefini değil. Şema yalnızca Liquibase ile değişir ([ADR-016](../adr/016-liquibase-for-schema-migrations.md)); changeset değiştiğinde bu sayfa aynı commit'te güncellenir (`AGENTS.md` K4).
 
@@ -24,6 +24,8 @@ erDiagram
     ACCOUNTS |o--o| SELLERS : "başvurur"
     SELLERS ||--o{ SELLER_DOCUMENTS : "belge gönderir"
     SELLERS ||--o{ SELLER_STATUS_CHANGES : "geçmiş"
+    PRODUCTS ||--o{ PRODUCT_PHOTOS : "fotoğraf"
+    PRODUCTS ||--o{ PRODUCT_STATUS_CHANGES : "geçmiş"
 
     SELLERS {
         bigserial id PK
@@ -35,6 +37,29 @@ erDiagram
         varchar(16) phone "E.164; yalnızca admin görür"
         varchar(500) status_reason "son ret veya askı gerekçesi"
         timestamptz status_changed_at
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    PRODUCT_PHOTOS {
+        bigserial id PK
+        bigint product_id FK
+        integer position "0-4; 0 kapak"
+        varchar(64) card_key UK "400 px JPEG"
+        varchar(64) large_key UK "1600 px JPEG"
+        integer width
+        integer height
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    PRODUCT_STATUS_CHANGES {
+        bigserial id PK
+        bigint product_id FK
+        varchar(20) from_status "oluşturmada NULL"
+        varchar(20) to_status
+        varchar(500) reason
+        bigint actor_account_id FK
         timestamptz created_at
         timestamptz updated_at
     }
@@ -67,7 +92,9 @@ erDiagram
         varchar(140) slug UK "URL tanımlayıcısı"
         varchar(200) name
         text description "vitrinde gösterilmiyor"
-        varchar(20) status "DRAFT | PUBLISHED | ARCHIVED"
+        varchar(20) status "DRAFT | PUBLISHED | ARCHIVED | REMOVED"
+        varchar(500) status_reason "admin kaldırma gerekçesi"
+        timestamptz status_changed_at
         varchar(20) unit "KILOGRAM | PIECE | BUNCH"
         bigint price_amount "kuruş"
         varchar(3) price_currency "ISO 4217"
@@ -119,20 +146,22 @@ Satılan ürün ilanı.
 | `seller_id` | `bigint` | `sellers(id)` yabancı anahtarı |
 | `slug` | `varchar(140)` | Tekil; URL'de kullanılır |
 | `name` | `varchar(200)` | Ürün adı |
-| `description` | `text` | Şemada var, **sözleşmede yok**: liste ucu göstermiyor, detay sayfası dilimiyle açılacak |
-| `status` | `varchar(20)` | `DRAFT` / `PUBLISHED` / `ARCHIVED`; enum olarak modellendi ([ADR-010](../adr/010-product-status-as-enum.md)) |
+| `description` | `text` | Ürün detayında gösterilir (`GET /products/{slug}`); listede yok |
+| `status` | `varchar(20)` | `DRAFT` / `PUBLISHED` / `ARCHIVED` / `REMOVED`; enum ([ADR-010](../adr/010-product-status-as-enum.md)); geçişler `ProductTransition`'da ([ADR-047](../adr/047-listing-states-removed-and-named-transitions.md)) |
 | `unit` | `varchar(20)` | `KILOGRAM` / `PIECE` / `BUNCH` |
 | `price_amount` | `bigint` | **Kuruş** cinsinden tamsayı ([ADR-006](../adr/006-money-as-minor-unit.md)) |
 | `price_currency` | `varchar(3)` | ISO 4217. `char(3)` değil: `bpchar` Hibernate şema doğrulamasıyla uyumsuz |
 | `stock_quantity` | `integer` | Negatif olamaz |
-| `published_at` | `timestamptz` | `PUBLISHED` ise zorunlu (kısıt) |
+| `published_at` | `timestamptz` | `PUBLISHED` ise zorunlu (kısıt). İlk yayında yazılır, yeniden yayında değişmez |
+| `status_reason` | `varchar(500)` | Admin kaldırma gerekçesi; satıcıya gösterilir (ADR-038 §3) |
+| `status_changed_at` | `timestamptz` | Durumun son değiştiği an |
 | `created_at`, `updated_at` | `timestamptz` | UTC |
 
 ### Kısıtlar
 
 | Kısıt | Ne garanti eder |
 |---|---|
-| `products_status_check` | Durum yalnızca üç değerden biri olabilir |
+| `products_status_check` | Durum dört değerden biri; `009` changeset'i `REMOVED`'ı ekledi |
 | `products_unit_check` | Birim yalnızca üç değerden biri olabilir |
 | `products_price_amount_check` | Fiyat negatif olamaz |
 | `products_stock_check` | Stok negatif olamaz |
@@ -147,6 +176,15 @@ Satılan ürün ilanı.
 | `sellers_slug_unique`, `products_slug_unique` | URL tanımlayıcılarının tekilliği |
 
 ---
+
+
+## `product_photos`
+
+İlan fotoğrafları ([ADR-049](../adr/049-listing-photos-table-one-by-one-position.md)). Kapak `position = 0` olan satırdır. `(product_id, position)` tekildir ve kısıt transaction sonunda denetlenir; sıralama tek transaction'da yer değiştirebilir. Dosyalar `BAHCEDEN_STORAGE_DIR` dizinindedir. Her fotoğraf için iki JPEG (400 px kart, 1600 px büyük) saklanır, orijinal saklanmaz ([ADR-050](../adr/050-photo-processing-exif-orientation-two-sizes.md)). `width` ve `height` büyük boyutun ölçüleridir. Anahtarlar herkese açık fotoğraf ucunun tek kaynağıdır: bu tabloda kayıtlı olmayan anahtar sunulmaz ([ADR-051](../adr/051-photo-serving-public-key-registered-web-proxy.md)).
+
+## `product_status_changes`
+
+İlanın durum geçişleri, yalnızca eklenir ([ADR-047](../adr/047-listing-states-removed-and-named-transitions.md)). `actor_account_id` satıcı geçişlerinde satıcının hesabı, kaldırma ve yeniden açmada admin'in hesabıdır.
 
 ## Hesap bölgesi
 
@@ -269,7 +307,9 @@ Hesaba bağlı token ve girişim tablolarında yabancı anahtar `on delete casca
 | `com.bahceden.seller.domain.Seller` | `sellers` | Başvuruyla yazılır; durum yalnızca `SellerTransition` üzerinden değişir. Hesap ilişki değil kimlik (`accountId`) olarak tutulur |
 | `com.bahceden.seller.domain.SellerDocument` | `seller_documents` | Yalnızca ekleme |
 | `com.bahceden.seller.domain.SellerStatusChange` | `seller_status_changes` | Yalnızca ekleme; repository çıplak `Repository` (silme yok) |
-| `com.bahceden.catalog.domain.Product` | `products` | `seller` ilişkisi `LAZY`; liste sorgusu `join fetch` ile çeker ([ADR-011](../adr/011-fetch-join-with-query-count-test.md)) |
+| `com.bahceden.catalog.domain.Product` | `products` | `seller` ilişkisi `LAZY`; liste sorgusu `join fetch` ile çeker ([ADR-011](../adr/011-fetch-join-with-query-count-test.md)). Durum yalnızca `ProductTransition` ile değişir |
+| `com.bahceden.catalog.domain.ProductPhoto` | `product_photos` | Ürüne kimlikle (`productId`) bağlı; kapaklar ve listeler tek sorguda toplu okunur ([ADR-052](../adr/052-storefront-cover-second-query-detail-by-slug.md)) |
+| `com.bahceden.catalog.domain.ProductStatusChange` | `product_status_changes` | Yalnızca ekleme; repository çıplak `Repository` |
 | `com.bahceden.common.money.Money` | `products.price_amount`, `products.price_currency` | `@Embeddable`; ayrı tablo yok |
 | `com.bahceden.account.domain.Account` | `accounts` + `account_roles` | Roller `@ElementCollection` (`EAGER`): yetkilendirme her zaman rollere ihtiyaç duyar |
 | `com.bahceden.account.domain.EmailVerificationToken` | `email_verification_tokens` | |

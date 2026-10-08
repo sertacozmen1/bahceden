@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CircleUserRound, ShieldCheck } from "lucide-react";
+import { CircleUserRound, ShieldCheck, Store } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { buttonVariants } from "@/components/ui/button";
 import { currentSession, type SessionState } from "@/features/account/api";
@@ -18,7 +18,7 @@ import { cn } from "@/lib/utils";
  * Dar ekranda maskeli e-posta gizlenir, ikon kalır; erişilebilir ad
  * `aria-label` ile korunur.
  *
- * Yönetim bağlantısı yalnızca `ROLE_ADMIN` taşıyan hesapta görünür. Bu bir
+ * "Ürünlerim" yalnızca `ROLE_SELLER`, yönetim bağlantısı yalnızca `ROLE_ADMIN` taşıyan hesapta görünür. Bu bir
  * kolaylıktır, yetkilendirme değil: otorite `api`'dir (add-seller-onboarding D7).
  */
 const navClassName = "flex items-center gap-1 sm:gap-2";
@@ -31,6 +31,12 @@ export async function SessionNav() {
     const masked = maskEmail(session.account.email);
     return (
       <nav className={navClassName} aria-label={t("account.nav.signedInAs", { email: masked })}>
+        {session.account.roles.includes("ROLE_SELLER") && (
+          <Link className={buttonVariants({ variant: "ghost" })} href="/seller/products" aria-label={t("listings.nav")}>
+            <Store aria-hidden />
+            <span className="hidden lg:inline">{t("listings.nav")}</span>
+          </Link>
+        )}
         {session.account.roles.includes("ROLE_ADMIN") && (
           <Link className={buttonVariants({ variant: "ghost" })} href="/admin/sellers" aria-label={t("admin.nav")}>
             <ShieldCheck aria-hidden />

@@ -14,7 +14,7 @@ type FormFieldProps = {
   readonly autoComplete: string;
   readonly hint?: string;
   readonly error?: string;
-  readonly inputMode?: "numeric";
+  readonly inputMode?: "numeric" | "decimal";
   readonly maxLength?: number;
   /** Düzeltip yeniden gönderilen formda önceki değer. */
   readonly defaultValue?: string;

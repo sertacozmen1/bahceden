@@ -24,7 +24,7 @@ Tüm liste uçları aynı şekli kullanır (`AGENTS.md` §11.5):
 
 `size` alanı **uygulanan** sayfa boyutunu bildirir: istek üst sınırı aşarsa sunucu değeri sınıra çeker ([ADR-012](../adr/012-page-size-capped-on-server.md)).
 
-Sözleşmede her öğe tipi için ayrı bir şema üretilir: `PageResponseProductSummary`, `PageResponseAdminSellerSummary`. JSON şekli hepsinde aynıdır. Eskiden tek bir `PageResponse` şeması vardı; ikinci liste ucu gelince ikisi aynı şemaya düşüyordu, bu yüzden 2026-10-08'de ayrıldı ([ADR-046](../adr/046-admin-surface-in-web-first-admin-by-sql.md) Trade-off).
+Sözleşmede her öğe tipi için ayrı bir şema üretilir: `PageResponseProductSummary`, `PageResponseAdminSellerSummary`, `PageResponseSellerListingView`, `PageResponseAdminProductSummary`. JSON şekli hepsinde aynıdır. Eskiden tek bir `PageResponse` şeması vardı; ikinci liste ucu gelince ikisi aynı şemaya düşüyordu, bu yüzden 2026-10-08'de ayrıldı ([ADR-046](../adr/046-admin-surface-in-web-first-admin-by-sql.md) Trade-off).
 
 ### Hata gövdesi
 
@@ -54,6 +54,10 @@ Tüm hatalar aynı şekli kullanır:
 | `SELLER_INVALID_TRANSITION` | 409 | Kaydın şimdiki durumundan bu geçiş yapılamaz |
 | `SELLER_EMAIL_NOT_VERIFIED` | 422 | Başvuru için e-posta doğrulaması gerekir ([ADR-043](../adr/043-seller-application-requires-verified-email.md)) |
 | `SELLER_NOT_APPROVED` | 403 | Satıcıya özgü işlem onaylı satıcı ister ([ADR-044](../adr/044-seller-role-follows-status-with-query-gate.md)); bugün bunu çağıran uç yok |
+| `PRODUCT_NOT_FOUND` | 404 | İlan yok, başkasına ait ya da vitrinde görünmüyor; fotoğraf anahtarı kayıtlı değil |
+| `PRODUCT_INVALID_TRANSITION` | 409 | İlanın şimdiki durumundan bu geçiş yapılamaz ([ADR-047](../adr/047-listing-states-removed-and-named-transitions.md)) |
+| `PRODUCT_PHOTO_REQUIRED` | 409 | Yayına alma / yeniden açma fotoğraf ister; yayındaki ilanın son fotoğrafı silinemez |
+| `PRODUCT_PHOTO_LIMIT_REACHED` | 409 | İlan başına 5 fotoğraf sınırı doldu |
 | `INTERNAL_ERROR` | 500 | Beklenmeyen hata; ayrıntı yalnızca sunucu log'unda |
 
 - `message` kullanıcıya gösterilebilir ve **isteğin dilindedir**: `Accept-Language` başlığına göre `tr` ya da `en`; başlık yoksa veya yalnızca desteklenmeyen dil bildiriyorsa Türkçe. Alan hataları (`fieldErrors[].message`) ve bilgilendirme yanıtlarındaki `message` alanları da aynı kurala uyar. `code` dilden bağımsızdır ([ADR-031](../adr/031-api-messages-by-accept-language.md)).
@@ -96,7 +100,7 @@ Vitrinde yayınlanmış ürünleri listeler. **Kimlik doğrulaması gerektirmez*
 
 **200 yanıtı** — `PageResponseProductSummary`
 
-Yalnızca satıcısı `APPROVED` olan `PUBLISHED` ürünler döner ([ADR-041](../adr/041-storefront-filters-seller-status-in-query.md)).
+Yalnızca satıcısı `APPROVED` olan `PUBLISHED` ürünler döner ([ADR-041](../adr/041-storefront-filters-seller-status-in-query.md)). Her ürün varsa `coverPhoto` (`ProductPhotoView`) taşır; fotoğrafı olmayan eski seed ürünlerinde boştur. Kapaklar tek ek sorguyla gelir ([ADR-052](../adr/052-storefront-cover-second-query-detail-by-slug.md)).
 
 ```json
 {
@@ -303,6 +307,14 @@ Tarayıcı `api`'ye hiç konuşmaz ve token görmez ([ADR-023](../adr/023-web-bf
 | `/api/seller/application/document` | GET | `GET /sellers/me/document` | Akış olarak iletim; koruma başlıkları aynen geçer; 401'de `/api/auth/refresh?next=`'e 307 |
 | `/api/admin/sellers/{id}/{action}` | POST | `POST /admin/sellers/{id}/{action}` | `action` beyaz listede değilse 404, `api`'ye gidilmez |
 | `/api/admin/sellers/{id}/document` | GET | `GET /admin/sellers/{id}/document` | Sahibin belge yoluyla aynı iletim |
+| `/api/seller/products` | POST | `POST /sellers/me/products` | Yalnızca ilan alanları iletilir |
+| `/api/seller/products/{id}` | PUT | `PUT /sellers/me/products/{id}` | |
+| `/api/seller/products/{id}/photos` | POST | `POST /sellers/me/products/{id}/photos` | Multipart; yalnızca `photo` iletilir |
+| `/api/seller/products/{id}/photos/{photoId}` | DELETE | `DELETE …/photos/{photoId}` | |
+| `/api/seller/products/{id}/photos/order` | PUT | `PUT …/photos/order` | Yalnızca `photoIds` |
+| `/api/seller/products/{id}/{action}` | POST | `POST …/{publish\|unpublish\|archive\|restore}` | Beyaz liste dışı eylem 404 |
+| `/api/admin/products/{id}/{action}` | POST | `POST /admin/products/{id}/{remove\|reinstate}` | Beyaz liste dışı eylem 404 |
+| `/media/product-photos/{key}` | GET | `GET /product-photos/{key}` | Herkese açık akış; önbellek başlıkları aynen geçer |
 
 - **Çerezler:** `bahceden_at` (`path=/`) ve `bahceden_rt` (`path=/api/auth`); ikisi de `HttpOnly`, `Secure`, `SameSite=Lax`, ömürleri yenileme token'ı kadar.
 - **CSRF:** POST'lar `Sec-Fetch-Site: same-origin` ister; yoksa `Origin` `Host` ile karşılaştırılır. Reddedilen istek `403 CROSS_SITE_REQUEST` alır (BFF'in kendi kodu, `api`'de yok). `api`'ye ulaşılamazsa BFF `502 SERVICE_UNAVAILABLE` döner.
@@ -368,6 +380,31 @@ Her karar hesabın dilinde e-postayla bildirilir. Gönderim hatası kararı geri
 
 ---
 
+## Ürün ilanı uçları
+
+Change `add-product-listings`; kararlar [ADR-047](../adr/047-listing-states-removed-and-named-transitions.md)…[ADR-053](../adr/053-admin-listing-moderation-shared-reason-dialog.md).
+
+| Uç | Kimlik | Başarı | Hatalar | Hız sınırı |
+|---|---|---|---|---|
+| `GET /api/v1/products/{slug}` | açık | `200` `ProductDetail` | 404 (`PRODUCT_NOT_FOUND`) | - |
+| `GET /api/v1/product-photos/{key}` | açık | `200` `image/jpeg`, `max-age=31536000, immutable` | 404 | - |
+| `GET /api/v1/sellers/me/products` | `ROLE_SELLER` + onaylı satıcı | `200` `PageResponseSellerListingView` | 401, 403 (`AUTH_FORBIDDEN`, `SELLER_NOT_APPROVED`) | - |
+| `POST /api/v1/sellers/me/products` | aynı | `201` `SellerListingView` + `Location` | 400, 401, 403 | - |
+| `GET`, `PUT /api/v1/sellers/me/products/{id}` | aynı | `200` `SellerListingView` | 400, 401, 403, 404 | - |
+| `POST /api/v1/sellers/me/products/{id}/photos` | aynı | `200` `SellerListingView` | 400 (`photo`), 401, 403, 404, 409 (`PRODUCT_PHOTO_LIMIT_REACHED`), 429 | hesap: saatte 60 |
+| `DELETE /api/v1/sellers/me/products/{id}/photos/{photoId}` | aynı | `200` | 401, 403, 404, 409 (`PRODUCT_PHOTO_REQUIRED`) | - |
+| `PUT /api/v1/sellers/me/products/{id}/photos/order` | aynı | `200` | 400 (`photoIds`), 401, 403, 404 | - |
+| `POST /api/v1/sellers/me/products/{id}/{publish\|unpublish\|archive\|restore}` | aynı | `200` | 401, 403, 404, 409 | - |
+| `GET /api/v1/admin/products?status=` | `ROLE_ADMIN` | `200` `PageResponseAdminProductSummary` | 400, 401, 403 | - |
+| `POST /api/v1/admin/products/{id}/remove` | `ROLE_ADMIN` | `200` `AdminProductSummary` | 400 (gerekçe), 401, 403, 404, 409 | - |
+| `POST /api/v1/admin/products/{id}/reinstate` | `ROLE_ADMIN` | `200` `AdminProductSummary` | 401, 403, 404, 409 | - |
+
+- **İlan alanları:** ad 2–200; açıklama en çok 2000; birim `KILOGRAM` / `PIECE` / `BUNCH`; `priceAmount` 1–10.000.000 kuruş; `stockQuantity` 0–100.000. Para birimi her zaman TRY. `slug` oluşturmada addan üretilir ve sonra değişmez.
+- **Fotoğraf:** JPEG veya PNG, en çok 10 MB ve 40 megapiksel. EXIF yönü uygulanır, iki boyutta JPEG'e yeniden kodlanır, meta veri atılır. Okunamayan dosya `400` döner ([ADR-050](../adr/050-photo-processing-exif-orientation-two-sizes.md)).
+- **Kaldırma ve yeniden açma:** satıcıya hesabının dilinde e-postayla bildirilir. Satıcı kaldırılan ilanı düzenleyebilir ama yayına alamaz.
+
+---
+
 ## Henüz olmayan uçlar
 
-Oturum açıkken parola değiştirme, satıcı ürün yönetimi (ilan ekleme ve fotoğraf), sepet, sipariş, ödeme ve gönderim uçları **yoktur**. Parola değiştirme ve ürün ilanları karara bağlandı, change bekliyor; sipariş, ödeme ve gönderim `openspec/KALANLAR.md` A1 ve A2'ye bağlı.
+Oturum açıkken parola değiştirme, sepet, sipariş, ödeme ve gönderim uçları **yoktur**. Parola değiştirme karara bağlandı, change bekliyor; sipariş, ödeme ve gönderim `openspec/KALANLAR.md` A1 ve A2'ye bağlı.

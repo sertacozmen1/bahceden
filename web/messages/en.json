@@ -14,7 +14,18 @@
     "inStock": "In stock",
     "perUnit": "/ {unit, select, KILOGRAM {kg} PIECE {piece} BUNCH {bunch} other {unit}}",
     "sellerFrom": "Grower from {city}",
-    "resultCount": "{count, plural, one {# product} other {# products}}"
+    "resultCount": "{count, plural, one {# product} other {# products}}",
+    "detail": {
+      "back": "Back to storefront",
+      "description": "Description",
+      "noDescription": "The producer has not added a description.",
+      "seller": "Producer",
+      "galleryLabel": "Product photos",
+      "showPhoto": "Show photo {position}",
+      "loading": "Loading product",
+      "notFoundTitle": "Product not found",
+      "notFoundBody": "This product may have been unpublished or may never have existed."
+    }
   },
   "pagination": {
     "previous": "Previous page",
@@ -122,7 +133,8 @@
       "title": "Selling",
       "inviteBody": "Apply as a producer to sell what you grow without middlemen.",
       "inviteAction": "Apply as a seller",
-      "statusAction": "Application details"
+      "statusAction": "Application details",
+      "productsAction": "My products"
     },
     "application": {
       "title": "Seller application",
@@ -168,6 +180,80 @@
       }
     }
   },
+  "listings": {
+    "nav": "My products",
+    "list": {
+      "title": "My products",
+      "intro": "Add and manage your listings here. A draft with a photo appears in the storefront as soon as you publish it.",
+      "new": "New listing",
+      "emptyTitle": "You have no listings yet",
+      "emptyBody": "Add your first product; buyers will see it once you upload a photo and publish it.",
+      "loading": "Loading listings",
+      "stock": "Stock: {count}",
+      "notApprovedTitle": "Your seller record is not approved",
+      "notApprovedBody": "An approved seller record is required to add and manage listings.",
+      "notApprovedAction": "See application status"
+    },
+    "status": "{status, select, DRAFT {Draft} PUBLISHED {Published} ARCHIVED {Archived} REMOVED {Removed} other {Unknown}}",
+    "form": {
+      "newTitle": "New listing",
+      "newIntro": "Enter the details first; the listing is saved as a draft. Then you can add photos and publish it.",
+      "editTitle": "Edit listing",
+      "name": "Product name",
+      "description": "Description",
+      "descriptionHint": "Optional. Details a buyer would like to know, such as how it was grown or when it was picked.",
+      "unit": "Sales unit",
+      "unitOption": "{unit, select, KILOGRAM {Kilogram} PIECE {Piece} BUNCH {Bunch} other {Unit}}",
+      "price": "Unit price (TRY)",
+      "priceHint": "Example: 24.50",
+      "priceInvalid": "Enter a valid price (e.g. 24.50).",
+      "stock": "Stock quantity",
+      "stockHint": "The amount you have; with zero the listing shows as \"out of stock\".",
+      "stockInvalid": "Enter a whole number of 0 or more for stock.",
+      "create": "Save as draft",
+      "save": "Save changes",
+      "saving": "Saving…",
+      "saved": "Changes saved.",
+      "backToList": "Back to my products",
+      "removedTitle": "This listing was removed by an administrator",
+      "removedBody": "You can correct the listing, but an administrator republishes it. Reason: {reason}"
+    },
+    "photos": {
+      "title": "Photos",
+      "intro": "Up to 5 photos. The first photo is the cover shown on the storefront card.",
+      "empty": "No photos yet. Add at least one photo to publish.",
+      "add": "Add photo",
+      "uploading": "Uploading…",
+      "fileLabel": "Photo file",
+      "hint": "JPEG or PNG, at most 10 MB. Location data is removed.",
+      "cover": "Cover",
+      "moveUp": "Move photo {position} forward",
+      "moveDown": "Move photo {position} back",
+      "delete": "Delete photo {position}",
+      "deleteTitle": "Delete this photo?",
+      "deleteBody": "This cannot be undone.",
+      "deleteConfirm": "Delete",
+      "cancel": "Cancel",
+      "alt": "{name}, photo {position}",
+      "limitReached": "You have reached the 5-photo limit.",
+      "tooLarge": "The photo can be at most 10 MB.",
+      "wrongType": "The photo must be a JPEG or PNG file."
+    },
+    "actions": {
+      "title": "Publishing",
+      "publish": "Publish",
+      "unpublish": "Unpublish",
+      "archive": "Archive",
+      "restore": "Restore from archive",
+      "working": "Working…",
+      "needsPhoto": "Add a photo before publishing.",
+      "draftBody": "Drafts are not shown in the storefront.",
+      "publishedBody": "The listing is shown in the storefront.",
+      "archivedBody": "Archived listings are hidden; restoring makes it a draft.",
+      "removedBody": "The listing stays hidden until an administrator reopens it.",
+      "viewInStore": "View in storefront"
+    }
+  },
   "admin": {
     "nav": "Admin",
     "sellers": {
@@ -207,14 +293,31 @@
         "suspendTitle": "Suspend the seller",
         "rejectBody": "The applicant will see the reason and receive it by email; they can correct and resend.",
         "suspendBody": "The seller role is removed and their products leave the storefront. The reason is shown to the seller and sent by email.",
-        "reason": "Reason",
-        "reasonHint": "Between 10 and 500 characters. Shown to the seller as written.",
-        "reasonRequired": "The reason must be at least 10 characters.",
-        "cancel": "Cancel",
         "confirmReject": "Reject",
-        "confirmSuspend": "Suspend",
-        "sending": "Saving…"
+        "confirmSuspend": "Suspend"
       }
+    },
+    "tabs": {
+      "label": "Admin sections",
+      "sellers": "Seller applications",
+      "products": "Listings"
+    },
+    "products": {
+      "title": "Listings",
+      "intro": "Review published listings. A removed listing leaves the storefront; the seller sees the reason and receives it by email.",
+      "tabsLabel": "Filter by status",
+      "tab": "{status, select, PUBLISHED {Published} REMOVED {Removed} other {Other}}",
+      "emptyTitle": "No listings in this state",
+      "emptyBody": "You can check another tab.",
+      "loading": "Loading listings",
+      "viewInStore": "View in storefront",
+      "remove": "Remove",
+      "removeTitle": "Remove the listing",
+      "removeBody": "The listing leaves the storefront. The seller sees the reason and can correct it; you reopen it.",
+      "confirmRemove": "Remove",
+      "reinstate": "Reopen",
+      "reinstating": "Reopening…",
+      "reason": "Reason: {reason}"
     }
   },
   "footer": {
@@ -239,5 +342,12 @@
       "tr": "Türkçe",
       "en": "English"
     }
+  },
+  "reasonDialog": {
+    "label": "Reason",
+    "hint": "Between 10 and 500 characters. Shown to the other party as written.",
+    "required": "The reason must be at least 10 characters.",
+    "cancel": "Cancel",
+    "sending": "Saving…"
   }
 }

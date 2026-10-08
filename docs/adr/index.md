@@ -66,8 +66,15 @@ Architecture Decision Records, projedeki önemli mimari kararları ve bu kararla
 | 044 | [`ROLE_SELLER` onayda eklenir, askıda kaldırılır; satıcıya özgü sorgular `APPROVED` durumunu da denetler](044-seller-role-follows-status-with-query-gate.md) | Accepted | 2026-10-08 |
 | 045 | [Belge `seller_documents` tablosunda; tür içerikten tespit edilir; korumalı başlıklarla sunulur](045-seller-documents-table-content-sniffing-protected-serving.md) | Accepted | 2026-10-08 |
 | 046 | [Admin yüzeyi `web` içinde `(admin)` rota grubunda; ilk admin veritabanından atanır](046-admin-surface-in-web-first-admin-by-sql.md) | Accepted | 2026-10-08 |
+| 047 | [İlan durumlarına `REMOVED` eklenir; geçişler adlandırılmış ve tek yerde](047-listing-states-removed-and-named-transitions.md) | Accepted | 2026-10-08 |
+| 048 | [Satıcı ilan uçları `/sellers/me/products` altında; önce onaylı satıcı kapısı, sonra sahiplik sorgusu](048-seller-listing-endpoints-gate-then-ownership.md) | Accepted | 2026-10-08 |
+| 049 | [İlan fotoğrafları ayrı tabloda, tek tek yüklenir; sıra açık pozisyonla, kapak `position = 0`](049-listing-photos-table-one-by-one-position.md) | Accepted | 2026-10-08 |
+| 050 | [Fotoğraf işleme: başlıktan piksel sınırı, EXIF yönü, iki boyut, JPEG yeniden kodlama; orijinal saklanmaz](050-photo-processing-exif-orientation-two-sizes.md) | Accepted | 2026-10-08 |
+| 051 | [Fotoğraflar kayıtlı anahtarla herkese açık sunulur; `web` akış aktarır, `next/image` yeniden işlemez](051-photo-serving-public-key-registered-web-proxy.md) | Accepted | 2026-10-08 |
+| 052 | [Vitrin kapağı ikinci sabit sorguyla gelir; ürün detayı `slug` ile, vitrinle aynı görünürlük koşuluyla](052-storefront-cover-second-query-detail-by-slug.md) | Accepted | 2026-10-08 |
+| 053 | [Admin ilan denetimi: liste ve iki eylem; gerekçe diyaloğu ortak bileşen](053-admin-listing-moderation-shared-reason-dialog.md) | Accepted | 2026-10-08 |
 
-**Sıradaki numara: 047.**
+**Sıradaki numara: 054.**
 
 **Durum değerleri:** `Proposed` (öneri, henüz bağlayıcı değil) · `Accepted` (yürürlükte, bağlayıcı) · `Deprecated` (artık geçerli değil, yerine bir şey gelmedi) · `Superseded by [ADR-XXX]` (yerini başka bir karara bıraktı).
 

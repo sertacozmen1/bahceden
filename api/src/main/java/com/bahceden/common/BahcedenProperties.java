@@ -45,8 +45,9 @@ public record BahcedenProperties(
      *                         sınırı ({@code spring.servlet.multipart}) bununla
      *                         uyumlu tutulur, böylece büyük istek belleğe
      *                         alınmadan reddedilir.
+     * @param maxPhotoBytes    ilan fotoğrafının üst sınırı (bayt; add-product-listings D4)
      */
-    public record Storage(@NotBlank String dir, @Positive long maxDocumentBytes) {
+    public record Storage(@NotBlank String dir, @Positive long maxDocumentBytes, @Positive long maxPhotoBytes) {
     }
 
     /**
