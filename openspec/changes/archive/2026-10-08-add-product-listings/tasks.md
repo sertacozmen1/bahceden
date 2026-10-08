@@ -124,4 +124,4 @@ Bu faz bittiğinde admin uygunsuz ilanı gerekçeyle kaldırır ve yeniden açar
 - [x] 4.6 `00-current-state.md`: L25 kalkar (hesaplı seed satıcısı); test sayıları; sıradaki adım.
 - [x] 4.7 Delta spec'ler ana spec'lere sync edilir: yeni `specs/product-listings/spec.md` (Purpose bölümüyle); `storefront-catalog` MODIFIED ve ADDED.
 - [x] 4.8 `./docs/.tools/serve.sh --build` strict derleme temiz.
-- [ ] 4.9 Archive kullanıcı onayıyla (§9).
+- [x] 4.9 Archive kullanıcı onayıyla yapıldı (2026-10-08). **İnsan işi, açık:** gerçek cihazda (telefon kamerasından yükleme) doğrulama; archive'ı bloke etmedi, notlandı.

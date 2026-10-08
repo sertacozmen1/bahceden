@@ -27,7 +27,7 @@ Feature dosyası içerik üretmez; yukarıdakilere **link verir** ve zaman için
 | [Vitrin ve Arama](vitrin-ve-arama.md) | Yayında | 2026-10-06 | 2026-10-08 | storefront-catalog |
 | [Hesap ve Oturum](hesap-ve-oturum.md) | Yayında | 2026-10-07 | 2026-10-08 | account-identity |
 | [Satıcı Kaydı ve Onayı](satici-kaydi-ve-onayi.md) | Yayında | 2026-10-08 | 2026-10-08 | seller-onboarding |
-| [Ürün İlanları](urun-ilanlari.md) | Geliştirmede | 2026-10-08 | 2026-10-08 | product-listings |
+| [Ürün İlanları](urun-ilanlari.md) | Yayında | 2026-10-08 | 2026-10-08 | product-listings |
 | [Genel: feature'a bağlı olmayan işler](_genel.md) | - | - | 2026-10-08 | (dokümantasyon, araçlar, altyapı, AI kuralları) |
 
 **Planlanan feature'lar** (ilk dilimlerle birlikte dosyaları açılacak):

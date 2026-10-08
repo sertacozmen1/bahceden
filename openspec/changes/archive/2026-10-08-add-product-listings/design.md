@@ -1,7 +1,7 @@
 # Design: add-product-listings
 
 > Her `D<n>` maddesi archive'dan önce `docs/adr/` altına ADR olur (`AGENTS.md` K1 / §5.2): D1 → ADR-047, D2 → ADR-048, D3 → ADR-049, D4 → ADR-050, D5 → ADR-051, D6 → ADR-052, D7 → ADR-053.
-> Çerçeve kararlar zaten alındı: [ADR-038](../../../docs/adr/038-listings-publish-immediately-with-admin-takedown.md) (ilan ön onaysız yayına girer, admin gerekçeyle kaldırır, satıcı kaldırılan ilanı kendisi açamaz), [ADR-039](../../../docs/adr/039-uploads-on-local-volume-served-by-api.md) (yerel volume, `api` sunar, ImageIO ile boyutlandırma ve EXIF temizliği), [ADR-044](../../../docs/adr/044-seller-role-follows-status-with-query-gate.md) (onaylı satıcı kapısı), [ADR-007](../../../docs/adr/007-query-level-ownership-scoping.md) (sorgu seviyesinde sahiplik). Aşağıdaki kararlar bunlara aykırı değildir.
+> Çerçeve kararlar zaten alındı: [ADR-038](../../../../docs/adr/038-listings-publish-immediately-with-admin-takedown.md) (ilan ön onaysız yayına girer, admin gerekçeyle kaldırır, satıcı kaldırılan ilanı kendisi açamaz), [ADR-039](../../../../docs/adr/039-uploads-on-local-volume-served-by-api.md) (yerel volume, `api` sunar, ImageIO ile boyutlandırma ve EXIF temizliği), [ADR-044](../../../../docs/adr/044-seller-role-follows-status-with-query-gate.md) (onaylı satıcı kapısı), [ADR-007](../../../../docs/adr/007-query-level-ownership-scoping.md) (sorgu seviyesinde sahiplik). Aşağıdaki kararlar bunlara aykırı değildir.
 
 ## Kararlar
 
@@ -20,7 +20,7 @@
 | `REMOVE` | Admin | `DRAFT`, `PUBLISHED` → `REMOVED` | gerekçe |
 | `REINSTATE` | Admin | `REMOVED` → `PUBLISHED` | ≥ 1 fotoğraf |
 
-Her geçiş `product_status_changes` tablosuna yazılır. Bu tablo yalnızca eklenerek büyür ve repository'si çıplak bir Spring Data `Repository`'dir ([ADR-040](../../../docs/adr/040-seller-application-is-the-seller-record.md) ile aynı desen).
+Her geçiş `product_status_changes` tablosuna yazılır. Bu tablo yalnızca eklenerek büyür ve repository'si çıplak bir Spring Data `Repository`'dir ([ADR-040](../../../../docs/adr/040-seller-application-is-the-seller-record.md) ile aynı desen).
 
 Satıcı `REMOVED` ilanı düzenleyebilir, fotoğrafını değiştirebilir, ama geçiş yapamaz. Bu durumdan çıkışı yalnızca admin yapar (ADR-038 §3).
 
@@ -42,7 +42,7 @@ Satıcı `REMOVED` ilanı düzenleyebilir, fotoğrafını değiştirebilir, ama 
 - `POST /sellers/me/products/{id}/{publish|unpublish|archive|restore}`
 - fotoğraf uçları (D3)
 
-Her serviste ilk satır `requireApprovedSeller(accountId)` çağrısıdır ([ADR-044](../../../docs/adr/044-seller-role-follows-status-with-query-gate.md)). İlan bu satıcının kimliğiyle `findByIdAndSellerId` sorgusundan okunur; başka satıcının ilanı **404** döner.
+Her serviste ilk satır `requireApprovedSeller(accountId)` çağrısıdır ([ADR-044](../../../../docs/adr/044-seller-role-follows-status-with-query-gate.md)). İlan bu satıcının kimliğiyle `findByIdAndSellerId` sorgusundan okunur; başka satıcının ilanı **404** döner.
 
 Uçlar `ROLE_SELLER` rolünü de ister. Yine de otorite durum kapısıdır: askıya alınmış bir satıcının token'ında rol henüz duruyorsa bile istek **403** `SELLER_NOT_APPROVED` alır.
 
@@ -82,12 +82,12 @@ Sınırlar:
 Hız sınırı: `PRODUCT_PHOTO_UPLOAD`, hesap başına saatte 60.
 
 **Gerekçe:**
-- Satıcı sahada telefonla tek tek fotoğraf çeker. Taslak, ilan bilgileri girildiği anda vardır, yani belgede olduğu gibi yetim kayıt sorunu yoktur ([ADR-042](../../../docs/adr/042-seller-application-single-multipart-request.md)'nin aksine). Bu yüzden fotoğraf başına istek, mobil bağlantıda tek bir dev istekten daha dayanıklıdır.
+- Satıcı sahada telefonla tek tek fotoğraf çeker. Taslak, ilan bilgileri girildiği anda vardır, yani belgede olduğu gibi yetim kayıt sorunu yoktur ([ADR-042](../../../../docs/adr/042-seller-application-single-multipart-request.md)'nin aksine). Bu yüzden fotoğraf başına istek, mobil bağlantıda tek bir dev istekten daha dayanıklıdır.
 - Açık bir pozisyon kolonu sıralamayı ve kapağı tek bir alana indirger. Ayrı bir kapak alanı tutarsızlık doğurur.
 
 **Reddedilen alternatifler:**
 - (a) İlan ve bütün fotoğrafların tek multipart istekte gelmesi: 5 × 10 MB tek istekte gider; tek fotoğraf hatasında hepsi yeniden yüklenir.
-- (b) Fotoğrafları `seller_documents` benzeri genel bir tabloda tutmak: herkese açık ve gizli dosyalar karışır ([ADR-045](../../../docs/adr/045-seller-documents-table-content-sniffing-protected-serving.md)'in reddettiği durum).
+- (b) Fotoğrafları `seller_documents` benzeri genel bir tabloda tutmak: herkese açık ve gizli dosyalar karışır ([ADR-045](../../../../docs/adr/045-seller-documents-table-content-sniffing-protected-serving.md)'in reddettiği durum).
 - (c) Ayrı bir `cover_photo_id` alanı: pozisyonla çelişebilir, iki kaynaklı gerçek oluşur.
 
 ### D4 · Görüntü işleme: piksel sınırı, EXIF yönü, iki boyut, JPEG yeniden kodlama
@@ -112,7 +112,7 @@ Okunamayan dosya (bozuk ya da CMYK JPEG gibi ImageIO'nun desteklemediği biçim)
 **Reddedilen alternatifler:**
 - (a) Görüntü işleme kütüphanesi (Thumbnailator, metadata-extractor): K7 dışında; tek bir etiket için gereksiz.
 - (b) Orijinali de saklamak: konum gibi meta veri diskte kalır, gelecekteki bir "orijinali indir" ihtiyacı bugün yok.
-- (c) Boyutlandırmayı `next/image`'a bırakmak: büyük orijinal diskte ve sunucu belleğinde kalır, EXIF temizlenmez ([ADR-039](../../../docs/adr/039-uploads-on-local-volume-served-by-api.md)'un reddettiği durum).
+- (c) Boyutlandırmayı `next/image`'a bırakmak: büyük orijinal diskte ve sunucu belleğinde kalır, EXIF temizlenmez ([ADR-039](../../../../docs/adr/039-uploads-on-local-volume-served-by-api.md)'un reddettiği durum).
 
 ### D5 · Fotoğraf sunumu: `api`'de anahtarla herkese açık uç, `web`'de akış aktaran bir Route Handler
 
@@ -124,7 +124,7 @@ Okunamayan dosya (bozuk ya da CMYK JPEG gibi ImageIO'nun desteklemediği biçim)
 
 Fotoğraf değiştirildiğinde yeni anahtar üretilir, bu yüzden uzun önbellek güvenlidir. Var olmayan anahtar 404 döner. Anahtar biçimi `FileStorage`'da zaten doğrulanıyor.
 
-**Anahtar `product_photos` tablosunda kayıtlı olmalıdır.** Satıcı belgeleri de aynı depolama dizininde, aynı anahtar biçimiyle durur ([ADR-045](../../../docs/adr/045-seller-documents-table-content-sniffing-protected-serving.md)). Uç yalnızca anahtar biçimine baksaydı, bir belge anahtarını bilen kişi gizli belgeyi herkese açık fotoğraf ucundan indirebilirdi. Bu yüzden uç önce anahtarı `card_key` veya `large_key` olarak arar. Bulamazsa, dosya diskte olsa bile 404 döner. Bu iddia `critical` testle sabitlenir.
+**Anahtar `product_photos` tablosunda kayıtlı olmalıdır.** Satıcı belgeleri de aynı depolama dizininde, aynı anahtar biçimiyle durur ([ADR-045](../../../../docs/adr/045-seller-documents-table-content-sniffing-protected-serving.md)). Uç yalnızca anahtar biçimine baksaydı, bir belge anahtarını bilen kişi gizli belgeyi herkese açık fotoğraf ucundan indirebilirdi. Bu yüzden uç önce anahtarı `card_key` veya `large_key` olarak arar. Bulamazsa, dosya diskte olsa bile 404 döner. Bu iddia `critical` testle sabitlenir.
 
 > Uygulama notu (2026-10-08): bu kural Faz 2'nin tasarımı sırasında eklendi.
 
@@ -146,11 +146,11 @@ Sözleşme dosya yolu taşımaz; yalnızca anahtarları taşır: `ProductPhotoVi
 - `ProductSummary`'ye `coverPhoto` (`ProductPhotoView`, boş olabilir) eklenir.
 - Liste sorgusu değişmez. Sayfanın ürün kimlikleriyle **tek** bir ek sorgu (`position = 0 and product_id in (…)`) kapakları getirir. Sorgu sayısı ürün sayısından bağımsız kalır: içerik + sayım + kapak, en çok 3. Bu iddia mevcut sorgu sayısı testine eklenir.
 - `GET /api/v1/products/{slug}` (`ProductDetail`): ürün, üretici ve sıralı fotoğraflar. Koşullar vitrinle aynıdır (`PUBLISHED` ve satıcı `APPROVED`); aksi halde 404 `PRODUCT_NOT_FOUND`.
-- Seed ürünlerinin fotoğrafı yoktur. Kart ve detay sayfası fotoğrafsız ürünü bugünkü tipografik düzenle gösterir; yer tutucu görsel yoktur ([Tasarım sistemi](../../../docs/reference/03-design-system.md) §6).
+- Seed ürünlerinin fotoğrafı yoktur. Kart ve detay sayfası fotoğrafsız ürünü bugünkü tipografik düzenle gösterir; yer tutucu görsel yoktur ([Tasarım sistemi](../../../../docs/reference/03-design-system.md) §6).
 
 **Gerekçe:**
 - `@OneToMany` fetch join, sayfalama ile birlikte bellekte sayfalamaya (Hibernate uyarısı) yol açar. Ayrı sabit sorgu, sayfalamayı veritabanında tutar.
-- Detayın vitrinle aynı koşulu taşıması, listede görünmeyen bir ürünün doğrudan adresle açılmasını engeller ([ADR-041](../../../docs/adr/041-storefront-filters-seller-status-in-query.md) nötr sonucu).
+- Detayın vitrinle aynı koşulu taşıması, listede görünmeyen bir ürünün doğrudan adresle açılmasını engeller ([ADR-041](../../../../docs/adr/041-storefront-filters-seller-status-in-query.md) nötr sonucu).
 
 **Reddedilen alternatifler:**
 - (a) Fetch join ile fotoğrafları liste sorgusunda getirmek: bellekte sayfalama.
@@ -181,13 +181,13 @@ Kaldırma ve yeniden açma, satıcının hesabına onun dilinde e-postayla bildi
 
 | Detay | Kaynak |
 |---|---|
-| Para alanı: istek ve yanıtta minor unit tamsayı + `TRY` | [ADR-006](../../../docs/adr/006-money-as-minor-unit.md) |
-| Hata kodları: `PRODUCT_NOT_FOUND` (404), `PRODUCT_INVALID_TRANSITION` (409), `PRODUCT_PHOTO_REQUIRED` (409; fotoğrafsız yayına alma ve son fotoğrafı silme), `PRODUCT_PHOTO_LIMIT_REACHED` (409), dosya hataları `VALIDATION_FAILED` + `fieldErrors[photo]` | §11.5, [ADR-031](../../../docs/adr/031-api-messages-by-accept-language.md) |
-| Sayfa boyutu üst sınırı 50, ortak `PageResponse` | [ADR-012](../../../docs/adr/012-page-size-capped-on-server.md) |
-| Geçmiş tablosu yalnızca eklenir | [ADR-040](../../../docs/adr/040-seller-application-is-the-seller-record.md) |
-| Dosya-transaction tutarlılığı (geri almada dosyayı sil) | [ADR-042](../../../docs/adr/042-seller-application-single-multipart-request.md) |
-| BFF multipart iletimi (`handleBffFormMutation`), köken denetimi | [ADR-023](../../../docs/adr/023-web-bff-cookies-and-header-csrf.md), ADR-042 |
-| E-posta hesabın dilinde, gönderim hatası akışı kesmez | [ADR-032](../../../docs/adr/032-account-locale-stored-and-refreshed-on-login.md), [ADR-019](../../../docs/adr/019-email-via-smtp-provider-agnostic.md) |
+| Para alanı: istek ve yanıtta minor unit tamsayı + `TRY` | [ADR-006](../../../../docs/adr/006-money-as-minor-unit.md) |
+| Hata kodları: `PRODUCT_NOT_FOUND` (404), `PRODUCT_INVALID_TRANSITION` (409), `PRODUCT_PHOTO_REQUIRED` (409; fotoğrafsız yayına alma ve son fotoğrafı silme), `PRODUCT_PHOTO_LIMIT_REACHED` (409), dosya hataları `VALIDATION_FAILED` + `fieldErrors[photo]` | §11.5, [ADR-031](../../../../docs/adr/031-api-messages-by-accept-language.md) |
+| Sayfa boyutu üst sınırı 50, ortak `PageResponse` | [ADR-012](../../../../docs/adr/012-page-size-capped-on-server.md) |
+| Geçmiş tablosu yalnızca eklenir | [ADR-040](../../../../docs/adr/040-seller-application-is-the-seller-record.md) |
+| Dosya-transaction tutarlılığı (geri almada dosyayı sil) | [ADR-042](../../../../docs/adr/042-seller-application-single-multipart-request.md) |
+| BFF multipart iletimi (`handleBffFormMutation`), köken denetimi | [ADR-023](../../../../docs/adr/023-web-bff-cookies-and-header-csrf.md), ADR-042 |
+| E-posta hesabın dilinde, gönderim hatası akışı kesmez | [ADR-032](../../../../docs/adr/032-account-locale-stored-and-refreshed-on-login.md), [ADR-019](../../../../docs/adr/019-email-via-smtp-provider-agnostic.md) |
 
 **Bu change'te alınan küçük varsayımlar** (karar düzeyinde değil; review'da değiştirilebilir):
 

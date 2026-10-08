@@ -1,8 +1,8 @@
 # add-product-listings
 
-**Durum:** Onaylandı (2026-10-08, proje sahibi `/opsx:apply`); uygulanıyor.
+**Durum:** Onaylandı (2026-10-08, proje sahibi `/opsx:apply`), uygulandı, PR #2 ile `main`'e merge edildi ve kullanıcı onayıyla archive edildi (2026-10-08).
 
-> Bu change [ADR-038](../../../docs/adr/038-listings-publish-immediately-with-admin-takedown.md) (ilan ön onaysız yayına girer, admin kaldırabilir) ve [ADR-039](../../../docs/adr/039-uploads-on-local-volume-served-by-api.md) (yerel volume, ImageIO ile boyutlandırma) üzerine kurulur. Onaylı satıcı kapısı ([ADR-044](../../../docs/adr/044-seller-role-follows-status-with-query-gate.md)) ve `FileStorage` ([ADR-045](../../../docs/adr/045-seller-documents-table-content-sniffing-protected-serving.md)) `add-seller-onboarding` ile hazırlandı.
+> Bu change [ADR-038](../../../../docs/adr/038-listings-publish-immediately-with-admin-takedown.md) (ilan ön onaysız yayına girer, admin kaldırabilir) ve [ADR-039](../../../../docs/adr/039-uploads-on-local-volume-served-by-api.md) (yerel volume, ImageIO ile boyutlandırma) üzerine kurulur. Onaylı satıcı kapısı ([ADR-044](../../../../docs/adr/044-seller-role-follows-status-with-query-gate.md)) ve `FileStorage` ([ADR-045](../../../../docs/adr/045-seller-documents-table-content-sniffing-protected-serving.md)) `add-seller-onboarding` ile hazırlandı.
 
 ## Why
 

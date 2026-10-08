@@ -1,6 +1,6 @@
 # product-listings Specification (delta)
 
-> Bu bir **delta spec**'tir ve yeni bir capability tanımlar. Uygulanıp onaylandıktan sonra `openspec/specs/product-listings/spec.md` olarak sync edilir (`AGENTS.md` §5.3). Çerçeve: [ADR-038](../../../../../docs/adr/038-listings-publish-immediately-with-admin-takedown.md), [ADR-039](../../../../../docs/adr/039-uploads-on-local-volume-served-by-api.md), [ADR-044](../../../../../docs/adr/044-seller-role-follows-status-with-query-gate.md). Uygulama kararları: `design.md` D1–D7.
+> Bu bir **delta spec**'tir ve yeni bir capability tanımlar. Uygulanıp onaylandıktan sonra `openspec/specs/product-listings/spec.md` olarak sync edilir (`AGENTS.md` §5.3). Çerçeve: [ADR-038](../../../../../../docs/adr/038-listings-publish-immediately-with-admin-takedown.md), [ADR-039](../../../../../../docs/adr/039-uploads-on-local-volume-served-by-api.md), [ADR-044](../../../../../../docs/adr/044-seller-role-follows-status-with-query-gate.md). Uygulama kararları: `design.md` D1–D7.
 
 ## ADDED Requirements
 
