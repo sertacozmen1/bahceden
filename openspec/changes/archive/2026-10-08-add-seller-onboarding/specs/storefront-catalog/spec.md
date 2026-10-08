@@ -1,6 +1,6 @@
 # storefront-catalog Specification (delta)
 
-> Bu bir **delta spec**'tir. Uygulanıp onaylandıktan sonra `openspec/specs/storefront-catalog/spec.md` ana spec'ine sync edilir (`AGENTS.md` §5.3). Karar: [ADR-038](../../../../../docs/adr/038-listings-publish-immediately-with-admin-takedown.md) §4, `design.md` D2.
+> Bu bir **delta spec**'tir. Uygulanıp onaylandıktan sonra `openspec/specs/storefront-catalog/spec.md` ana spec'ine sync edilir (`AGENTS.md` §5.3). Karar: [ADR-038](../../../../../../docs/adr/038-listings-publish-immediately-with-admin-takedown.md) §4, `design.md` D2.
 
 ## MODIFIED Requirements
 

@@ -1,6 +1,6 @@
 # seller-onboarding Specification (delta)
 
-> Bu bir **delta spec**'tir ve yeni bir capability tanımlar. Uygulanıp onaylandıktan sonra `openspec/specs/seller-onboarding/spec.md` olarak ana spec'lere sync edilir (`AGENTS.md` §5.3). Çerçeve kararlar: [ADR-037](../../../../../docs/adr/037-seller-application-with-document-and-manual-approval.md), [ADR-039](../../../../../docs/adr/039-uploads-on-local-volume-served-by-api.md). Uygulama kararları: `design.md` D1–D7.
+> Bu bir **delta spec**'tir ve yeni bir capability tanımlar. Uygulanıp onaylandıktan sonra `openspec/specs/seller-onboarding/spec.md` olarak ana spec'lere sync edilir (`AGENTS.md` §5.3). Çerçeve kararlar: [ADR-037](../../../../../../docs/adr/037-seller-application-with-document-and-manual-approval.md), [ADR-039](../../../../../../docs/adr/039-uploads-on-local-volume-served-by-api.md). Uygulama kararları: `design.md` D1–D7.
 
 ## ADDED Requirements
 

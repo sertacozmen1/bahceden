@@ -114,4 +114,4 @@ Bu faz bittiğinde admin başvuruyu karara bağlar, satıcı rolünü alır ve e
 - [x] 4.7 `00-current-state.md`: L6 ve L7 kalkar; yeni sınırlamalar: antivirüs yok, volume yedeklenmiyor, admin yalnızca veritabanından; test sayıları; sıradaki adım (ilan change'i). `openspec/KALANLAR.md`: A5 (satıcı verisinin saklama süresi ve aydınlatma metni; hukuk). `AGENTS.md` §15 tablosuna A5. `_genel.md` Tarihçe.
 - [x] 4.8 Delta spec'ler ana spec'lere sync edilir: yeni `specs/seller-onboarding/spec.md` (Purpose bölümüyle), `storefront-catalog` MODIFIED.
 - [x] 4.9 `./docs/.tools/serve.sh --build` strict derleme temiz.
-- [ ] 4.10 Archive: kullanıcı onayıyla (§9). **İnsan işi, açık:** hukuk teyidi (ADR-037 açık riski, A5); archive'ı bloke etmez, notlanır.
+- [x] 4.10 Archive kullanıcı onayıyla yapıldı (2026-10-08). **İnsan işi, açık:** hukuk teyidi (ADR-037 açık riski, KALANLAR A5); archive'ı bloke etmedi, notlandı.

@@ -1,6 +1,6 @@
 # Satıcı Kaydı ve Onayı
 
-**Durum:** Geliştirmede
+**Durum:** Yayında
 **İlk sürüm:** 2026-10-08
 **Son değişiklik:** 2026-10-08
 
@@ -9,7 +9,7 @@
 | **Ürün belgesi** | [Satıcı Kaydı ve Onayı](../product/satici-kaydi.md) |
 | **Kararlar** | Çerçeve: [ADR-037](../adr/037-seller-application-with-document-and-manual-approval.md), [ADR-038](../adr/038-listings-publish-immediately-with-admin-takedown.md), [ADR-039](../adr/039-uploads-on-local-volume-served-by-api.md). Uygulama: [ADR-040](../adr/040-seller-application-is-the-seller-record.md) … [ADR-046](../adr/046-admin-surface-in-web-first-admin-by-sql.md) |
 | **Spec (capability)** | `openspec/specs/seller-onboarding` (yeni); `openspec/specs/storefront-catalog` (vitrin satıcı durumu süzgeci) |
-| **Change'ler** | `openspec/changes/add-seller-onboarding` (açık; archive kullanıcı onayı bekliyor) |
+| **Change'ler** | `openspec/changes/archive/2026-10-08-add-seller-onboarding` (archive edildi) |
 | **Rehberler** | [Admin yetkisi verme ve başvuruyu karara bağlama](../how-to/admin-yetkisi-verme.md), [Yerel geliştirme](../how-to/yerel-gelistirme.md) |
 | **Referans** | [Domain modeli](../reference/01-domain-model.md), [API referansı](../reference/02-api-reference.md), [Tasarım sistemi](../reference/03-design-system.md) |
 | **Kod** | `api/src/main/java/com/bahceden/seller/`, `api/.../common/storage/`, `web/src/app/(seller)/`, `web/src/app/(admin)/`, `web/src/app/api/seller/`, `web/src/app/api/admin/`, `web/src/features/seller/`, `web/src/features/admin/` |
@@ -34,10 +34,10 @@ Bir üretici, alıcı olarak açtığı hesaptan "Hesabım → Satıcı olarak b
 
 - **Hukuk:** ÇKS belgesi ve vergi levhası yeterli mi? Başvuruda KVKK aydınlatma metni gerekiyor mu? Belgeler ne kadar saklanacak? (KALANLAR A5)
 - Gerçek cihazda insan doğrulaması. Başsız Chrome ile 375 / 1440 px ve iki temada ekran görüntüsü alındı.
-- Change `add-seller-onboarding`'in archive'ı kullanıcı onayı bekliyor.
 
 ## Tarihçe
 
+- 2026-10-08: `add-seller-onboarding` change'i kullanıcı onayıyla archive edildi (`openspec/changes/archive/2026-10-08-add-seller-onboarding/`). Ön koşullar: PR #1 `main`'e merge edildi ve CI 4/4 yeşil (run `37760518873`); delta spec'ler ana spec'lere sync edildi; D1–D7 → ADR-040…046; dokümanlar güncel. Taşımada göreli linkler bir seviye uzatıldı. Hukuk teyidi (A5) açık ve notlu.
 - 2026-10-08: İlk sürüm (change `add-seller-onboarding`).
   - `api`:
     - başvuru, yeniden gönderim, kendi kaydı ve belgesi (`/api/v1/sellers/me`);

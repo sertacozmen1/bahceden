@@ -1,14 +1,14 @@
 # add-seller-onboarding
 
-**Durum:** Onaylandı (2026-10-08, proje sahibi `/opsx:apply`); uygulanıyor.
+**Durum:** Onaylandı (2026-10-08, proje sahibi `/opsx:apply`), uygulandı, PR #1 ile `main`'e merge edildi ve kullanıcı onayıyla archive edildi (2026-10-08).
 
-> Bu change, `openspec/KALANLAR.md` A3'ün karara bağlanmasıyla ([ADR-037](../../../docs/adr/037-seller-application-with-document-and-manual-approval.md), [ADR-038](../../../docs/adr/038-listings-publish-immediately-with-admin-takedown.md)) ve B3'ün ([ADR-039](../../../docs/adr/039-uploads-on-local-volume-served-by-api.md)) üzerine kurulur. [`00-current-state.md`](../../../docs/reference/00-current-state.md) L6 ve L7 sınırlamalarını kapatır.
+> Bu change, `openspec/KALANLAR.md` A3'ün karara bağlanmasıyla ([ADR-037](../../../../docs/adr/037-seller-application-with-document-and-manual-approval.md), [ADR-038](../../../../docs/adr/038-listings-publish-immediately-with-admin-takedown.md)) ve B3'ün ([ADR-039](../../../../docs/adr/039-uploads-on-local-volume-served-by-api.md)) üzerine kurulur. [`00-current-state.md`](../../../../docs/reference/00-current-state.md) L6 ve L7 sınırlamalarını kapatır.
 
 ## Why
 
-Bugün üretici yalnızca geliştirme seed'i ile oluşabiliyor. `sellers` tablosunun hesapla bir ilişkisi yok ([ADR-013](../../../docs/adr/013-minimal-seller-table-ahead-of-onboarding.md)) ve `ROLE_SELLER` atayan bir akış bulunmuyor. Ürünün vaadi, üreticinin kolayca kaydolup ürün listelemesi. Bu vaat, satıcının sisteme girebildiği bir kapı olmadan başlayamaz.
+Bugün üretici yalnızca geliştirme seed'i ile oluşabiliyor. `sellers` tablosunun hesapla bir ilişkisi yok ([ADR-013](../../../../docs/adr/013-minimal-seller-table-ahead-of-onboarding.md)) ve `ROLE_SELLER` atayan bir akış bulunmuyor. Ürünün vaadi, üreticinin kolayca kaydolup ürün listelemesi. Bu vaat, satıcının sisteme girebildiği bir kapı olmadan başlayamaz.
 
-Sıradaki dilim olan ürün ilanı ekleme de buna bağlı. Satıcı paneli, sahiplik kontrolü ([ADR-007](../../../docs/adr/007-query-level-ownership-scoping.md)) ve ilan yayını ([ADR-038](../../../docs/adr/038-listings-publish-immediately-with-admin-takedown.md)), hesapla bağlanmış ve onaylanmış bir satıcı kaydı ister.
+Sıradaki dilim olan ürün ilanı ekleme de buna bağlı. Satıcı paneli, sahiplik kontrolü ([ADR-007](../../../../docs/adr/007-query-level-ownership-scoping.md)) ve ilan yayını ([ADR-038](../../../../docs/adr/038-listings-publish-immediately-with-admin-takedown.md)), hesapla bağlanmış ve onaylanmış bir satıcı kaydı ister.
 
 ## What Changes
 
@@ -20,8 +20,8 @@ Sıradaki dilim olan ürün ilanı ekleme de buna bağlı. Satıcı paneli, sahi
   - **Rol:** onayla hesaba `ROLE_SELLER` eklenir. Askıya alındığında rol kaldırılır, askıdan çıkarıldığında geri eklenir.
   - **Bildirim:** her karar hesabın dilinde e-postayla bildirilir.
   - **Denetim izi:** her durum geçişi silinmeyen bir kayıt olarak saklanır: kim yaptı, ne zaman, hangi durumdan hangisine, gerekçesi ne.
-  - **Dosya depolama:** belgeler [ADR-039](../../../docs/adr/039-uploads-on-local-volume-served-by-api.md)'a göre yapılandırılmış bir dizinde (Docker volume) saklanır. Dosyanın türü içeriğindeki imzadan belirlenir; kabul edilenler PDF, JPEG ve PNG'dir, boyut sınırı yapılandırmadadır.
-  - **Vitrin:** yalnızca `APPROVED` durumundaki satıcıların ürünleri vitrinde görünür ([ADR-038](../../../docs/adr/038-listings-publish-immediately-with-admin-takedown.md) §4).
+  - **Dosya depolama:** belgeler [ADR-039](../../../../docs/adr/039-uploads-on-local-volume-served-by-api.md)'a göre yapılandırılmış bir dizinde (Docker volume) saklanır. Dosyanın türü içeriğindeki imzadan belirlenir; kabul edilenler PDF, JPEG ve PNG'dir, boyut sınırı yapılandırmadadır.
+  - **Vitrin:** yalnızca `APPROVED` durumundaki satıcıların ürünleri vitrinde görünür ([ADR-038](../../../../docs/adr/038-listings-publish-immediately-with-admin-takedown.md) §4).
 - **`web`:**
   - "Hesabım" ekranına satıcılık kartı eklenir. Hesabın satıcı kaydı yoksa kart başvuruya davet eder, varsa kaydın durumunu gösterir.
   - `(seller)` rota grubunda `/seller/application` sayfası: başvuru formu, durum ekranı ve ret gerekçesiyle yeniden gönderme.
@@ -65,18 +65,18 @@ Saklama süresi, silme talebi ve aydınlatma metni hukuk teyidi bekliyor (bkz. d
 ## Non-goals
 
 - **Ürün ilanı ekleme, düzenleme ve fotoğraf.** Ayrı change; bu change'in kurduğu `FileStorage` ve satıcı kaydı ona temel olur.
-- **Admin'in ilanı yayından kaldırması** ([ADR-038](../../../docs/adr/038-listings-publish-immediately-with-admin-takedown.md) §3). Satıcının ilanı olmadan kaldırılacak bir şey yok; ilan change'iyle gelir.
+- **Admin'in ilanı yayından kaldırması** ([ADR-038](../../../../docs/adr/038-listings-publish-immediately-with-admin-takedown.md) §3). Satıcının ilanı olmadan kaldırılacak bir şey yok; ilan change'iyle gelir.
 - Onaylı satıcının profilini (ad, şehir, telefon) düzenlemesi. Gerekirse küçük bir sonraki dilim.
 - Admin'e yeni başvuru bildirimi (e-posta veya SMS). Bildirim kanalları KALANLAR B4'e bağlı; admin bekleyen listeyi panelden görür.
-- TCKN, VKN ve IBAN toplamak ([ADR-037](../../../docs/adr/037-seller-application-with-document-and-manual-approval.md) §4).
+- TCKN, VKN ve IBAN toplamak ([ADR-037](../../../../docs/adr/037-seller-application-with-document-and-manual-approval.md) §4).
 - Belge türünü veya kimliği otomatik doğrulamak (dış servis yok).
 - `ROLE_ADMIN`'i ürün yüzeyinden vermek. İlk admin veritabanından atanır; bunun için how-to yazılır.
 - Satıcı kaydını veya belgeyi silmek. KVKK silme talebi süreci hukuk kararından sonra ayrı bir iş.
-- HEIC ve WebP desteği ([ADR-039](../../../docs/adr/039-uploads-on-local-volume-served-by-api.md)).
+- HEIC ve WebP desteği ([ADR-039](../../../../docs/adr/039-uploads-on-local-volume-served-by-api.md)).
 
 ## Riskler
 
 - **Rol değişikliği gecikmesi:** onay sonrası `ROLE_SELLER`, erişim token'ına bir sonraki yenilemede (en fazla 15 dakika) girer. Askıya almada rol token'dan aynı süre içinde düşer. Bu arada satıcıya özgü her sorgu satıcının `APPROVED` olduğunu da denetler (D5), yani askıdaki satıcı bu pencerede de işlem yapamaz.
-- **Belgenin yasal yeterliliği** hukuk teyidi bekliyor ([ADR-037](../../../docs/adr/037-seller-application-with-document-and-manual-approval.md)). Belge türü listesi genişleyebilir; model aynı kalır.
+- **Belgenin yasal yeterliliği** hukuk teyidi bekliyor ([ADR-037](../../../../docs/adr/037-seller-application-with-document-and-manual-approval.md)). Belge türü listesi genişleyebilir; model aynı kalır.
 - **Yüklenen dosya saldırı yüzeyidir.** Bunu sınırlayan önlemler: tür içerikten tespit edilir, boyut sınırı vardır, ad sunucuda üretilir, belge yanıtı `nosniff` ve `Content-Security-Policy: sandbox` başlıklarıyla döner, belge yalnızca yetkili kişilere sunulur. Antivirüs taraması yok; bu, kabul edilen bir risk olarak `00-current-state.md`'ye yazılır.
-- **Volume yedeklenmiyor.** Yedekleme B5'e bağlı ([ADR-039](../../../docs/adr/039-uploads-on-local-volume-served-by-api.md)).
+- **Volume yedeklenmiyor.** Yedekleme B5'e bağlı ([ADR-039](../../../../docs/adr/039-uploads-on-local-volume-served-by-api.md)).

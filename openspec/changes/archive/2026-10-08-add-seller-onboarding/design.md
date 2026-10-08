@@ -1,7 +1,7 @@
 # Design: add-seller-onboarding
 
 > Her `D<n>` maddesi archive'dan önce `docs/adr/` altına ADR olur (`AGENTS.md` K1 / §5.2): D1 → ADR-040, D2 → ADR-041, D3 → ADR-042, D4 → ADR-043, D5 → ADR-044, D6 → ADR-045, D7 → ADR-046.
-> Çerçeve kararlar zaten alındı: [ADR-037](../../../docs/adr/037-seller-application-with-document-and-manual-approval.md) (beyan + belge, manuel onay, durumlar), [ADR-038](../../../docs/adr/038-listings-publish-immediately-with-admin-takedown.md) (onaylı olmayan satıcının ilanı görünmez), [ADR-039](../../../docs/adr/039-uploads-on-local-volume-served-by-api.md) (yerel volume, `api` sunar). Aşağıdaki kararlar bunların uygulama ayrıntılarını sabitler ve hiçbirine aykırı değildir.
+> Çerçeve kararlar zaten alındı: [ADR-037](../../../../docs/adr/037-seller-application-with-document-and-manual-approval.md) (beyan + belge, manuel onay, durumlar), [ADR-038](../../../../docs/adr/038-listings-publish-immediately-with-admin-takedown.md) (onaylı olmayan satıcının ilanı görünmez), [ADR-039](../../../../docs/adr/039-uploads-on-local-volume-served-by-api.md) (yerel volume, `api` sunar). Aşağıdaki kararlar bunların uygulama ayrıntılarını sabitler ve hiçbirine aykırı değildir.
 
 ## Kararlar
 
@@ -65,11 +65,11 @@ Kayıt ve dosya tek bir işlem olarak ele alınır. Doğrulama hatasında hiçbi
 
 ### D4 · Başvuru için e-posta doğrulaması zorunludur
 
-E-postası doğrulanmamış hesap başvuramaz: **422** `SELLER_EMAIL_NOT_VERIFIED` döner. Arayüz kullanıcıyı mevcut "yeni doğrulama bağlantısı" eylemine yönlendirir ([ADR-026](../../../docs/adr/026-verification-link-resend-requires-session.md)).
+E-postası doğrulanmamış hesap başvuramaz: **422** `SELLER_EMAIL_NOT_VERIFIED` döner. Arayüz kullanıcıyı mevcut "yeni doğrulama bağlantısı" eylemine yönlendirir ([ADR-026](../../../../docs/adr/026-verification-link-resend-requires-session.md)).
 
 **Gerekçe:**
 - Admin kararları e-postayla bildirilir. Doğrulanmamış bir adrese giden karar kaybolabilir.
-- [ADR-017](../../../docs/adr/017-email-verification-non-blocking-and-2fa-switch.md) doğrulamayı *girişin* ön koşulu olmaktan çıkardı ve bunu bilinçli bir borç olarak kabul etti (L11). Satıcılık, para ve yasal sorumluluk taşıyan ilk eylem; kapının uygulandığı ilk yer de burası. Bu, ADR-017'ye aykırı değildir: giriş hâlâ engellenmez.
+- [ADR-017](../../../../docs/adr/017-email-verification-non-blocking-and-2fa-switch.md) doğrulamayı *girişin* ön koşulu olmaktan çıkardı ve bunu bilinçli bir borç olarak kabul etti (L11). Satıcılık, para ve yasal sorumluluk taşıyan ilk eylem; kapının uygulandığı ilk yer de burası. Bu, ADR-017'ye aykırı değildir: giriş hâlâ engellenmez.
 
 **Reddedilen alternatifler:**
 - (a) Doğrulamayı onay anında admin'e bırakmak: admin'e mekanik bir kontrol yükler ve kararın bildirimi yine kaybolabilir.
@@ -86,10 +86,10 @@ E-postası doğrulanmamış hesap başvuramaz: **422** `SELLER_EMAIL_NOT_VERIFIE
 
 Rol ve durum aynı transaction içinde değişir. Erişim token'ı rolleri her yenilemede güncel kayıttan okur (`SessionService.issueTokens`). Bu yüzden değişiklik en geç 15 dakika içinde token'a yansır. Oturumlar kapatılmaz, çünkü kullanıcı alıcı olarak devam edebilir.
 
-Rolün token'dan düşmesi gecikebildiği için `seller` paketi tek bir kapı sunar: `SellerService.requireApprovedSeller(accountId)`. Kapı, onaylı satıcıyı `findByAccountIdAndStatus(accountId, APPROVED)` sorgusuyla getirir; bulamazsa 403 `SELLER_NOT_APPROVED` döner. Sonraki change'lerde satıcıya özgü her işlem bu kapıdan geçer ve kendi sahiplik sorgusunu bu satıcının kimliğiyle kurar ([ADR-007](../../../docs/adr/007-query-level-ownership-scoping.md)). Bu change'te kapı yazılır ve doğrudan `critical` testle sabitlenir. Onu kullanan ilk uç ilan change'iyle gelir.
+Rolün token'dan düşmesi gecikebildiği için `seller` paketi tek bir kapı sunar: `SellerService.requireApprovedSeller(accountId)`. Kapı, onaylı satıcıyı `findByAccountIdAndStatus(accountId, APPROVED)` sorgusuyla getirir; bulamazsa 403 `SELLER_NOT_APPROVED` döner. Sonraki change'lerde satıcıya özgü her işlem bu kapıdan geçer ve kendi sahiplik sorgusunu bu satıcının kimliğiyle kurar ([ADR-007](../../../../docs/adr/007-query-level-ownership-scoping.md)). Bu change'te kapı yazılır ve doğrudan `critical` testle sabitlenir. Onu kullanan ilk uç ilan change'iyle gelir.
 
 **Gerekçe:**
-- Yetkilendirme kararı token'daki rolle verilir; her istekte veritabanına gidilmez ([ADR-008](../../../docs/adr/008-jwt-auth-with-opaque-refresh.md), add-account-and-session D7). Rol "şu an satış yapabilir" anlamına gelirse bu model korunur.
+- Yetkilendirme kararı token'daki rolle verilir; her istekte veritabanına gidilmez ([ADR-008](../../../../docs/adr/008-jwt-auth-with-opaque-refresh.md), add-account-and-session D7). Rol "şu an satış yapabilir" anlamına gelirse bu model korunur.
 - Askı güvenlik niteliğinde bir eylemdir; 15 dakikalık pencere kabul edilemez. Satıcının kimliği zaten sorguyla bulunuyor, aynı sorguya durum koşulunu eklemenin ek maliyeti yok.
 
 **Reddedilen alternatifler:**
@@ -123,7 +123,7 @@ Rolün token'dan düşmesi gecikebildiği için `seller` paketi tek bir kapı su
 - **İlk admin:** `ROLE_ADMIN` ürün yüzeyinden verilemez. İlk admin veritabanında tek bir `insert` ile atanır; bunun adımları bir how-to'da yazılır. Dev seed'i `admin@ornek.test` hesabını içerir.
 
 **Gerekçe:**
-- Ayrı bir admin uygulaması, ikinci bir dağıtılabilir birim demek; [ADR-001](../../../docs/adr/001-spring-api-and-next-web.md)'in iki birim kararı ve §3 bunu istemiyor. Mevcut oturum, BFF, tasarım sistemi ve i18n altyapısı olduğu gibi kullanılır.
+- Ayrı bir admin uygulaması, ikinci bir dağıtılabilir birim demek; [ADR-001](../../../../docs/adr/001-spring-api-and-next-web.md)'in iki birim kararı ve §3 bunu istemiyor. Mevcut oturum, BFF, tasarım sistemi ve i18n altyapısı olduğu gibi kullanılır.
 - Rol verme yüzeyi en yüksek değerli saldırı hedefidir. MVP'de admin sayısı bir veya iki kişi olduğu için yüzeyi hiç açmamak en güvenli seçim.
 
 **Reddedilen alternatifler:**
@@ -136,13 +136,13 @@ Rolün token'dan düşmesi gecikebildiği için `seller` paketi tek bir kapı su
 | Detay | Kaynak |
 |---|---|
 | Uç adları: `/sellers/me` (oturum sahibinin kaynağı, `/accounts/me` ile aynı desen), komut uçları alt kaynak | `AGENTS.md` §11.5 |
-| Hata kodları: `SELLER_ALREADY_EXISTS` (409), `SELLER_INVALID_TRANSITION` (409), `SELLER_EMAIL_NOT_VERIFIED` (422), `SELLER_NOT_APPROVED` (403), `SELLER_NOT_FOUND` (404), `DOCUMENT_TYPE_NOT_ALLOWED` ve `DOCUMENT_TOO_LARGE` (400, `fieldErrors` içinde `document` alanı) | §11.5, [ADR-031](../../../docs/adr/031-api-messages-by-accept-language.md) |
-| Başkasının kaydı veya belgesi 404 döner | §11.5, [ADR-007](../../../docs/adr/007-query-level-ownership-scoping.md) |
+| Hata kodları: `SELLER_ALREADY_EXISTS` (409), `SELLER_INVALID_TRANSITION` (409), `SELLER_EMAIL_NOT_VERIFIED` (422), `SELLER_NOT_APPROVED` (403), `SELLER_NOT_FOUND` (404), `DOCUMENT_TYPE_NOT_ALLOWED` ve `DOCUMENT_TOO_LARGE` (400, `fieldErrors` içinde `document` alanı) | §11.5, [ADR-031](../../../../docs/adr/031-api-messages-by-accept-language.md) |
+| Başkasının kaydı veya belgesi 404 döner | §11.5, [ADR-007](../../../../docs/adr/007-query-level-ownership-scoping.md) |
 | Liste uçları ortak `PageResponse` ile döner, sayfa boyutu sunucuda sınırlıdır (varsayılan 20, üst sınır 50, vitrinle aynı) | §11.5, storefront-catalog |
-| Hız sınırı: `SELLER_APPLICATION`, hesap başına saatte 5 başvuru veya yeniden gönderim | [ADR-022](../../../docs/adr/022-in-memory-fixed-window-rate-limiting.md) |
-| Karar e-postası hesabın dilinde; gönderim hatası akışı kesmez, `WARN` olarak loglanır | [ADR-032](../../../docs/adr/032-account-locale-stored-and-refreshed-on-login.md), [ADR-019](../../../docs/adr/019-email-via-smtp-provider-agnostic.md) |
-| BFF Route Handler'ı ve başlık tabanlı CSRF; token tarayıcıya verilmez | [ADR-023](../../../docs/adr/023-web-bff-cookies-and-header-csrf.md) |
-| Şema yalnızca Liquibase ile değişir, `--rollback` zorunlu, dev verisi `contextFilter:dev` ile | [ADR-016](../../../docs/adr/016-liquibase-for-schema-migrations.md) |
+| Hız sınırı: `SELLER_APPLICATION`, hesap başına saatte 5 başvuru veya yeniden gönderim | [ADR-022](../../../../docs/adr/022-in-memory-fixed-window-rate-limiting.md) |
+| Karar e-postası hesabın dilinde; gönderim hatası akışı kesmez, `WARN` olarak loglanır | [ADR-032](../../../../docs/adr/032-account-locale-stored-and-refreshed-on-login.md), [ADR-019](../../../../docs/adr/019-email-via-smtp-provider-agnostic.md) |
+| BFF Route Handler'ı ve başlık tabanlı CSRF; token tarayıcıya verilmez | [ADR-023](../../../../docs/adr/023-web-bff-cookies-and-header-csrf.md) |
+| Şema yalnızca Liquibase ile değişir, `--rollback` zorunlu, dev verisi `contextFilter:dev` ile | [ADR-016](../../../../docs/adr/016-liquibase-for-schema-migrations.md) |
 
 **Bu change'te alınan küçük varsayımlar** (karar düzeyinde değil; review'da değiştirilebilir):
 
