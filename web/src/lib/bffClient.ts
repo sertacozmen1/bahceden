@@ -10,16 +10,22 @@ import { ApiUnavailableError, toApiError } from "@/lib/apiError";
  *
  * Çerezler aynı kökene otomatik gider; token bu katmanda görünmez.
  */
-export async function postToBff<T>(path: string, body?: unknown): Promise<T | undefined> {
+export async function postToBff<T>(
+  path: string,
+  body?: unknown,
+  method: "POST" | "PUT" = "POST",
+): Promise<T | undefined> {
+  // `FormData` (dosya yükleme) olduğu gibi gider; tarayıcı multipart sınırını kendisi yazar.
+  const isForm = body instanceof FormData;
   let response: Response;
   try {
     response = await fetch(path, {
-      method: "POST",
-      headers: body === undefined ? { Accept: "application/json" } : {
+      method,
+      headers: body === undefined || isForm ? { Accept: "application/json" } : {
         Accept: "application/json",
         "Content-Type": "application/json",
       },
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: body === undefined ? undefined : isForm ? body : JSON.stringify(body),
     });
   } catch (cause) {
     throw new ApiUnavailableError("Sunucuya ulaşılamadı.", { cause });

@@ -11,6 +11,10 @@ servers:
 tags:
 - name: Sağlık
   description: Operasyonel sağlık kontrolü
+- name: Satıcı başvurusu
+  description: Oturum sahibinin satıcı başvurusu ve kaydı
+- name: "Admin: satıcılar"
+  description: Satıcı başvurularının listelenmesi ve karara bağlanması
 - name: Ürünler
   description: Vitrindeki ürünlerin listelenmesi
 - name: Oturum
@@ -19,6 +23,139 @@ tags:
   description: "Hesap açma, e-posta doğrulama, parola sıfırlama ve oturum sahibinin\
     \ kimliği"
 paths:
+  /api/v1/sellers/me:
+    get:
+      tags:
+      - Satıcı başvurusu
+      summary: Oturum sahibinin satıcı kaydını döner
+      description: Kayıt yoksa 404 döner; arayüz bunu başvuruya davet olarak gösterir.
+      operationId: getOwnSeller
+      responses:
+        "200":
+          description: Satıcı kaydı
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SellerSelfView"
+        "401":
+          description: Oturum yok (AUTH_REQUIRED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: Hesabın satıcı kaydı yok (SELLER_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+      security:
+      - bearerAuth: []
+    put:
+      tags:
+      - Satıcı başvurusu
+      summary: Reddedilen başvuruyu yeniden gönderir
+      description: |
+        Yalnızca REJECTED durumundaki kayıt için: beyan güncellenir, yeni belge eklenir ve
+        kayıt yeniden PENDING olur. Önceki belge denetim izi için saklanır.
+      operationId: resubmitSellerApplication
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/SellerApplicationRequest"
+      responses:
+        "200":
+          description: Başvuru yeniden gönderildi
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SellerSelfView"
+        "400":
+          description: Alan veya belge geçersiz (VALIDATION_FAILED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Oturum yok (AUTH_REQUIRED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: Hesabın satıcı kaydı yok (SELLER_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "409":
+          description: Kayıt reddedilmiş durumda değil (SELLER_INVALID_TRANSITION)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "429":
+          description: Çok fazla istek (RATE_LIMITED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+      security:
+      - bearerAuth: []
+    post:
+      tags:
+      - Satıcı başvurusu
+      summary: Satıcı başvurusu yapar
+      description: |
+        Beyan alanları ve belge dosyası tek istekte gönderilir. Kayıt PENDING açılır ve
+        admin kararı e-postayla bildirilir. E-posta adresi doğrulanmış olmalıdır. Belge
+        türü içerikten doğrulanır: PDF, JPEG veya PNG; en çok 10 MB.
+      operationId: applyAsSeller
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/SellerApplicationRequest"
+      responses:
+        "201":
+          description: Başvuru alındı
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SellerSelfView"
+        "400":
+          description: Alan veya belge geçersiz (VALIDATION_FAILED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Oturum yok (AUTH_REQUIRED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "409":
+          description: Hesabın zaten satıcı kaydı var (SELLER_ALREADY_EXISTS)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "422":
+          description: E-posta doğrulanmamış (SELLER_EMAIL_NOT_VERIFIED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "429":
+          description: Çok fazla istek (RATE_LIMITED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+      security:
+      - bearerAuth: []
   /api/v1/sessions:
     post:
       tags:
@@ -145,6 +282,234 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiError"
+  /api/v1/admin/sellers/{id}/suspend:
+    post:
+      tags:
+      - "Admin: satıcılar"
+      summary: Onaylı satıcıyı gerekçeyle askıya alır
+      description: |
+        APPROVED → SUSPENDED. ROLE_SELLER kaldırılır, ürünleri vitrinden düşer; gerekçe
+        satıcıya gösterilir ve e-postayla bildirilir.
+      operationId: suspendSeller
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SellerDecisionReason"
+        required: true
+      responses:
+        "200":
+          description: Karar kaydedildi; güncel kayıt döner
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSellerDetail"
+        "400":
+          description: Gerekçe eksik veya kurala uymuyor (VALIDATION_FAILED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Oturum yok (AUTH_REQUIRED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "403":
+          description: Admin rolü yok (AUTH_FORBIDDEN)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: Kayıt yok (SELLER_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "409":
+          description: Bu durumdan bu geçiş yapılamaz (SELLER_INVALID_TRANSITION)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+      security:
+      - bearerAuth: []
+  /api/v1/admin/sellers/{id}/reject:
+    post:
+      tags:
+      - "Admin: satıcılar"
+      summary: Bekleyen başvuruyu gerekçeyle reddeder
+      description: PENDING → REJECTED. Gerekçe satıcıya gösterilir ve e-postayla bildirilir.
+      operationId: rejectSeller
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SellerDecisionReason"
+        required: true
+      responses:
+        "200":
+          description: Karar kaydedildi; güncel kayıt döner
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSellerDetail"
+        "400":
+          description: Gerekçe eksik veya kurala uymuyor (VALIDATION_FAILED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Oturum yok (AUTH_REQUIRED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "403":
+          description: Admin rolü yok (AUTH_FORBIDDEN)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: Kayıt yok (SELLER_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "409":
+          description: Bu durumdan bu geçiş yapılamaz (SELLER_INVALID_TRANSITION)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+      security:
+      - bearerAuth: []
+  /api/v1/admin/sellers/{id}/reinstate:
+    post:
+      tags:
+      - "Admin: satıcılar"
+      summary: Askıdaki satıcıyı askıdan çıkarır
+      description: SUSPENDED → APPROVED. ROLE_SELLER yeniden eklenir ve karar e-postayla
+        bildirilir.
+      operationId: reinstateSeller
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: Karar kaydedildi; güncel kayıt döner
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSellerDetail"
+        "400":
+          description: Gerekçe eksik veya kurala uymuyor (VALIDATION_FAILED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Oturum yok (AUTH_REQUIRED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "403":
+          description: Admin rolü yok (AUTH_FORBIDDEN)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: Kayıt yok (SELLER_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "409":
+          description: Bu durumdan bu geçiş yapılamaz (SELLER_INVALID_TRANSITION)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+      security:
+      - bearerAuth: []
+  /api/v1/admin/sellers/{id}/approve:
+    post:
+      tags:
+      - "Admin: satıcılar"
+      summary: Bekleyen başvuruyu onaylar
+      description: PENDING → APPROVED. Hesaba ROLE_SELLER eklenir ve karar e-postayla
+        bildirilir.
+      operationId: approveSeller
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: Karar kaydedildi; güncel kayıt döner
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSellerDetail"
+        "400":
+          description: Gerekçe eksik veya kurala uymuyor (VALIDATION_FAILED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Oturum yok (AUTH_REQUIRED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "403":
+          description: Admin rolü yok (AUTH_FORBIDDEN)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: Kayıt yok (SELLER_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "409":
+          description: Bu durumdan bu geçiş yapılamaz (SELLER_INVALID_TRANSITION)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+      security:
+      - bearerAuth: []
   /api/v1/accounts:
     post:
       tags:
@@ -308,6 +673,45 @@ paths:
                 $ref: "#/components/schemas/ApiError"
       security:
       - bearerAuth: []
+  /api/v1/sellers/me/document:
+    get:
+      tags:
+      - Satıcı başvurusu
+      summary: Oturum sahibinin güncel başvuru belgesini döner
+      description: |
+        Belge içerikten tespit edilen türüyle, tarayıcının içeriği yorumlamasını ve
+        betik çalıştırmasını engelleyen başlıklarla döner.
+      operationId: getOwnSellerDocument
+      responses:
+        "200":
+          description: Belge dosyası
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+            image/png:
+              schema:
+                type: string
+                format: binary
+        "401":
+          description: Oturum yok (AUTH_REQUIRED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: Hesabın satıcı kaydı yok (SELLER_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+      security:
+      - bearerAuth: []
   /api/v1/products:
     get:
       tags:
@@ -346,7 +750,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/PageResponse"
+                $ref: "#/components/schemas/PageResponseProductSummary"
         "400":
           description: Sayfalama parametresi geçersiz
           content:
@@ -366,6 +770,164 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthResponse"
+  /api/v1/admin/sellers:
+    get:
+      tags:
+      - "Admin: satıcılar"
+      summary: Satıcı kayıtlarını listeler
+      description: Durumla süzülebilir; yeniden eskiye sıralı. Sayfa boyutunun üst
+        sınırı sunucuda 50'dir.
+      operationId: listSellersForAdmin
+      parameters:
+      - name: status
+        in: query
+        description: Durum süzgeci; verilmezse tüm kayıtlar
+        required: false
+        schema:
+          type: string
+          enum:
+          - PENDING
+          - APPROVED
+          - REJECTED
+          - SUSPENDED
+        example: PENDING
+      - name: page
+        in: query
+        description: Sayfa numarası (sıfırdan başlar)
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+          minimum: 0
+        example: 0
+      - name: size
+        in: query
+        description: Sayfa boyutu; üst sınır sunucuda 50'ye çekilir
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+          minimum: 1
+        example: 20
+      responses:
+        "200":
+          description: Satıcı kayıtları
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PageResponseAdminSellerSummary"
+        "400":
+          description: Geçersiz süzgeç veya sayfa (VALIDATION_FAILED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Oturum yok (AUTH_REQUIRED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "403":
+          description: Admin rolü yok (AUTH_FORBIDDEN)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+      security:
+      - bearerAuth: []
+  /api/v1/admin/sellers/{id}:
+    get:
+      tags:
+      - "Admin: satıcılar"
+      summary: Satıcı kaydının ayrıntısını ve geçmişini döner
+      operationId: getSellerForAdmin
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: Satıcı kaydı
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSellerDetail"
+        "401":
+          description: Oturum yok (AUTH_REQUIRED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "403":
+          description: Admin rolü yok (AUTH_FORBIDDEN)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: Kayıt yok (SELLER_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+      security:
+      - bearerAuth: []
+  /api/v1/admin/sellers/{id}/document:
+    get:
+      tags:
+      - "Admin: satıcılar"
+      summary: Satıcının güncel başvuru belgesini döner
+      description: Sahibin belge ucuyla aynı koruma başlıklarıyla döner.
+      operationId: getSellerDocumentForAdmin
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: Belge dosyası
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+            image/png:
+              schema:
+                type: string
+                format: binary
+        "401":
+          description: Oturum yok (AUTH_REQUIRED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "403":
+          description: Admin rolü yok (AUTH_FORBIDDEN)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: Kayıt veya belge yok (SELLER_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+      security:
+      - bearerAuth: []
   /api/v1/accounts/me:
     get:
       tags:
@@ -417,6 +979,140 @@ paths:
                 $ref: "#/components/schemas/ApiError"
 components:
   schemas:
+    SellerApplicationRequest:
+      type: object
+      description: "Satıcı başvurusu: beyan alanları ve belge dosyası"
+      properties:
+        displayName:
+          type: string
+          description: Vitrinde görünecek üretici adı
+          example: Örnek Bahçe
+          maxLength: 160
+          minLength: 2
+        city:
+          type: string
+          description: Üreticinin şehri
+          example: Manisa
+          maxLength: 80
+          minLength: 2
+        phone:
+          type: string
+          description: İletişim telefonu; yalnızca admin görür. 0 veya +90 önekiyle
+            yazılabilir
+          example: +90 555 000 00 00
+          maxLength: 20
+          minLength: 0
+        documentType:
+          type: string
+          description: Belge türü
+          enum:
+          - CKS_CERTIFICATE
+          - TAX_CERTIFICATE
+          example: CKS_CERTIFICATE
+          minLength: 1
+          pattern: CKS_CERTIFICATE|TAX_CERTIFICATE
+        document:
+          type: string
+          format: binary
+          description: "Belge dosyası: PDF, JPEG veya PNG; en çok 10 MB"
+      required:
+      - city
+      - displayName
+      - document
+      - documentType
+      - phone
+    ApiError:
+      type: object
+      description: Hata yanıtı
+      properties:
+        code:
+          type: string
+          description: Sabit hata kodu; dilden bağımsızdır
+          example: VALIDATION_FAILED
+        message:
+          type: string
+          description: "Kullanıcıya gösterilebilir açıklama; isteğin diliyle (Accept-Language:\
+            \ tr, en) döner, varsayılan Türkçe"
+          example: Gönderilen değerler geçersiz.
+        fieldErrors:
+          type: array
+          description: Alan bazlı doğrulama hataları
+          items:
+            $ref: "#/components/schemas/FieldError"
+      required:
+      - code
+      - fieldErrors
+      - message
+    FieldError:
+      type: object
+      description: Alan bazlı doğrulama hatası
+      properties:
+        field:
+          type: string
+          description: Hatalı alanın adı
+          example: size
+        message:
+          type: string
+          description: Alana ait hata açıklaması; isteğin dilinde
+          example: Sayfa boyutu en az 1 olmalıdır
+      required:
+      - field
+      - message
+    SellerSelfView:
+      type: object
+      description: Oturum sahibinin satıcı kaydı
+      properties:
+        slug:
+          type: string
+          description: Vitrin adresinde kullanılacak kalıcı ad
+          example: ornek-bahce
+        displayName:
+          type: string
+          description: Vitrinde görünecek üretici adı
+          example: Örnek Bahçe
+        city:
+          type: string
+          description: Şehir
+          example: Manisa
+        phone:
+          type: string
+          description: "İletişim telefonu, E.164 biçiminde"
+          example: "+905550000000"
+        status:
+          type: string
+          description: Kaydın durumu
+          enum:
+          - PENDING
+          - APPROVED
+          - REJECTED
+          - SUSPENDED
+          example: PENDING
+        statusReason:
+          type:
+          - string
+          - "null"
+          description: Son ret veya askı gerekçesi; satıcıya gösterilir
+          example: Belgedeki ad ile beyan edilen ad eşleşmiyor.
+        documentType:
+          type: string
+          description: Güncel belgenin türü
+          enum:
+          - CKS_CERTIFICATE
+          - TAX_CERTIFICATE
+          example: CKS_CERTIFICATE
+        statusChangedAt:
+          type: string
+          format: date-time
+          description: "Durumun son değiştiği an (UTC, ISO-8601)"
+          example: 2026-10-08T09:30:00Z
+      required:
+      - city
+      - displayName
+      - documentType
+      - phone
+      - slug
+      - status
+      - statusChangedAt
     LoginRequest:
       type: object
       description: Oturum açma isteği
@@ -481,43 +1177,6 @@ components:
       required:
       - expiresAt
       - message
-    ApiError:
-      type: object
-      description: Hata yanıtı
-      properties:
-        code:
-          type: string
-          description: Sabit hata kodu; dilden bağımsızdır
-          example: VALIDATION_FAILED
-        message:
-          type: string
-          description: "Kullanıcıya gösterilebilir açıklama; isteğin diliyle (Accept-Language:\
-            \ tr, en) döner, varsayılan Türkçe"
-          example: Gönderilen değerler geçersiz.
-        fieldErrors:
-          type: array
-          description: Alan bazlı doğrulama hataları
-          items:
-            $ref: "#/components/schemas/FieldError"
-      required:
-      - code
-      - fieldErrors
-      - message
-    FieldError:
-      type: object
-      description: Alan bazlı doğrulama hatası
-      properties:
-        field:
-          type: string
-          description: Hatalı alanın adı
-          example: size
-        message:
-          type: string
-          description: Alana ait hata açıklaması; isteğin dilinde
-          example: Sayfa boyutu en az 1 olmalıdır
-      required:
-      - field
-      - message
     RefreshTokenRequest:
       type: object
       description: Yenileme token'ı
@@ -549,6 +1208,145 @@ components:
       required:
       - code
       - email
+    SellerDecisionReason:
+      type: object
+      description: Ret veya askı gerekçesi; satıcıya gösterilir
+      properties:
+        reason:
+          type: string
+          description: Satıcıya gösterilecek gerekçe
+          example: Belgedeki ad ile beyan edilen ad eşleşmiyor.
+          maxLength: 500
+          minLength: 10
+      required:
+      - reason
+    AdminSellerDetail:
+      type: object
+      description: Admin için satıcı kaydı ayrıntısı ve geçmişi
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Satıcı kaydının kimliği
+          example: 42
+        slug:
+          type: string
+          description: Vitrin adresindeki kalıcı ad
+          example: ornek-bahce
+        displayName:
+          type: string
+          description: Üretici adı
+          example: Örnek Bahçe
+        city:
+          type: string
+          description: Şehir
+          example: Manisa
+        phone:
+          type:
+          - string
+          - "null"
+          description: "İletişim telefonu, E.164; seed kayıtlarında boş"
+          example: "+905550000000"
+        accountEmail:
+          type:
+          - string
+          - "null"
+          description: Kaydın sahibi olan hesabın e-postası; seed kayıtlarında boş
+          example: uretici@ornek.test
+        status:
+          type: string
+          description: Kaydın durumu
+          enum:
+          - PENDING
+          - APPROVED
+          - REJECTED
+          - SUSPENDED
+          example: PENDING
+        statusReason:
+          type:
+          - string
+          - "null"
+          description: Son ret veya askı gerekçesi
+          example: Belgedeki ad okunmuyor.
+        documentType:
+          type:
+          - string
+          - "null"
+          description: Güncel belgenin türü; belgesiz seed kayıtlarında boş
+          enum:
+          - CKS_CERTIFICATE
+          - TAX_CERTIFICATE
+          example: CKS_CERTIFICATE
+        createdAt:
+          type: string
+          format: date-time
+          description: "Başvurunun ilk yapıldığı an (UTC, ISO-8601)"
+          example: 2026-10-08T09:30:00Z
+        statusChangedAt:
+          type:
+          - string
+          - "null"
+          format: date-time
+          description: "Durumun son değiştiği an (UTC, ISO-8601); seed kayıtlarında\
+            \ boş olabilir"
+          example: 2026-10-08T09:30:00Z
+        history:
+          type: array
+          description: "Durum geçişleri, eskiden yeniye"
+          items:
+            $ref: "#/components/schemas/SellerStatusChangeView"
+      required:
+      - city
+      - createdAt
+      - displayName
+      - history
+      - id
+      - slug
+      - status
+      - statusChangedAt
+    SellerStatusChangeView:
+      type: object
+      description: Satıcı kaydının bir durum geçişi
+      properties:
+        fromStatus:
+          type:
+          - string
+          - "null"
+          description: Önceki durum; başvuruda boş
+          enum:
+          - PENDING
+          - APPROVED
+          - REJECTED
+          - SUSPENDED
+          example: PENDING
+        toStatus:
+          type: string
+          description: Yeni durum
+          enum:
+          - PENDING
+          - APPROVED
+          - REJECTED
+          - SUSPENDED
+          example: REJECTED
+        reason:
+          type:
+          - string
+          - "null"
+          description: Gerekçe; ret ve askıda dolu
+          example: Belgedeki ad okunmuyor.
+        actorEmail:
+          type: string
+          description: Geçişi yapan hesabın e-postası
+          example: admin@ornek.test
+        createdAt:
+          type: string
+          format: date-time
+          description: "Geçişin anı (UTC, ISO-8601)"
+          example: 2026-10-08T10:15:00Z
+      required:
+      - actorEmail
+      - createdAt
+      - toStatus
     RegisterRequest:
       type: object
       description: Hesap açma isteği
@@ -651,7 +1449,7 @@ components:
       required:
       - amount
       - currency
-    PageResponse:
+    PageResponseProductSummary:
       type: object
       description: Sayfalı liste yanıtı
       properties:
@@ -754,6 +1552,87 @@ components:
           example: UP
       required:
       - status
+    AdminSellerSummary:
+      type: object
+      description: Admin listesinde satıcı kaydı özeti
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Satıcı kaydının kimliği
+          example: 42
+        displayName:
+          type: string
+          description: Üretici adı
+          example: Örnek Bahçe
+        city:
+          type: string
+          description: Şehir
+          example: Manisa
+        status:
+          type: string
+          description: Kaydın durumu
+          enum:
+          - PENDING
+          - APPROVED
+          - REJECTED
+          - SUSPENDED
+          example: PENDING
+        createdAt:
+          type: string
+          format: date-time
+          description: "Başvurunun ilk yapıldığı an (UTC, ISO-8601)"
+          example: 2026-10-08T09:30:00Z
+        statusChangedAt:
+          type:
+          - string
+          - "null"
+          format: date-time
+          description: "Durumun son değiştiği an (UTC, ISO-8601); seed kayıtlarında\
+            \ boş olabilir"
+          example: 2026-10-08T09:30:00Z
+      required:
+      - city
+      - createdAt
+      - displayName
+      - id
+      - status
+      - statusChangedAt
+    PageResponseAdminSellerSummary:
+      type: object
+      description: Sayfalı liste yanıtı
+      properties:
+        items:
+          type: array
+          description: Sayfadaki kayıtlar
+          items:
+            $ref: "#/components/schemas/AdminSellerSummary"
+        page:
+          type: integer
+          format: int32
+          description: Geçerli sayfa numarası (sıfırdan başlar)
+          example: 0
+        size:
+          type: integer
+          format: int32
+          description: Uygulanan sayfa boyutu
+          example: 20
+        totalElements:
+          type: integer
+          format: int64
+          description: Süzgeçten geçen toplam kayıt sayısı
+          example: 137
+        totalPages:
+          type: integer
+          format: int32
+          description: Toplam sayfa sayısı
+          example: 7
+      required:
+      - items
+      - page
+      - size
+      - totalElements
+      - totalPages
     AccountView:
       type: object
       description: Oturum sahibinin kimliği ve rolleri

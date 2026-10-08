@@ -7,6 +7,8 @@ import { requireSignedIn } from "@/features/account/requireSession";
 import { AccountScreen } from "@/features/account/components/AccountScreen";
 import { ResendVerificationButton } from "@/features/account/components/ResendVerificationButton";
 import { SignOutButton } from "@/features/account/components/SignOutButton";
+import { getOwnSeller } from "@/features/seller/api";
+import { SellerCard } from "@/features/seller/components/SellerCard";
 
 /** Sayfa başlığı seçili dilde (ADR-029). */
 export async function generateMetadata(): Promise<Metadata> {
@@ -23,10 +25,14 @@ export async function generateMetadata(): Promise<Metadata> {
  * Doğrulama durumu bir etikettir ve metniyle okunur; doğrulanmamışsa yeni
  * bağlantı eylemi hemen altında durur (tek odak). Çıkış en altta, ayraçla
  * ayrılmış: sık kullanılmaz ve birincil eylemle karışmamalı (Fitts).
+ *
+ * Satıcılık bölümü kaydı olmayanı başvuruya davet eder, olanın durumunu
+ * gösterir (add-seller-onboarding); kayıt her istekte taze okunur.
  */
 export default async function MyAccountPage() {
   const t = await getTranslations();
-  const { account } = await requireSignedIn("/account");
+  const { account, accessToken } = await requireSignedIn("/account");
+  const seller = await getOwnSeller(accessToken);
   return (
     <AccountScreen title={t("account.myAccount.title")}>
       <dl className="grid gap-4">
@@ -61,6 +67,8 @@ export default async function MyAccountPage() {
           <ResendVerificationButton />
         </div>
       )}
+      <Separator />
+      <SellerCard seller={seller} />
       <Separator />
       <SignOutButton variant="ghost" className="self-start" />
     </AccountScreen>

@@ -19,7 +19,7 @@ Bu bölüm, Bahçeden'de **belirli bir görevi tamamlamak** isteyen geliştirici
 | 5 | Veritabanı migration'ı yazma ve geri alma | Veri | İlk dilimle |
 | 6 | Yeni ortam değişkeni ekleme | Operasyon | İlk dilimle |
 | 7 | Üretim ortam değişkenleri ve güvenlik | Operasyon | Planlanıyor |
-| 8 | Satıcı başvurusunu elle onaylama | Operasyon | KALANLAR A3'e bağlı |
+| 8 | [Admin yetkisi verme ve satıcı başvurusunu karara bağlama](admin-yetkisi-verme.md) | Operasyon | Hazır |
 | 9 | Kargo gönderisi oluşturma ve takip | Operasyon | KALANLAR A2'ye bağlı |
 
 **Durum değerleri:** `Hazır` · `İlk dilimle` (ilgili kod yazıldığında aynı change içinde yazılacak) · `Planlanıyor` · `KALANLAR X'e bağlı` (karar bekliyor).

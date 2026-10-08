@@ -1,6 +1,6 @@
 # Genel: Feature'a Bağlı Olmayan İşler
 
-**Son değişiklik:** 2026-10-07
+**Son değişiklik:** 2026-10-08
 
 Dokümantasyon altyapısı, geliştirme araçları, AI kural dosyaları, CI ve tek bir feature'a bağlanamayan altyapı işleri burada kayıt altına alınır. Bir feature'a ait değişiklik buraya **yazılmaz**; ilgili feature dosyasına gider.
 
@@ -28,6 +28,8 @@ Dokümantasyon altyapısı, geliştirme araçları, AI kural dosyaları, CI ve t
 
 ## Tarihçe
 
+- 2026-10-08: `openspec/KALANLAR.md`'ye **A5** eklendi: satıcı verisinin saklama süresi, KVKK aydınlatma metni ve belgenin yasal yeterliliği (hukuk). `AGENTS.md` §15 tablosuna satır olarak işlendi. Kaynak: change `add-seller-onboarding` design.md Open Questions. ADR index'e ADR-040…046 eklendi; how-to dizinindeki "Satıcı başvurusunu elle onaylama" satırı [Admin yetkisi verme](../how-to/admin-yetkisi-verme.md) rehberiyle karşılandı. [Yerel geliştirme](../how-to/yerel-gelistirme.md) rehberinin 7. adımı, eskimiş "bugün çalışmaz" notu yerine gerçek komutlar, dev hesapları ve `uploads` volume'u ile yeniden yazıldı. `.gitignore`'a `api/uploads/` eklendi.
+- 2026-10-08: `openspec/KALANLAR.md` A3 ve B3 ürün sahibinin kararıyla kapandı. A3 → [ADR-037](../adr/037-seller-application-with-document-and-manual-approval.md) (mevcut hesaptan başvuru, beyan + ÇKS belgesi veya vergi levhası, manuel admin onayı, TCKN/VKN/IBAN alınmaz) ve [ADR-038](../adr/038-listings-publish-immediately-with-admin-takedown.md) (ilan ön onaysız yayına girer, admin gerekçeyle kaldırır). B3 → [ADR-039](../adr/039-uploads-on-local-volume-served-by-api.md) (Docker volume'da yerel disk, `api` sunar, ImageIO ile boyutlandırma, yeni paket yok). Belgenin yasal yeterliliği hukuk teyidi bekliyor; açık risk olarak ADR-037'de. `AGENTS.md` §15 tablosu ve ADR index güncellendi. Kod yazılmadı.
 - 2026-10-07: Bahçeden logosu eklendi. Başlıkta satır içi SVG logo var (`BrandLogo`; 420px altında yalnızca karo, `BrandMark`); kelime işareti açıkta koyu yeşil, koyuda krem (`logo-*` rolleri, `--brand-*` merdiveni). Sekme ikonu, `apple-icon`, `theme-color` ve PWA manifesti eklendi. SVG kaynakları `docs/assets/brand/` altında. Paylaşım görseli (`og-image`) bağlanmadı: mutlak site adresi üretim alan adına bağlı (KALANLAR B5). Yeni bağımlılık yok. Döküm: [Tasarım sistemi §2.4](../reference/03-design-system.md).
 - 2026-10-07: Kod tanımlayıcısı olan Türkçe adlar İngilizceye çevrildi (AGENTS.md §1). Kapsam: web sayfa adresleri (`/register`, `/login`, `/verify-email`, `/account`; ayrıntı [Hesap ve Oturum](hesap-ve-oturum.md)), form alanı `id`'leri, `api` ve `web` testlerindeki yardımcı metot ve değişken adları. Test metodu adları §11.7 gereği Türkçe cümle olarak kaldı; doküman dosya adları Türkçe kaldı. `api` yolları zaten İngilizceydi.
 - 2026-10-07: `add-i18n` change'i kullanıcı onayıyla archive edildi (`openspec/changes/archive/2026-10-07-add-i18n/`). Ön koşullar: delta spec ana `specs/localization` ile birebir, D1–D4 → ADR-029…032, dokümanlar güncel, `api` verify (88) ve `web` lint/typecheck/test (52)/build temiz.

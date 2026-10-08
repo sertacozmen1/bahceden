@@ -1,6 +1,7 @@
 package com.bahceden.catalog.domain;
 
 import com.bahceden.common.money.Money;
+import com.bahceden.seller.domain.Seller;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;

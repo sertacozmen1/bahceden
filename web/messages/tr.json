@@ -117,6 +117,106 @@
       "formHasErrors": "Formdaki işaretli alanları düzeltin."
     }
   },
+  "seller": {
+    "card": {
+      "title": "Satıcılık",
+      "inviteBody": "Ürettiklerinizi aracısız satmak için üretici olarak başvurun.",
+      "inviteAction": "Satıcı olarak başvur",
+      "statusAction": "Başvuru ayrıntıları"
+    },
+    "application": {
+      "title": "Satıcı başvurusu",
+      "intro": "Ürünlerinizi Bahçeden'de satmak için üretici bilgilerinizi ve bir belgenizi gönderin. Başvurunuzu bir yönetici inceler; kararı e-postayla bildiririz.",
+      "submit": "Başvuruyu gönder",
+      "submitting": "Gönderiliyor…",
+      "resubmit": "Düzeltip yeniden gönder",
+      "fields": {
+        "displayName": "Üretici adı",
+        "displayNameHint": "Vitrinde ürünlerinizin yanında bu ad görünür.",
+        "city": "Şehir",
+        "phone": "Telefon",
+        "phoneHint": "Yalnızca yönetici görür; başvurunuzla ilgili size ulaşmak için.",
+        "documentType": "Belge türü",
+        "document": "Belge",
+        "documentHint": "PDF, JPEG veya PNG; en çok 10 MB. Belgeyi yalnızca yönetici görür."
+      },
+      "documentType": "{type, select, CKS_CERTIFICATE {ÇKS belgesi} TAX_CERTIFICATE {Vergi levhası} other {Belge}}",
+      "documentTypeHint": "{type, select, CKS_CERTIFICATE {Çiftçi Kayıt Sistemi'nden alınan belge} TAX_CERTIFICATE {Vergi dairesinin verdiği levha} other {Belge}}",
+      "errors": {
+        "documentTypeRequired": "Belge türünü seçin.",
+        "documentRequired": "Belge dosyasını seçin.",
+        "documentType": "Belge PDF, JPEG veya PNG olmalıdır.",
+        "documentTooLarge": "Belge en çok 10 MB olabilir."
+      },
+      "verifyFirst": {
+        "title": "Önce e-postanızı doğrulayın",
+        "body": "Başvurunuzun sonucunu e-postayla bildireceğiz. Başvurmadan önce e-posta adresinizi doğrulayın."
+      },
+      "status": {
+        "label": "{status, select, PENDING {İnceleniyor} APPROVED {Onaylandı} REJECTED {Reddedildi} SUSPENDED {Askıya alındı} other {Bilinmiyor}}",
+        "pendingTitle": "Başvurunuz inceleniyor",
+        "pendingBody": "Bir yönetici bilgilerinizi ve belgenizi inceliyor. Kararı e-posta adresinize bildireceğiz.",
+        "approvedTitle": "Başvurunuz onaylandı",
+        "approvedBody": "Üretici kaydınız onaylandı ve satıcı rolü hesabınıza eklendi.",
+        "rejectedTitle": "Başvurunuz reddedildi",
+        "rejectedBody": "Gerekçeye göre bilgilerinizi düzeltip yeni bir belgeyle yeniden gönderebilirsiniz.",
+        "suspendedTitle": "Satıcı kaydınız askıya alındı",
+        "suspendedBody": "Askıdayken ürünleriniz vitrinde görünmez.",
+        "reason": "Gerekçe",
+        "viewDocument": "Gönderdiğim belgeyi aç",
+        "statusLabel": "Durum"
+      }
+    }
+  },
+  "admin": {
+    "nav": "Yönetim",
+    "sellers": {
+      "title": "Satıcı başvuruları",
+      "intro": "Başvuruları inceleyin ve karara bağlayın. Kararlar başvurana e-postayla bildirilir.",
+      "tabsLabel": "Duruma göre süz",
+      "tab": "{status, select, PENDING {Bekleyen} APPROVED {Onaylı} REJECTED {Reddedilen} SUSPENDED {Askıda} other {Diğer}}",
+      "emptyTitle": "Bu durumda kayıt yok",
+      "emptyBody": "Başka bir sekmeye bakabilir ya da yeni başvuruları bekleyebilirsiniz.",
+      "appliedAt": "Başvuru: {date}",
+      "loading": "Satıcı kayıtları yükleniyor",
+      "backToList": "Listeye dön",
+      "detail": {
+        "accountEmail": "Hesap e-postası",
+        "phone": "Telefon",
+        "city": "Şehir",
+        "documentType": "Belge türü",
+        "status": "Durum",
+        "reason": "Gerekçe",
+        "appliedAt": "Başvuru tarihi",
+        "openDocument": "Belgeyi yeni sekmede aç",
+        "noDocument": "Bu kaydın belgesi yok.",
+        "none": "Yok",
+        "historyTitle": "Geçmiş",
+        "historyItem": "{to, select, PENDING {İncelemeye alındı} APPROVED {Onaylandı} REJECTED {Reddedildi} SUSPENDED {Askıya alındı} other {Değişti}}",
+        "historyBy": "{email} · {date}",
+        "actionsTitle": "Karar"
+      },
+      "actions": {
+        "approve": "Onayla",
+        "approving": "Onaylanıyor…",
+        "reject": "Reddet",
+        "suspend": "Askıya al",
+        "reinstate": "Askıdan çıkar",
+        "reinstating": "Askıdan çıkarılıyor…",
+        "rejectTitle": "Başvuruyu reddet",
+        "suspendTitle": "Satıcıyı askıya al",
+        "rejectBody": "Başvuran gerekçeyi görecek ve e-postayla alacak; düzeltip yeniden gönderebilir.",
+        "suspendBody": "Satıcı rolü kaldırılır ve ürünleri vitrinden düşer. Gerekçe satıcıya gösterilir ve e-postayla gönderilir.",
+        "reason": "Gerekçe",
+        "reasonHint": "En az 10, en çok 500 karakter. Satıcıya olduğu gibi gösterilir.",
+        "reasonRequired": "Gerekçe en az 10 karakter olmalıdır.",
+        "cancel": "Vazgeç",
+        "confirmReject": "Reddet",
+        "confirmSuspend": "Askıya al",
+        "sending": "Kaydediliyor…"
+      }
+    }
+  },
   "footer": {
     "copyright": "Bahçeden"
   },

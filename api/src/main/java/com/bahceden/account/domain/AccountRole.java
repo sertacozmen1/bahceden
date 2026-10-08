@@ -7,16 +7,17 @@ package com.bahceden.account.domain;
  * Spring Security'nin beklediği {@code ROLE_} önekiyle adlandırılır, böylece
  * yetkilendirme ifadelerinde dönüşüm gerekmez.
  *
- * <p>Kayıt olan herkes {@link #ROLE_CUSTOMER} alır. {@link #ROLE_SELLER} rolünü
- * veren akış satıcı onboarding kararına bağlıdır (KALANLAR A3) ve bu dilimde
- * yoktur; {@link #ROLE_ADMIN} yalnızca veritabanından verilir.
+ * <p>Kayıt olan herkes {@link #ROLE_CUSTOMER} alır. {@link #ROLE_SELLER} satıcı
+ * başvurusu onaylandığında eklenir, askıda kaldırılır (ADR-037,
+ * add-seller-onboarding D5); {@link #ROLE_ADMIN} yalnızca veritabanından
+ * verilir (D7).
  */
 public enum AccountRole {
 
     /** Alıcı: vitrinden alışveriş yapar. Kayıt olan herkesin varsayılan rolü. */
     ROLE_CUSTOMER,
 
-    /** Satıcı: ürün yayınlar ve gönderir. Atama akışı KALANLAR A3'e bağlı. */
+    /** Satıcı: ürün yayınlar ve gönderir. Başvurunun admin onayıyla verilir (ADR-037). */
     ROLE_SELLER,
 
     /** Yönetici: operasyon ekranları. Yalnızca veritabanından verilir. */

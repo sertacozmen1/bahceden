@@ -14,6 +14,8 @@ shared/generated/
 
 # api/ (Maven)
 api/target/
+# Yerel çalıştırmada yüklenen dosyalar (BAHCEDEN_STORAGE_DIR=./uploads); kişisel veri içerir (K10).
+api/uploads/
 *.class
 *.jar
 *.war

@@ -16,6 +16,9 @@ const session = vi.hoisted(() => {
 
 vi.mock("@/features/account/api", () => ({ currentSession: async () => session.current }));
 
+const ownSeller = vi.hoisted(() => ({ current: null as null | { status: "PENDING" } }));
+vi.mock("@/features/seller/api", () => ({ getOwnSeller: async () => ownSeller.current }));
+
 const redirect = vi.hoisted(() =>
   vi.fn((target: string) => {
     throw new Error(`yönlendirildi: ${target}`);
@@ -25,6 +28,7 @@ vi.mock("next/navigation", () => ({ redirect, useRouter: () => ({ push: vi.fn(),
 
 beforeEach(() => {
   redirect.mockClear();
+  ownSeller.current = null;
 });
 
 describe("Hesabım sayfası", () => {
@@ -56,5 +60,32 @@ describe("Hesabım sayfası", () => {
     expect(screen.getByText("Doğrulanmadı")).toBeDefined();
     expect(screen.getByRole("button", { name: "Yeni doğrulama bağlantısı gönder" })).toBeDefined();
     expect(redirect).not.toHaveBeenCalled();
+  });
+
+  it("satıcı kaydı yoksa başvuruya davet eder", async () => {
+    session.current = {
+      kind: "signed-in",
+      accessToken: "test-erisim",
+      account: { email: "alici@ornek.test", roles: ["ROLE_CUSTOMER"], emailVerified: true },
+    };
+
+    renderWithIntl(await MyAccountPage());
+
+    expect(screen.getByRole("heading", { name: "Satıcılık" })).toBeDefined();
+    expect(screen.getByRole("link", { name: "Satıcı olarak başvur" }).getAttribute("href")).toBe("/seller/application");
+  });
+
+  it("satıcı kaydı varsa durumunu ve ayrıntı bağlantısını gösterir", async () => {
+    session.current = {
+      kind: "signed-in",
+      accessToken: "test-erisim",
+      account: { email: "alici@ornek.test", roles: ["ROLE_CUSTOMER"], emailVerified: true },
+    };
+    ownSeller.current = { status: "PENDING" };
+
+    renderWithIntl(await MyAccountPage());
+
+    expect(screen.getByText("İnceleniyor")).toBeDefined();
+    expect(screen.getByRole("link", { name: "Başvuru ayrıntıları" })).toBeDefined();
   });
 });

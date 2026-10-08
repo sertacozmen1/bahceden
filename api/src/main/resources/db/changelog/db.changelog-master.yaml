@@ -26,3 +26,9 @@ databaseChangeLog:
   - include:
       file: 006-create-password-reset-tokens.sql
       relativeToChangelogFile: true
+  - include:
+      file: 007-seller-onboarding.sql
+      relativeToChangelogFile: true
+  - include:
+      file: 008-dev-seed-seller-onboarding.sql
+      relativeToChangelogFile: true

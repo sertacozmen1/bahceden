@@ -19,7 +19,10 @@ import org.springframework.data.domain.Page;
  * @param totalElements süzgeçten geçen toplam kayıt sayısı
  * @param totalPages    toplam sayfa sayısı
  */
-@Schema(name = "PageResponse", description = "Sayfalı liste yanıtı")
+// Sabit şema adı verilmez: generic kayıt her öğe tipi için ayrı şema olmalı
+// (PageResponseProductSummary, PageResponseAdminSellerSummary). Tek ad, iki liste
+// ucunu aynı şemaya bağlar ve birinin öğe tipini yanlış gösterirdi.
+@Schema(description = "Sayfalı liste yanıtı")
 public record PageResponse<T>(
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Sayfadaki kayıtlar") List<T> items,
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Geçerli sayfa numarası (sıfırdan başlar)", example = "0") int page,

@@ -56,8 +56,18 @@ Architecture Decision Records, projedeki önemli mimari kararları ve bu kararla
 | 034 | [Parola sıfırlama talebi hesabı açığa çıkarmaz; kayıtsız adrese e-posta gitmez](034-password-reset-request-reveals-nothing.md) | Accepted | 2026-10-07 |
 | 035 | [Parola sıfırlama bütün oturumları kapatır; otomatik giriş yok](035-password-reset-signs-out-everywhere-no-auto-login.md) | Accepted | 2026-10-07 |
 | 036 | [Sıfırlama bağlantısını kullanmak e-postayı doğrular](036-password-reset-marks-email-verified.md) | Accepted | 2026-10-07 |
+| 037 | [Satıcı başvurusu: beyan + tek belge, manuel admin onayı](037-seller-application-with-document-and-manual-approval.md) | Accepted | 2026-10-08 |
+| 038 | [Onaylı satıcının ilanı hemen yayına girer; admin gerekçeyle kaldırabilir](038-listings-publish-immediately-with-admin-takedown.md) | Accepted | 2026-10-08 |
+| 039 | [Yüklenen dosyalar yerel diskte (Docker volume) durur, `api` sunar; boyutlandırma ImageIO ile](039-uploads-on-local-volume-served-by-api.md) | Accepted | 2026-10-08 |
+| 040 | [Başvuru, satıcı kaydının kendisidir; durum geçmişi ayrı ve silinmeyen bir tabloda](040-seller-application-is-the-seller-record.md) | Accepted | 2026-10-08 |
+| 041 | [Mevcut satıcılar onaylı sayılır; vitrin satıcı durumunu sorguda filtreler](041-storefront-filters-seller-status-in-query.md) | Accepted | 2026-10-08 |
+| 042 | [Başvuru tek bir multipart istektir; yeniden gönderim de öyle](042-seller-application-single-multipart-request.md) | Accepted | 2026-10-08 |
+| 043 | [Satıcı başvurusu için e-posta doğrulaması zorunludur](043-seller-application-requires-verified-email.md) | Accepted | 2026-10-08 |
+| 044 | [`ROLE_SELLER` onayda eklenir, askıda kaldırılır; satıcıya özgü sorgular `APPROVED` durumunu da denetler](044-seller-role-follows-status-with-query-gate.md) | Accepted | 2026-10-08 |
+| 045 | [Belge `seller_documents` tablosunda; tür içerikten tespit edilir; korumalı başlıklarla sunulur](045-seller-documents-table-content-sniffing-protected-serving.md) | Accepted | 2026-10-08 |
+| 046 | [Admin yüzeyi `web` içinde `(admin)` rota grubunda; ilk admin veritabanından atanır](046-admin-surface-in-web-first-admin-by-sql.md) | Accepted | 2026-10-08 |
 
-**Sıradaki numara: 037.**
+**Sıradaki numara: 047.**
 
 **Durum değerleri:** `Proposed` (öneri, henüz bağlayıcı değil) · `Accepted` (yürürlükte, bağlayıcı) · `Deprecated` (artık geçerli değil, yerine bir şey gelmedi) · `Superseded by [ADR-XXX]` (yerini başka bir karara bıraktı).
 
@@ -71,8 +81,6 @@ Aşağıdaki konular henüz karara bağlanmadı ve ilgili alanda kod yazılması
 |---|---|---|
 | Ödeme sağlayıcısı, payout modeli, komisyon ve iade kuralı | KALANLAR A1 | ADR adayı |
 | Kargo entegrasyonu ve ücret sahipliği | KALANLAR A2 | ADR adayı |
-| Satıcı doğrulama ve ilan ön onayı | KALANLAR A3 | ADR adayı |
-| Ürün fotoğrafı depolama (yerel disk / nesne depolama) | KALANLAR B3 | ADR adayı |
 
 ---
 

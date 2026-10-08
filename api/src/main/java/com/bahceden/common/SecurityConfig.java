@@ -1,6 +1,7 @@
 package com.bahceden.common;
 
 import com.bahceden.common.security.AccessTokenIssuer;
+import com.bahceden.common.security.ApiAccessDeniedHandler;
 import com.bahceden.common.security.ApiAuthenticationEntryPoint;
 import java.util.List;
 import org.springframework.context.annotation.Bean;
@@ -39,7 +40,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig {
 
     @Bean
-    SecurityFilterChain filterChain(HttpSecurity http, ApiAuthenticationEntryPoint entryPoint) throws Exception {
+    SecurityFilterChain filterChain(HttpSecurity http, ApiAuthenticationEntryPoint entryPoint,
+                                    ApiAccessDeniedHandler accessDeniedHandler) throws Exception {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 // Yapılandırmayı tip ile enjekte etmiyoruz: Spring MVC'nin
@@ -64,15 +66,28 @@ public class SecurityConfig {
                         // Oturum sahibi: geçerli erişim token'ı ister; rol fark etmez.
                         .requestMatchers(HttpMethod.GET, "/api/v1/accounts/me").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/v1/accounts/me/verification-requests").authenticated()
+                        // Satıcı başvurusu: başvuran henüz satıcı değildir; oturum yeter, rol aranmaz (ADR-037).
+                        .requestMatchers(HttpMethod.GET, "/api/v1/sellers/me", "/api/v1/sellers/me/document").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/sellers/me").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/v1/sellers/me").authenticated()
+                        // Admin: satıcı başvurularını karara bağlama (add-seller-onboarding D7). Rol token'dan gelir.
+                        .requestMatchers(HttpMethod.GET, "/api/v1/admin/sellers", "/api/v1/admin/sellers/*",
+                                "/api/v1/admin/sellers/*/document").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/admin/sellers/*/approve", "/api/v1/admin/sellers/*/reject",
+                                "/api/v1/admin/sellers/*/suspend", "/api/v1/admin/sellers/*/reinstate").hasRole("ADMIN")
                         // Operasyon: konteyner sağlık kontrolü ve sözleşme çıktısı.
                         .requestMatchers(HttpMethod.GET, "/api/v1/health").permitAll()
                         .requestMatchers(HttpMethod.GET, "/v3/api-docs", "/v3/api-docs/**", "/v3/api-docs.yaml").permitAll()
                         .anyRequest().denyAll())
                 .oauth2ResourceServer(resourceServer -> resourceServer
                         .authenticationEntryPoint(entryPoint)
+                        .accessDeniedHandler(accessDeniedHandler)
                         .jwt(jwt -> jwt.jwtAuthenticationConverter(rolesFromToken())))
                 // Kimliksiz istek (token hiç yok) da aynı 401 gövdesini alır.
-                .exceptionHandling(exceptions -> exceptions.authenticationEntryPoint(entryPoint))
+                // Rolü yetmeyen istek (403) de ortak hata gövdesini alır.
+                .exceptionHandling(exceptions -> exceptions
+                        .authenticationEntryPoint(entryPoint)
+                        .accessDeniedHandler(accessDeniedHandler))
                 .build();
     }
 

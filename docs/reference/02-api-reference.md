@@ -1,6 +1,6 @@
 # API Referansı
 
-**Son doğrulama:** 2026-10-07 · Kaynak: `shared/contracts/openapi.yaml`
+**Son doğrulama:** 2026-10-08 · Kaynak: `shared/contracts/openapi.yaml`
 
 > Sözleşme `api/` içindeki DTO ve anotasyonlardan **üretilir** ([ADR-009](../adr/009-contract-generated-from-spring.md)) ve tazeliği bir testle zorunludur ([ADR-015](../adr/015-contract-freshness-enforced-by-test.md)). Bu sayfa sözleşmeyi okunur hale getirir; çelişki halinde **sözleşme dosyası** esastır.
 
@@ -24,6 +24,8 @@ Tüm liste uçları aynı şekli kullanır (`AGENTS.md` §11.5):
 
 `size` alanı **uygulanan** sayfa boyutunu bildirir: istek üst sınırı aşarsa sunucu değeri sınıra çeker ([ADR-012](../adr/012-page-size-capped-on-server.md)).
 
+Sözleşmede her öğe tipi için ayrı bir şema üretilir: `PageResponseProductSummary`, `PageResponseAdminSellerSummary`. JSON şekli hepsinde aynıdır. Eskiden tek bir `PageResponse` şeması vardı; ikinci liste ucu gelince ikisi aynı şemaya düşüyordu, bu yüzden 2026-10-08'de ayrıldı ([ADR-046](../adr/046-admin-surface-in-web-first-admin-by-sql.md) Trade-off).
+
 ### Hata gövdesi
 
 Tüm hatalar aynı şekli kullanır:
@@ -46,6 +48,12 @@ Tüm hatalar aynı şekli kullanır:
 | `AUTH_CODE_INVALID` | 401 | İkinci faktör kodu hatalı, kullanılmış, süresi dolmuş ya da açık girişim yok |
 | `AUTH_REQUIRED` | 401 | Korunan uca erişim token'ı olmadan, geçersiz ya da süresi dolmuş token'la gelindi (`WWW-Authenticate: Bearer`) |
 | `RATE_LIMITED` | 429 | Hız sınırı aşıldı ya da girişim başına 5 hatalı kod denendi ([ADR-022](../adr/022-in-memory-fixed-window-rate-limiting.md)) |
+| `AUTH_FORBIDDEN` | 403 | Kimlik geçerli ama rol yetmiyor (örn. admin olmayan hesabın admin uçları) |
+| `SELLER_NOT_FOUND` | 404 | Oturum sahibinin satıcı kaydı yok; ya da istenen kayıt veya belge yok |
+| `SELLER_ALREADY_EXISTS` | 409 | Hesabın zaten bir satıcı kaydı var |
+| `SELLER_INVALID_TRANSITION` | 409 | Kaydın şimdiki durumundan bu geçiş yapılamaz |
+| `SELLER_EMAIL_NOT_VERIFIED` | 422 | Başvuru için e-posta doğrulaması gerekir ([ADR-043](../adr/043-seller-application-requires-verified-email.md)) |
+| `SELLER_NOT_APPROVED` | 403 | Satıcıya özgü işlem onaylı satıcı ister ([ADR-044](../adr/044-seller-role-follows-status-with-query-gate.md)); bugün bunu çağıran uç yok |
 | `INTERNAL_ERROR` | 500 | Beklenmeyen hata; ayrıntı yalnızca sunucu log'unda |
 
 - `message` kullanıcıya gösterilebilir ve **isteğin dilindedir**: `Accept-Language` başlığına göre `tr` ya da `en`; başlık yoksa veya yalnızca desteklenmeyen dil bildiriyorsa Türkçe. Alan hataları (`fieldErrors[].message`) ve bilgilendirme yanıtlarındaki `message` alanları da aynı kurala uyar. `code` dilden bağımsızdır ([ADR-031](../adr/031-api-messages-by-accept-language.md)).
@@ -86,7 +94,9 @@ Vitrinde yayınlanmış ürünleri listeler. **Kimlik doğrulaması gerektirmez*
 - Sıralama yayın tarihine göre yeniden eskiye; eşit tarihlerde ikincil ölçüt tanımlayıcıdır (sayfalar arası tutarlılık).
 - Aralık dışı sayfa boş içerik ve doğru toplam döner; hata üretmez.
 
-**200 yanıtı** — `PageResponse<ProductSummary>`
+**200 yanıtı** — `PageResponseProductSummary`
+
+Yalnızca satıcısı `APPROVED` olan `PUBLISHED` ürünler döner ([ADR-041](../adr/041-storefront-filters-seller-status-in-query.md)).
 
 ```json
 {
@@ -289,6 +299,10 @@ Tarayıcı `api`'ye hiç konuşmaz ve token görmez ([ADR-023](../adr/023-web-bf
 | `/api/auth/password-reset` | POST | `POST /accounts/password-resets/confirmations` | Çerez yazmaz; tarayıcı `/login?reset=1`'e gider |
 | `/api/auth/logout` | POST | `DELETE /sessions/current` | `api`'ye ulaşılamasa da çerezler silinir |
 | `/api/auth/refresh?next=<yol>` | GET | `POST /sessions/refresh` | Gezinti; başarıda `next`'e, reddedilirse `/login?next=`'e 307 |
+| `/api/seller/application` | POST, PUT | `POST`, `PUT /sellers/me` | `multipart/form-data`; yalnızca formun beş alanı iletilir |
+| `/api/seller/application/document` | GET | `GET /sellers/me/document` | Akış olarak iletim; koruma başlıkları aynen geçer; 401'de `/api/auth/refresh?next=`'e 307 |
+| `/api/admin/sellers/{id}/{action}` | POST | `POST /admin/sellers/{id}/{action}` | `action` beyaz listede değilse 404, `api`'ye gidilmez |
+| `/api/admin/sellers/{id}/document` | GET | `GET /admin/sellers/{id}/document` | Sahibin belge yoluyla aynı iletim |
 
 - **Çerezler:** `bahceden_at` (`path=/`) ve `bahceden_rt` (`path=/api/auth`); ikisi de `HttpOnly`, `Secure`, `SameSite=Lax`, ömürleri yenileme token'ı kadar.
 - **CSRF:** POST'lar `Sec-Fetch-Site: same-origin` ister; yoksa `Origin` `Host` ile karşılaştırılır. Reddedilen istek `403 CROSS_SITE_REQUEST` alır (BFF'in kendi kodu, `api`'de yok). `api`'ye ulaşılamazsa BFF `502 SERVICE_UNAVAILABLE` döner.
@@ -297,6 +311,63 @@ Tarayıcı `api`'ye hiç konuşmaz ve token görmez ([ADR-023](../adr/023-web-bf
 
 ---
 
+## Satıcı başvurusu uçları
+
+Change `add-seller-onboarding`; kararlar [ADR-037](../adr/037-seller-application-with-document-and-manual-approval.md), [ADR-040](../adr/040-seller-application-is-the-seller-record.md)…[ADR-046](../adr/046-admin-surface-in-web-first-admin-by-sql.md).
+
+| Uç | Kimlik | Başarı | Hatalar | Hız sınırı |
+|---|---|---|---|---|
+| `GET /api/v1/sellers/me` | Bearer | `200` `SellerSelfView` | 401, 404 (`SELLER_NOT_FOUND`) | - |
+| `POST /api/v1/sellers/me` | Bearer | `201` `SellerSelfView` + `Location` | 400, 401, 409 (`SELLER_ALREADY_EXISTS`), 422 (`SELLER_EMAIL_NOT_VERIFIED`), 429 | hesap: saatte 5 |
+| `PUT /api/v1/sellers/me` | Bearer | `200` `SellerSelfView` | 400, 401, 404, 409 (`SELLER_INVALID_TRANSITION`), 429 | hesap: saatte 5 (başvuruyla ortak) |
+| `GET /api/v1/sellers/me/document` | Bearer | `200` PDF / JPEG / PNG | 401, 404 | - |
+| `GET /api/v1/admin/sellers?status=&page=&size=` | Bearer + `ROLE_ADMIN` | `200` `PageResponseAdminSellerSummary` | 400, 401, 403 (`AUTH_FORBIDDEN`) | - |
+| `GET /api/v1/admin/sellers/{id}` | Bearer + `ROLE_ADMIN` | `200` `AdminSellerDetail` | 401, 403, 404 | - |
+| `GET /api/v1/admin/sellers/{id}/document` | Bearer + `ROLE_ADMIN` | `200` PDF / JPEG / PNG | 401, 403, 404 | - |
+| `POST /api/v1/admin/sellers/{id}/approve` | Bearer + `ROLE_ADMIN` | `200` `AdminSellerDetail` | 401, 403, 404, 409 | - |
+| `POST /api/v1/admin/sellers/{id}/reject` | Bearer + `ROLE_ADMIN` | `200` `AdminSellerDetail` | 400 (gerekçe), 401, 403, 404, 409 | - |
+| `POST /api/v1/admin/sellers/{id}/suspend` | Bearer + `ROLE_ADMIN` | `200` `AdminSellerDetail` | 400 (gerekçe), 401, 403, 404, 409 | - |
+| `POST /api/v1/admin/sellers/{id}/reinstate` | Bearer + `ROLE_ADMIN` | `200` `AdminSellerDetail` | 401, 403, 404, 409 | - |
+
+### `POST /api/v1/sellers/me` ve `PUT /api/v1/sellers/me`
+
+`multipart/form-data` alır ([ADR-042](../adr/042-seller-application-single-multipart-request.md)). Alanlar:
+
+| Alan | Kural |
+|---|---|
+| `displayName` | 2–160 karakter |
+| `city` | 2–80 karakter; serbest metin |
+| `phone` | Türkiye numarası; boşluk, tire ve parantez temizlenir, `0` / `90` / `+90` öneki kabul edilir, `+90XXXXXXXXXX` olarak saklanır |
+| `documentType` | `CKS_CERTIFICATE` veya `TAX_CERTIFICATE` |
+| `document` | PDF, JPEG veya PNG; en çok 10 MB. Tür, dosyanın ilk baytlarından tespit edilir; istemcinin bildirdiği tür ve dosya adı yok sayılır ([ADR-045](../adr/045-seller-documents-table-content-sniffing-protected-serving.md)) |
+
+Dosya türü, boyut ve telefon hataları da `fieldErrors` içinde ilgili alan adıyla döner. Başvuru kaydı `PENDING` açar. Yeniden gönderim yalnızca `REJECTED` kayıtta yapılabilir; yeni bir belge ekler ve kaydı yeniden `PENDING` yapar. `slug` değişmez.
+
+### Belge yanıtları
+
+Sahibin ve admin'in belge uçları aynı başlıklarla döner:
+
+- tespit edilen `Content-Type`;
+- `X-Content-Type-Options: nosniff`;
+- `Content-Security-Policy: sandbox`;
+- `Cache-Control: no-store, private`;
+- `Content-Disposition: inline; filename="belge.<uzantı>"`.
+
+Başka bir satıcının belgesine sahip yolundan ulaşılamaz: kayıt token'daki hesaptan bulunur.
+
+### Admin kararları
+
+| Eylem | Geçiş | Gövde | Rol etkisi |
+|---|---|---|---|
+| `approve` | `PENDING` → `APPROVED` | yok | `ROLE_SELLER` eklenir |
+| `reject` | `PENDING` → `REJECTED` | `{"reason": "…"}` (10–500) | yok |
+| `suspend` | `APPROVED` → `SUSPENDED` | `{"reason": "…"}` (10–500) | `ROLE_SELLER` kaldırılır |
+| `reinstate` | `SUSPENDED` → `APPROVED` | yok | `ROLE_SELLER` eklenir |
+
+Her karar hesabın dilinde e-postayla bildirilir. Gönderim hatası kararı geri almaz. Rol erişim token'ına bir sonraki yenilemede yansır (en fazla 15 dakika; [ADR-044](../adr/044-seller-role-follows-status-with-query-gate.md)). `AdminSellerDetail.history` geçişleri eskiden yeniye, geçişi yapan hesabın e-postasıyla birlikte verir.
+
+---
+
 ## Henüz olmayan uçlar
 
-Oturum açıkken parola değiştirme, satıcı olma, satıcı ürün yönetimi, sepet, sipariş, ödeme ve gönderim uçları **yoktur**. Parola değiştirme sıfırlama altyapısının üzerine oturan küçük bir dilimdir; diğerleri `openspec/KALANLAR.md` maddelerine bağlıdır.
+Oturum açıkken parola değiştirme, satıcı ürün yönetimi (ilan ekleme ve fotoğraf), sepet, sipariş, ödeme ve gönderim uçları **yoktur**. Parola değiştirme ve ürün ilanları karara bağlandı, change bekliyor; sipariş, ödeme ve gönderim `openspec/KALANLAR.md` A1 ve A2'ye bağlı.

@@ -44,8 +44,13 @@ services:
       BAHCEDEN_MAIL_FROM: bahceden@ornek.test
       # Yalnızca yerel geliştirme imza anahtarı; üretimde secret yöneticisinden gelir.
       BAHCEDEN_JWT_SECRET: YmFoY2VkZW4teWVyZWwtZ2VsaXN0aXJtZS1pbXphLWFuYWh0YXJpLWdpemxpLWRlZ2ls
+      # Yüklenen dosyalar (satıcı belgeleri) volume'da durur (ADR-039); konteyner
+      # yeniden kurulduğunda kaybolmaz. Yedeklemesi barındırma kararına bağlı (B5).
+      BAHCEDEN_STORAGE_DIR: /app/uploads
     ports:
       - "8080:8080"
+    volumes:
+      - uploads:/app/uploads
     depends_on:
       db:
         condition: service_healthy
@@ -84,3 +89,4 @@ services:
 
 volumes:
   db-data:
+  uploads:

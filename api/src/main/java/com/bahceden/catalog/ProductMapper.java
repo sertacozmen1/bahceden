@@ -1,7 +1,7 @@
 package com.bahceden.catalog;
 
 import com.bahceden.catalog.domain.Product;
-import com.bahceden.catalog.domain.Seller;
+import com.bahceden.seller.domain.Seller;
 import com.bahceden.catalog.dto.MoneyView;
 import com.bahceden.catalog.dto.ProductSummary;
 import com.bahceden.catalog.dto.SellerSummary;

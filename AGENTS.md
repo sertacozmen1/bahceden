@@ -488,13 +488,12 @@ Bugün bloke eden maddeler (özet; gerekçeler KALANLAR dosyasında):
 |---|---|---|
 | A1 | Ödeme sağlayıcısı, payout modeli, komisyon ve iade kuralı | `order` durum makinesi, `payment` domaini |
 | A2 | Kargo firması, entegrasyon biçimi, ücret sahipliği | `shipping` domaini, satıcı akışı |
-| A3 | Satıcı doğrulaması ve ilan ön onayı | `seller` / `catalog` durum makineleri, yasal sorumluluk |
 | A4 | MVP kapsamı: bölge sınırı, mobil (çoklu dil karara bağlandı: Türkçe + İngilizce, ADR-029…032) | §3 over-engineering sınırı, adres modeli |
-| B3 | Ürün fotoğrafı depolama | `catalog`, K7 bütçesi |
+| A5 | Satıcı verisinin saklama süresi, KVKK aydınlatma metni, belgenin yasal yeterliliği | Belge silme işi, başvuru formundaki onay kutusu |
 | B4 | Bildirim kanalları (e-posta / SMS) | `notification`, K7 bütçesi |
 | B5 | Üretim barındırma ve yedekleme | CI/CD, üretim compose varyantı |
 
-**Karara bağlananlar:** [ADR-001](docs/adr/001-spring-api-and-next-web.md) (iki birim) · [ADR-002](docs/adr/002-dependency-budget.md) (bağımlılık bütçesi) · [ADR-003](docs/adr/003-openapi-as-single-contract.md) (tek sözleşme) · [ADR-004](docs/adr/004-postgresql-with-flyway.md) (PostgreSQL + Flyway) · [ADR-005](docs/adr/005-test-strategy.md) (test stratejisi) · [ADR-006](docs/adr/006-money-as-minor-unit.md) (para temsili) · [ADR-007](docs/adr/007-query-level-ownership-scoping.md) (satıcı izolasyonu) · [ADR-008](docs/adr/008-jwt-auth-with-opaque-refresh.md) (kimlik: JWT + iptal edilebilir yenileme, tek hesap tablosu, zorunlu doğrulama) · [ADR-009](docs/adr/009-contract-generated-from-spring.md) (sözleşme Spring'den üretilir).
+**Karara bağlananlar:** [ADR-001](docs/adr/001-spring-api-and-next-web.md) (iki birim) · [ADR-002](docs/adr/002-dependency-budget.md) (bağımlılık bütçesi) · [ADR-003](docs/adr/003-openapi-as-single-contract.md) (tek sözleşme) · [ADR-004](docs/adr/004-postgresql-with-flyway.md) (PostgreSQL + Flyway) · [ADR-005](docs/adr/005-test-strategy.md) (test stratejisi) · [ADR-006](docs/adr/006-money-as-minor-unit.md) (para temsili) · [ADR-007](docs/adr/007-query-level-ownership-scoping.md) (satıcı izolasyonu) · [ADR-008](docs/adr/008-jwt-auth-with-opaque-refresh.md) (kimlik: JWT + iptal edilebilir yenileme, tek hesap tablosu, zorunlu doğrulama) · [ADR-009](docs/adr/009-contract-generated-from-spring.md) (sözleşme Spring'den üretilir) · [ADR-037](docs/adr/037-seller-application-with-document-and-manual-approval.md), [ADR-038](docs/adr/038-listings-publish-immediately-with-admin-takedown.md) (A3: satıcı başvurusu + manuel onay, ilan ön onaysız) · [ADR-039](docs/adr/039-uploads-on-local-volume-served-by-api.md) (B3: dosyalar yerel volume'da, `api` sunar).
 
 > [!NOTE]
 > Bu dosya değiştiğinde `docs/features/_genel.md` *Tarihçe*'sine bir satır düşer (K1).

@@ -2,7 +2,7 @@
 
 **Durum:** Yayında
 **İlk sürüm:** 2026-10-07
-**Son değişiklik:** 2026-10-07
+**Son değişiklik:** 2026-10-08
 
 | | |
 |---|---|
@@ -23,9 +23,9 @@ Kullanıcı e-posta adresi ve parolayla hesap açar ve hesabını hemen kullanı
 
 - **Oturum açıkken parola değiştirme yok.** Sıfırlama altyapısı (parola kuralları, bütün oturumları kapatma) ona doğrudan taşınır.
 - **İkinci faktörü kullanıcı açamaz** ([ADR-017](../adr/017-email-verification-non-blocking-and-2fa-switch.md)); anahtar yalnızca veritabanından veya dev seed'inden açılır.
-- **Doğrulanmamış e-postayla hesap açılabilir.** Bu kabul edilmiş bir borç: sipariş dilimi `email_verified` kapısını değerlendirmek zorunda.
-- **Satıcı olma akışı yok** (KALANLAR A3); herkes `ROLE_CUSTOMER` alır.
-- **Hesap silme, KVKK dışa aktarma, sosyal giriş, yönetici ekranları yok.**
+- **Doğrulanmamış e-postayla hesap açılabilir.** Bu kabul edilmiş bir borç. Kapı ilk olarak satıcı başvurusuna kondu ([ADR-043](../adr/043-seller-application-requires-verified-email.md)); sipariş dilimi kendi kapısını değerlendirecek.
+- **Satıcılık ayrı feature'dır:** başvuru ve onay [Satıcı Kaydı ve Onayı](satici-kaydi-ve-onayi.md) dosyasında; `ROLE_SELLER` admin onayıyla verilir.
+- **Hesap silme, KVKK dışa aktarma ve sosyal giriş yok.** Yönetici ekranı bugün yalnızca satıcı başvuruları için var.
 - **Hız sınırı tek örnek içindir** ve istemci adresine dayanır ([ADR-022](../adr/022-in-memory-fixed-window-rate-limiting.md)).
 
 ## Açık konular
@@ -36,6 +36,7 @@ Kullanıcı e-posta adresi ve parolayla hesap açar ve hesabını hemen kullanı
 
 ## Tarihçe
 
+- 2026-10-08: "Hesabım" ekranına satıcılık bölümü eklendi: kaydı olmayanı başvuruya davet ediyor, olanın durumunu gösteriyor. Hesaba rol ekleme ve kaldırma geldi (`Account.grantRole` / `revokeRole`); `ROLE_SELLER` admin kararıyla değişir ve erişim token'ına bir sonraki yenilemede yansır ([ADR-044](../adr/044-seller-role-follows-status-with-query-gate.md)). Rolü yetmeyen istek artık ortak hata gövdesiyle `403 AUTH_FORBIDDEN` alıyor (`ApiAccessDeniedHandler`). Başlıkta `ROLE_ADMIN` için "Yönetim" bağlantısı var. Change `add-seller-onboarding`.
 - 2026-10-07: `add-password-reset` change'i kullanıcı onayıyla archive edildi (`openspec/changes/archive/2026-10-07-add-password-reset/`). Ön koşullar: delta spec ana spec'e sync edildi, D1–D4 → ADR-033…036, dokümanlar güncel, `api` 102 / `web` 62 test yeşil, docs strict derleme temiz. Taşımada `proposal.md` ve `design.md` içindeki göreli linkler bir seviye uzatıldı.
 - 2026-10-07: Parola sıfırlama (change `add-password-reset`). `api`: `POST /accounts/password-resets` (her durumda aynı `202`, kayıtsız adrese e-posta yok, istemci ve e-posta başına hız sınırı) ve `POST /accounts/password-resets/confirmations` (parola değişir, bütün oturumlar ve açık giriş kodları kapanır, e-posta doğrulanır, "parolanız değişti" bildirimi; oturum açmaz). Token 1 saat, tek kullanımlık, ayrı tabloda (`006-create-password-reset-tokens.sql`). `web`: `/forgot-password`, `/reset-password`, giriş formunda "Parolamı unuttum" bağlantısı. Kararlar ADR-033…036; 14 yeni `api` testi, 8 yeni `web` testi.
 - 2026-10-07: Hesap sayfalarının adresleri İngilizce oldu: `/kayit` → `/register`, `/giris` → `/login`, `/dogrulama` → `/verify-email`, `/hesabim` → `/account`. Değişikliğe e-postadaki doğrulama ve giriş bağlantıları da dahil. Eski adresler yönlendirilmez: üretim yok, yalnızca geliştirmede gönderilmiş bağlantılar kırılır. Form alanı `id`'leri ve testlerdeki Türkçe yardımcı adları da İngilizce yapıldı (AGENTS.md §1).
