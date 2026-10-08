@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
-import { BadgeCheck, CircleAlert } from "lucide-react";
+import Link from "next/link";
+import { BadgeCheck, CircleAlert, MapPinHouse, Receipt } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { Badge } from "@/components/ui/badge";
+import { buttonVariants } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { requireSignedIn } from "@/features/account/requireSession";
 import { AccountScreen } from "@/features/account/components/AccountScreen";
@@ -28,6 +30,9 @@ export async function generateMetadata(): Promise<Metadata> {
  *
  * Satıcılık bölümü kaydı olmayanı başvuruya davet eder, olanın durumunu
  * gösterir (add-seller-onboarding); kayıt her istekte taze okunur.
+ *
+ * Alışveriş bağlantıları (siparişler, adresler) satıcılıktan önce durur: hesabı olan
+ * herkes alıcıdır (add-cart-and-checkout D10).
  */
 export default async function MyAccountPage() {
   const t = await getTranslations();
@@ -67,6 +72,20 @@ export default async function MyAccountPage() {
           <ResendVerificationButton />
         </div>
       )}
+      <Separator />
+      <nav aria-label={t("account.myAccount.shopping")} className="flex flex-col gap-3">
+        <h2 className="text-base font-semibold tracking-tight">{t("account.myAccount.shopping")}</h2>
+        <div className="flex flex-wrap gap-2">
+          <Link className={buttonVariants({ variant: "outline" })} href="/account/orders">
+            <Receipt aria-hidden />
+            {t("orders.title")}
+          </Link>
+          <Link className={buttonVariants({ variant: "outline" })} href="/account/addresses">
+            <MapPinHouse aria-hidden />
+            {t("addresses.title")}
+          </Link>
+        </div>
+      </nav>
       <Separator />
       <SellerCard seller={seller} />
       <Separator />

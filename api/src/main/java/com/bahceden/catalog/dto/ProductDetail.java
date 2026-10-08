@@ -17,6 +17,9 @@ import java.util.List;
  * @param stockQuantity eldeki miktar; sıfırsa stokta değil
  * @param seller        üretici
  * @param photos        fotoğraflar, sırayla; ilki kapak
+ * @param dispatchDays  kargoya verme süresi, iş günü (add-cart-and-checkout D3)
+ * @param purchasable   satın alınabilir mi (D1)
+ * @param id            ürünün kimliği; sepete ekleme bu kimlikle yapılır (D4)
  */
 @Schema(name = "ProductDetail", description = "Vitrindeki ürünün detayı")
 public record ProductDetail(
@@ -37,5 +40,15 @@ public record ProductDetail(
         SellerSummary seller,
         @ArraySchema(schema = @Schema(implementation = ProductPhotoView.class),
                 arraySchema = @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Fotoğraflar, sırayla; ilki kapak"))
-        List<ProductPhotoView> photos) {
+        List<ProductPhotoView> photos,
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Satıcının kargoya verme süresi, iş günü (1–3)",
+                example = "2")
+        int dispatchDays,
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED,
+                description = "Satın alınabilir mi: yayında, satıcısı onaylı, satıcının ödeme hesabı etkin ve stokta",
+                example = "true")
+        boolean purchasable,
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Ürünün kimliği; sepete ekleme bu kimlikle yapılır",
+                example = "42")
+        long id) {
 }

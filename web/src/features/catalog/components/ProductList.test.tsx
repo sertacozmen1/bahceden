@@ -18,6 +18,7 @@ function aProduct(overrides: Partial<ProductSummary> = {}): ProductSummary {
     unit: "KILOGRAM",
     unitPrice: { amount: 4250, currency: "TRY" },
     stockQuantity: 120,
+    purchasable: true,
     seller: {
       slug: "ornek-uretici-manisa",
       displayName: "Örnek Üretici (Manisa)",

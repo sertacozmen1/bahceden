@@ -24,7 +24,9 @@
       "showPhoto": "{position}. fotoğrafı göster",
       "loading": "Ürün yükleniyor",
       "notFoundTitle": "Ürün bulunamadı",
-      "notFoundBody": "Bu ürün yayından kaldırılmış ya da hiç var olmamış olabilir."
+      "notFoundBody": "Bu ürün yayından kaldırılmış ya da hiç var olmamış olabilir.",
+      "dispatch": "{days, plural, other {Üretici # iş günü içinde kargoya verir}}",
+      "notReady": "Satıcı henüz satışa hazır değil; bu ürün şu anda satın alınamaz."
     }
   },
   "pagination": {
@@ -116,7 +118,8 @@
       "resend": "Yeni doğrulama bağlantısı gönder",
       "resending": "Gönderiliyor…",
       "resent": "Yeni bağlantıyı e-posta adresinize gönderdik.",
-      "loading": "Hesap bilgileri yükleniyor"
+      "loading": "Hesap bilgileri yükleniyor",
+      "shopping": "Alışveriş"
     },
     "errors": {
       "title": "Bir sorun oluştu",
@@ -178,6 +181,12 @@
         "viewDocument": "Gönderdiğim belgeyi aç",
         "statusLabel": "Durum"
       }
+    },
+    "tabs": {
+      "label": "Satıcı paneli bölümleri",
+      "products": "Ürünlerim",
+      "payout": "Ödeme bilgileri",
+      "orders": "Gelen siparişler"
     }
   },
   "listings": {
@@ -216,7 +225,10 @@
       "saved": "Değişiklikler kaydedildi.",
       "backToList": "Ürünlerime dön",
       "removedTitle": "Bu ilan yönetici tarafından kaldırıldı",
-      "removedBody": "İlanı düzeltebilirsiniz, ama yayına yeniden yönetici alır. Gerekçe: {reason}"
+      "removedBody": "İlanı düzeltebilirsiniz, ama yayına yeniden yönetici alır. Gerekçe: {reason}",
+      "dispatchDays": "Kargoya verme süresi",
+      "dispatchOption": "{days, plural, other {# iş günü}}",
+      "dispatchHint": "Siparişi en geç kaç iş günü içinde kargoya verebilirsiniz? Alıcı bu süreyi ürün sayfasında görür."
     },
     "photos": {
       "title": "Fotoğraflar",
@@ -348,6 +360,177 @@
     "hint": "En az 10, en çok 500 karakter. Karşı tarafa olduğu gibi gösterilir.",
     "required": "Gerekçe en az 10 karakter olmalıdır.",
     "cancel": "Vazgeç",
-    "sending": "Kaydediliyor…"
+    "sending": "Kaydediliyor…",
+    "optionalLabel": "Gerekçe (isteğe bağlı)",
+    "optionalHint": "En çok 500 karakter. Yazarsanız karşı tarafa iletilir."
+  },
+  "payout": {
+    "title": "Ödeme bilgileri",
+    "intro": "Satışlarınızın ödemesi bu hesaba yapılır. Bilgilerinizi bir kez girin; ödeme kuruluşu onaylayınca ürünleriniz satın alınabilir olur.",
+    "loading": "Ödeme bilgileri yükleniyor",
+    "missing": "Henüz ödeme bilgisi girmediniz. Bilgilerinizi girene kadar ilanlarınız vitrinde görünür ama satın alınamaz.",
+    "active": "Ödeme hesabınız etkin. Ürünleriniz satın alınabilir.",
+    "rejected": "Ödeme kuruluşu bilgilerinizi kabul etmedi. Bilgileri kontrol edip yeniden gönderin; o zamana kadar ürünleriniz satın alınamaz.",
+    "summary": {
+      "legalName": "Yasal ad",
+      "taxId": "Kimlik numarası"
+    },
+    "form": {
+      "createTitle": "Ödeme bilgilerini girin",
+      "updateTitle": "Ödeme bilgilerini güncelleyin",
+      "privacy": "Güvenliğiniz için kayıtlı kimlik numarası ve IBAN yeniden gösterilmez; kaydederken ikisini de tam olarak girin. Bu bilgileri yalnızca ödeme kuruluşu ve yönetici görür.",
+      "legalType": "Satıcı türü",
+      "legalTypeOption": "{type, select, INDIVIDUAL {Bireysel} SOLE_PROPRIETOR {Şahıs şirketi} COMPANY {Şirket} other {Diğer}}",
+      "legalName": "{type, select, COMPANY {Şirket unvanı} other {Ad soyad}}",
+      "taxId": "{type, select, COMPANY {Vergi kimlik numarası} other {T.C. kimlik numarası}}",
+      "taxIdHint": "{type, select, COMPANY {10 hane} other {11 hane}}",
+      "taxOffice": "Vergi dairesi",
+      "iban": "IBAN",
+      "ibanHint": "TR ile başlayan 26 karakter; boşluklu yazabilirsiniz.",
+      "save": "Kaydet",
+      "saving": "Kaydediliyor…",
+      "saved": "Ödeme bilgileriniz kaydedildi."
+    },
+    "notice": {
+      "title": "Ürünleriniz henüz satın alınamıyor",
+      "body": "Alıcıların ödeme yapabilmesi için ödeme bilgilerinizi tamamlayın.",
+      "action": "Ödeme bilgilerine git"
+    }
+  },
+  "cart": {
+    "nav": "Sepetim",
+    "navWithCount": "{count, plural, other {Sepetim, # ürün}}",
+    "title": "Sepetim",
+    "loading": "Sepet yükleniyor",
+    "emptyTitle": "Sepetiniz boş",
+    "emptyBody": "Vitrindeki taze ürünlerden sepetinize ekleyin.",
+    "backToStore": "Vitrine dön",
+    "summaryTitle": "Sipariş özeti",
+    "hasUnavailable": "Sepetinizde şu anda satın alınamayan ürünler var. Sipariş vermeden önce onları çıkarın.",
+    "perUnit": "/ {unit, select, KILOGRAM {kg} PIECE {adet} BUNCH {demet} other {birim}}",
+    "quantity": {
+      "decrease": "Adedi azalt",
+      "increase": "Adedi artır"
+    },
+    "add": {
+      "quantity": "Adet",
+      "action": "Sepete ekle",
+      "adding": "Ekleniyor…",
+      "added": "Sepete eklendi.",
+      "goToCart": "Sepete git",
+      "signIn": "Sepete eklemek için giriş yapın"
+    },
+    "line": {
+      "quantityOf": "{name} adedi",
+      "remove": "{name} ürününü sepetten çıkar",
+      "unavailable": "Şu anda satın alınamıyor"
+    },
+    "group": {
+      "items": "Ürünler",
+      "shipping": "Kargo",
+      "freeShipping": "Ücretsiz",
+      "freeShippingRemaining": "Bu üreticiden {amount} daha eklerseniz kargo ücretsiz.",
+      "dispatch": "{days, plural, other {Üretici # iş günü içinde kargoya verir}}"
+    },
+    "totals": {
+      "items": "{count, plural, other {Ürünler (# adet)}}",
+      "shipping": "Kargo",
+      "grandTotal": "Toplam"
+    },
+    "checkout": "Siparişe geç"
+  },
+  "addresses": {
+    "title": "Adreslerim",
+    "back": "Hesabıma dön",
+    "intro": "Teslimat adreslerinizi buradan yönetin. Şu anda yalnızca şu illere teslimat yapıyoruz: {provinces}.",
+    "loading": "Adresler yükleniyor",
+    "empty": "Henüz kayıtlı adresiniz yok.",
+    "notDeliverable": "Bu ile şu anda teslimat yok",
+    "edit": "Düzenle",
+    "delete": "Sil",
+    "confirmDelete": "Evet, sil",
+    "cancelDelete": "Vazgeç",
+    "add": "Yeni adres ekle",
+    "newTitle": "Yeni adres",
+    "form": {
+      "title": "Adres adı",
+      "titleHint": "Örnek: Ev, İş",
+      "recipientName": "Teslim alacak kişi",
+      "phone": "Telefon",
+      "phoneHint": "Kargo firması teslimatta size bu numaradan ulaşır.",
+      "province": "İl",
+      "provinceHint": "Yalnızca teslimat yaptığımız iller listelenir.",
+      "district": "İlçe",
+      "postalCode": "Posta kodu",
+      "addressLine": "Açık adres",
+      "addressLineHint": "Mahalle, sokak, bina ve daire numarası.",
+      "save": "Adresi kaydet",
+      "saving": "Kaydediliyor…",
+      "cancel": "Vazgeç"
+    }
+  },
+  "checkout": {
+    "title": "Ödeme",
+    "loading": "Ödeme sayfası yükleniyor",
+    "backToCart": "Sepete dön",
+    "summaryTitle": "Sipariş özeti",
+    "withdrawalNotice": "Taze ürünlerde teslimattan sonra cayma hakkı yoktur. Üretici siparişi kargoya vermeden önce iptal edebilirsiniz.",
+    "address": "Teslimat adresi",
+    "addressRequired": "Bir teslimat adresi seçin veya ekleyin.",
+    "someNotDeliverable": "Bazı kayıtlı adreslerinizin iline şu anda teslimat yok; onlar listelenmedi.",
+    "newAddress": "Yeni teslimat adresi",
+    "addAddress": "Yeni adres ekle",
+    "pay": "Ödemeye geç",
+    "paying": "Ödeme sayfasına gidiliyor…",
+    "return": {
+      "title": "Ödeme sonucu",
+      "heading": "{status, select, PAID {Siparişiniz alındı} PAYMENT_FAILED {Ödeme başarısız oldu} PAYMENT_EXPIRED {Ödeme süresi doldu} CANCELLED_OUT_OF_STOCK {Ürünler tükendi, ödemeniz iade ediliyor} other {Ödemeniz bekleniyor}}",
+      "body": "{status, select, PAID {{number} numaralı siparişinizin ödemesi alındı. Üreticiler kargoya verdiğinde size haber vereceğiz.} PAYMENT_FAILED {{number} numaralı siparişin ödemesi alınamadı. Sepetiniz duruyor; yeniden deneyebilirsiniz.} PAYMENT_EXPIRED {{number} numaralı siparişin ödemesi süresinde tamamlanmadı. Çekilen bir tutar varsa iade edilir; sepetiniz duruyor.} CANCELLED_OUT_OF_STOCK {{number} numaralı siparişteki ürünlerden biri siz öderken tükendi. Ödemenizin tamamı kartınıza iade edilecek; sepetiniz duruyor.} other {{number} numaralı siparişin ödemesi henüz tamamlanmadı. Birazdan yeniden kontrol edin.}}",
+      "retry": "Yeniden kontrol et",
+      "backToCart": "Sepete dön",
+      "viewOrder": "Siparişi gör"
+    }
+  },
+  "orders": {
+    "title": "Siparişlerim",
+    "loading": "Siparişler yükleniyor",
+    "emptyTitle": "Henüz siparişiniz yok",
+    "detailTitle": "Sipariş {number}",
+    "backToList": "Siparişlerime dön",
+    "placedAt": "{date} tarihinde verildi",
+    "status": "{status, select, PENDING_PAYMENT {Ödeme bekleniyor} PAID {Ödendi} PAYMENT_FAILED {Ödeme başarısız} PAYMENT_EXPIRED {Süresi doldu} CANCELLED_OUT_OF_STOCK {Stok yetmedi, iade edildi} other {Bilinmiyor}}",
+    "sellerOrderStatus": "{status, select, PENDING_PAYMENT {Ödeme bekleniyor} NEW {Hazırlanıyor} CANCELLED {İptal edildi} VOID {Gerçekleşmedi} other {Bilinmiyor}}",
+    "perUnit": "/ {unit, select, KILOGRAM {kg} PIECE {adet} BUNCH {demet} other {birim}}",
+    "shipping": "Kargo",
+    "freeShipping": "Ücretsiz",
+    "itemsTotal": "Ürünler",
+    "grandTotal": "Toplam",
+    "deliveryAddress": "Teslimat adresi",
+    "dispatchDue": "En geç {date} kargoya verilecek",
+    "dispatchOverdue": "Üretici kargoya verme süresini aştı. Siparişi hâlâ iptal edebilirsiniz.",
+    "cancelledBy": "{by, select, SELLER {Üretici iptal etti.} other {Siz iptal ettiniz.}}",
+    "cancelReason": "Gerekçe: {reason}",
+    "cancel": {
+      "action": "Siparişi iptal et",
+      "buyerTitle": "{seller} siparişini iptal et",
+      "buyerBody": "Bu üreticinin ürünleri ve kargo ücreti kartınıza iade edilir. Siparişinizdeki diğer üreticiler etkilenmez.",
+      "sellerTitle": "Siparişi iptal et",
+      "sellerBody": "Alıcıya ürünlerin ve kargo ücretinin tamamı iade edilir, ürünler stoğunuza geri eklenir. Gerekçeniz alıcıya iletilir.",
+      "confirm": "İptal et"
+    }
+  },
+  "sellerOrders": {
+    "title": "Gelen siparişler",
+    "intro": "Ödemesi alınmış siparişleriniz. Her siparişi belirttiğiniz süre içinde kargoya verin.",
+    "loading": "Siparişler yükleniyor",
+    "tabsLabel": "Sipariş durumu",
+    "emptyTitle": "{status, select, NEW {Hazırlanacak sipariş yok} other {İptal edilen sipariş yok}}",
+    "payout": "Hakediş: {amount}",
+    "detailTitle": "Sipariş",
+    "backToList": "Gelen siparişlere dön",
+    "overdue": "Kargoya verme süresi geçti. Alıcı siparişi iptal edebilir; mümkünse hemen kargoya verin.",
+    "commission": "Komisyon",
+    "payoutLabel": "Hakedişiniz",
+    "destination": "Teslimat: {district} / {province}"
   }
 }

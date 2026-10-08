@@ -18,6 +18,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
  * @param stockQuantity eldeki miktar; sıfırsa ürün stokta değildir
  * @param seller        ürünü üreten ve gönderen üretici
  * @param coverPhoto    kapak fotoğrafı; yoksa {@code null}
+ * @param purchasable   satın alınabilir mi (add-cart-and-checkout D1)
  */
 @Schema(name = "ProductSummary", description = "Vitrin listesindeki ürün")
 public record ProductSummary(
@@ -28,5 +29,8 @@ public record ProductSummary(
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Eldeki miktar; sıfırsa stokta değil", example = "120") int stockQuantity,
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Ürünü üreten ve gönderen üretici") SellerSummary seller,
         @Schema(requiredMode = Schema.RequiredMode.NOT_REQUIRED, nullable = true,
-                description = "Kapak fotoğrafı (sıradaki ilk fotoğraf); fotoğrafı olmayan üründe boş") ProductPhotoView coverPhoto) {
+                description = "Kapak fotoğrafı (sıradaki ilk fotoğraf); fotoğrafı olmayan üründe boş") ProductPhotoView coverPhoto,
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED,
+                description = "Satın alınabilir mi: yayında, satıcısı onaylı, satıcının ödeme hesabı etkin ve stokta",
+                example = "true") boolean purchasable) {
 }

@@ -2,10 +2,14 @@ package com.bahceden.catalog;
 
 import com.bahceden.catalog.domain.Product;
 import com.bahceden.catalog.domain.ProductStatus;
+import jakarta.persistence.LockModeType;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 
 /**
@@ -55,6 +59,23 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     Page<Product> findOwnNewestFirst(long sellerId, Pageable pageable);
 
     boolean existsBySlug(String slug);
+
+    /**
+     * Sepete ekleme için ürün ve satıcısı tek sorguda (add-cart-and-checkout
+     * D4); satın alınabilirlik {@link Product#isPurchasable()} ile, satıcı
+     * yüklüyken karara bağlanır.
+     */
+    @Query("select p from Product p join fetch p.seller where p.id = :id")
+    Optional<Product> findWithSellerById(long id);
+
+    /**
+     * Ödeme anında stok düşümü için ürünleri kilitler (add-cart-and-checkout D8).
+     * Satırlar kimlik sırasıyla kilitlenir: aynı ürünleri içeren iki ödeme
+     * birbirini kilitlenmeye (deadlock) sokmaz, ikincisi ilkinin bitmesini bekler.
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select p from Product p where p.id in :ids order by p.id")
+    List<Product> findAllForUpdate(Collection<Long> ids);
 
     /**
      * Ürün detayı: vitrin listesiyle aynı görünürlük koşulu (D6, ADR-041).

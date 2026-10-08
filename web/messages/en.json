@@ -24,7 +24,9 @@
       "showPhoto": "Show photo {position}",
       "loading": "Loading product",
       "notFoundTitle": "Product not found",
-      "notFoundBody": "This product may have been unpublished or may never have existed."
+      "notFoundBody": "This product may have been unpublished or may never have existed.",
+      "dispatch": "{days, plural, one {The producer ships within # business day} other {The producer ships within # business days}}",
+      "notReady": "The seller is not ready to sell yet; this product cannot be bought right now."
     }
   },
   "pagination": {
@@ -116,7 +118,8 @@
       "resend": "Send a new verification link",
       "resending": "Sending…",
       "resent": "We sent a new link to your email address.",
-      "loading": "Loading account details"
+      "loading": "Loading account details",
+      "shopping": "Shopping"
     },
     "errors": {
       "title": "Something went wrong",
@@ -178,6 +181,12 @@
         "viewDocument": "Open the document I sent",
         "statusLabel": "Status"
       }
+    },
+    "tabs": {
+      "label": "Seller panel sections",
+      "products": "My products",
+      "payout": "Payment details",
+      "orders": "Incoming orders"
     }
   },
   "listings": {
@@ -216,7 +225,10 @@
       "saved": "Changes saved.",
       "backToList": "Back to my products",
       "removedTitle": "This listing was removed by an administrator",
-      "removedBody": "You can correct the listing, but an administrator republishes it. Reason: {reason}"
+      "removedBody": "You can correct the listing, but an administrator republishes it. Reason: {reason}",
+      "dispatchDays": "Dispatch time",
+      "dispatchOption": "{days, plural, one {# business day} other {# business days}}",
+      "dispatchHint": "Within how many business days can you hand an order to the carrier? Buyers see this on the product page."
     },
     "photos": {
       "title": "Photos",
@@ -348,6 +360,177 @@
     "hint": "Between 10 and 500 characters. Shown to the other party as written.",
     "required": "The reason must be at least 10 characters.",
     "cancel": "Cancel",
-    "sending": "Saving…"
+    "sending": "Saving…",
+    "optionalLabel": "Reason (optional)",
+    "optionalHint": "At most 500 characters. If you write one, it is shared with the other party."
+  },
+  "payout": {
+    "title": "Payment details",
+    "intro": "Payments for your sales go to this account. Enter your details once; when the payment institution approves them, your products can be bought.",
+    "loading": "Loading payment details",
+    "missing": "You have not entered payment details yet. Until you do, your listings appear in the storefront but cannot be bought.",
+    "active": "Your payment account is active. Your products can be bought.",
+    "rejected": "The payment institution did not accept your details. Check them and submit again; until then your products cannot be bought.",
+    "summary": {
+      "legalName": "Legal name",
+      "taxId": "Identification number"
+    },
+    "form": {
+      "createTitle": "Enter payment details",
+      "updateTitle": "Update payment details",
+      "privacy": "For your security, the saved identification number and IBAN are not shown again; enter both in full when saving. Only the payment institution and administrators see these details.",
+      "legalType": "Seller type",
+      "legalTypeOption": "{type, select, INDIVIDUAL {Individual} SOLE_PROPRIETOR {Sole proprietorship} COMPANY {Company} other {Other}}",
+      "legalName": "{type, select, COMPANY {Company name} other {Full name}}",
+      "taxId": "{type, select, COMPANY {Tax number} other {Turkish national ID number}}",
+      "taxIdHint": "{type, select, COMPANY {10 digits} other {11 digits}}",
+      "taxOffice": "Tax office",
+      "iban": "IBAN",
+      "ibanHint": "26 characters starting with TR; spaces are fine.",
+      "save": "Save",
+      "saving": "Saving…",
+      "saved": "Your payment details were saved."
+    },
+    "notice": {
+      "title": "Your products cannot be bought yet",
+      "body": "Complete your payment details so buyers can pay.",
+      "action": "Go to payment details"
+    }
+  },
+  "cart": {
+    "nav": "My cart",
+    "navWithCount": "{count, plural, one {My cart, # item} other {My cart, # items}}",
+    "title": "My cart",
+    "loading": "Loading cart",
+    "emptyTitle": "Your cart is empty",
+    "emptyBody": "Add fresh products from the storefront to your cart.",
+    "backToStore": "Back to the storefront",
+    "summaryTitle": "Order summary",
+    "hasUnavailable": "Your cart has products that cannot be bought right now. Remove them before ordering.",
+    "perUnit": "/ {unit, select, KILOGRAM {kg} PIECE {piece} BUNCH {bunch} other {unit}}",
+    "quantity": {
+      "decrease": "Decrease quantity",
+      "increase": "Increase quantity"
+    },
+    "add": {
+      "quantity": "Quantity",
+      "action": "Add to cart",
+      "adding": "Adding…",
+      "added": "Added to your cart.",
+      "goToCart": "Go to cart",
+      "signIn": "Sign in to add to cart"
+    },
+    "line": {
+      "quantityOf": "Quantity of {name}",
+      "remove": "Remove {name} from the cart",
+      "unavailable": "Cannot be bought right now"
+    },
+    "group": {
+      "items": "Products",
+      "shipping": "Shipping",
+      "freeShipping": "Free",
+      "freeShippingRemaining": "Add {amount} more from this producer for free shipping.",
+      "dispatch": "{days, plural, one {The producer ships within # business day} other {The producer ships within # business days}}"
+    },
+    "totals": {
+      "items": "{count, plural, one {Products (# item)} other {Products (# items)}}",
+      "shipping": "Shipping",
+      "grandTotal": "Total"
+    },
+    "checkout": "Proceed to checkout"
+  },
+  "addresses": {
+    "title": "My addresses",
+    "back": "Back to my account",
+    "intro": "Manage your delivery addresses here. We currently deliver only to: {provinces}.",
+    "loading": "Loading addresses",
+    "empty": "You have no saved addresses yet.",
+    "notDeliverable": "No delivery to this province right now",
+    "edit": "Edit",
+    "delete": "Delete",
+    "confirmDelete": "Yes, delete",
+    "cancelDelete": "Cancel",
+    "add": "Add a new address",
+    "newTitle": "New address",
+    "form": {
+      "title": "Address name",
+      "titleHint": "For example: Home, Work",
+      "recipientName": "Recipient",
+      "phone": "Phone",
+      "phoneHint": "The carrier uses this number to reach you on delivery.",
+      "province": "Province",
+      "provinceHint": "Only the provinces we deliver to are listed.",
+      "district": "District",
+      "postalCode": "Postal code",
+      "addressLine": "Street address",
+      "addressLineHint": "Neighbourhood, street, building and flat number.",
+      "save": "Save address",
+      "saving": "Saving…",
+      "cancel": "Cancel"
+    }
+  },
+  "checkout": {
+    "title": "Checkout",
+    "loading": "Loading checkout",
+    "backToCart": "Back to cart",
+    "summaryTitle": "Order summary",
+    "withdrawalNotice": "Fresh produce cannot be returned after delivery. You can cancel before the producer ships the order.",
+    "address": "Delivery address",
+    "addressRequired": "Choose or add a delivery address.",
+    "someNotDeliverable": "Some of your saved addresses are in provinces we do not deliver to right now; they are not listed.",
+    "newAddress": "New delivery address",
+    "addAddress": "Add a new address",
+    "pay": "Continue to payment",
+    "paying": "Opening payment…",
+    "return": {
+      "title": "Payment result",
+      "heading": "{status, select, PAID {Your order was received} PAYMENT_FAILED {The payment failed} PAYMENT_EXPIRED {The payment time ran out} CANCELLED_OUT_OF_STOCK {Products ran out, your payment is being refunded} other {Waiting for your payment}}",
+      "body": "{status, select, PAID {The payment for order {number} was received. We will let you know when the producers ship.} PAYMENT_FAILED {The payment for order {number} could not be taken. Your cart is still there; you can try again.} PAYMENT_EXPIRED {The payment for order {number} was not completed in time. Any amount taken is refunded; your cart is still there.} CANCELLED_OUT_OF_STOCK {A product in order {number} ran out while you were paying. Your full payment will be refunded to your card; your cart is still there.} other {The payment for order {number} is not complete yet. Check again in a moment.}}",
+      "retry": "Check again",
+      "backToCart": "Back to cart",
+      "viewOrder": "View order"
+    }
+  },
+  "orders": {
+    "title": "My orders",
+    "loading": "Loading orders",
+    "emptyTitle": "You have no orders yet",
+    "detailTitle": "Order {number}",
+    "backToList": "Back to my orders",
+    "placedAt": "Placed on {date}",
+    "status": "{status, select, PENDING_PAYMENT {Awaiting payment} PAID {Paid} PAYMENT_FAILED {Payment failed} PAYMENT_EXPIRED {Expired} CANCELLED_OUT_OF_STOCK {Out of stock, refunded} other {Unknown}}",
+    "sellerOrderStatus": "{status, select, PENDING_PAYMENT {Awaiting payment} NEW {Being prepared} CANCELLED {Cancelled} VOID {Not completed} other {Unknown}}",
+    "perUnit": "/ {unit, select, KILOGRAM {kg} PIECE {piece} BUNCH {bunch} other {unit}}",
+    "shipping": "Shipping",
+    "freeShipping": "Free",
+    "itemsTotal": "Products",
+    "grandTotal": "Total",
+    "deliveryAddress": "Delivery address",
+    "dispatchDue": "To be shipped by {date}",
+    "dispatchOverdue": "The producer missed the dispatch deadline. You can still cancel the order.",
+    "cancelledBy": "{by, select, SELLER {Cancelled by the producer.} other {Cancelled by you.}}",
+    "cancelReason": "Reason: {reason}",
+    "cancel": {
+      "action": "Cancel order",
+      "buyerTitle": "Cancel the order from {seller}",
+      "buyerBody": "The products and shipping fee from this producer are refunded to your card. Other producers in your order are not affected.",
+      "sellerTitle": "Cancel the order",
+      "sellerBody": "The buyer is refunded in full for the products and shipping, and the products are added back to your stock. Your reason is shared with the buyer.",
+      "confirm": "Cancel order"
+    }
+  },
+  "sellerOrders": {
+    "title": "Incoming orders",
+    "intro": "Your paid orders. Ship each order within the time you declared.",
+    "loading": "Loading orders",
+    "tabsLabel": "Order status",
+    "emptyTitle": "{status, select, NEW {No orders to prepare} other {No cancelled orders}}",
+    "payout": "Payout: {amount}",
+    "detailTitle": "Order",
+    "backToList": "Back to incoming orders",
+    "overdue": "The dispatch deadline has passed. The buyer may cancel; ship as soon as possible.",
+    "commission": "Commission",
+    "payoutLabel": "Your payout",
+    "destination": "Delivery: {district} / {province}"
   }
 }

@@ -21,6 +21,8 @@ import jakarta.validation.constraints.Size;
  * @param unit          satış birimi: {@code KILOGRAM}, {@code PIECE} veya {@code BUNCH}
  * @param priceAmount   birim fiyat, kuruş
  * @param stockQuantity eldeki miktar
+ * @param dispatchDays  kargoya verme süresi (1–3 iş günü); gönderilmezse yeni ilanda 2,
+ *                      güncellemede mevcut değer (add-cart-and-checkout D3)
  */
 @Schema(name = "ListingRequest", description = "İlan oluşturma veya güncelleme isteği")
 public record ListingRequest(
@@ -53,5 +55,12 @@ public record ListingRequest(
         @NotNull(message = "{validation.listingStock.required}")
         @Min(value = 0, message = "{validation.listingStock.range}")
         @Max(value = 100_000, message = "{validation.listingStock.range}")
-        Integer stockQuantity) {
+        Integer stockQuantity,
+
+        @Schema(requiredMode = Schema.RequiredMode.NOT_REQUIRED, nullable = true,
+                description = "Kargoya verme süresi, iş günü (1–3); gönderilmezse yeni ilanda 2, güncellemede mevcut değer",
+                example = "2")
+        @Min(value = 1, message = "{validation.listingDispatchDays.range}")
+        @Max(value = 3, message = "{validation.listingDispatchDays.range}")
+        Integer dispatchDays) {
 }

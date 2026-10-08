@@ -14,6 +14,7 @@ export async function postToBff<T>(
   path: string,
   body?: unknown,
   method: "POST" | "PUT" | "DELETE" = "POST",
+  extraHeaders: Readonly<Record<string, string>> = {},
 ): Promise<T | undefined> {
   // `FormData` (dosya yükleme) olduğu gibi gider; tarayıcı multipart sınırını kendisi yazar.
   const isForm = body instanceof FormData;
@@ -21,9 +22,11 @@ export async function postToBff<T>(
   try {
     response = await fetch(path, {
       method,
-      headers: body === undefined || isForm ? { Accept: "application/json" } : {
-        Accept: "application/json",
-        "Content-Type": "application/json",
+      headers: {
+        ...extraHeaders,
+        ...(body === undefined || isForm
+          ? { Accept: "application/json" }
+          : { Accept: "application/json", "Content-Type": "application/json" }),
       },
       body: body === undefined ? undefined : isForm ? body : JSON.stringify(body),
     });

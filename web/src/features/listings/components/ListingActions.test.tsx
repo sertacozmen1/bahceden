@@ -21,6 +21,7 @@ function aListing(status: SellerListingView["status"], photoCount = 1): SellerLi
     unit: "KILOGRAM",
     unitPrice: { amount: 2450, currency: "TRY" },
     stockQuantity: 10,
+    dispatchDays: 2,
     status,
     updatedAt: "2026-10-08T09:30:00Z",
     photos: Array.from({ length: photoCount }, (_, index) => ({

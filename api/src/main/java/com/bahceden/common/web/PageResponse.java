@@ -30,6 +30,15 @@ public record PageResponse<T>(
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Süzgeçten geçen toplam kayıt sayısı", example = "137") long totalElements,
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Toplam sayfa sayısı", example = "7") int totalPages) {
 
+    /**
+     * Sunucuda üst sınırı sabit, kısa bir listenin tamamı tek sayfa olarak
+     * (teslimat illeri, en çok 10 adres; add-cart-and-checkout D5). Liste
+     * yanıtı her uçta aynı şekli korur (AGENTS.md §11.5).
+     */
+    public static <T> PageResponse<T> ofAll(List<T> items) {
+        return new PageResponse<>(List.copyOf(items), 0, items.size(), items.size(), 1);
+    }
+
     public static <T> PageResponse<T> from(Page<T> page) {
         return new PageResponse<>(
                 page.getContent(),

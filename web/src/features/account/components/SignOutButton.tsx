@@ -15,13 +15,21 @@ import { postToBff } from "@/lib/bffClient";
  * kullanıcı vitrine gönderilir: düzen oturum durumunu sunucuda yeniden okur.
  *
  * Yıkıcı bir eylem değildir (veri silmez), bu yüzden kırmızı değil nötr görünür.
+ *
+ * `compact`: dar ekranda yalnızca ikon görünür, erişilebilir ad korunur
+ * (başlıkta yer kalsın diye; 375 px'de yatay kaydırma olmaz).
  */
-type SignOutButtonProps = VariantProps<typeof buttonVariants> & { readonly className?: string };
+type SignOutButtonProps = VariantProps<typeof buttonVariants> & {
+  readonly className?: string;
+  readonly compact?: boolean;
+};
 
-export function SignOutButton({ variant = "outline", size, className }: SignOutButtonProps) {
+export function SignOutButton({ variant = "outline", size, className, compact = false }: SignOutButtonProps) {
   const t = useTranslations();
   const router = useRouter();
   const [pending, setPending] = useState(false);
+
+  const label = pending ? t("account.nav.signingOut") : t("account.nav.signOut");
 
   function signOut() {
     setPending(true);
@@ -34,9 +42,17 @@ export function SignOutButton({ variant = "outline", size, className }: SignOutB
   }
 
   return (
-    <Button variant={variant} size={size} className={className} type="button" onClick={signOut} disabled={pending}>
+    <Button
+      variant={variant}
+      size={size}
+      className={className}
+      type="button"
+      onClick={signOut}
+      disabled={pending}
+      aria-label={compact ? label : undefined}
+    >
       <LogOut aria-hidden />
-      {pending ? t("account.nav.signingOut") : t("account.nav.signOut")}
+      {compact ? <span className="hidden sm:inline">{label}</span> : label}
     </Button>
   );
 }

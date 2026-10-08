@@ -73,8 +73,23 @@ Architecture Decision Records, projedeki önemli mimari kararları ve bu kararla
 | 051 | [Fotoğraflar kayıtlı anahtarla herkese açık sunulur; `web` akış aktarır, `next/image` yeniden işlemez](051-photo-serving-public-key-registered-web-proxy.md) | Accepted | 2026-10-08 |
 | 052 | [Vitrin kapağı ikinci sabit sorguyla gelir; ürün detayı `slug` ile, vitrinle aynı görünürlük koşuluyla](052-storefront-cover-second-query-detail-by-slug.md) | Accepted | 2026-10-08 |
 | 053 | [Admin ilan denetimi: liste ve iki eylem; gerekçe diyaloğu ortak bileşen](053-admin-listing-moderation-shared-reason-dialog.md) | Accepted | 2026-10-08 |
+| 054 | [Ödeme bölünmüş ödeme (alt üye işyeri) modeliyle alınır; sağlayıcı bir arayüzün arkasında, seçimi sonraya kalır](054-split-payment-via-provider-port-provider-pending.md) | Accepted | 2026-10-08 |
+| 055 | [Komisyon satıcı payından: ürün tutarının %5'i + satıcı siparişi başına 3 TL; değerler siparişe yazılır](055-commission-percent-plus-fixed-from-seller.md) | Accepted | 2026-10-08 |
+| 056 | [Kargodan önce iptal tam iadedir; teslimden sonra cayma yok, ayıplı ürün 48 saat içinde fotoğrafla bildirilir](056-cancel-before-shipment-and-defect-refund.md) | Accepted | 2026-10-08 |
+| 057 | [Gönderi kargo entegratörü API'si ile oluşturulur; entegratör bir arayüzün arkasında, seçimi sonraya kalır](057-shipping-via-integrator-port-integrator-pending.md) | Accepted | 2026-10-08 |
+| 058 | [Kargo ücreti satıcı başına sabit 99 TL, 1000 TL ve üzeri ücretsiz; maliyet pazaryerinde; kargoya verme süresi ilanda beyan edilir](058-flat-shipping-fee-per-seller-and-declared-handover.md) | Accepted | 2026-10-08 |
+| 059 | [`payment` ve `order` paketleri; satın alınabilirlik tek koşul ve vitrine alan olarak çıkar](059-payment-and-order-packages-single-purchasability-rule.md) | Accepted | 2026-10-08 |
+| 060 | [Satıcı ödeme hesabı: TCKN/VKN ve IBAN sunucuda doğrulanır, yanıtta maskelenir; alt üye kaydı eşzamanlı](060-seller-payout-account-validated-masked-sync-submerchant.md) | Accepted | 2026-10-08 |
+| 061 | [İlanda kargoya verme süresi; son tarih iş günüyle, yalnızca hafta sonu dışlanır](061-listing-dispatch-days-business-days-weekends-only.md) | Accepted | 2026-10-08 |
+| 062 | [Sepet sunucuda, hesaba bağlı; fiyat ve stok her okumada üründen](062-server-side-cart-prices-read-live.md) | Accepted | 2026-10-08 |
+| 063 | [Teslimat illeri yapılandırmadan (İstanbul, İzmir, Ankara, Manisa); il kataloğu sabit; en çok 10 adres](063-delivery-provinces-config-address-book.md) | Accepted | 2026-10-08 |
+| 064 | [Sipariş üç seviyede; tutarlar ve adres sipariş anında yazılır; `Idempotency-Key` zorunlu](064-three-level-order-snapshot-idempotency-key.md) | Accepted | 2026-10-08 |
+| 065 | [Fiyatlama tek sınıfta: kuruş tamsayısı, `HALF_UP`; değerler yapılandırmada](065-order-pricing-integer-minor-units-half-up.md) | Accepted | 2026-10-08 |
+| 066 | [Ödeme: başlat, yönlendir, tamamla; stok tamamlamada kilitle düşer, yetmezse tam iade](066-payment-redirect-verify-lock-stock-on-success.md) | Accepted | 2026-10-08 |
+| 067 | [Kargodan önce iptal: alıcı her zaman, satıcı gerekçeyle; tam iade, stok geri eklenir](067-cancel-before-shipment-full-refund-restock.md) | Accepted | 2026-10-08 |
+| 068 | [`web`: sepet ve ödeme vitrinde, siparişler hesapta, satıcı ekranları panelde; sepet sayısı sunucudan](068-checkout-web-routes-server-cart-count.md) | Accepted | 2026-10-08 |
 
-**Sıradaki numara: 054.**
+**Sıradaki numara: 069.**
 
 **Durum değerleri:** `Proposed` (öneri, henüz bağlayıcı değil) · `Accepted` (yürürlükte, bağlayıcı) · `Deprecated` (artık geçerli değil, yerine bir şey gelmedi) · `Superseded by [ADR-XXX]` (yerini başka bir karara bıraktı).
 
@@ -86,8 +101,8 @@ Aşağıdaki konular henüz karara bağlanmadı ve ilgili alanda kod yazılması
 
 | Konu | Kaynak madde | Karara bağlanınca |
 |---|---|---|
-| Ödeme sağlayıcısı, payout modeli, komisyon ve iade kuralı | KALANLAR A1 | ADR adayı |
-| Kargo entegrasyonu ve ücret sahipliği | KALANLAR A2 | ADR adayı |
+| Ödeme sağlayıcısı seçimi ve sözleşmesi (model, komisyon, iade karara bağlandı: ADR-054…056) | KALANLAR A1 | Gerçek sağlayıcı uygulaması için ADR |
+| Kargo entegratörü seçimi ve sözleşmesi (entegrasyon biçimi ve ücret karara bağlandı: ADR-057, ADR-058) | KALANLAR A2 | Gerçek entegratör uygulaması için ADR |
 
 ---
 

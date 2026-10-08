@@ -141,10 +141,12 @@ Tercih `bahceden_theme` çerezinde (bir yıl). Kök düzen onu sunucuda okur; il
 | `BrandLogo` / `BrandMark` | `components/` | Satır içi SVG logo ve dar alan için yalnızca karo; renkler `logo-*` rollerinden, erişilebilir adı çağıran verir |
 | `LocaleMenu` | `components/` | Tek ikonlu tetikleyici + dil menüsü; seçenekler kendi dilinde, seçim çereze yazılır ve sayfa sunucuda yenilenir |
 | `ThemeMenu` | `components/` | Tek ikonlu tetikleyici + Açık / Koyu / Sistem menüsü; seçimi `data-theme`'ya ve çereze yazar |
-| `SessionNav` | `components/` | Oturum durumuna göre "Giriş yap / Kayıt ol" veya maskeli e-posta + çıkış; `ROLE_ADMIN`'de "Yönetim" bağlantısı |
+| `SessionNav` | `components/` | Oturum durumuna göre "Giriş yap / Kayıt ol" veya sepet (adet rozetiyle) + maskeli e-posta + çıkış; `ROLE_SELLER`'da "Ürünlerim", `ROLE_ADMIN`'de "Yönetim". Dar ekranda çıkış yalnızca ikon ([ADR-068](../adr/068-checkout-web-routes-server-cart-count.md)) |
 | `Pagination` | `components/` | Sayfalı listelerin önceki / sonraki gezintisi; diğer sorgu parametrelerini korur. Vitrin, satıcı ilanları ve admin listeleri paylaşır |
 | `ListSkeleton` | `components/` | Liste sayfalarının yükleniyor iskeleti (isteğe bağlı sekmelerle) |
-| `ReasonDialog` | `components/` | Gerekçe isteyen yıkıcı admin eylemi; satıcı reddi, satıcı askısı ve ilan kaldırma paylaşır ([ADR-053](../adr/053-admin-listing-moderation-shared-reason-dialog.md)) |
+| `ReasonDialog` | `components/` | Gerekçe isteyen yıkıcı eylem; satıcı reddi, satıcı askısı, ilan kaldırma ve sipariş iptali paylaşır ([ADR-053](../adr/053-admin-listing-moderation-shared-reason-dialog.md)). `reasonOptional` ile gerekçe boş bırakılabilir (alıcının iptali) |
+| `SectionTabs` | `components/` | Panel bölümleri arası alt çizgili sekmeler (`aria-current`); `AdminNav` ve `SellerNav` kullanır |
+| `FilterTabs` | `components/` | Liste sayfalarının `?status=` süzgeci (dolgulu düğmeler); admin satıcıları, admin ilanları ve gelen siparişler paylaşır |
 | `StatusPanel` | `components/` | Tam sayfa hata ve bulunamadı kutusu: ikon (hatada `destructive` tonlu), başlık, tek cümle, tek eylem |
 | `AccountScreen` | `features/account/components/` | Hesap ekranlarının ortak tek sütun iskeleti |
 | `AccountSkeleton` | `features/account/components/` | Hesap sayfalarının yükleniyor iskeleti |
@@ -160,6 +162,16 @@ Tercih `bahceden_theme` çerezinde (bir yıl). Kök düzen onu sunucuda okur; il
 | `PhotoManager` | `features/listings/components/` | Fotoğraf yükleme, öne / arkaya düğmeleriyle sıralama (sürükle-bırak yok), onaylı silme, kapak etiketi |
 | `ListingActions` | `features/listings/components/` | Yayın eylemleri: yayına al birincil; fotoğraf yoksa pasif ve nedeni yazılı |
 | `ProductGallery` | `features/catalog/components/` | Ürün detayında büyük görsel ve küçük resim düğmeleri (`aria-current`) |
+| `SellerNav` | `features/seller/components/` | Satıcı paneli sekmeleri: Ürünlerim · Gelen siparişler · Ödeme bilgileri |
+| `PayoutForm`, `PayoutMissingNotice` | `features/payout/components/` | Ödeme bilgileri formu (tür radyo grubu, türe göre vergi dairesi; numaralar kayıttan sonra boşalır) ve ödeme hesabı etkin değilken ilan ekranlarındaki uyarı |
+| `QuantityStepper` | `features/cart/components/` | Eksi · sayı · artı; 44 px düğmeler, sınırlar stok ve 99 |
+| `AddToCart` | `features/cart/components/` | Ürün detayında adet ve "Sepete ekle"; oturumsuz alıcıya giriş bağlantısı (`SignInToBuy`) |
+| `CartGroups`, `CartLineControls`, `CartTotals` | `features/cart/components/` | Satıcı grubu kartları (sepette düzenlenebilir, ödemede salt okunur), satır eylemleri (dar ekranda kendi satırında) ve toplamlar |
+| `AddressForm`, `AddressBook` | `features/addresses/components/` | Adres formu (il seçenekleri açık radyo grubu) ve iki adımlı silmeli adres defteri |
+| `CheckoutForm` | `features/orders/components/` | Teslimat adresi seçimi veya ekleme, ödemeye geçiş; tekrar anahtarı ekran boyunca korunur |
+| `BuyerOrderView` | `features/orders/components/` | Alıcının sipariş detayı: satıcı siparişleri, son tarih, süre aşımı, adres, toplam |
+| `OrderStatusBadge`, `SellerOrderStatusBadge` | `features/orders/components/` | Sipariş durumu (`PAID` `success`, bekleyen `warning`, başarısız `destructive`) ve satıcı siparişi durumu (`NEW` `info`, iptal `secondary`) |
+| `CancelSellerOrder` | `features/orders/components/` | Kargodan önce iptal: alıcıda isteğe bağlı, satıcıda zorunlu gerekçeli onay penceresi |
 
 ## 5. Dört durum
 

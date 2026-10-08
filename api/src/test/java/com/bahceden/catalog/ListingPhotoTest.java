@@ -340,7 +340,8 @@ class ListingPhotoTest {
                 .andExpect(jsonPath("$.name").value("Dut"))
                 .andExpect(jsonPath("$.seller.city").value("Manisa"))
                 .andExpect(jsonPath("$.photos.length()").value(2))
-                .andExpect(jsonPath("$.id").doesNotExist());
+                // Sepete ekleme ürün kimliğiyle yapılır (add-cart-and-checkout D4).
+                .andExpect(jsonPath("$.id").value(id));
 
         jdbc.update("update sellers set status = 'SUSPENDED' where account_id is not null");
         mockMvc.perform(get("/api/v1/products/dut"))

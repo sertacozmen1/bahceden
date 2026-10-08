@@ -8,6 +8,9 @@ import { requireRole } from "@/features/account/requireSession";
 import { listOwnListings, type SellerListingPage } from "@/features/listings/api";
 import { ListingStatusBadge } from "@/features/listings/components/ListingStatusBadge";
 import { isSellerNotApproved, SellerNotApproved } from "@/features/listings/components/SellerNotApproved";
+import { acceptsPayments, getOwnPayoutAccount } from "@/features/payout/api";
+import { PayoutMissingNotice } from "@/features/payout/components/PayoutMissingNotice";
+import { SellerNav } from "@/features/seller/components/SellerNav";
 import { formatMoney } from "@/lib/money";
 
 /** Sayfa başlığı seçili dilde (ADR-029). */
@@ -21,7 +24,8 @@ const PAGE_SIZE = 20;
 /**
  * Satıcının ilanları (product-listings spec'i). En son güncellenen üstte;
  * birincil eylem "Yeni ilan". Onaylı olmayan satıcı hata yerine başvuru
- * yönlendirmesi görür (ADR-044).
+ * yönlendirmesi görür (ADR-044). Ödeme hesabı etkin değilse ilanların satın
+ * alınamayacağı söylenir (add-cart-and-checkout D10).
  */
 export default async function SellerProductsPage({
   searchParams,
@@ -34,8 +38,14 @@ export default async function SellerProductsPage({
   const { accessToken } = await requireRole("/seller/products", "ROLE_SELLER");
 
   let result: SellerListingPage;
+  let paymentsReady: boolean;
   try {
-    result = await listOwnListings(accessToken, parsePage(page), PAGE_SIZE);
+    const [listings, payoutAccount] = await Promise.all([
+      listOwnListings(accessToken, parsePage(page), PAGE_SIZE),
+      getOwnPayoutAccount(accessToken),
+    ]);
+    result = listings;
+    paymentsReady = acceptsPayments(payoutAccount);
   } catch (error) {
     if (isSellerNotApproved(error)) {
       return <SellerNotApproved />;
@@ -55,6 +65,8 @@ export default async function SellerProductsPage({
           {t("listings.list.new")}
         </Link>
       </header>
+      <SellerNav current="products" />
+      {!paymentsReady && <PayoutMissingNotice />}
 
       {result.items.length === 0 ? (
         <section

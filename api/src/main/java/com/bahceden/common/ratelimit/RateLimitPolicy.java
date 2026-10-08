@@ -43,7 +43,10 @@ public enum RateLimitPolicy {
     SELLER_APPLICATION(5, Duration.ofHours(1)),
 
     /** İlan fotoğrafı yükleme: aynı hesap için saatte 60; her biri görüntü işler (add-product-listings D3). */
-    PRODUCT_PHOTO_UPLOAD(60, Duration.ofHours(1));
+    PRODUCT_PHOTO_UPLOAD(60, Duration.ofHours(1)),
+
+    /** Sipariş oluşturma: aynı hesap için saatte 20; her biri ödeme sağlayıcısına gider (add-cart-and-checkout D6). */
+    ORDER_CREATE(20, Duration.ofHours(1));
 
     private final int limit;
     private final Duration window;

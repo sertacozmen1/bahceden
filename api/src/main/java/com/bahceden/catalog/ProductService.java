@@ -3,10 +3,12 @@ package com.bahceden.catalog;
 import com.bahceden.catalog.domain.Product;
 import com.bahceden.catalog.domain.ProductPhoto;
 import com.bahceden.catalog.dto.ProductDetail;
+import com.bahceden.catalog.dto.ProductPhotoView;
 import com.bahceden.catalog.dto.ProductSummary;
 import com.bahceden.common.web.ApiErrorCode;
 import com.bahceden.common.web.ApiException;
 import com.bahceden.common.web.PageResponse;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
@@ -60,6 +62,19 @@ public class ProductService {
                 : photos.findCovers(ids).stream().collect(Collectors.toMap(ProductPhoto::getProductId, Function.identity()));
         return PageResponse.from(products.map(product ->
                 mapper.toSummary(product, Optional.ofNullable(covers.get(product.getId())))));
+    }
+
+    /**
+     * Verilen ürünlerin kapak fotoğrafları, tek sorguda (sepet ve sipariş
+     * satırları için; add-cart-and-checkout D4). Fotoğrafı olmayan ürün haritada yoktur.
+     */
+    @Transactional(readOnly = true)
+    public Map<Long, ProductPhotoView> coverViews(Collection<Long> productIds) {
+        if (productIds.isEmpty()) {
+            return Map.of();
+        }
+        return photos.findCovers(productIds).stream()
+                .collect(Collectors.toMap(ProductPhoto::getProductId, mapper::toPhotoView));
     }
 
     /**

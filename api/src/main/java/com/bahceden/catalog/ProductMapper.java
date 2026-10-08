@@ -34,7 +34,8 @@ public class ProductMapper {
                 MoneyView.from(product.getPrice()),
                 product.getStockQuantity(),
                 toSellerSummary(product.getSeller()),
-                cover.map(this::toPhotoView).orElse(null));
+                cover.map(this::toPhotoView).orElse(null),
+                product.isPurchasable());
     }
 
     public AdminProductSummary toAdminSummary(Product product, Optional<ProductPhoto> cover) {
@@ -58,7 +59,10 @@ public class ProductMapper {
                 MoneyView.from(product.getPrice()),
                 product.getStockQuantity(),
                 toSellerSummary(product.getSeller()),
-                photos.stream().map(this::toPhotoView).toList());
+                photos.stream().map(this::toPhotoView).toList(),
+                product.getDispatchDays(),
+                product.isPurchasable(),
+                product.getId());
     }
 
     public ProductPhotoView toPhotoView(ProductPhoto photo) {
@@ -75,6 +79,7 @@ public class ProductMapper {
                 product.getUnit(),
                 MoneyView.from(product.getPrice()),
                 product.getStockQuantity(),
+                product.getDispatchDays(),
                 product.getStatus(),
                 product.getStatusReason().orElse(null),
                 product.getPublishedAt(),
@@ -82,7 +87,7 @@ public class ProductMapper {
                 photos.stream().map(this::toPhotoView).toList());
     }
 
-    private SellerSummary toSellerSummary(Seller seller) {
+    public SellerSummary toSellerSummary(Seller seller) {
         return new SellerSummary(seller.getSlug(), seller.getDisplayName(), seller.getCity());
     }
 }

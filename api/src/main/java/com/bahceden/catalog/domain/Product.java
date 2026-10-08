@@ -2,6 +2,7 @@ package com.bahceden.catalog.domain;
 
 import com.bahceden.common.money.Money;
 import com.bahceden.seller.domain.Seller;
+import com.bahceden.seller.domain.SellerStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
@@ -16,6 +17,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.Instant;
 import java.util.Optional;
+import org.hibernate.annotations.Formula;
 
 /**
  * Satılan ürün ilanı.
@@ -69,6 +71,19 @@ public class Product {
     @Column(name = "stock_quantity", nullable = false)
     private int stockQuantity;
 
+    /** Kargoya verme süresi, iş günü: 1–3 (ADR-058, add-cart-and-checkout D3). */
+    @Column(name = "dispatch_days", nullable = false)
+    private int dispatchDays;
+
+    /**
+     * Satıcının etkin bir ödeme hesabı var mı (add-cart-and-checkout D1). Ürün
+     * satırıyla aynı sorguda, alt sorgu olarak okunur: vitrin listesine ek
+     * sorgu eklenmez. Salt okunurdur; ödeme hesabı {@code payment} domaininde
+     * değişir.
+     */
+    @Formula("(exists (select 1 from seller_payout_accounts a where a.seller_id = seller_id and a.status = 'ACTIVE'))")
+    private boolean sellerAcceptsPayments;
+
     /**
      * Yayına alınma zamanı. Vitrin sıralaması buna dayanır; veritabanı kısıtı
      * yayınlanmış bir ürünün bu alanı boş bırakmasını engeller.
@@ -94,26 +109,58 @@ public class Product {
 
     /** Yeni ilan: {@link ProductStatus#DRAFT} açılır, vitrinde görünmez. */
     public static Product draft(Seller seller, String slug, String name, String description, ProductUnit unit,
-                                Money price, int stockQuantity, Instant now) {
+                                Money price, int stockQuantity, int dispatchDays, Instant now) {
         var product = new Product();
         product.seller = seller;
         product.slug = slug;
         product.status = ProductStatus.DRAFT;
         product.statusChangedAt = now;
         product.createdAt = now;
-        product.update(name, description, unit, price, stockQuantity, now);
+        product.update(name, description, unit, price, stockQuantity, dispatchDays, now);
         return product;
     }
 
     /** İlan bilgilerini günceller; durum ve {@code slug} değişmez (D2). */
     public void update(String name, String description, ProductUnit unit, Money price, int stockQuantity,
-                       Instant now) {
+                       int dispatchDays, Instant now) {
         this.name = name;
         this.description = description;
         this.unit = unit;
         this.price = price;
         this.stockQuantity = stockQuantity;
+        this.dispatchDays = dispatchDays;
         this.updatedAt = now;
+    }
+
+    /**
+     * Satın alınabilirlik koşulu, tek yerde (storefront-catalog "Satın
+     * alınabilirlik", add-cart-and-checkout D1): yayında, satıcısı onaylı,
+     * satıcısının ödeme hesabı etkin ve stokta. Vitrin, sepet ve sipariş aynı
+     * kararı buradan alır. Satıcı yüklenmiş olmalıdır (sorgular fetch join kullanır).
+     */
+    public boolean isPurchasable() {
+        return status == ProductStatus.PUBLISHED
+                && seller.getStatus() == SellerStatus.APPROVED
+                && sellerAcceptsPayments
+                && stockQuantity > 0;
+    }
+
+    /** Ödeme başarılı olunca stok düşer (D8); çağıran satırı kilitlemiş ve yeterliliği denetlemiştir. */
+    public void decreaseStock(int quantity, Instant now) {
+        if (quantity <= 0 || quantity > stockQuantity) {
+            throw new IllegalStateException("Geçersiz stok düşümü: ilan " + id);
+        }
+        stockQuantity -= quantity;
+        updatedAt = now;
+    }
+
+    /** İptal edilen satıcı siparişinin ürünleri stoğa geri döner (D9). */
+    public void increaseStock(int quantity, Instant now) {
+        if (quantity <= 0) {
+            throw new IllegalStateException("Geçersiz stok iadesi: ilan " + id);
+        }
+        stockQuantity += quantity;
+        updatedAt = now;
     }
 
     /** Fotoğraf değişince ilanın son değişiklik anı güncellenir (satıcı paneli sıralaması). */
@@ -178,6 +225,10 @@ public class Product {
 
     public int getStockQuantity() {
         return stockQuantity;
+    }
+
+    public int getDispatchDays() {
+        return dispatchDays;
     }
 
     public Instant getPublishedAt() {

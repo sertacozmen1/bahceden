@@ -8,6 +8,7 @@ import com.bahceden.common.i18n.Messages;
 import com.bahceden.common.mail.MailSender;
 import com.bahceden.common.storage.FileStorage;
 import com.bahceden.common.storage.FileType;
+import com.bahceden.common.text.Phones;
 import com.bahceden.common.text.Slugs;
 import com.bahceden.common.web.ApiErrorCode;
 import com.bahceden.common.web.ApiException;
@@ -29,7 +30,6 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,18 +60,8 @@ public class SellerService {
 
     private static final Logger log = LoggerFactory.getLogger(SellerService.class);
 
-    /** Türkiye ulusal numarası: 10 hane, 0 ile başlamaz. */
-    private static final Pattern NATIONAL_NUMBER = Pattern.compile("[1-9]\\d{9}");
-
-    /** Telefonda kullanıcının yazabileceği ayraçlar: boşluk, tire, nokta, parantez. */
-    private static final Pattern PHONE_SEPARATORS = Pattern.compile("[\\s\\-.()]");
-
-    private static final String COUNTRY_PREFIX = "+90";
-
     /** Ad yalnızca Latin dışı karakterlerden oluşuyorsa kullanılan taban. */
     private static final String SLUG_FALLBACK = "uretici";
-
-    private static final int PHONE_VISIBLE_DIGITS = 4;
 
     /** Admin listesinin sayfa üst sınırı: vitrinle aynı (AGENTS.md §11.5). */
     static final int MAX_PAGE_SIZE = 50;
@@ -375,23 +365,10 @@ public class SellerService {
                 request.document().getSize(), now));
     }
 
-    /**
-     * Türkiye numarasını E.164'e çevirir: ayraçlar temizlenir, {@code 0},
-     * {@code 90} veya {@code +90} öneki kabul edilir.
-     */
+    /** Türkiye numarasını E.164'e çevirir; kural ortak yardımcıdadır ({@link Phones}). */
     private static String normalizePhone(String raw) {
-        var digits = PHONE_SEPARATORS.matcher(raw.trim()).replaceAll("");
-        if (digits.startsWith(COUNTRY_PREFIX)) {
-            digits = digits.substring(COUNTRY_PREFIX.length());
-        } else if (digits.startsWith("90") && digits.length() == 12) {
-            digits = digits.substring(2);
-        } else if (digits.startsWith("0")) {
-            digits = digits.substring(1);
-        }
-        if (!NATIONAL_NUMBER.matcher(digits).matches()) {
-            throw ApiException.invalidField("phone", "validation.phone.format");
-        }
-        return COUNTRY_PREFIX + digits;
+        return Phones.normalizeTurkish(raw)
+                .orElseThrow(() -> ApiException.invalidField("phone", "validation.phone.format"));
     }
 
     /**
@@ -408,7 +385,7 @@ public class SellerService {
     }
 
     private static String maskedPhone(String phone) {
-        return "***" + phone.substring(phone.length() - PHONE_VISIBLE_DIGITS);
+        return Phones.masked(phone);
     }
 
     static ApiException sellerNotFound() {

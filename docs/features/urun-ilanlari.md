@@ -37,6 +37,7 @@ Onaylı üretici "Ürünlerim" ekranından yeni ilan açar: ad, birim, fiyat ve 
 
 ## Tarihçe
 
+- 2026-10-08: İlana kargoya verme süresi (1–3 iş günü; istekte isteğe bağlı, varsayılan 2) eklendi ([ADR-061](../adr/061-listing-dispatch-days-business-days-weekends-only.md)). "Ürünlerim" ve ilan detayında ödeme hesabı etkin değilse "ürünleriniz henüz satın alınamıyor" uyarısı; satıcı panelinde sekmeler (Ürünlerim · Gelen siparişler · Ödeme bilgileri). Change `add-cart-and-checkout`.
 - 2026-10-08: `add-product-listings` change'i kullanıcı onayıyla archive edildi (`openspec/changes/archive/2026-10-08-add-product-listings/`). Ön koşullar: PR #2 `main`'e merge edildi ve CI 4/4 yeşil (run `37792192822`); delta spec'ler ana spec'lere sync edildi; D1–D7 → ADR-047…053; dokümanlar güncel. Taşımada göreli linkler bir seviye uzatıldı. Gerçek cihaz doğrulaması açık ve notlu.
 - 2026-10-08: İlk sürüm (change `add-product-listings`).
   - `api`:
