@@ -318,7 +318,7 @@ Tarayıcı `api`'ye hiç konuşmaz ve token görmez ([ADR-023](../adr/023-web-bf
 
 - **Çerezler:** `bahceden_at` (`path=/`) ve `bahceden_rt` (`path=/api/auth`); ikisi de `HttpOnly`, `Secure`, `SameSite=Lax`, ömürleri yenileme token'ı kadar.
 - **CSRF:** POST'lar `Sec-Fetch-Site: same-origin` ister; yoksa `Origin` `Host` ile karşılaştırılır. Reddedilen istek `403 CROSS_SITE_REQUEST` alır (BFF'in kendi kodu, `api`'de yok). `api`'ye ulaşılamazsa BFF `502 SERVICE_UNAVAILABLE` döner.
-- **Yenileme:** korunan sayfa erişim token'ının süresinin dolduğunu görünce kullanıcıyı `/api/auth/refresh?next=` adresine yönlendirir.
+- **Yenileme:** korunan sayfa erişim token'ının süresinin dolduğunu görünce kullanıcıyı önce `/session/refresh?next=` sayfasına yönlendirir; sayfa `/api/auth/refresh?next=` adresine tam sayfa gezintisiyle geçer (JavaScript yoksa "Devam et" bağlantısı). Ara sayfa gereklidir: uygulama içi bağlantıyla yapılan gezinti bir Route Handler'a yönlendirilirse Next.js istemci yönlendiricisi onu izleyemez ve boş sayfada kalır; sunucu da iki gezinti türünü ayırt edemez (yönlendirici başlıkları `headers()`'tan çıkarılır).
 - **İstemci adresi:** BFF `X-Forwarded-For` başlığını `api`'ye iletir; `api` başlığa yalnızca iç ağdan gelen proxy için güvenir.
 
 ---

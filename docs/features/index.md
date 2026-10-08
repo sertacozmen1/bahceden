@@ -25,7 +25,7 @@ Feature dosyası içerik üretmez; yukarıdakilere **link verir** ve zaman için
 | Feature | Durum | İlk sürüm | Son değişiklik | Kapsadığı capability'ler |
 |---|---|---|---|---|
 | [Vitrin ve Arama](vitrin-ve-arama.md) | Yayında | 2026-10-06 | 2026-10-08 | storefront-catalog |
-| [Hesap ve Oturum](hesap-ve-oturum.md) | Yayında | 2026-10-07 | 2026-10-08 | account-identity |
+| [Hesap ve Oturum](hesap-ve-oturum.md) | Yayında | 2026-10-07 | 2026-10-09 | account-identity |
 | [Satıcı Kaydı ve Onayı](satici-kaydi-ve-onayi.md) | Yayında | 2026-10-08 | 2026-10-08 | seller-onboarding |
 | [Ürün İlanları](urun-ilanlari.md) | Yayında | 2026-10-08 | 2026-10-08 | product-listings |
 | [Sepet ve Sipariş](sepet-ve-siparis.md) | Yayında | 2026-10-08 | 2026-10-08 | cart-and-checkout, orders |

@@ -2,7 +2,7 @@
 
 **Durum:** Yayında
 **İlk sürüm:** 2026-10-07
-**Son değişiklik:** 2026-10-08
+**Son değişiklik:** 2026-10-09
 
 | | |
 |---|---|
@@ -36,6 +36,7 @@ Kullanıcı e-posta adresi ve parolayla hesap açar ve hesabını hemen kullanı
 
 ## Tarihçe
 
+- 2026-10-09: Hata düzeltmesi: erişim token'ı dolmuşken (ör. tarayıcı kapatılıp açıldıktan sonra) uygulama içi bir bağlantıyla korunan sayfaya gidilince ("Hesabım") boş sayfa açılıyordu. Kapı Route Handler'a yönlendiriyordu ve Next.js istemci yönlendiricisi onu izleyemiyordu. Kapı artık `/session/refresh` ara sayfasına yönlendiriyor; sayfa yenileme ucuna tam sayfa gezintisiyle geçiyor. [ADR-023](../adr/023-web-bff-cookies-and-header-csrf.md)'ün yenileme modeli değişmedi. Başsız Chrome'da yeniden üretildi ve düzeltme doğrulandı. Branch `fix/session-refresh-client-navigation`.
 - 2026-10-08: "Hesabım" ekranına satıcılık bölümü eklendi: kaydı olmayanı başvuruya davet ediyor, olanın durumunu gösteriyor. Hesaba rol ekleme ve kaldırma geldi (`Account.grantRole` / `revokeRole`); `ROLE_SELLER` admin kararıyla değişir ve erişim token'ına bir sonraki yenilemede yansır ([ADR-044](../adr/044-seller-role-follows-status-with-query-gate.md)). Rolü yetmeyen istek artık ortak hata gövdesiyle `403 AUTH_FORBIDDEN` alıyor (`ApiAccessDeniedHandler`). Başlıkta `ROLE_ADMIN` için "Yönetim" bağlantısı var. Change `add-seller-onboarding`.
 - 2026-10-07: `add-password-reset` change'i kullanıcı onayıyla archive edildi (`openspec/changes/archive/2026-10-07-add-password-reset/`). Ön koşullar: delta spec ana spec'e sync edildi, D1–D4 → ADR-033…036, dokümanlar güncel, `api` 102 / `web` 62 test yeşil, docs strict derleme temiz. Taşımada `proposal.md` ve `design.md` içindeki göreli linkler bir seviye uzatıldı.
 - 2026-10-07: Parola sıfırlama (change `add-password-reset`). `api`: `POST /accounts/password-resets` (her durumda aynı `202`, kayıtsız adrese e-posta yok, istemci ve e-posta başına hız sınırı) ve `POST /accounts/password-resets/confirmations` (parola değişir, bütün oturumlar ve açık giriş kodları kapanır, e-posta doğrulanır, "parolanız değişti" bildirimi; oturum açmaz). Token 1 saat, tek kullanımlık, ayrı tabloda (`006-create-password-reset-tokens.sql`). `web`: `/forgot-password`, `/reset-password`, giriş formunda "Parolamı unuttum" bağlantısı. Kararlar ADR-033…036; 14 yeni `api` testi, 8 yeni `web` testi.

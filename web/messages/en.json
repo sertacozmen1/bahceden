@@ -129,6 +129,11 @@
       "crossSite": "This request was rejected because it came from another site.",
       "invalidRequest": "The request could not be read.",
       "formHasErrors": "Please fix the highlighted fields."
+    },
+    "sessionRefresh": {
+      "title": "Refreshing your session",
+      "body": "You have been inactive for a while; we are safely refreshing your session. You will return to your page in a moment.",
+      "continue": "Continue"
     }
   },
   "seller": {

@@ -39,11 +39,11 @@ describe("Hesabım sayfası", () => {
     expect(redirect).toHaveBeenCalledWith("/login?next=%2Faccount");
   });
 
-  it("erişim token'ının süresi dolduysa önce yenilemeye yönlendirir", async () => {
+  it("erişim token'ının süresi dolduysa yenileme ara sayfasına yönlendirir; Route Handler'a değil (uygulama içi gezinti onu izleyemez)", async () => {
     session.current = { kind: "expired" };
 
     await expect(MyAccountPage()).rejects.toThrow("yönlendirildi");
-    expect(redirect).toHaveBeenCalledWith("/api/auth/refresh?next=%2Faccount");
+    expect(redirect).toHaveBeenCalledWith("/session/refresh?next=%2Faccount");
   });
 
   it("oturum açıksa hesap bilgisini ve doğrulama durumunu gösterir", async () => {

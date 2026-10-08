@@ -129,6 +129,11 @@
       "crossSite": "Bu istek başka bir siteden geldiği için reddedildi.",
       "invalidRequest": "İstek okunamadı.",
       "formHasErrors": "Formdaki işaretli alanları düzeltin."
+    },
+    "sessionRefresh": {
+      "title": "Oturumunuz yenileniyor",
+      "body": "Bir süredir işlem yapmadınız; oturumunuzu güvenle yeniliyoruz. Birazdan kaldığınız sayfaya döneceksiniz.",
+      "continue": "Devam et"
     }
   },
   "seller": {

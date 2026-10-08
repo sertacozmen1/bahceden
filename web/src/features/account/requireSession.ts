@@ -12,6 +12,13 @@ type SignedIn = Extract<SessionState, { kind: "signed-in" }>;
  * Sayfanın `layout.tsx` dosyasından çağrılır: layout yükleniyor sınırının
  * dışında çalıştığı için yönlendirme gerçek bir HTTP 307 olur. Sayfa aynı
  * çağrıyla veriyi alır; oturum istek başına bir kez okunur.
+ *
+ * Yenileme ucu bir Route Handler'dır, sayfa değil. Uygulama içi bağlantıyla
+ * yapılan gezinti bir Route Handler'a yönlendirilirse istemci yönlendiricisi
+ * onu izleyemez ve boş sayfada kalır. Sunucu iki gezinti türünü ayırt edemez
+ * (Next.js yönlendirici başlıklarını `headers()`'tan çıkarır); bu yüzden kapı
+ * her zaman önce `/session/refresh` sayfasına yönlendirir, o sayfa yenileme
+ * ucuna tam sayfa gezintisiyle geçer.
  */
 export async function requireSignedIn(selfPath: Route): Promise<SignedIn> {
   const session = await currentSession();
@@ -20,7 +27,7 @@ export async function requireSignedIn(selfPath: Route): Promise<SignedIn> {
     redirect(`/login?next=${next}`);
   }
   if (session.kind === "expired") {
-    redirect(`/api/auth/refresh?next=${next}`);
+    redirect(`/session/refresh?next=${next}`);
   }
   return session;
 }
