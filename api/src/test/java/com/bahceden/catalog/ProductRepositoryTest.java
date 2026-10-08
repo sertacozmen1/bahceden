@@ -45,6 +45,8 @@ class ProductRepositoryTest {
     @BeforeEach
     void cleanUp() {
         jdbc.execute("delete from products");
+        jdbc.execute("delete from seller_status_changes");
+        jdbc.execute("delete from seller_documents");
         jdbc.execute("delete from sellers");
     }
 
@@ -61,6 +63,40 @@ class ProductRepositoryTest {
         assertThat(page.getTotalElements()).isEqualTo(1);
         assertThat(page.getContent()).singleElement()
                 .satisfies(p -> assertThat(p.getSlug()).isEqualTo("yayinda"));
+    }
+
+    @Test
+    @Tag("critical")
+    @DisplayName("Onaylı olmayan satıcının PUBLISHED ürünü listede ve toplamda yok (ADR-038 §4)")
+    void onayli_olmayan_saticinin_urunu_gizlenir() {
+        long approved = insertSeller("onayli", "Onaylı", "Manisa");
+        long pending = insertSeller("bekleyen", "Bekleyen", "Manisa", "PENDING");
+        long rejected = insertSeller("reddedilen", "Reddedilen", "Manisa", "REJECTED");
+        long suspended = insertSeller("askida", "Askıda", "Manisa", "SUSPENDED");
+        insertProduct(approved, "gorunur", "Görünür", "PUBLISHED", Instant.now());
+        insertProduct(pending, "bekleyenin", "Bekleyenin", "PUBLISHED", Instant.now());
+        insertProduct(rejected, "reddedilenin", "Reddedilenin", "PUBLISHED", Instant.now());
+        insertProduct(suspended, "askidakinin", "Askıdakinin", "PUBLISHED", Instant.now());
+
+        var page = repository.findPublished(PageRequest.of(0, 20));
+
+        assertThat(page.getTotalElements()).isEqualTo(1);
+        assertThat(page.getContent()).singleElement()
+                .satisfies(p -> assertThat(p.getSlug()).isEqualTo("gorunur"));
+    }
+
+    @Test
+    @Tag("critical")
+    @DisplayName("Askıdan çıkan satıcının ürünleri yeniden görünür")
+    void askidan_cikan_saticinin_urunleri_geri_gelir() {
+        long seller = insertSeller("donen", "Dönen", "Manisa", "SUSPENDED");
+        insertProduct(seller, "donen-urun", "Dönen Ürün", "PUBLISHED", Instant.now());
+        assertThat(repository.findPublished(PageRequest.of(0, 20)).getTotalElements()).isZero();
+
+        jdbc.update("update sellers set status = 'APPROVED' where id = ?", seller);
+
+        assertThat(repository.findPublished(PageRequest.of(0, 20)).getContent()).singleElement()
+                .satisfies(p -> assertThat(p.getSlug()).isEqualTo("donen-urun"));
     }
 
     @Test
@@ -144,7 +180,12 @@ class ProductRepositoryTest {
     }
 
     private long insertSeller(String slug, String displayName, String city) {
-        jdbc.update("insert into sellers (slug, display_name, city) values (?, ?, ?)", slug, displayName, city);
+        return insertSeller(slug, displayName, city, "APPROVED");
+    }
+
+    private long insertSeller(String slug, String displayName, String city, String status) {
+        jdbc.update("insert into sellers (slug, display_name, city, status) values (?, ?, ?, ?)",
+                slug, displayName, city, status);
         return jdbc.queryForObject("select id from sellers where slug = ?", Long.class, slug);
     }
 

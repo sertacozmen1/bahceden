@@ -39,6 +39,14 @@ spring:
       mail.smtp.timeout: 5000
       mail.smtp.writetimeout: 5000
 
+  servlet:
+    multipart:
+      # Belge sınırı (bahceden.storage.max-document-bytes, 10 MB) ile aynı
+      # tutulur; sınırı aşan dosya belleğe alınmadan reddedilir (ADR-039).
+      # İstek sınırı form alanları için küçük bir pay bırakır.
+      max-file-size: 10MB
+      max-request-size: 11MB
+
   messages:
     # Kullanıcıya dönen metinler (ADR-031): messages.properties Türkçe ve
     # temeldir. Sunucunun işletim sistemi dili sonucu ETKİLEMEZ: İngilizce bir
@@ -83,6 +91,12 @@ bahceden:
     # Erişim token'ı imza anahtarı (ADR-008): Base64, en az 256 bit. Varsayılan
     # YOKTUR; eksik, kısa veya Base64 olmayan değerle uygulama açılmaz (K10).
     secret: ${BAHCEDEN_JWT_SECRET}
+  storage:
+    # Yüklenen dosyaların dizini (ADR-039): uygulama kökünün dışında, geliştirmede
+    # Docker volume'u. Varsayılan YOKTUR; dizin yazılamıyorsa uygulama açılmaz.
+    dir: ${BAHCEDEN_STORAGE_DIR}
+    # Başvuru belgesinin üst sınırı: 10 MB (yukarıdaki multipart sınırıyla aynı).
+    max-document-bytes: 10485760
 
 logging:
   level:

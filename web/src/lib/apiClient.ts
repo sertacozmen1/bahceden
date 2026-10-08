@@ -30,7 +30,10 @@ type RequestOptions = {
 };
 
 type SendOptions = {
-  /** JSON olarak gönderilecek gövde. */
+  /**
+   * Gövde. `FormData` ise `multipart/form-data` olarak olduğu gibi iletilir
+   * (sınır değerini `fetch` kendisi yazar); değilse JSON'a çevrilir.
+   */
   readonly body?: unknown;
   readonly accessToken?: string;
   /**
@@ -72,14 +75,15 @@ export async function apiGet<T>(path: string, options: RequestOptions = {}): Pro
   return readJson<T>(response);
 }
 
-/** Durum değiştiren istek (POST, DELETE). Başarısız yanıt {@link ApiRequestError} fırlatır. */
+/** Durum değiştiren istek (POST, PUT, DELETE). Başarısız yanıt {@link ApiRequestError} fırlatır. */
 export async function apiSend<T>(
-  method: "POST" | "DELETE",
+  method: "POST" | "PUT" | "DELETE",
   path: string,
   options: SendOptions = {},
 ): Promise<SendResult<T>> {
   const headers = await baseHeaders();
-  if (options.body !== undefined) {
+  const isForm = options.body instanceof FormData;
+  if (options.body !== undefined && !isForm) {
     headers["Content-Type"] = "application/json";
   }
   if (options.accessToken !== undefined) {
@@ -93,13 +97,38 @@ export async function apiSend<T>(
     method,
     headers,
     cache: "no-store",
-    body: options.body === undefined ? undefined : JSON.stringify(options.body),
+    body: requestBody(options.body),
   });
 
   if (!response.ok) {
     throw await toApiError(response);
   }
   return { status: response.status, data: await readOptionalJson<T>(response) };
+}
+
+/**
+ * İkili içerik (belge) için ham yanıt: gövde okunmadan döner, çağıran onu
+ * tarayıcıya akış olarak iletir. Başarısız yanıt yine ortak hata gövdesiyle
+ * {@link ApiRequestError} fırlatır.
+ */
+export async function apiDownload(path: string, accessToken: string | undefined): Promise<Response> {
+  const headers = await baseHeaders();
+  headers.Accept = "*/*";
+  if (accessToken !== undefined) {
+    headers.Authorization = `Bearer ${accessToken}`;
+  }
+  const response = await send(new URL(`${apiBaseUrl()}${path}`), { headers, cache: "no-store" });
+  if (!response.ok) {
+    throw await toApiError(response);
+  }
+  return response;
+}
+
+function requestBody(body: unknown): BodyInit | undefined {
+  if (body === undefined) {
+    return undefined;
+  }
+  return body instanceof FormData ? body : JSON.stringify(body);
 }
 
 /**

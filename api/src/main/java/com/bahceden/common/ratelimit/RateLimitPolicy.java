@@ -37,7 +37,10 @@ public enum RateLimitPolicy {
     PASSWORD_RESET_REQUEST_EMAIL(3, Duration.ofHours(1)),
 
     /** Sıfırlama bağlantısının tüketilmesi: aynı istemciden 15 dakikada 20. */
-    PASSWORD_RESET(20, Duration.ofMinutes(15));
+    PASSWORD_RESET(20, Duration.ofMinutes(15)),
+
+    /** Satıcı başvurusu veya yeniden gönderim: aynı hesap için saatte 5; her biri bir dosya yazar (add-seller-onboarding). */
+    SELLER_APPLICATION(5, Duration.ofHours(1));
 
     private final int limit;
     private final Duration window;

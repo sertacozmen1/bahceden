@@ -1,5 +1,5 @@
 import type { Route } from "next";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { currentSession, type SessionState } from "@/features/account/api";
 
 type SignedIn = Extract<SessionState, { kind: "signed-in" }>;
@@ -21,6 +21,22 @@ export async function requireSignedIn(selfPath: Route): Promise<SignedIn> {
   }
   if (session.kind === "expired") {
     redirect(`/api/auth/refresh?next=${next}`);
+  }
+  return session;
+}
+
+type AccountRole = SignedIn["account"]["roles"][number];
+
+/**
+ * Rol isteyen sayfaların kapısı (add-seller-onboarding D7): önce oturum
+ * kapısı, sonra rol. Rolü olmayan kullanıcı "bulunamadı" görür; yönetim
+ * yüzeyinin varlığı açığa çıkmaz. Bu yalnızca deneyimdir: yetkilendirme
+ * otoritesi `api`'dir (AGENTS.md §12.1), rolsüz istek orada 403 alır.
+ */
+export async function requireRole(selfPath: Route, role: AccountRole): Promise<SignedIn> {
+  const session = await requireSignedIn(selfPath);
+  if (!session.account.roles.includes(role)) {
+    notFound();
   }
   return session;
 }

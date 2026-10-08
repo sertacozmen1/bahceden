@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import java.util.Base64;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
@@ -21,13 +22,32 @@ import org.springframework.validation.annotation.Validated;
  *                  Joker karakter kullanılmaz (AGENTS.md §11.6).
  * @param mailFrom  giden e-postaların gönderen adresi
  * @param jwt       erişim token'ı imza ayarları (ADR-008)
+ * @param storage   yüklenen dosyaların dizini ve sınırları (ADR-039)
  */
 @Validated
 @ConfigurationProperties(prefix = "bahceden")
 public record BahcedenProperties(
         @NotBlank String webOrigin,
         @NotBlank @Email String mailFrom,
-        @NotNull @Valid Jwt jwt) {
+        @NotNull @Valid Jwt jwt,
+        @NotNull @Valid Storage storage) {
+
+    /**
+     * Yüklenen dosyaların saklandığı dizin (ADR-039, add-seller-onboarding D6).
+     *
+     * <p>Dizin uygulama kökünün ve sınıf yolunun dışındadır; geliştirmede bir
+     * Docker volume'udur. Varlığı ve yazılabilirliği açılışta doğrulanır
+     * ({@code FileStorage}): yanlış yapılandırma ilk yüklemede değil açılışta
+     * görünür.
+     *
+     * @param dir              kök dizin; yalnızca ortamdan gelir
+     * @param maxDocumentBytes başvuru belgesinin üst sınırı (bayt). Multipart
+     *                         sınırı ({@code spring.servlet.multipart}) bununla
+     *                         uyumlu tutulur, böylece büyük istek belleğe
+     *                         alınmadan reddedilir.
+     */
+    public record Storage(@NotBlank String dir, @Positive long maxDocumentBytes) {
+    }
 
     /**
      * Erişim token'ı imza ayarları.

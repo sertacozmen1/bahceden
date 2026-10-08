@@ -126,13 +126,26 @@ nav:
     - "ADR-034 · Sıfırlama talebi ve hesap keşfi": adr/034-password-reset-request-reveals-nothing.md
     - "ADR-035 · Sıfırlama oturumları kapatır": adr/035-password-reset-signs-out-everywhere-no-auto-login.md
     - "ADR-036 · Sıfırlama e-postayı doğrular": adr/036-password-reset-marks-email-verified.md
+    - "ADR-037 · Satıcı başvurusu ve onayı": adr/037-seller-application-with-document-and-manual-approval.md
+    - "ADR-038 · İlan yayını ve admin kaldırma": adr/038-listings-publish-immediately-with-admin-takedown.md
+    - "ADR-039 · Dosya depolama": adr/039-uploads-on-local-volume-served-by-api.md
+    - "ADR-040 · Satıcı başvurusu ve geçmişi": adr/040-seller-application-is-the-seller-record.md
+    - "ADR-041 · Vitrin satıcı durumu süzgeci": adr/041-storefront-filters-seller-status-in-query.md
+    - "ADR-042 · Tek multipart başvuru": adr/042-seller-application-single-multipart-request.md
+    - "ADR-043 · Başvuruda e-posta doğrulaması": adr/043-seller-application-requires-verified-email.md
+    - "ADR-044 · Satıcı rolü ve onaylı satıcı kapısı": adr/044-seller-role-follows-status-with-query-gate.md
+    - "ADR-045 · Başvuru belgesi saklama ve sunum": adr/045-seller-documents-table-content-sniffing-protected-serving.md
+    - "ADR-046 · Admin yüzeyi": adr/046-admin-surface-in-web-first-admin-by-sql.md
   - Nasıl Yapılır (How-to):
     - Genel Bakış: how-to/index.md
     - Yerel Geliştirme Ortamı: how-to/yerel-gelistirme.md
     - Yeni API Ucu Ekleme: how-to/yeni-api-ucu-ekleme.md
     - Korunan API Ucu Ekleme: how-to/korunan-uc-ekleme.md
     - UI Bileşeni Ekleme: how-to/ui-bileseni-ekleme.md
-  - Ürün & Strateji: product/index.md
+    - Admin Yetkisi Verme: how-to/admin-yetkisi-verme.md
+  - Ürün & Strateji:
+    - Genel Bakış: product/index.md
+    - Satıcı Kaydı ve Onayı: product/satici-kaydi.md
   - Araştırma (Research): research/index.md
   - Eğitimler (Tutorials): tutorials/index.md
   - Açıklamalar (Explanation): explanation/index.md
@@ -140,6 +153,7 @@ nav:
     - Genel Bakış: features/index.md
     - Vitrin ve Arama: features/vitrin-ve-arama.md
     - Hesap ve Oturum: features/hesap-ve-oturum.md
+    - Satıcı Kaydı ve Onayı: features/satici-kaydi-ve-onayi.md
     - "Genel (feature dışı işler)": features/_genel.md
 
 copyright: Bahçeden Internal Documentation

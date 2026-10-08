@@ -10,7 +10,7 @@ import { apiGet } from "@/lib/apiClient";
  */
 
 export type ProductSummary = components["schemas"]["ProductSummary"];
-export type ProductPage = components["schemas"]["PageResponse"];
+export type ProductPage = components["schemas"]["PageResponseProductSummary"];
 
 /** Vitrinde yayınlanmış ürünlerin sayfası. */
 export async function fetchPublishedProducts(page: number, size: number): Promise<ProductPage> {

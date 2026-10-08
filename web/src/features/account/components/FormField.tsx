@@ -10,12 +10,14 @@ type FormFieldProps = {
   readonly id: string;
   readonly name: string;
   readonly label: string;
-  readonly type: "email" | "password" | "text";
+  readonly type: "email" | "password" | "text" | "tel";
   readonly autoComplete: string;
   readonly hint?: string;
   readonly error?: string;
   readonly inputMode?: "numeric";
   readonly maxLength?: number;
+  /** Düzeltip yeniden gönderilen formda önceki değer. */
+  readonly defaultValue?: string;
   readonly className?: string;
 };
 
@@ -29,6 +31,7 @@ export function FormField({
   error,
   inputMode,
   maxLength,
+  defaultValue,
   className,
 }: FormFieldProps) {
   const hintId = hint === undefined ? undefined : `${id}-ipucu`;
@@ -46,6 +49,7 @@ export function FormField({
         autoComplete={autoComplete}
         inputMode={inputMode}
         maxLength={maxLength}
+        defaultValue={defaultValue}
         required
         aria-invalid={error !== undefined}
         aria-describedby={describedBy}

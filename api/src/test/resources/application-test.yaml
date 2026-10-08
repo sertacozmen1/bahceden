@@ -31,6 +31,9 @@ bahceden:
   jwt:
     # Yalnızca testler için sabit anahtar; gerçek bir secret değildir.
     secret: YmFoY2VkZW4tdGVzdC1pbXphLWFuYWh0YXJpLXlhbG5pemNhLXRlc3RsZXItaWNpbg==
+  storage:
+    # Testler gerçek volume'a değil derleme dizinine yazar; `mvn clean` siler.
+    dir: target/test-uploads
 
 logging:
   level:

@@ -129,6 +129,9 @@ Tercih `bahceden_theme` çerezinde (bir yıl). Kök düzen onu sunucuda okur; il
 | `Separator` | Değişmedi |
 | `DropdownMenu` ve parçaları (Base UI Menu) | Yalnızca kullanılan parçalar alındı (kök, tetikleyici, içerik, grup başlığı, radyo grubu/öğesi); öğe yüksekliği 44/36px; içerik tetikleyici genişliğine kilitlenmez (`min-w-40`), varsayılan hizalama sağ |
 | `Skeleton` | `motion-reduce:animate-none`; köşe `rounded-lg` |
+| `RadioGroup`, `RadioGroupItem` (Base UI Radio) | Dokunma alanı `after:` ile genişletilir; seçenek satırı kullanan ekranda etiketle sarılır (en az 44px). Seçili satır `has-[[data-checked]]` ile vurgulanır |
+| `Textarea` | `Input` ile aynı ölçüler: mobilde 16px yazı, kart zemini; en az iki satır, içeriğe göre büyür |
+| `Dialog` ve parçaları (Base UI Dialog) | Köşedeki kapatma ikonu ve hazır "Close" düğmesi alınmadı (sabit İngilizce metin); vazgeç düğmesini ekran koyar. Arka plan `foreground/30`; hareket `motion-reduce:` ile durur; alt bilgi mobilde alt alta |
 
 ### Proje bileşenleri
 
@@ -138,13 +141,18 @@ Tercih `bahceden_theme` çerezinde (bir yıl). Kök düzen onu sunucuda okur; il
 | `BrandLogo` / `BrandMark` | `components/` | Satır içi SVG logo ve dar alan için yalnızca karo; renkler `logo-*` rollerinden, erişilebilir adı çağıran verir |
 | `LocaleMenu` | `components/` | Tek ikonlu tetikleyici + dil menüsü; seçenekler kendi dilinde, seçim çereze yazılır ve sayfa sunucuda yenilenir |
 | `ThemeMenu` | `components/` | Tek ikonlu tetikleyici + Açık / Koyu / Sistem menüsü; seçimi `data-theme`'ya ve çereze yazar |
-| `SessionNav` | `components/` | Oturum durumuna göre "Giriş yap / Kayıt ol" veya maskeli e-posta + çıkış |
+| `SessionNav` | `components/` | Oturum durumuna göre "Giriş yap / Kayıt ol" veya maskeli e-posta + çıkış; `ROLE_ADMIN`'de "Yönetim" bağlantısı |
+| `Pagination` | `components/` | Sayfalı listelerin önceki / sonraki gezintisi; diğer sorgu parametrelerini korur. Vitrin ve admin satıcı listesi paylaşır |
 | `StatusPanel` | `components/` | Tam sayfa hata ve bulunamadı kutusu: ikon (hatada `destructive` tonlu), başlık, tek cümle, tek eylem |
 | `AccountScreen` | `features/account/components/` | Hesap ekranlarının ortak tek sütun iskeleti |
 | `AccountSkeleton` | `features/account/components/` | Hesap sayfalarının yükleniyor iskeleti |
 | `FormField` | `features/account/components/` | Etiket + girdi + yardım + hata; `aria-describedby` bağları |
 | `FormMessage` | `features/account/components/` | Formun tek bildirim biçimi: hata (`alert`), başarı ve bilgi (`status`) |
 | `ProductList` | `features/catalog/components/` | Ürün kartı ızgarası ve boş durum; stok `Badge` ile |
+| `SellerStatusBadge` | `features/seller/components/` | Satıcı durumu rozeti: `PENDING` `info`, `APPROVED` `success`, `REJECTED` `destructive`, `SUSPENDED` `warning`; durum her zaman metinle de yazılır |
+| `SellerApplicationForm` | `features/seller/components/` | Başvuru ve yeniden gönderim formu; belge türü radyo grubu, dosya alanı, istemcide erken tür/boyut uyarısı |
+| `SellerRecordSummary`, `SellerCard` | `features/seller/components/` | Satıcının kendi kaydı ve "Hesabım"daki satıcılık bölümü |
+| `SellerDecisionActions` | `features/admin/components/` | Admin karar eylemleri: onay birincil ve büyük; ret ve askı yıkıcı, gerekçe isteyen diyalogla |
 
 ## 5. Dört durum
 
@@ -157,5 +165,6 @@ Tercih `bahceden_theme` çerezinde (bir yıl). Kök düzen onu sunucuda okur; il
 
 ## 6. Bilinçli olarak olmayanlar
 
-- **Ürün fotoğrafı** (KALANLAR B3): kart tipografiye ve fiyata yaslanır; yer tutucu veya stok görsel kullanılmaz.
+- **Ürün fotoğrafı:** depolama kararı alındı ([ADR-039](../adr/039-uploads-on-local-volume-served-by-api.md)) ama ilan change'i gelene kadar kart tipografiye ve fiyata yaslanır; yer tutucu veya stok görsel kullanılmaz.
+- **Dosya seçici metni:** dosya girdisinin içindeki "Dosya seç / Dosya seçilmedi" metni tarayıcının dilindedir, uygulamanın dilinde değil. Yerel denetim bilinçli olarak korunuyor; özel bir yükleme bileşeni ihtiyaç doğunca gelir.
 - **Hareket kütüphanesi:** hareket yalnızca CSS geçişi; `motion` paketi bütçede değil.

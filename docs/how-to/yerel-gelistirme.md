@@ -122,13 +122,23 @@ Betik ilk çalıştırmada `docs/.tools/.venv` altında bir Python sanal ortamı
 
 ### 7. Uygulamayı çalıştırma
 
-İlk dikey dilim yazıldığında bu bölüm şu komutlarla doldurulacaktır (`AGENTS.md` §7):
-
 ```bash
-docker compose up                 # db + api (8080) + web (3000) + mailpit (8025)
+docker compose up -d --build --wait   # db + api (8080) + web (3000) + mailpit (8025)
 ```
 
-Bugün bu komut çalışmaz: `docker-compose.yml` ve servisler henüz yok.
+- Vitrin: `http://localhost:3000`, e-postalar (mailpit): `http://localhost:8025`.
+- `api` dev profiliyle açılır ve geliştirme verisini yükler (`contextFilter:dev`). Dev hesaplarının hepsinin parolası `gelistirme-parolasi-1`; bu parola yalnızca yerel veritabanında geçerlidir:
+
+| Hesap | Ne için |
+|---|---|
+| `alici@ornek.test` | Olağan alıcı; e-postası doğrulanmamış |
+| `iki-adim@ornek.test` | İkinci faktör açık |
+| `admin@ornek.test` | `ROLE_ADMIN`: satıcı başvurularını karara bağlamak için (`/admin/sellers`) |
+| `uretici@ornek.test` | E-postası doğrulanmış, satıcı kaydı yok: başvuru akışını denemek için |
+
+- **Satıcı başvurusunu elle deneme:** `uretici@ornek.test` ile giriş yapın. **Hesabım → Satıcı olarak başvur** yolundan herhangi bir PDF, JPEG ya da PNG dosyası (en çok 10 MB) yükleyin. Sonra `admin@ornek.test` ile **Yönetim** ekranından karar verin. Seed başvuru içermez, çünkü belge dosyası Liquibase ile volume'a yazılamaz.
+- **Yüklenen dosyalar** `api` konteynerinde `/app/uploads`'a bağlı `uploads` volume'unda durur (`BAHCEDEN_STORAGE_DIR`; [ADR-039](../adr/039-uploads-on-local-volume-served-by-api.md)). Konteyner yeniden kurulduğunda kaybolmazlar. Sıfırlamak için `docker compose down -v` hem veritabanını hem dosyaları siler.
+- `api`'yi compose dışında (IDE'den) çalıştırıyorsanız `api/.env.example`'daki değişkenleri tanımlayın. `BAHCEDEN_STORAGE_DIR` yazılabilir bir dizini göstermeli; `./uploads` gitignore'dadır.
 
 ---
 
@@ -145,6 +155,9 @@ Bugün bu komut çalışmaz: `docker-compose.yml` ve servisler henüz yok.
 
 - **Hata:** Testcontainers testleri `Could not find a valid Docker environment` ile düşüyor
   **Çözüm:** Docker çalışıyor olmalı ([ADR-005](../adr/005-test-strategy.md)); Windows'ta WSL2 arka ucunun açık olduğundan emin olun.
+
+- **Hata:** `api` açılmıyor, log'da `Depolama dizini yazılabilir değil: bahceden.storage.dir`
+  **Çözüm:** `BAHCEDEN_STORAGE_DIR` var olmayan ya da uygulama kullanıcısının yazamadığı bir dizini gösteriyor. Compose'da değer `/app/uploads`'tır ve imaj dizini hazırlar; IDE'den çalıştırıyorsanız dizini oluşturun.
 
 - **Hata:** `pre-commit` hook'u hiç çalışmıyor
   **Çözüm:** `git config core.hooksPath .githooks` komutu klon başına bir kez çalıştırılmalıdır (adım 1).

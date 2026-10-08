@@ -1,5 +1,6 @@
 package com.bahceden.common.web;
 
+import java.util.List;
 import org.springframework.http.HttpStatus;
 
 /**
@@ -15,8 +16,19 @@ import org.springframework.http.HttpStatus;
  */
 public class ApiException extends RuntimeException {
 
+    /**
+     * Servis katmanında saptanan alan hatası (örneğin dosya türü): alan adı ve
+     * o alanın mesaj anahtarı. Metin, gövde üretilirken isteğin dilinde çözülür.
+     *
+     * @param field      hatalı alanın adı
+     * @param messageKey alan mesajının anahtarı
+     */
+    public record FieldErrorKey(String field, String messageKey) {
+    }
+
     private final ApiErrorCode code;
     private final String messageKey;
+    private final List<FieldErrorKey> fieldErrors;
 
     /**
      * @param code       sabit hata kodu; HTTP durumu buradan türetilir
@@ -24,9 +36,28 @@ public class ApiException extends RuntimeException {
      */
     public ApiException(ApiErrorCode code, String messageKey) {
         // Log'larda anahtar görünür; kullanıcı metni ve kişisel veri değil.
+        this(code, messageKey, List.of());
+    }
+
+    /**
+     * Bean Validation'ın göremediği, servis katmanında saptanan alan hataları
+     * için (dosya türü ve boyutu, telefon biçimi).
+     */
+    public ApiException(ApiErrorCode code, String messageKey, List<FieldErrorKey> fieldErrors) {
         super(messageKey);
         this.code = code;
         this.messageKey = messageKey;
+        this.fieldErrors = List.copyOf(fieldErrors);
+    }
+
+    /** Tek alanlı doğrulama hatası kısayolu: {@code VALIDATION_FAILED}. */
+    public static ApiException invalidField(String field, String fieldMessageKey) {
+        return new ApiException(ApiErrorCode.VALIDATION_FAILED, "error.validation",
+                List.of(new FieldErrorKey(field, fieldMessageKey)));
+    }
+
+    public List<FieldErrorKey> getFieldErrors() {
+        return fieldErrors;
     }
 
     public ApiErrorCode getCode() {

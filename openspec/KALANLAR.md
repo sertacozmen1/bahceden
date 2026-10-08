@@ -22,11 +22,11 @@
 **Kim karar verir:** Ürün sahibi + operasyon.
 **Durum:** UNDECIDED.
 
-### A3 · Satıcı onboarding ve doğrulama
-**Soru:** Üretici nasıl doğrulanır (vergi levhası, çiftçi kayıt belgesi, TC doğrulama)? Onayı kim verir (manuel admin onayı mı, otomatik mi)? Ürün ilanı yayına girmeden ön onaydan geçer mi?
-**Neden bloklayıcı:** `seller` ve `catalog` durum makineleri; yasal sorumluluk (mesafeli satış, gıda satışı mevzuatı).
+### A5 · Satıcı verisinin saklama süresi ve aydınlatma metni
+**Soru:** Satıcı başvurusunda toplanan belge (ÇKS belgesi veya vergi levhası) ve telefon ne kadar saklanır? Reddedilen ve yeniden gönderilen başvuruların eski belgeleri ne zaman silinir? Başvuru formunda KVKK aydınlatma metni ve açık rıza gerekiyor mu? ÇKS belgesi ve vergi levhası gıda satışı ve mesafeli satış için yeterli mi?
+**Neden bloklayıcı:** Belge silme / anonimleştirme işi ve başvuru formundaki onay kutusu buna bağlı. Bugün belgeler silinmiyor ve formda aydınlatma metni yok ([ADR-037](../docs/adr/037-seller-application-with-document-and-manual-approval.md) açık riski, [ADR-045](../docs/adr/045-seller-documents-table-content-sniffing-protected-serving.md)).
 **Kim karar verir:** Ürün sahibi + hukuk.
-**Durum:** UNDECIDED.
+**Durum:** UNDECIDED. `add-seller-onboarding` change'i bu madde açıkken uygulandı; çıkan karar ayrı ve küçük bir dilim olur.
 
 ### A4 · MVP kapsam sınırları
 **Soru:** Teslimat bölgesi sınırlı mı (tek il / bölge) yoksa Türkiye geneli mi? Mobil uygulama yol haritasında mı?
@@ -37,11 +37,6 @@
 ---
 
 ## B. Teknik Kararlar
-
-### B3 · Ürün fotoğrafı depolama
-**Soru:** Fotoğraflar nerede saklanır: yerel disk + volume mi, S3 uyumlu nesne depolama mı? Yeniden boyutlandırma sunucuda mı yapılır? CDN var mı?
-**Neden bloklayıcı:** `catalog` domaini ve K7 bağımlılık bütçesi (nesne depolama istemcisi yeni paket demektir).
-**Durum:** UNDECIDED.
 
 ### B4 · Bildirim kanalları
 **Soru:** Sipariş/kargo bildirimleri yalnızca e-posta mı, SMS de var mı? SMS sağlayıcısı hangisi? Satıcıya yeni sipariş bildirimi hangi kanaldan gider?
@@ -69,3 +64,5 @@ Bu bölüm boş kaldıkça iyidir: karara bağlanan madde buradan **silinir**, A
 | 2026-10-06 | Satıcı veri izolasyonu | [ADR-007](../docs/adr/007-query-level-ownership-scoping.md) |
 | 2026-10-06 | **B1** Kimlik doğrulama modeli: JWT erişim + opak/iptal edilebilir yenileme token'ı, tek hesap tablosu + roller, herkes için zorunlu e-posta doğrulaması, sosyal giriş kapsam dışı | [ADR-008](../docs/adr/008-jwt-auth-with-opaque-refresh.md) |
 | 2026-10-06 | **B2** Sözleşme kaynağı: Spring kodundan üretilir; `openapi.yaml` üretilmiş ama commit'lenen çıktı, tazeliği CI'da zorunlu | [ADR-009](../docs/adr/009-contract-generated-from-spring.md) |
+| 2026-10-08 | **A3** Satıcı onboarding: mevcut hesaptan başvuru, beyan (ad, şehir, telefon) + tek belge (ÇKS veya vergi levhası), manuel admin onayı; ilan ön onaysız yayına girer, admin gerekçeyle kaldırır. Belgenin yasal yeterliliği hukuk teyidi bekliyor (açık risk) | [ADR-037](../docs/adr/037-seller-application-with-document-and-manual-approval.md), [ADR-038](../docs/adr/038-listings-publish-immediately-with-admin-takedown.md) |
+| 2026-10-08 | **B3** Dosya depolama: Docker volume'da yerel disk, `api` sunar, ImageIO ile yeniden boyutlandırma ve EXIF temizliği; belgeler yalnızca yetkili uçtan; CDN yok | [ADR-039](../docs/adr/039-uploads-on-local-volume-served-by-api.md) |

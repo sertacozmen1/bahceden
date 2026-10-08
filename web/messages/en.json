@@ -117,6 +117,106 @@
       "formHasErrors": "Please fix the highlighted fields."
     }
   },
+  "seller": {
+    "card": {
+      "title": "Selling",
+      "inviteBody": "Apply as a producer to sell what you grow without middlemen.",
+      "inviteAction": "Apply as a seller",
+      "statusAction": "Application details"
+    },
+    "application": {
+      "title": "Seller application",
+      "intro": "To sell your produce on Bahçeden, send your producer details and one document. An administrator reviews your application and we email you the decision.",
+      "submit": "Send application",
+      "submitting": "Sending…",
+      "resubmit": "Correct and resend",
+      "fields": {
+        "displayName": "Producer name",
+        "displayNameHint": "This name appears next to your products in the storefront.",
+        "city": "City",
+        "phone": "Phone",
+        "phoneHint": "Only administrators see it, to contact you about your application.",
+        "documentType": "Document type",
+        "document": "Document",
+        "documentHint": "PDF, JPEG or PNG; at most 10 MB. Only administrators see the document."
+      },
+      "documentType": "{type, select, CKS_CERTIFICATE {Farmer registration (ÇKS) certificate} TAX_CERTIFICATE {Tax certificate} other {Document}}",
+      "documentTypeHint": "{type, select, CKS_CERTIFICATE {Issued by the Farmer Registration System} TAX_CERTIFICATE {Issued by the tax office} other {Document}}",
+      "errors": {
+        "documentTypeRequired": "Choose a document type.",
+        "documentRequired": "Choose a document file.",
+        "documentType": "The document must be a PDF, JPEG or PNG file.",
+        "documentTooLarge": "The document can be at most 10 MB."
+      },
+      "verifyFirst": {
+        "title": "Verify your email first",
+        "body": "We will email you the result of your application. Please verify your email address before applying."
+      },
+      "status": {
+        "label": "{status, select, PENDING {Under review} APPROVED {Approved} REJECTED {Rejected} SUSPENDED {Suspended} other {Unknown}}",
+        "pendingTitle": "Your application is under review",
+        "pendingBody": "An administrator is reviewing your details and document. We will email you the decision.",
+        "approvedTitle": "Your application was approved",
+        "approvedBody": "Your producer record was approved and the seller role was added to your account.",
+        "rejectedTitle": "Your application was rejected",
+        "rejectedBody": "You can correct your details based on the reason and resend them with a new document.",
+        "suspendedTitle": "Your seller record is suspended",
+        "suspendedBody": "While suspended, your products are not shown in the storefront.",
+        "reason": "Reason",
+        "viewDocument": "Open the document I sent",
+        "statusLabel": "Status"
+      }
+    }
+  },
+  "admin": {
+    "nav": "Admin",
+    "sellers": {
+      "title": "Seller applications",
+      "intro": "Review applications and decide on them. Applicants are notified of decisions by email.",
+      "tabsLabel": "Filter by status",
+      "tab": "{status, select, PENDING {Pending} APPROVED {Approved} REJECTED {Rejected} SUSPENDED {Suspended} other {Other}}",
+      "emptyTitle": "No records in this state",
+      "emptyBody": "You can check another tab or wait for new applications.",
+      "appliedAt": "Applied: {date}",
+      "loading": "Loading seller records",
+      "backToList": "Back to the list",
+      "detail": {
+        "accountEmail": "Account email",
+        "phone": "Phone",
+        "city": "City",
+        "documentType": "Document type",
+        "status": "Status",
+        "reason": "Reason",
+        "appliedAt": "Application date",
+        "openDocument": "Open the document in a new tab",
+        "noDocument": "This record has no document.",
+        "none": "None",
+        "historyTitle": "History",
+        "historyItem": "{to, select, PENDING {Put under review} APPROVED {Approved} REJECTED {Rejected} SUSPENDED {Suspended} other {Changed}}",
+        "historyBy": "{email} · {date}",
+        "actionsTitle": "Decision"
+      },
+      "actions": {
+        "approve": "Approve",
+        "approving": "Approving…",
+        "reject": "Reject",
+        "suspend": "Suspend",
+        "reinstate": "Reinstate",
+        "reinstating": "Reinstating…",
+        "rejectTitle": "Reject the application",
+        "suspendTitle": "Suspend the seller",
+        "rejectBody": "The applicant will see the reason and receive it by email; they can correct and resend.",
+        "suspendBody": "The seller role is removed and their products leave the storefront. The reason is shown to the seller and sent by email.",
+        "reason": "Reason",
+        "reasonHint": "Between 10 and 500 characters. Shown to the seller as written.",
+        "reasonRequired": "The reason must be at least 10 characters.",
+        "cancel": "Cancel",
+        "confirmReject": "Reject",
+        "confirmSuspend": "Suspend",
+        "sending": "Saving…"
+      }
+    }
+  },
   "footer": {
     "copyright": "Bahçeden"
   },

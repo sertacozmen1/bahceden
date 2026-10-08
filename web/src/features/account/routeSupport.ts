@@ -20,29 +20,65 @@ export async function handleBffMutation(
   request: Request,
   action: (body: Record<string, unknown>) => Promise<Response>,
 ): Promise<Response> {
+  return runBffAction(request, async () => {
+    const body = await readJsonObject(request);
+    return body === undefined ? INVALID_BODY : action(body);
+  });
+}
+
+/**
+ * Dosya yüklemeli (`multipart/form-data`) BFF isteği: aynı köken denetimi ve
+ * hata iletimi, gövde JSON yerine `FormData` olarak okunur ve `api`'ye olduğu
+ * gibi iletilir (add-seller-onboarding D3).
+ */
+export async function handleBffFormMutation(
+  request: Request,
+  action: (form: FormData) => Promise<Response>,
+): Promise<Response> {
+  return runBffAction(request, async () => {
+    let form: FormData;
+    try {
+      form = await request.formData();
+    } catch {
+      return INVALID_BODY;
+    }
+    return action(form);
+  });
+}
+
+/** Adımın "gövde okunamadı" sonucu: metni dil bilen ortak adım üretir. */
+const INVALID_BODY = Symbol("invalid-body");
+
+async function runBffAction(
+  request: Request,
+  step: () => Promise<Response | typeof INVALID_BODY>,
+): Promise<Response> {
   // BFF'in kendi ürettiği hatalar da sayfanın dilinde (ADR-030); `api` hataları zaten o dilde gelir.
   const t = await getTranslations();
   if (!isSameOriginRequest(request)) {
     return errorResponse(HTTP_FORBIDDEN, bffErrorCodes.crossSite, t("account.errors.crossSite"));
   }
 
-  const body = await readJsonObject(request);
-  if (body === undefined) {
-    return errorResponse(HTTP_BAD_REQUEST, bffErrorCodes.invalidBody, t("account.errors.invalidRequest"));
-  }
-
   try {
-    return await action(body);
+    const result = await step();
+    return result === INVALID_BODY
+      ? errorResponse(HTTP_BAD_REQUEST, bffErrorCodes.invalidBody, t("account.errors.invalidRequest"))
+      : result;
   } catch (error) {
     if (error instanceof ApiRequestError) {
-      return Response.json(
-        { code: error.code, message: error.message, fieldErrors: error.fieldErrors },
-        { status: error.status },
-      );
+      return apiErrorResponse(error);
     }
     // Ayrıntı yalnızca sunucu tarafında; tarayıcıya genel mesaj (K10).
     return errorResponse(HTTP_BAD_GATEWAY, bffErrorCodes.unavailable, t("account.errors.unavailable"));
   }
+}
+
+/** `api` hatasını tarayıcıya aynı ortak gövdeyle ve aynı durum koduyla iletir. */
+export function apiErrorResponse(error: ApiRequestError): Response {
+  return Response.json(
+    { code: error.code, message: error.message, fieldErrors: error.fieldErrors },
+    { status: error.status },
+  );
 }
 
 /** Gövdedeki bir alanı metin olarak okur; yoksa boş metin (doğrulama otoritesi `api`). */

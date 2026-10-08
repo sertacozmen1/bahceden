@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
 
 /**
  * Tüm hataları {@link ApiError} gövdesine çeviren tek nokta (AGENTS.md §11.5).
@@ -30,6 +32,12 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 public class GlobalExceptionHandler {
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    /**
+     * Multipart sınır aşımı hangi dosya alanında olduğunu söylemez; bugün tek
+     * yükleme alanı başvuru belgesidir.
+     */
+    private static final String UPLOAD_FIELD = "document";
 
     private final Messages messages;
 
@@ -72,8 +80,31 @@ public class GlobalExceptionHandler {
     /** Modellenmiş iş hatası: kod ve durum {@link ApiErrorCode} içinde sabittir. */
     @ExceptionHandler(ApiException.class)
     public ResponseEntity<ApiError> handleApiException(ApiException exception, Locale locale) {
+        var fieldErrors = exception.getFieldErrors().stream()
+                .map(error -> new ApiError.FieldError(error.field(), text(error.messageKey(), locale)))
+                .toList();
         return ResponseEntity.status(exception.getStatus())
-                .body(ApiError.of(exception.getCode(), text(exception.getMessageKey(), locale)));
+                .body(ApiError.of(exception.getCode(), text(exception.getMessageKey(), locale), fieldErrors));
+    }
+
+    /**
+     * Yüklenen dosya multipart sınırını aştı: istek belleğe alınmadan reddedilir
+     * (add-seller-onboarding D6). Hata, sınırı tutan alana değil dosya alanına
+     * bağlanır; istemci onu formdaki dosya alanında gösterir.
+     */
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiError> handleUploadTooLarge(MaxUploadSizeExceededException exception, Locale locale) {
+        var fieldError = new ApiError.FieldError(UPLOAD_FIELD, text("validation.document.tooLarge", locale));
+        return ResponseEntity.badRequest()
+                .body(ApiError.of(ApiErrorCode.VALIDATION_FAILED, text("error.validation", locale), List.of(fieldError)));
+    }
+
+    /** Multipart beklenen uca multipart olmayan veya bozuk gövde geldi. */
+    @ExceptionHandler(MultipartException.class)
+    public ResponseEntity<ApiError> handleMultipart(MultipartException exception, Locale locale) {
+        log.warn("Multipart istek çözülemedi: {}", exception.getClass().getSimpleName());
+        return ResponseEntity.badRequest()
+                .body(ApiError.of(ApiErrorCode.VALIDATION_FAILED, text("error.validation", locale)));
     }
 
     /**

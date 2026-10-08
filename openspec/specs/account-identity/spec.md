@@ -1,7 +1,7 @@
 # account-identity Specification
 
 ## Purpose
-Hesap açma, e-posta doğrulama (girişi engellemeyen), oturum açma, hesap bazlı anahtarla e-posta ikinci faktörü, oturum yenileme ve sonlandırma, e-postayla parola sıfırlama ile oturum sahibinin kimliğini tanımlar. Token'lar tarayıcı JavaScript'ine verilmez. Oturum açıkken parola değiştirme, satıcı olma ve hesap silme bu capability'nin bugünkü kapsamı dışındadır.
+Hesap açma, e-posta doğrulama (girişi engellemeyen), oturum açma, hesap bazlı anahtarla e-posta ikinci faktörü, oturum yenileme ve sonlandırma, e-postayla parola sıfırlama ile oturum sahibinin kimliğini tanımlar. Token'lar tarayıcı JavaScript'ine verilmez. Oturum açıkken parola değiştirme ve hesap silme bu capability'nin bugünkü kapsamı dışındadır; satıcı olma `seller-onboarding` capability'sindedir.
 
 ## Requirements
 

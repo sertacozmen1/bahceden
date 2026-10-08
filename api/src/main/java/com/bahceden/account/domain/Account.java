@@ -140,6 +140,24 @@ public class Account {
         }
     }
 
+    /**
+     * Rol ekler; zaten varsa değişmez. Satıcı onayı ve askıdan çıkarma
+     * {@link AccountRole#ROLE_SELLER} ekler (add-seller-onboarding D5). Rol
+     * erişim token'ına bir sonraki yenilemede girer.
+     */
+    public void grantRole(AccountRole role, Instant now) {
+        if (roles.add(role)) {
+            updatedAt = now;
+        }
+    }
+
+    /** Rol kaldırır; yoksa değişmez. Satıcı askısı {@link AccountRole#ROLE_SELLER} kaldırır (D5). */
+    public void revokeRole(AccountRole role, Instant now) {
+        if (roles.remove(role)) {
+            updatedAt = now;
+        }
+    }
+
     public SupportedLocale getLocale() {
         return SupportedLocale.fromTag(locale);
     }

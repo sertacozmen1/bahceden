@@ -1,6 +1,6 @@
 # Domain Modeli ve Veritabanı Şeması
 
-**Son doğrulama:** 2026-10-07 · Kaynak: `api/src/main/resources/db/changelog/`
+**Son doğrulama:** 2026-10-08 · Kaynak: `api/src/main/resources/db/changelog/`
 
 > Bu sayfa şemanın **mevcut halini** anlatır, hedefini değil. Şema yalnızca Liquibase ile değişir ([ADR-016](../adr/016-liquibase-for-schema-migrations.md)); changeset değiştiğinde bu sayfa aynı commit'te güncellenir (`AGENTS.md` K4).
 
@@ -8,19 +8,55 @@
 
 ## Mevcut durum
 
-Şemada bugün iki bölge vardır: **katalog** (üretici ve ürün) ve **hesap** (hesap, roller, tek kullanımlık token'lar, oturum zinciri, ikinci faktör girişimleri). Sipariş, ödeme ve gönderim tabloları henüz yok ([güncel durum](00-current-state.md)).
+Şemada bugün üç bölge vardır:
 
-İki bölge arasında **bilinçli olarak ilişki yoktur**: `products.seller_id` → `sellers`, `accounts` ile bağlı değildir. Satıcı ile hesabın nasıl bağlanacağı satıcı onboarding kararına (`openspec/KALANLAR.md` A3, [ADR-013](../adr/013-minimal-seller-table-ahead-of-onboarding.md)) bağlıdır; karar verilmeden bir yabancı anahtar kurmak o kararı önceden almak olurdu.
+- **katalog:** ürün;
+- **satıcı:** üretici kaydı, başvuru belgeleri, durum geçmişi;
+- **hesap:** hesap, roller, tek kullanımlık token'lar, oturum zinciri, ikinci faktör girişimleri.
+
+Sipariş, ödeme ve gönderim tabloları henüz yok ([güncel durum](00-current-state.md)).
+
+Satıcı ile hesap `sellers.account_id` üzerinden bağlıdır ([ADR-037](../adr/037-seller-application-with-document-and-manual-approval.md), [ADR-040](../adr/040-seller-application-is-the-seller-record.md)). Bu kolon NULL olabilir, çünkü dev seed'inden gelen satıcıların hesabı yok. Tekil kısıt, bir hesabın en fazla bir satıcı kaydı olmasını sağlar.
 
 ```mermaid
 erDiagram
     SELLERS ||--o{ PRODUCTS : "üretir"
+    ACCOUNTS |o--o| SELLERS : "başvurur"
+    SELLERS ||--o{ SELLER_DOCUMENTS : "belge gönderir"
+    SELLERS ||--o{ SELLER_STATUS_CHANGES : "geçmiş"
 
     SELLERS {
         bigserial id PK
+        bigint account_id FK,UK "seed satıcılarında NULL"
         varchar(120) slug UK "URL tanımlayıcısı"
         varchar(160) display_name "vitrinde gösterilen ad"
         varchar(80) city "üretim ili"
+        varchar(20) status "PENDING | APPROVED | REJECTED | SUSPENDED"
+        varchar(16) phone "E.164; yalnızca admin görür"
+        varchar(500) status_reason "son ret veya askı gerekçesi"
+        timestamptz status_changed_at
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    SELLER_DOCUMENTS {
+        bigserial id PK
+        bigint seller_id FK
+        varchar(30) document_type "CKS_CERTIFICATE | TAX_CERTIFICATE"
+        varchar(64) storage_key UK "sunucunun ürettiği dosya adı"
+        varchar(40) content_type "içerikten tespit edilen tür"
+        bigint size_bytes
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    SELLER_STATUS_CHANGES {
+        bigserial id PK
+        bigint seller_id FK
+        varchar(20) from_status "başvuruda NULL"
+        varchar(20) to_status
+        varchar(500) reason
+        bigint actor_account_id FK
         timestamptz created_at
         timestamptz updated_at
     }
@@ -46,18 +82,30 @@ erDiagram
 
 ## `sellers`
 
-Ürünü üreten ve gönderen üretici.
+Ürünü üreten ve gönderen üretici. Satıcı başvurusu bu satırın kendisidir: kayıt `PENDING` açılır ([ADR-040](../adr/040-seller-application-is-the-seller-record.md)). `001` changeset'i tabloyu minimum açtı ([ADR-013](../adr/013-minimal-seller-table-ahead-of-onboarding.md)); `007` changeset'i genişletti.
 
 | Kolon | Tip | Not |
 |---|---|---|
 | `id` | `bigserial` | Birincil anahtar |
-| `slug` | `varchar(120)` | Tekil; URL'de kullanılır |
+| `account_id` | `bigint` | `accounts(id)` yabancı anahtarı; tekil; seed satıcılarında NULL |
+| `slug` | `varchar(120)` | Tekil; URL'de kullanılır; başvuruda üretici adından üretilir ve değişmez |
 | `display_name` | `varchar(160)` | Vitrinde gösterilen ad |
 | `city` | `varchar(80)` | Ürünün hangi yöreden geldiğini göstermek için |
+| `status` | `varchar(20)` | `PENDING`, `APPROVED`, `REJECTED`, `SUSPENDED`; **varsayılanı yok** ([ADR-041](../adr/041-storefront-filters-seller-status-in-query.md)) |
+| `phone` | `varchar(16)` | E.164 (`+90…`); kişisel veri, yalnızca admin ve sahibi görür (K10) |
+| `status_reason` | `varchar(500)` | Son ret veya askı gerekçesi; satıcıya gösterilir |
+| `status_changed_at` | `timestamptz` | Durumun son değiştiği an |
 | `created_at`, `updated_at` | `timestamptz` | UTC |
 
-> [!IMPORTANT]
-> Bu tablo **bilinçli olarak minimumdur** ([ADR-013](../adr/013-minimal-seller-table-ahead-of-onboarding.md)). Hesap ilişkisi, vergi/belge alanları, onay durumu ve iletişim bilgisi **yoktur**; satıcı onboarding kararı (`openspec/KALANLAR.md` A3) verildiğinde `V2` migration'ı ile gelecektir. Bugün üretici kaydı yalnızca geliştirme seed'i ile oluşur.
+Vitrin yalnızca `status = 'APPROVED'` satıcının ürünlerini gösterir ([ADR-038](../adr/038-listings-publish-immediately-with-admin-takedown.md), [ADR-041](../adr/041-storefront-filters-seller-status-in-query.md)). Admin listesi `sellers_status_idx (status, created_at desc, id desc)` indeksini kullanır.
+
+## `seller_documents`
+
+Başvuru belgelerinin meta verisi ([ADR-045](../adr/045-seller-documents-table-content-sniffing-protected-serving.md)). Dosyanın kendisi veritabanında değil, `BAHCEDEN_STORAGE_DIR` dizinindedir ([ADR-039](../adr/039-uploads-on-local-volume-served-by-api.md)). Her başvuru ve yeniden gönderim yeni bir satır yazar; güncel belge en son satırdır. Önceki belgeler silinmez. Kullanıcının verdiği dosya adı hiçbir yerde tutulmaz.
+
+## `seller_status_changes`
+
+Satıcı kaydının durum geçişleri: kim, ne zaman, hangi durumdan hangisine, neden ([ADR-037](../adr/037-seller-application-with-document-and-manual-approval.md) §7). **Yalnızca eklenir.** Uygulama kodunda güncelleme ve silme yolu yoktur. `actor_account_id`, başvuruda ve yeniden gönderimde başvuran hesaptır; kararlarda admin hesabıdır.
 
 ---
 
@@ -210,7 +258,7 @@ Opak yenileme token'ı ([ADR-018](../adr/018-refresh-token-rotation-with-family-
 
 ### Silme davranışı
 
-Hesaba bağlı tüm tablolarda yabancı anahtar `on delete cascade`'dir: hesap silinirse roller, token'lar ve girişimler de gider. Hesap silme akışı bugün yoktur.
+Hesaba bağlı token ve girişim tablolarında yabancı anahtar `on delete cascade`'dir: hesap silinirse roller, token'lar ve girişimler de gider. `sellers.account_id` ve `seller_status_changes.actor_account_id` ise **kısıtlıdır** (cascade yok): satıcı kaydı ve geçmişi yasal kayıttır, hesapla birlikte sessizce silinmez. Hesap silme akışı bugün yoktur.
 
 ---
 
@@ -218,7 +266,9 @@ Hesaba bağlı tüm tablolarda yabancı anahtar `on delete cascade`'dir: hesap s
 
 | Java tipi | Tablo | Not |
 |---|---|---|
-| `com.bahceden.catalog.domain.Seller` | `sellers` | Yalnızca okuma; bu dilimde yazma akışı yok |
+| `com.bahceden.seller.domain.Seller` | `sellers` | Başvuruyla yazılır; durum yalnızca `SellerTransition` üzerinden değişir. Hesap ilişki değil kimlik (`accountId`) olarak tutulur |
+| `com.bahceden.seller.domain.SellerDocument` | `seller_documents` | Yalnızca ekleme |
+| `com.bahceden.seller.domain.SellerStatusChange` | `seller_status_changes` | Yalnızca ekleme; repository çıplak `Repository` (silme yok) |
 | `com.bahceden.catalog.domain.Product` | `products` | `seller` ilişkisi `LAZY`; liste sorgusu `join fetch` ile çeker ([ADR-011](../adr/011-fetch-join-with-query-count-test.md)) |
 | `com.bahceden.common.money.Money` | `products.price_amount`, `products.price_currency` | `@Embeddable`; ayrı tablo yok |
 | `com.bahceden.account.domain.Account` | `accounts` + `account_roles` | Roller `@ElementCollection` (`EAGER`): yetkilendirme her zaman rollere ihtiyaç duyar |

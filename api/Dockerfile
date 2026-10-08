@@ -24,6 +24,10 @@ WORKDIR /app
 
 # Uygulama root olmayan kullanıcıyla çalışır.
 RUN addgroup -S bahceden && adduser -S -G bahceden bahceden
+# Yüklenen dosyaların dizini (ADR-039). Boş bir adlandırılmış volume ilk
+# bağlandığında imajdaki dizinin sahipliğini devralır; uygulama kullanıcısı
+# yazabilsin diye dizin burada açılır.
+RUN mkdir -p /app/uploads && chown bahceden:bahceden /app/uploads
 COPY --from=build /build/target/*.jar app.jar
 USER bahceden
 

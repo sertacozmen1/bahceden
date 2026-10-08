@@ -18,6 +18,7 @@ import com.bahceden.common.ClockConfig;
 import com.bahceden.common.i18n.LocaleConfig;
 import com.bahceden.common.i18n.Messages;
 import com.bahceden.common.SecurityConfig;
+import com.bahceden.common.security.ApiAccessDeniedHandler;
 import com.bahceden.common.security.ApiAuthenticationEntryPoint;
 import com.bahceden.common.security.JwtConfig;
 import java.util.List;
@@ -46,11 +47,12 @@ import org.springframework.test.web.servlet.MockMvc;
 @WebMvcTest(ProductController.class)
 // Gerçek SecurityConfig yüklenir: ucun kimlik doğrulaması olmadan erişilebildiği
 // (permitAll) de bu testin doğruladığı sözleşmenin parçasıdır.
-// SecurityConfig JWT doğrulayıcısına (JwtConfig) ve 401 gövdesini yazan giriş
-// noktasına bağımlıdır; hata metinleri mesaj kaynağından ve istek dilinden
+// SecurityConfig JWT doğrulayıcısına (JwtConfig), 401 gövdesini yazan giriş
+// noktasına ve 403 gövdesini yazan işleyiciye bağımlıdır; hata metinleri mesaj kaynağından ve istek dilinden
 // çözülür (Messages, LocaleConfig; ADR-031). Dilim testi bunları kendisi yüklemez.
 @Import({GlobalExceptionHandler.class, SecurityConfig.class, JwtConfig.class,
-        ApiAuthenticationEntryPoint.class, ClockConfig.class, Messages.class, LocaleConfig.class})
+        ApiAuthenticationEntryPoint.class, ApiAccessDeniedHandler.class, ClockConfig.class, Messages.class,
+        LocaleConfig.class})
 @TestPropertySource(properties = {
         "bahceden.web-origin=http://localhost:3000",
         "bahceden.mail-from=bahceden@ornek.test",
