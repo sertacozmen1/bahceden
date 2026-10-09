@@ -11,7 +11,7 @@
 
 **Beş dikey dilim çalışıyor:** `docker compose up` ile vitrin, hesap, satıcı başvurusu, ürün ilanları ve sepet-sipariş uçtan uca ayakta (PostgreSQL + Spring Boot `api` + Next.js `web` + `mailpit`).
 
-- **Hesap:** kullanıcı kayıt olur, e-postasını doğrular (doğrulama girişi engellemez), giriş yapar; oturumu arka planda yenilenir; çıkış yapar. İkinci faktörü veritabanından açılmış hesap e-postayla kod girer. Parolasını unutan kullanıcı e-postayla sıfırlar.
+- **Hesap:** kullanıcı kayıt olur, e-postasını doğrular (doğrulama girişi engellemez), giriş yapar; oturumu arka planda yenilenir ve tarayıcı kapatılıp açılınca her sayfada sessizce geri gelir (ADR-069, ADR-070); çıkış yapar. İkinci faktörü veritabanından açılmış hesap e-postayla kod girer. Parolasını unutan kullanıcı e-postayla sıfırlar.
 - **Satıcı başvurusu:** e-postası doğrulanmış kullanıcı belgesiyle satıcı olarak başvurur. Admin başvuruyu onaylar, reddeder, askıya alır veya askıdan çıkarır. Onaylı satıcı `ROLE_SELLER` alır ve vitrin yalnızca onaylı satıcıların ürünlerini gösterir.
 - **Ürün ilanları:** onaylı satıcı ilan açar, 1–5 fotoğraf yükler (sunucuda döndürülür, küçültülür, konum bilgisi atılır), yayına alır; vitrin kartında kapak, `/products/[slug]` sayfasında galeri görünür. Admin uygunsuz ilanı gerekçeyle kaldırır ve yeniden açar.
 - **Sepet ve sipariş:** onaylı satıcı ödeme bilgilerini girer; alıcı sepete ekler, teslimat adresini (İstanbul, İzmir, Ankara, Manisa) seçer ve sahte ödeme sağlayıcısıyla öder. Sipariş üreticilere bölünür; kargo ücreti üretici başına 99 TL (1000 TL ve üzeri ücretsiz), komisyon %5 + 3 TL. Stok ödeme anında düşer; kargodan önce alıcı veya satıcı iptal eder ve tam iade yapılır. Kargo gönderisi henüz yok.

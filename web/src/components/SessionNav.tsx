@@ -3,6 +3,7 @@ import { CircleUserRound, ShieldCheck, ShoppingBasket, Store } from "lucide-reac
 import { getTranslations } from "next-intl/server";
 import { buttonVariants } from "@/components/ui/button";
 import { currentSession, type SessionState } from "@/features/account/api";
+import { SessionAutoRefresh } from "@/features/account/components/SessionAutoRefresh";
 import { SignOutButton } from "@/features/account/components/SignOutButton";
 import { maskEmail } from "@/features/account/maskEmail";
 import { getCart } from "@/features/cart/api";
@@ -75,8 +76,10 @@ export async function SessionNav() {
 
   if (session === null || session.kind === "expired") {
     // Oturum var ama yenilenmeli ya da durum okunamadı: "Hesabım" yenilemeyi tetikler.
+    // Süresi dolmuşsa oturum sessizce yenilenir ve sayfa açık oturumla döner (ADR-070).
     return (
       <nav className={navClassName} aria-label={t("account.nav.myAccount")}>
+        {session?.kind === "expired" && <SessionAutoRefresh />}
         <Link className={buttonVariants({ variant: "outline" })} href="/account">
           <CircleUserRound aria-hidden />
           {t("account.nav.myAccount")}

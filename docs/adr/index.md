@@ -37,12 +37,12 @@ Architecture Decision Records, projedeki önemli mimari kararları ve bu kararla
 | 015 | [Sözleşme tazeliği testle zorunlu; dosya testten üretilir](015-contract-freshness-enforced-by-test.md) | Accepted | 2026-10-06 |
 | 016 | [Şema değişiklikleri Liquibase ile yönetilir](016-liquibase-for-schema-migrations.md) | Accepted | 2026-10-06 |
 | 017 | [E-posta doğrulaması girişi engellemez; 2FA hesap anahtarıyla açılır](017-email-verification-non-blocking-and-2fa-switch.md) | Accepted | 2026-10-06 |
-| 018 | [Yenileme token'ı: rotasyon ve tekrar kullanımda aile iptali](018-refresh-token-rotation-with-family-revocation.md) | Accepted | 2026-10-07 |
+| 018 | [Yenileme token'ı: rotasyon ve tekrar kullanımda aile iptali](018-refresh-token-rotation-with-family-revocation.md) | Accepted · tolerans penceresi [069](069-refresh-token-reuse-grace-window.md) ile değişti | 2026-10-07 |
 | 019 | [E-posta SMTP üzerinden, sağlayıcıdan bağımsız, akışı kesmeden](019-email-via-smtp-provider-agnostic.md) | Accepted | 2026-10-07 |
 | 020 | [Tek kullanımlık token'lar: 256 bit, SHA-256 hash'li, süreli](020-verification-tokens-sha256-single-use.md) | Accepted | 2026-10-07 |
 | 021 | [Kimlik yanıtları hesabın varlığını açığa çıkarmaz](021-identity-responses-do-not-reveal-accounts.md) | Accepted | 2026-10-07 |
 | 022 | [Kimlik uçlarında bellek içi sabit pencere hız sınırı](022-in-memory-fixed-window-rate-limiting.md) | Accepted | 2026-10-07 |
-| 023 | [`web` BFF: HttpOnly çerezler, başlık tabanlı CSRF, yönlendirmeyle yenileme](023-web-bff-cookies-and-header-csrf.md) | Accepted | 2026-10-07 |
+| 023 | [`web` BFF: HttpOnly çerezler, başlık tabanlı CSRF, yönlendirmeyle yenileme](023-web-bff-cookies-and-header-csrf.md) | Accepted · yenileme tetikleyicisi [070](070-silent-session-refresh-on-any-page.md) ile genişledi | 2026-10-07 |
 | 024 | [Yetkilendirme JWT iddialarıyla; `/accounts/me` taze okunur](024-roles-in-jwt-claims-fresh-me-endpoint.md) | Accepted | 2026-10-07 |
 | 025 | [İkinci faktör kodu hesaba bağlı; ikinci adım e-posta + kod](025-second-factor-code-bound-to-account.md) | Accepted | 2026-10-07 |
 | 026 | [Doğrulama bağlantısını yeniden gönderme oturum ister](026-verification-link-resend-requires-session.md) | Accepted | 2026-10-07 |
@@ -89,7 +89,10 @@ Architecture Decision Records, projedeki önemli mimari kararları ve bu kararla
 | 067 | [Kargodan önce iptal: alıcı her zaman, satıcı gerekçeyle; tam iade, stok geri eklenir](067-cancel-before-shipment-full-refund-restock.md) | Accepted | 2026-10-08 |
 | 068 | [`web`: sepet ve ödeme vitrinde, siparişler hesapta, satıcı ekranları panelde; sepet sayısı sunucudan](068-checkout-web-routes-server-cart-count.md) | Accepted | 2026-10-08 |
 
-**Sıradaki numara: 069.**
+| 069 | [Yenileme token'ı: 30 saniyelik tekrar kullanım toleransı](069-refresh-token-reuse-grace-window.md) | Accepted | 2026-10-09 |
+| 070 | [Oturum her sayfada sessizce yenilenir; sekmeler Web Locks ile sıraya girer](070-silent-session-refresh-on-any-page.md) | Accepted | 2026-10-09 |
+
+**Sıradaki numara: 071.**
 
 **Durum değerleri:** `Proposed` (öneri, henüz bağlayıcı değil) · `Accepted` (yürürlükte, bağlayıcı) · `Deprecated` (artık geçerli değil, yerine bir şey gelmedi) · `Superseded by [ADR-XXX]` (yerini başka bir karara bıraktı).
 
