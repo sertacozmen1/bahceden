@@ -90,10 +90,55 @@ class SessionRefreshTest {
     }
 
     @Test
-    @DisplayName("Kullanılmış token tekrar sunulursa ailenin tamamı iptal edilir")
+    @DisplayName("Tolerans penceresinde tekrar sunulan token aynı ailede yeni çift alır (ADR-069)")
+    void tolerans_penceresinde_tekrar_kullanim_kabul_edilir() throws Exception {
+        var first = signInAndGetToken();
+        var second = issuedTokens(postRefresh(first.refreshToken()).andExpect(status().isOk()));
+
+        clock.advance(SessionService.REUSE_GRACE.minusSeconds(1));
+        var third = issuedTokens(postRefresh(first.refreshToken()).andExpect(status().isOk()));
+
+        assertThat(third.refreshToken()).isNotEqualTo(second.refreshToken());
+        // İki sekme de oturumda kalır: ikisinin yeni token'ı da geçerlidir.
+        postRefresh(second.refreshToken()).andExpect(status().isOk());
+        postRefresh(third.refreshToken()).andExpect(status().isOk());
+        assertThat(jdbc.queryForObject("select count(distinct family_id) from refresh_tokens", Integer.class))
+                .isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("Tolerans penceresi kullanıldığı andan sayılır; pencere dışında aile iptal edilir")
+    void tolerans_penceresi_kullanim_anindan_sayilir() throws Exception {
+        var first = signInAndGetToken();
+        postRefresh(first.refreshToken()).andExpect(status().isOk());
+        clock.advance(SessionService.REUSE_GRACE.minusSeconds(1));
+        postRefresh(first.refreshToken()).andExpect(status().isOk());
+
+        // Pencerede yapılan tekrar kullanım pencereyi uzatmaz.
+        clock.advance(Duration.ofSeconds(1));
+        postRefresh(first.refreshToken())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value(ApiErrorCode.AUTH_TOKEN_INVALID.name()));
+        assertThat(jdbc.queryForObject("select count(*) from refresh_tokens where revoked_at is null", Integer.class))
+                .isZero();
+    }
+
+    @Test
+    @DisplayName("Çıkıştan sonra kullanılmış token tolerans penceresinde de reddedilir")
+    void cikis_sonrasi_tolerans_yok() throws Exception {
+        var first = signInAndGetToken();
+        var second = issuedTokens(postRefresh(first.refreshToken()).andExpect(status().isOk()));
+        postLogout(second.refreshToken()).andExpect(status().isNoContent());
+
+        postRefresh(first.refreshToken()).andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("Kullanılmış token pencere dışında tekrar sunulursa ailenin tamamı iptal edilir")
     void tekrar_kullanim_aileyi_iptal_eder() throws Exception {
         var first = signInAndGetToken();
         var second = issuedTokens(postRefresh(first.refreshToken()).andExpect(status().isOk()));
+        clock.advance(SessionService.REUSE_GRACE);
 
         postRefresh(first.refreshToken())
                 .andExpect(status().isBadRequest())
@@ -113,6 +158,7 @@ class SessionRefreshTest {
         var phone = signInAndGetToken();
         var laptop = signInAndGetToken();
         postRefresh(phone.refreshToken()).andExpect(status().isOk());
+        clock.advance(SessionService.REUSE_GRACE);
 
         postRefresh(phone.refreshToken()).andExpect(status().isBadRequest());
 

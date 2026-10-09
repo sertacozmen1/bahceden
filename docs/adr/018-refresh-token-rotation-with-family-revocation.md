@@ -1,7 +1,7 @@
 # [ADR-018] Yenileme token'ı: opak, hash'li, tek kullanımlık; tekrar kullanımda aile iptali
 
 **Tarih:** 2026-10-07
-**Durum:** Accepted
+**Durum:** Accepted · tolerans penceresi kararı [ADR-069](069-refresh-token-reuse-grace-window.md) ile değişti (2026-10-09)
 **Kaynak:** `add-account-and-session` design.md D1
 
 ---

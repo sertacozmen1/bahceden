@@ -6,6 +6,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -63,7 +64,7 @@ public class RefreshToken {
         return token;
     }
 
-    /** Kullanılmış token'ın tekrar sunulması sızıntı işaretidir (D1). */
+    /** Kullanılmış token'ın tolerans penceresi dışında tekrar sunulması sızıntı işaretidir (D1, ADR-069). */
     public boolean isUsed() {
         return usedAt != null;
     }
@@ -74,6 +75,14 @@ public class RefreshToken {
 
     public boolean isExpired(Instant now) {
         return !now.isBefore(expiresAt);
+    }
+
+    /**
+     * Token {@code grace} süresinden daha kısa bir süre önce mi kullanıldı?
+     * Tolerans penceresindeki tekrar kullanım sızıntı sayılmaz (ADR-069).
+     */
+    public boolean usedWithin(Duration grace, Instant now) {
+        return usedAt != null && now.isBefore(usedAt.plus(grace));
     }
 
     /** Rotasyon: bu token bir daha kabul edilmez, yerine aynı ailede yenisi üretilir. */

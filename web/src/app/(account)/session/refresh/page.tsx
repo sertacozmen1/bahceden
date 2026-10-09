@@ -17,7 +17,8 @@ export async function generateMetadata(): Promise<Metadata> {
  * Oturum yenileme ara sayfası (ADR-023). Erişim token'ı dolmuşken uygulama içi
  * bir bağlantıyla korunan sayfaya gidilince kapı buraya yönlendirir; sayfa
  * yenileme ucuna tam sayfa gezintisiyle geçer ve kullanıcı geldiği sayfaya
- * döner. JavaScript çalışmazsa bağlantı aynı işi yapar.
+ * döner. JavaScript çalışmazsa bağlantı aynı işi yapar. Başka bir sekme o anda
+ * yeniliyorsa bu sekme onu bekler ve doğrudan hedef sayfaya gider (ADR-070).
  */
 export default async function SessionRefreshPage({
   searchParams,
@@ -26,10 +27,11 @@ export default async function SessionRefreshPage({
 }) {
   const { next } = await searchParams;
   const t = await getTranslations();
-  const href = `${bffPaths.refresh}?next=${encodeURIComponent(safeReturnPath(next, "/account"))}`;
+  const returnPath = safeReturnPath(next, "/account");
+  const href = `${bffPaths.refresh}?next=${encodeURIComponent(returnPath)}`;
   return (
     <>
-      <SessionRefreshRedirect href={href} />
+      <SessionRefreshRedirect href={href} returnHref={returnPath} />
       <StatusPanel
         icon={RefreshCw}
         title={t("account.sessionRefresh.title")}

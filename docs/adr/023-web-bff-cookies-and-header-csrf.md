@@ -1,7 +1,7 @@
 # [ADR-023] `web` BFF: iki HttpOnly çerez, başlık tabanlı CSRF savunması, yönlendirmeyle yenileme
 
 **Tarih:** 2026-10-07
-**Durum:** Accepted
+**Durum:** Accepted · yenileme tetikleyicisi [ADR-070](070-silent-session-refresh-on-any-page.md) ile genişledi (2026-10-09)
 **Kaynak:** `add-account-and-session` design.md D6
 
 ---

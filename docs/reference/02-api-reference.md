@@ -168,7 +168,7 @@ Kimlik modeli: [ADR-008](../adr/008-jwt-auth-with-opaque-refresh.md), [ADR-017](
 | `POST /api/v1/accounts/me/verification-requests` | Bearer | `202` (gövdesiz) | 401 | hesap: saatte 3 |
 | `POST /api/v1/sessions` | açık | `200` `SessionTokens` · `202` `LoginChallengeIssued` | 400, 401 | IP + e-posta: 15 dk'da 10 |
 | `POST /api/v1/sessions/challenge` | açık | `200` `SessionTokens` | 400, 401 (`AUTH_CODE_INVALID`), 429 | IP + e-posta: 15 dk'da 10 |
-| `POST /api/v1/sessions/refresh` | açık (yenileme token'ı gövdede) | `200` `SessionTokens` | 400 (`AUTH_TOKEN_INVALID`) | IP: 15 dk'da 60 |
+| `POST /api/v1/sessions/refresh` | açık (yenileme token'ı gövdede) | `200` `SessionTokens` (kullanılmış token 30 sn içinde tekrar gelirse de; [ADR-069](../adr/069-refresh-token-reuse-grace-window.md)) | 400 (`AUTH_TOKEN_INVALID`) | IP: 15 dk'da 60 |
 | `DELETE /api/v1/sessions/current` | açık (yenileme token'ı gövdede) | `204` | 400 (token eksik) | - |
 
 Hız sınırı aşılınca her uç `429 RATE_LIMITED` döner.
@@ -319,6 +319,7 @@ Tarayıcı `api`'ye hiç konuşmaz ve token görmez ([ADR-023](../adr/023-web-bf
 - **Çerezler:** `bahceden_at` (`path=/`) ve `bahceden_rt` (`path=/api/auth`); ikisi de `HttpOnly`, `Secure`, `SameSite=Lax`, ömürleri yenileme token'ı kadar.
 - **CSRF:** POST'lar `Sec-Fetch-Site: same-origin` ister; yoksa `Origin` `Host` ile karşılaştırılır. Reddedilen istek `403 CROSS_SITE_REQUEST` alır (BFF'in kendi kodu, `api`'de yok). `api`'ye ulaşılamazsa BFF `502 SERVICE_UNAVAILABLE` döner.
 - **Yenileme:** korunan sayfa erişim token'ının süresinin dolduğunu görünce kullanıcıyı önce `/session/refresh?next=` sayfasına yönlendirir; sayfa `/api/auth/refresh?next=` adresine tam sayfa gezintisiyle geçer (JavaScript yoksa "Devam et" bağlantısı). Ara sayfa gereklidir: uygulama içi bağlantıyla yapılan gezinti bir Route Handler'a yönlendirilirse Next.js istemci yönlendiricisi onu izleyemez ve boş sayfada kalır; sunucu da iki gezinti türünü ayırt edemez (yönlendirici başlıkları `headers()`'tan çıkarılır).
+- **Sessiz yenileme ([ADR-070](../adr/070-silent-session-refresh-on-any-page.md)):** üst başlık oturumun süresinin dolduğunu görünce her sayfada `/api/auth/refresh?next=<yol>&silent=1` adresine tam sayfa gezintisi yapar. Sessiz kipte başarısız yenileme çerezleri siler ve kullanıcıyı giriş ekranına değil aynı sayfaya oturumsuz döndürür; `api`'ye ulaşılamazsa oturum silinmeden aynı sayfaya dönülür. Sekmeler `bahceden-session-refresh` Web Locks kilidiyle sıraya girer; kilidi bekleyen sekme yenileme yapmadan sayfasına döner. Bir sekme dakikada en fazla bir kez dener (`sessionStorage` zaman damgası).
 - **İstemci adresi:** BFF `X-Forwarded-For` başlığını `api`'ye iletir; `api` başlığa yalnızca iç ağdan gelen proxy için güvenir.
 
 ---

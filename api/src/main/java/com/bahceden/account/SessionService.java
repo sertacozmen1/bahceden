@@ -45,6 +45,12 @@ public class SessionService {
     /** Yenileme token'ının ömrü (design.md D1). */
     static final Duration REFRESH_TOKEN_TTL = Duration.ofDays(30);
 
+    /**
+     * Kullanılmış token'ın sızıntı sayılmadan yeniden kabul edildiği süre
+     * (ADR-069). Aynı anda açılan iki sekmenin yenileme yarışını kapsar.
+     */
+    static final Duration REUSE_GRACE = Duration.ofSeconds(30);
+
     /** İkinci faktör kodunun ömrü (design.md D8). */
     static final Duration CHALLENGE_TTL = Duration.ofMinutes(10);
 
@@ -164,8 +170,10 @@ public class SessionService {
      * Rotasyonlu yenileme (D1): sunulan token tüketilir, aynı ailede yenisi
      * verilir. Erişim token'ı hesabın <em>güncel</em> rolleriyle üretilir.
      *
-     * <p>Zaten kullanılmış bir token gelirse bu bir sızıntı işaretidir: ailenin
-     * tamamı iptal edilir ve iptal, istisnaya rağmen kalıcıdır.
+     * <p>Zaten kullanılmış bir token tolerans penceresi içinde gelirse aynı
+     * ailede yeni bir çift verilir: iki sekmenin eşzamanlı yenilemesi sızıntı
+     * değildir (ADR-069). Pencere dışında gelirse bu bir sızıntı işaretidir:
+     * ailenin tamamı iptal edilir ve iptal, istisnaya rağmen kalıcıdır.
      *
      * @throws ApiException {@code AUTH_TOKEN_INVALID}
      */
@@ -177,6 +185,11 @@ public class SessionService {
 
         if (token.isRevoked()) {
             throw invalidRefresh();
+        }
+        if (token.isUsed() && token.usedWithin(REUSE_GRACE, now) && !token.isExpired(now)) {
+            log.info("Yenileme token'ı tolerans penceresinde tekrar sunuldu: hesap {}", token.getAccountId());
+            var account = accounts.findById(token.getAccountId()).orElseThrow(SessionService::invalidRefresh);
+            return issueTokens(account, token.getFamilyId(), now);
         }
         if (token.isUsed()) {
             int revoked = refreshTokens.revokeFamily(token.getFamilyId(), now);

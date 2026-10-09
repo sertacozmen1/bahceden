@@ -158,6 +158,8 @@ nav:
     - "ADR-066 · Ödeme akışı ve stok": adr/066-payment-redirect-verify-lock-stock-on-success.md
     - "ADR-067 · Kargodan önce iptal": adr/067-cancel-before-shipment-full-refund-restock.md
     - "ADR-068 · Sepet ve sipariş ekranları": adr/068-checkout-web-routes-server-cart-count.md
+    - "ADR-069 · Yenileme toleransı": adr/069-refresh-token-reuse-grace-window.md
+    - "ADR-070 · Sessiz oturum yenileme": adr/070-silent-session-refresh-on-any-page.md
   - Nasıl Yapılır (How-to):
     - Genel Bakış: how-to/index.md
     - Yerel Geliştirme Ortamı: how-to/yerel-gelistirme.md
