@@ -7,6 +7,8 @@ import com.bahceden.order.domain.Order;
 import com.bahceden.order.domain.OrderItem;
 import com.bahceden.order.domain.SellerOrder;
 import com.bahceden.order.domain.SellerOrderTransition;
+import com.bahceden.order.dto.AdminSellerOrderDetail;
+import com.bahceden.order.dto.AdminSellerOrderSummary;
 import com.bahceden.order.dto.BuyerSellerOrderView;
 import com.bahceden.order.dto.OrderDetail;
 import com.bahceden.order.dto.OrderItemView;
@@ -14,8 +16,11 @@ import com.bahceden.order.dto.OrderSummary;
 import com.bahceden.order.dto.SellerOrderDetail;
 import com.bahceden.order.dto.SellerOrderSummary;
 import com.bahceden.order.dto.ShippingAddressView;
+import com.bahceden.shipping.dto.ShipmentView;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import org.springframework.stereotype.Component;
 
 /**
@@ -38,14 +43,16 @@ class OrderMapper {
                 order.getCreatedAt());
     }
 
-    OrderDetail toDetail(Order order, List<SellerOrder> sellerOrders, Instant now) {
+    OrderDetail toDetail(Order order, List<SellerOrder> sellerOrders, Map<Long, ShipmentView> shipments, Instant now) {
         var address = order.getShippingAddress();
         var shipping = new ShippingAddressView(address.recipientName(), address.phone(), address.provinceCode(),
                 provinceName(address.provinceCode()), address.district(), address.addressLine(), address.postalCode());
         return new OrderDetail(order.getOrderNumber(), order.getStatus(), order.getCreatedAt(),
                 order.getPaidAt().orElse(null), shipping, money(order, order.getItemsTotal()),
                 money(order, order.getShippingTotal()), money(order, order.getGrandTotal()),
-                sellerOrders.stream().map(sellerOrder -> toBuyerView(order, sellerOrder, now)).toList());
+                sellerOrders.stream()
+                        .map(sellerOrder -> toBuyerView(order, sellerOrder, shipments.get(sellerOrder.getId()), now))
+                        .toList());
     }
 
     SellerOrderSummary toSellerSummary(SellerOrder sellerOrder, Instant now) {
@@ -56,7 +63,7 @@ class OrderMapper {
                 sellerOrder.getCreatedAt());
     }
 
-    SellerOrderDetail toSellerDetail(SellerOrder sellerOrder, Instant now) {
+    SellerOrderDetail toSellerDetail(SellerOrder sellerOrder, Optional<ShipmentView> shipment, Instant now) {
         var order = sellerOrder.getOrder();
         var address = order.getShippingAddress();
         return new SellerOrderDetail(sellerOrder.getId(), order.getOrderNumber(), sellerOrder.getStatus(),
@@ -66,16 +73,35 @@ class OrderMapper {
                 sellerOrder.getDispatchDueAt().orElse(null), sellerOrder.isDispatchOverdue(now),
                 provinceName(address.provinceCode()), address.district(),
                 sellerOrder.getCancelledBy().orElse(null), sellerOrder.getCancelReason().orElse(null),
-                sellerOrder.allows(SellerOrderTransition.CANCEL));
+                sellerOrder.allows(SellerOrderTransition.CANCEL), shipment.orElse(null));
     }
 
-    private BuyerSellerOrderView toBuyerView(Order order, SellerOrder sellerOrder, Instant now) {
+    AdminSellerOrderSummary toAdminSummary(SellerOrder sellerOrder) {
+        var order = sellerOrder.getOrder();
+        return new AdminSellerOrderSummary(sellerOrder.getId(), order.getOrderNumber(), sellerOrder.getStatus(),
+                sellerOrder.getSeller().getDisplayName(), money(order, sellerOrder.refundableAmount()),
+                sellerOrder.getCreatedAt());
+    }
+
+    /** Admin alıcının adını ve telefonunu görür; açık adresi görmez (add-shipments D7, K10). */
+    AdminSellerOrderDetail toAdminDetail(SellerOrder sellerOrder, Optional<ShipmentView> shipment) {
+        var order = sellerOrder.getOrder();
+        var address = order.getShippingAddress();
+        return new AdminSellerOrderDetail(sellerOrder.getId(), order.getOrderNumber(), sellerOrder.getStatus(),
+                sellerOrder.getSeller().getDisplayName(), sellerOrder.getCreatedAt(),
+                items(order, sellerOrder.getItems()), money(order, sellerOrder.getItemsTotal()),
+                money(order, sellerOrder.getShippingFee()), money(order, sellerOrder.refundableAmount()),
+                address.recipientName(), address.phone(), provinceName(address.provinceCode()), address.district(),
+                shipment.orElse(null), sellerOrder.allows(SellerOrderTransition.REFUND_UNDELIVERED));
+    }
+
+    private BuyerSellerOrderView toBuyerView(Order order, SellerOrder sellerOrder, ShipmentView shipment, Instant now) {
         return new BuyerSellerOrderView(sellerOrder.getId(), productMapper.toSellerSummary(sellerOrder.getSeller()),
                 sellerOrder.getStatus(), items(order, sellerOrder.getItems()), money(order, sellerOrder.getItemsTotal()),
                 money(order, sellerOrder.getShippingFee()), sellerOrder.getDispatchDays(),
                 sellerOrder.getDispatchDueAt().orElse(null), sellerOrder.isDispatchOverdue(now),
                 sellerOrder.getCancelledBy().orElse(null), sellerOrder.getCancelReason().orElse(null),
-                sellerOrder.allows(SellerOrderTransition.CANCEL));
+                sellerOrder.allows(SellerOrderTransition.CANCEL), shipment);
     }
 
     private static List<OrderItemView> items(Order order, List<OrderItem> items) {

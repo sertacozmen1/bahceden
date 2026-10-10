@@ -6,10 +6,12 @@ import type { BuyerSellerOrderView, OrderDetail } from "@/features/orders/api";
 import { formatDateTime } from "@/lib/datetime";
 import { formatMoney } from "@/lib/money";
 import { OrderStatusBadge, SellerOrderStatusBadge } from "./OrderStatusBadge";
+import { ShipmentCard } from "./ShipmentCard";
 
 /**
  * Alıcının sipariş detayı (orders spec'i): satıcı siparişleri, satırlar,
- * kargo ücreti, kargoya verme son tarihi, teslimat adresi ve toplam. Sipariş
+ * kargo ücreti, kargoya verme son tarihi, gönderi (firma, takip numarası,
+ * durum; add-shipments), teslimat adresi ve toplam. Sipariş
  * sayfası ve ödeme dönüşü paylaşır (K9). Satıcı siparişinin eylemi (iptal)
  * çağıran sayfadan `sellerOrderAction` ile verilir.
  */
@@ -68,6 +70,14 @@ export function BuyerOrderView({ order, sellerOrderAction }: BuyerOrderViewProps
                 )}
                 {sellerOrder.dispatchOverdue && (
                   <p className="rounded-lg bg-warning/12 px-3 py-2 text-sm text-warning">{t("dispatchOverdue")}</p>
+                )}
+                {sellerOrder.shipment && <ShipmentCard shipment={sellerOrder.shipment} />}
+                {(sellerOrder.status === "DELIVERY_FAILED" ||
+                  sellerOrder.status === "REFUNDED" ||
+                  sellerOrder.status === "CLOSED") && (
+                  <p className="rounded-lg bg-muted px-3 py-2 text-sm text-pretty">
+                    {t("shippingNote", { status: sellerOrder.status })}
+                  </p>
                 )}
                 {sellerOrder.status === "CANCELLED" && (
                   <p className="text-sm text-muted-foreground">

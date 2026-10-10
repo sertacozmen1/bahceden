@@ -31,8 +31,12 @@ tags:
   description: "Sepetten sipariş, ödeme ve alıcının siparişleri"
 - name: Satıcı siparişleri
   description: Onaylı satıcının gelen siparişleri
+- name: "Admin: siparişler"
+  description: Teslim edilemeyen satıcı siparişleri ve karar
 - name: Ürünler
   description: Vitrindeki ürünlerin listelenmesi
+- name: Satıcı gönderileri
+  description: Kargoya hazırla ve etiket
 - name: Sepet
   description: "Oturum sahibinin sepeti, satıcılara göre gruplu"
 - name: Hesap
@@ -1109,6 +1113,86 @@ paths:
                 $ref: "#/components/schemas/ApiError"
       security:
       - bearerAuth: []
+  /api/v1/sellers/me/orders/{id}/shipment:
+    post:
+      tags:
+      - Satıcı gönderileri
+      summary: Satıcı siparişi için gönderi açar (kargoya hazırla)
+      description: |
+        Ödenmiş ve kargoya verilmemiş (NEW) satıcı siparişi için kargo entegratöründe gönderi açar;
+        paket şubeye teslim edilir. Gönderi zaten açıksa yenisi açılmaz, mevcut gönderi 200 ile döner.
+      operationId: createShipment
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateShipmentRequest"
+        required: true
+      responses:
+        "201":
+          description: Gönderi açıldı
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Shipment"
+        "200":
+          description: Gönderi zaten açıktı; mevcut gönderi
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Shipment"
+        "400":
+          description: Koli boyutu eksik veya geçersiz (VALIDATION_FAILED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Oturum yok (AUTH_REQUIRED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "403":
+          description: Satıcı rolü yok (AUTH_FORBIDDEN) veya satıcı kaydı onaylı değil
+            (SELLER_NOT_APPROVED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: Satıcı siparişi yok veya başkasına ait (SELLER_ORDER_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "409":
+          description: Satıcı siparişi kargoya hazırlanabilir durumda değil (ORDER_INVALID_TRANSITION)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "422":
+          description: Satıcının telefonu kayıtlı değil (SHIPMENT_SENDER_PHONE_MISSING)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "502":
+          description: Kargo entegratörüne ulaşılamadı; hiçbir şey değişmedi (SHIPPING_INTEGRATOR_ERROR)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+      security:
+      - bearerAuth: []
   /api/v1/sellers/me/orders/{id}/cancel:
     post:
       tags:
@@ -1164,13 +1248,15 @@ paths:
               schema:
                 $ref: "#/components/schemas/ApiError"
         "409":
-          description: Satıcı siparişi iptal edilebilir durumda değil (ORDER_INVALID_TRANSITION)
+          description: "Satıcı siparişi iptal edilebilir durumda değil: iptal edilmiş\
+            \ veya kargoya verilmiş (ORDER_INVALID_TRANSITION)"
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiError"
         "502":
-          description: İade yapılamadı; hiçbir şey değişmedi (PAYMENT_PROVIDER_ERROR)
+          description: Gönderi iptal edilemedi (SHIPPING_INTEGRATOR_ERROR) veya iade
+            yapılamadı (PAYMENT_PROVIDER_ERROR); hiçbir şey değişmedi
           content:
             application/json:
               schema:
@@ -1352,13 +1438,15 @@ paths:
               schema:
                 $ref: "#/components/schemas/ApiError"
         "409":
-          description: Satıcı siparişi iptal edilebilir durumda değil (ORDER_INVALID_TRANSITION)
+          description: "Satıcı siparişi iptal edilebilir durumda değil: iptal edilmiş\
+            \ veya kargoya verilmiş (ORDER_INVALID_TRANSITION)"
           content:
             application/json:
               schema:
                 $ref: "#/components/schemas/ApiError"
         "502":
-          description: İade yapılamadı; hiçbir şey değişmedi (PAYMENT_PROVIDER_ERROR)
+          description: Gönderi iptal edilemedi (SHIPPING_INTEGRATOR_ERROR) veya iade
+            yapılamadı (PAYMENT_PROVIDER_ERROR); hiçbir şey değişmedi
           content:
             application/json:
               schema:
@@ -1630,6 +1718,74 @@ paths:
                 $ref: "#/components/schemas/ApiError"
         "409":
           description: Bu durumdan bu geçiş yapılamaz (SELLER_INVALID_TRANSITION)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+      security:
+      - bearerAuth: []
+  /api/v1/admin/seller-orders/{id}/resolution:
+    post:
+      tags:
+      - "Admin: siparişler"
+      summary: Teslim edilemeyen satıcı siparişine karar verir
+      description: |
+        REFUND: ürün tutarı ve kargo ücreti alıcıya iade edilir, stok geri eklenmez, durum REFUNDED olur.
+        CLOSE: gerekçe zorunludur (10–500 karakter), iade yapılmaz, durum CLOSED olur.
+        Alıcıya ve satıcıya e-posta gider.
+      operationId: resolveUndeliveredSellerOrder
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UndeliveredResolutionRequest"
+        required: true
+      responses:
+        "409":
+          description: Satıcı siparişi karar bekliyor değil (ORDER_INVALID_TRANSITION)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "502":
+          description: İade yapılamadı; hiçbir şey değişmedi (PAYMENT_PROVIDER_ERROR)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: Satıcı siparişi veya siparişleri
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSellerOrderDetail"
+        "400":
+          description: "Karar, gerekçe veya süzgeç geçersiz (VALIDATION_FAILED)"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Oturum yok (AUTH_REQUIRED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "403":
+          description: Admin rolü yok (AUTH_FORBIDDEN)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: Satıcı siparişi yok veya teslim edilemeyenlerden değil (SELLER_ORDER_NOT_FOUND)
           content:
             application/json:
               schema:
@@ -1987,13 +2143,14 @@ paths:
       tags:
       - Satıcı siparişleri
       summary: Satıcının gelen siparişlerini listeler
-      description: "Yalnızca ödemesi tamamlanmış satıcı siparişleri; en yeni üstte.\
-        \ Durumla süzülebilir (NEW, CANCELLED)."
+      description: |
+        Yalnızca ödemesi tamamlanmış satıcı siparişleri; en yeni üstte. Durumla süzülebilir
+        (NEW, SHIPPED, DELIVERED, DELIVERY_FAILED, REFUNDED, CLOSED, CANCELLED).
       operationId: listSellerOrders
       parameters:
       - name: status
         in: query
-        description: "Durum süzgeci: NEW veya CANCELLED; boşsa ikisi"
+        description: Durum süzgeci; boşsa ödenmiş satıcı siparişlerinin hepsi
         required: false
         schema:
           type: string
@@ -2002,6 +2159,11 @@ paths:
           - NEW
           - CANCELLED
           - VOID
+          - SHIPPED
+          - DELIVERED
+          - DELIVERY_FAILED
+          - REFUNDED
+          - CLOSED
         example: NEW
       - name: page
         in: query
@@ -2086,6 +2248,54 @@ paths:
                 $ref: "#/components/schemas/ApiError"
         "404":
           description: Satıcı siparişi yok veya başkasına ait (SELLER_ORDER_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+      security:
+      - bearerAuth: []
+  /api/v1/sellers/me/orders/{id}/shipment/label:
+    get:
+      tags:
+      - Satıcı gönderileri
+      summary: Gönderinin etiketini döner
+      description: "Yalnızca satıcı siparişinin sahibine; PDF veya PNG, önbelleğe\
+        \ alınmaz."
+      operationId: getShipmentLabel
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: Etiket
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+            image/png:
+              schema:
+                type: string
+                format: binary
+        "401":
+          description: Oturum yok (AUTH_REQUIRED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "403":
+          description: Satıcı rolü yok (AUTH_FORBIDDEN) veya satıcı kaydı onaylı değil
+            (SELLER_NOT_APPROVED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: Gönderi yok veya sipariş başkasına ait (SELLER_ORDER_NOT_FOUND)
           content:
             application/json:
               schema:
@@ -2467,6 +2677,134 @@ paths:
                 $ref: "#/components/schemas/ApiError"
         "404":
           description: Kayıt veya belge yok (SELLER_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+      security:
+      - bearerAuth: []
+  /api/v1/admin/seller-orders:
+    get:
+      tags:
+      - "Admin: siparişler"
+      summary: Teslim edilemeyen satıcı siparişlerini listeler
+      description: |
+        Durum süzgeci DELIVERY_FAILED (karar bekleyen, varsayılan), REFUNDED veya CLOSED olabilir;
+        en yeni üstte. Sayfa boyutunun üst sınırı sunucuda 50'dir.
+      operationId: listSellerOrdersForAdmin
+      parameters:
+      - name: status
+        in: query
+        description: Durum süzgeci
+        required: false
+        schema:
+          type: string
+          default: DELIVERY_FAILED
+          enum:
+          - PENDING_PAYMENT
+          - NEW
+          - CANCELLED
+          - VOID
+          - SHIPPED
+          - DELIVERED
+          - DELIVERY_FAILED
+          - REFUNDED
+          - CLOSED
+        example: DELIVERY_FAILED
+      - name: page
+        in: query
+        description: Sayfa numarası (sıfırdan başlar)
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+          minimum: 0
+        example: 0
+      - name: size
+        in: query
+        description: Sayfa boyutu; üst sınır sunucuda 50'ye çekilir
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+          minimum: 1
+        example: 20
+      responses:
+        "200":
+          description: Satıcı siparişi veya siparişleri
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PageResponseAdminSellerOrderSummary"
+        "400":
+          description: "Karar, gerekçe veya süzgeç geçersiz (VALIDATION_FAILED)"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Oturum yok (AUTH_REQUIRED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "403":
+          description: Admin rolü yok (AUTH_FORBIDDEN)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: Satıcı siparişi yok veya teslim edilemeyenlerden değil (SELLER_ORDER_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+      security:
+      - bearerAuth: []
+  /api/v1/admin/seller-orders/{id}:
+    get:
+      tags:
+      - "Admin: siparişler"
+      summary: Teslim edilemeyen satıcı siparişinin detayı
+      description: Alıcının adı ve telefonu iletişim için görünür; açık adres gösterilmez.
+      operationId: getSellerOrderForAdmin
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: Satıcı siparişi veya siparişleri
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSellerOrderDetail"
+        "400":
+          description: "Karar, gerekçe veya süzgeç geçersiz (VALIDATION_FAILED)"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Oturum yok (AUTH_REQUIRED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "403":
+          description: Admin rolü yok (AUTH_FORBIDDEN)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: Satıcı siparişi yok veya teslim edilemeyenlerden değil (SELLER_ORDER_NOT_FOUND)
           content:
             application/json:
               schema:
@@ -3474,6 +3812,76 @@ components:
           description: "Fotoğraf: JPEG veya PNG; en çok 10 MB ve 40 megapiksel"
       required:
       - photo
+    CreateShipmentRequest:
+      type: object
+      description: "Kargoya hazırla: gönderi açma isteği"
+      properties:
+        packageSize:
+          type: string
+          description: "Koli boyutu: SMALL (küçük), MEDIUM (orta), LARGE (büyük)"
+          enum:
+          - SMALL
+          - MEDIUM
+          - LARGE
+          example: MEDIUM
+      required:
+      - packageSize
+    Shipment:
+      type: object
+      description: Satıcı siparişinin kargo gönderisi
+      properties:
+        carrier:
+          type: string
+          description: Kargo firması
+          example: Ornek Kargo
+        trackingNumber:
+          type: string
+          description: Takip numarası; şubede gönderi kodu olarak da kullanılır
+          example: FK0123456789
+        status:
+          type: string
+          description: Gönderinin durumu
+          enum:
+          - CREATED
+          - HANDED_OVER
+          - IN_TRANSIT
+          - DELIVERED
+          - DELIVERY_FAILED
+          - CANCELLED
+          example: IN_TRANSIT
+        packageSize:
+          type: string
+          description: Koli boyutu
+          enum:
+          - SMALL
+          - MEDIUM
+          - LARGE
+          example: MEDIUM
+        createdAt:
+          type: string
+          format: date-time
+          description: Gönderinin açıldığı an (UTC)
+          example: 2026-10-10T08:15:00Z
+        handedOverAt:
+          type:
+          - string
+          - "null"
+          format: date-time
+          description: Kargoya verildiği an (UTC)
+          example: 2026-10-10T14:30:00Z
+        deliveredAt:
+          type:
+          - string
+          - "null"
+          format: date-time
+          description: Teslim edildiği an (UTC)
+          example: 2026-10-11T16:05:00Z
+      required:
+      - carrier
+      - createdAt
+      - packageSize
+      - status
+      - trackingNumber
     CancellationRequest:
       type: object
       description: Kargodan önce iptal
@@ -3546,6 +3954,11 @@ components:
           - NEW
           - CANCELLED
           - VOID
+          - SHIPPED
+          - DELIVERED
+          - DELIVERY_FAILED
+          - REFUNDED
+          - CLOSED
           example: NEW
         createdAt:
           type: string
@@ -3609,6 +4022,10 @@ components:
           type: boolean
           description: Satıcı şu an iptal edebilir mi
           example: true
+        shipment:
+          type: "null"
+          $ref: "#/components/schemas/Shipment"
+          description: Kargo gönderisi; henüz açılmadıysa boş
       required:
       - cancellable
       - commissionAmount
@@ -3669,6 +4086,11 @@ components:
           - NEW
           - CANCELLED
           - VOID
+          - SHIPPED
+          - DELIVERED
+          - DELIVERY_FAILED
+          - REFUNDED
+          - CLOSED
           example: NEW
         items:
           type: array
@@ -3716,6 +4138,10 @@ components:
           type: boolean
           description: Alıcı şu an iptal edebilir mi
           example: true
+        shipment:
+          type: "null"
+          $ref: "#/components/schemas/Shipment"
+          description: Kargo gönderisi; henüz açılmadıysa boş
       required:
       - cancellable
       - dispatchDays
@@ -3962,6 +4388,117 @@ components:
       - actorEmail
       - createdAt
       - toStatus
+    UndeliveredResolutionRequest:
+      type: object
+      description: Teslim edilemeyen sipariş için admin kararı
+      properties:
+        decision:
+          type: string
+          description: "REFUND: ürünler ve kargo ücreti iade edilir; CLOSE: iadesiz\
+            \ kapatılır"
+          enum:
+          - REFUND
+          - CLOSE
+          example: REFUND
+        reason:
+          type:
+          - string
+          - "null"
+          description: Gerekçe; CLOSE için zorunlu (10–500 karakter)
+          example: Alıcı adreste bulunamadı ve paketi şubeden almadı.
+          maxLength: 500
+          minLength: 0
+      required:
+      - decision
+    AdminSellerOrderDetail:
+      type: object
+      description: Admin'in gördüğü teslim edilemeyen satıcı siparişi
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Satıcı siparişinin kimliği
+          example: 17
+        orderNumber:
+          type: string
+          description: Sipariş numarası
+          example: BHC-7K2M9QXA4T
+        status:
+          type: string
+          description: Durum
+          enum:
+          - PENDING_PAYMENT
+          - NEW
+          - CANCELLED
+          - VOID
+          - SHIPPED
+          - DELIVERED
+          - DELIVERY_FAILED
+          - REFUNDED
+          - CLOSED
+          example: DELIVERY_FAILED
+        sellerName:
+          type: string
+          description: Üreticinin görünen adı
+          example: Yılmaz Bahçesi
+        createdAt:
+          type: string
+          format: date-time
+          description: Oluşma anı (UTC)
+          example: 2026-10-08T09:30:00Z
+        items:
+          type: array
+          description: Satırlar
+          items:
+            $ref: "#/components/schemas/OrderItemView"
+        itemsTotal:
+          $ref: "#/components/schemas/Money"
+          description: Ürün tutarı
+        shippingFee:
+          $ref: "#/components/schemas/Money"
+          description: Kargo ücreti
+        refundableAmount:
+          $ref: "#/components/schemas/Money"
+          description: "İade kararında alıcıya dönecek tutar: ürünler + kargo ücreti"
+        recipientName:
+          type: string
+          description: Alıcı adı (iletişim için)
+          example: Ayşe Örnek
+        recipientPhone:
+          type: string
+          description: Alıcı telefonu (iletişim için)
+          example: "+905550000000"
+        provinceName:
+          type: string
+          description: Teslimat ili
+          example: İzmir
+        district:
+          type: string
+          description: Teslimat ilçesi
+          example: Bornova
+        shipment:
+          type: "null"
+          $ref: "#/components/schemas/Shipment"
+          description: Kargo gönderisi
+        resolvable:
+          type: boolean
+          description: Admin şu an karar verebilir mi
+          example: true
+      required:
+      - createdAt
+      - district
+      - id
+      - items
+      - itemsTotal
+      - orderNumber
+      - provinceName
+      - recipientName
+      - recipientPhone
+      - refundableAmount
+      - resolvable
+      - sellerName
+      - shippingFee
+      - status
     ListingRemovalRequest:
       type: object
       description: İlan kaldırma gerekçesi; satıcıya gösterilir
@@ -4202,6 +4739,11 @@ components:
           - NEW
           - CANCELLED
           - VOID
+          - SHIPPED
+          - DELIVERED
+          - DELIVERY_FAILED
+          - REFUNDED
+          - CLOSED
           example: NEW
         itemsTotal:
           $ref: "#/components/schemas/Money"
@@ -4566,6 +5108,87 @@ components:
           description: Sayfadaki kayıtlar
           items:
             $ref: "#/components/schemas/AdminSellerSummary"
+        page:
+          type: integer
+          format: int32
+          description: Geçerli sayfa numarası (sıfırdan başlar)
+          example: 0
+        size:
+          type: integer
+          format: int32
+          description: Uygulanan sayfa boyutu
+          example: 20
+        totalElements:
+          type: integer
+          format: int64
+          description: Süzgeçten geçen toplam kayıt sayısı
+          example: 137
+        totalPages:
+          type: integer
+          format: int32
+          description: Toplam sayfa sayısı
+          example: 7
+      required:
+      - items
+      - page
+      - size
+      - totalElements
+      - totalPages
+    AdminSellerOrderSummary:
+      type: object
+      description: Admin listesinde satıcı siparişi
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Satıcı siparişinin kimliği
+          example: 17
+        orderNumber:
+          type: string
+          description: Sipariş numarası
+          example: BHC-7K2M9QXA4T
+        status:
+          type: string
+          description: Durum
+          enum:
+          - PENDING_PAYMENT
+          - NEW
+          - CANCELLED
+          - VOID
+          - SHIPPED
+          - DELIVERED
+          - DELIVERY_FAILED
+          - REFUNDED
+          - CLOSED
+          example: DELIVERY_FAILED
+        sellerName:
+          type: string
+          description: Üreticinin görünen adı
+          example: Yılmaz Bahçesi
+        refundableAmount:
+          $ref: "#/components/schemas/Money"
+          description: "İade kararında alıcıya dönecek tutar: ürünler + kargo ücreti"
+        createdAt:
+          type: string
+          format: date-time
+          description: Oluşma anı (UTC)
+          example: 2026-10-08T09:30:00Z
+      required:
+      - createdAt
+      - id
+      - orderNumber
+      - refundableAmount
+      - sellerName
+      - status
+    PageResponseAdminSellerOrderSummary:
+      type: object
+      description: Sayfalı liste yanıtı
+      properties:
+        items:
+          type: array
+          description: Sayfadaki kayıtlar
+          items:
+            $ref: "#/components/schemas/AdminSellerOrderSummary"
         page:
           type: integer
           format: int32

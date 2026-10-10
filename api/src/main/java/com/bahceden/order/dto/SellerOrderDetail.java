@@ -4,6 +4,7 @@ import com.bahceden.catalog.dto.MoneyView;
 import com.bahceden.order.domain.CancelledBy;
 import com.bahceden.order.domain.SellerOrderStatus;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
+import com.bahceden.shipping.dto.ShipmentView;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.Instant;
 import java.util.List;
@@ -28,6 +29,7 @@ import java.util.List;
  * @param district         alıcının ilçesi
  * @param cancelledBy      iptal eden taraf; yoksa {@code null}
  * @param cancelReason     iptal gerekçesi; yoksa {@code null}
+ * @param shipment         etkin gönderi; açılmadıysa {@code null} (add-shipments)
  * @param cancellable      satıcı şu an iptal edebilir mi
  */
 @Schema(name = "SellerOrderDetail", description = "Satıcının gördüğü satıcı siparişi")
@@ -70,5 +72,8 @@ public record SellerOrderDetail(
         String cancelReason,
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Satıcı şu an iptal edebilir mi",
                 example = "true")
-        boolean cancellable) {
+        boolean cancellable,
+        @Schema(requiredMode = Schema.RequiredMode.NOT_REQUIRED, nullable = true,
+                description = "Kargo gönderisi; henüz açılmadıysa boş")
+        ShipmentView shipment) {
 }

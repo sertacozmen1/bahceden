@@ -6,8 +6,8 @@ import type { SellerOrderDetail } from "@/features/orders/api";
 import SellerOrderPage from "./page";
 
 /**
- * Satıcının satıcı siparişi (orders spec'i): hakediş ve alıcının yalnızca il
- * ve ilçesi görünür (K10). Veri taklit edilir.
+ * Satıcının satıcı siparişi (orders ve shipments spec'leri): hakediş, alıcının
+ * yalnızca il ve ilçesi (K10), kargoya hazırla ve gönderi kartı. Veri taklit edilir.
  */
 
 const session = vi.hoisted(() => ({
@@ -25,7 +25,7 @@ const notFound = vi.hoisted(() =>
 );
 
 vi.mock("@/features/account/api", () => ({ currentSession: async () => session.current }));
-vi.mock("@/features/orders/api", () => ({ getSellerOrder }));
+vi.mock("@/features/orders/api", () => ({ getSellerOrder, packageSizes: ["SMALL", "MEDIUM", "LARGE"] }));
 vi.mock("next/navigation", () => ({ notFound, redirect: vi.fn(), useRouter: () => ({ refresh: vi.fn() }) }));
 
 const money = (amount: number) => ({ amount, currency: "TRY" });
@@ -67,6 +67,54 @@ describe("Satıcı siparişi sayfası", () => {
     expect(screen.getByText(/Kargoya verme süresi geçti/)).toBeDefined();
     expect(screen.getByText("Teslimat: Bornova / İzmir")).toBeDefined();
     expect(screen.getByRole("button", { name: "Siparişi iptal et" })).toBeDefined();
+    expect(screen.getByRole("button", { name: "Gönderi oluştur" })).toBeDefined();
+    expect(screen.getByRole("radio", { name: /Orta/ })).toBeDefined();
+  });
+
+  it("gönderi açıksa kargoya hazırla yerine gönderi kodu ve etiket bağlantısı görünür", async () => {
+    getSellerOrder.mockResolvedValue({
+      ...order,
+      dispatchOverdue: false,
+      shipment: {
+        carrier: "Ornek Kargo",
+        trackingNumber: "FK0123456789",
+        status: "CREATED",
+        packageSize: "MEDIUM",
+        createdAt: "2026-10-10T08:15:00Z",
+      },
+    } satisfies SellerOrderDetail);
+
+    renderWithIntl(await SellerOrderPage(params("17")));
+
+    expect(screen.queryByRole("button", { name: "Gönderi oluştur" })).toBeNull();
+    expect(screen.getByText("FK0123456789")).toBeDefined();
+    expect(screen.getByText("Şubeye teslim bekleniyor")).toBeDefined();
+    expect(screen.getByRole("link", { name: "Etiketi aç ve yazdır" }).getAttribute("href")).toBe("/api/seller/orders/17/label");
+    expect(screen.getByRole("button", { name: "Kodu kopyala" })).toBeDefined();
+  });
+
+  it("teslim edilemeyen siparişte açıklama görünür; kargoya hazırla ve iptal yoktur", async () => {
+    getSellerOrder.mockResolvedValue({
+      ...order,
+      status: "DELIVERY_FAILED",
+      dispatchOverdue: false,
+      cancellable: false,
+      shipment: {
+        carrier: "Ornek Kargo",
+        trackingNumber: "FK0123456789",
+        status: "DELIVERY_FAILED",
+        packageSize: "MEDIUM",
+        createdAt: "2026-10-10T08:15:00Z",
+        handedOverAt: "2026-10-10T14:30:00Z",
+      },
+    } satisfies SellerOrderDetail);
+
+    renderWithIntl(await SellerOrderPage(params("17")));
+
+    expect(screen.getByText(/Yönetim durumu inceleyip karar verecek/)).toBeDefined();
+    expect(screen.queryByRole("button", { name: "Gönderi oluştur" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Siparişi iptal et" })).toBeNull();
+    expect(screen.queryByRole("link", { name: "Etiketi aç ve yazdır" })).toBeNull();
   });
 
   it("başkasının veya olmayan sipariş bulunamadı olur", async () => {

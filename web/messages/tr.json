@@ -317,7 +317,8 @@
     "tabs": {
       "label": "Yönetim bölümleri",
       "sellers": "Satıcı başvuruları",
-      "products": "İlanlar"
+      "products": "İlanlar",
+      "orders": "Teslim edilemeyenler"
     },
     "products": {
       "title": "İlanlar",
@@ -335,6 +336,30 @@
       "reinstate": "Yeniden aç",
       "reinstating": "Açılıyor…",
       "reason": "Gerekçe: {reason}"
+    },
+    "orders": {
+      "title": "Teslim edilemeyen siparişler",
+      "intro": "Kargonun teslim edemediği siparişleri inceleyin; alıcıya iade edin ya da gerekçeyle kapatın. Karar alıcıya ve üreticiye e-postayla bildirilir.",
+      "tabsLabel": "Duruma göre süz",
+      "emptyTitle": "Bu durumda sipariş yok",
+      "emptyBody": "Başka bir sekmeye bakabilirsiniz.",
+      "loading": "Siparişler yükleniyor",
+      "backToList": "Listeye dön",
+      "refundable": "İade tutarı: {amount}",
+      "refundLabel": "İade tutarı",
+      "contactTitle": "Alıcı",
+      "decisionTitle": "Karar",
+      "decisionIntro": "Alıcıyla ve gerekirse üreticiyle görüştükten sonra karar verin. İadede stok geri eklenmez.",
+      "actions": {
+        "refund": "İade et",
+        "refundTitle": "Alıcıya iade et",
+        "refundBody": "Ürünler ve kargo ücreti ({amount}) alıcının kartına iade edilir; üreticinin hakedişi oluşmaz. Açıklamanız iki tarafa iletilir.",
+        "confirmRefund": "İade et",
+        "close": "İadesiz kapat",
+        "closeTitle": "İadesiz kapat",
+        "closeBody": "Para hareketi olmaz, üreticinin hakedişi geçerli kalır. Gerekçeniz alıcıya ve üreticiye iletilir.",
+        "confirmClose": "Kapat"
+      }
     }
   },
   "footer": {
@@ -504,7 +529,7 @@
     "backToList": "Siparişlerime dön",
     "placedAt": "{date} tarihinde verildi",
     "status": "{status, select, PENDING_PAYMENT {Ödeme bekleniyor} PAID {Ödendi} PAYMENT_FAILED {Ödeme başarısız} PAYMENT_EXPIRED {Süresi doldu} CANCELLED_OUT_OF_STOCK {Stok yetmedi, iade edildi} other {Bilinmiyor}}",
-    "sellerOrderStatus": "{status, select, PENDING_PAYMENT {Ödeme bekleniyor} NEW {Hazırlanıyor} CANCELLED {İptal edildi} VOID {Gerçekleşmedi} other {Bilinmiyor}}",
+    "sellerOrderStatus": "{status, select, PENDING_PAYMENT {Ödeme bekleniyor} NEW {Hazırlanıyor} SHIPPED {Kargoda} DELIVERED {Teslim edildi} DELIVERY_FAILED {Teslim edilemedi} REFUNDED {İade edildi} CLOSED {Kapatıldı} CANCELLED {İptal edildi} VOID {Gerçekleşmedi} other {Bilinmiyor}}",
     "perUnit": "/ {unit, select, KILOGRAM {kg} PIECE {adet} BUNCH {demet} other {birim}}",
     "shipping": "Kargo",
     "freeShipping": "Ücretsiz",
@@ -522,20 +547,43 @@
       "sellerTitle": "Siparişi iptal et",
       "sellerBody": "Alıcıya ürünlerin ve kargo ücretinin tamamı iade edilir, ürünler stoğunuza geri eklenir. Gerekçeniz alıcıya iletilir.",
       "confirm": "İptal et"
-    }
+    },
+    "shippingNote": "{status, select, DELIVERY_FAILED {Paket size teslim edilemedi. Durumu inceleyip sizinle iletişime geçeceğiz ve sonucu e-postayla bildireceğiz.} REFUNDED {Paket teslim edilemediği için bu üreticinin ürünleri ve kargo ücreti kartınıza iade edildi.} CLOSED {Teslim edilemeyen gönderi incelendi ve iade yapılmadan kapatıldı; gerekçe e-postanızda.} other {}}"
   },
   "sellerOrders": {
     "title": "Gelen siparişler",
     "intro": "Ödemesi alınmış siparişleriniz. Her siparişi belirttiğiniz süre içinde kargoya verin.",
     "loading": "Siparişler yükleniyor",
     "tabsLabel": "Sipariş durumu",
-    "emptyTitle": "{status, select, NEW {Hazırlanacak sipariş yok} other {İptal edilen sipariş yok}}",
+    "emptyTitle": "{status, select, NEW {Hazırlanacak sipariş yok} SHIPPED {Kargoda sipariş yok} DELIVERED {Teslim edilen sipariş yok} DELIVERY_FAILED {Teslim edilemeyen sipariş yok} REFUNDED {İade edilen sipariş yok} CLOSED {Kapatılan sipariş yok} other {İptal edilen sipariş yok}}",
     "payout": "Hakediş: {amount}",
     "detailTitle": "Sipariş",
     "backToList": "Gelen siparişlere dön",
     "overdue": "Kargoya verme süresi geçti. Alıcı siparişi iptal edebilir; mümkünse hemen kargoya verin.",
     "commission": "Komisyon",
     "payoutLabel": "Hakedişiniz",
-    "destination": "Teslimat: {district} / {province}"
+    "destination": "Teslimat: {district} / {province}",
+    "shippingNote": "{status, select, DELIVERY_FAILED {Kargo paketi alıcıya teslim edemedi. Yönetim durumu inceleyip karar verecek ve size e-postayla bildirecek.} REFUNDED {Paket teslim edilemediği için alıcıya iade yapıldı; bu siparişten hakediş oluşmaz.} CLOSED {Teslim edilemeyen gönderi iadesiz kapatıldı; hakedişiniz geçerlidir.} other {}}"
+  },
+  "shipments": {
+    "title": "Kargo gönderisi",
+    "status": "{status, select, CREATED {Şubeye teslim bekleniyor} HANDED_OVER {Kargoya verildi} IN_TRANSIT {Yolda} DELIVERED {Teslim edildi} DELIVERY_FAILED {Teslim edilemedi} CANCELLED {İptal edildi} other {Bilinmiyor}}",
+    "trackingLabel": "Takip numarası",
+    "codeLabel": "Gönderi kodu",
+    "handoverHint": "Etiketi yazdırıp pakete yapıştırın ve paketi kargo şubesine bırakın. Yazıcınız yoksa şubede gönderi kodunu söyleyin.",
+    "openLabel": "Etiketi aç ve yazdır",
+    "copy": "Kodu kopyala",
+    "copied": "Kopyalandı",
+    "handedOverAt": "Kargoya verildi",
+    "deliveredAt": "Teslim edildi",
+    "prepare": {
+      "title": "Kargoya hazırla",
+      "intro": "Ürünleri paketleyin, koli boyutunu seçin. Gönderi açılınca etiket ve gönderi kodu burada görünür.",
+      "sizeLabel": "Koli boyutu",
+      "size": "{size, select, SMALL {Küçük} MEDIUM {Orta} LARGE {Büyük} other {Diğer}}",
+      "sizeHint": "{size, select, SMALL {Ayakkabı kutusu kadar, 5 kg'a kadar} MEDIUM {Meyve kasası kadar, 15 kg'a kadar} LARGE {Büyük koli, 30 kg'a kadar} other {}}",
+      "action": "Gönderi oluştur",
+      "preparing": "Gönderi oluşturuluyor…"
+    }
   }
 }

@@ -48,6 +48,11 @@ public enum FileType {
         return Arrays.stream(values()).filter(type -> type.matches(head)).findFirst();
     }
 
+    /** Kaydedilmiş içerik türünden geri dönüş (gönderi etiketi, add-shipments D4). */
+    public static Optional<FileType> ofContentType(String contentType) {
+        return Arrays.stream(values()).filter(type -> type.contentType.equals(contentType)).findFirst();
+    }
+
     /** Saklanmış meta veriden geri okuma; veritabanı yalnızca bu değerleri tutar. */
     public static FileType fromContentType(String contentType) {
         return Arrays.stream(values())

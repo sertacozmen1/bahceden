@@ -1,6 +1,6 @@
 # Güncel Durum ve Bilinen Sınırlamalar
 
-**Son doğrulama:** 2026-10-08
+**Son doğrulama:** 2026-10-10
 
 > **Bu dosya projenin gerçeğidir.** Sunum, yol haritası, ürün belgesi veya herhangi bir planlama dokümanı "şu an ne var?" sorusuna cevap olarak kullanılamaz (`AGENTS.md` §5.4). Şüphede **kod** ve bu dosya esastır.
 > Bir katmanın durumu, bilinen bir sınırlama veya sapma değiştiğinde bu dosya **aynı commit'te** güncellenir (`AGENTS.md` §6.4).
@@ -9,28 +9,29 @@
 
 ## 1. Tek cümlelik özet
 
-**Beş dikey dilim çalışıyor:** `docker compose up` ile vitrin, hesap, satıcı başvurusu, ürün ilanları ve sepet-sipariş uçtan uca ayakta (PostgreSQL + Spring Boot `api` + Next.js `web` + `mailpit`).
+**Altı dikey dilim çalışıyor:** `docker compose up` ile vitrin, hesap, satıcı başvurusu, ürün ilanları, sepet-sipariş ve kargo gönderisi uçtan uca ayakta (PostgreSQL + Spring Boot `api` + Next.js `web` + `mailpit`).
 
 - **Hesap:** kullanıcı kayıt olur, e-postasını doğrular (doğrulama girişi engellemez), giriş yapar; oturumu arka planda yenilenir ve tarayıcı kapatılıp açılınca her sayfada sessizce geri gelir (ADR-069, ADR-070); çıkış yapar. İkinci faktörü veritabanından açılmış hesap e-postayla kod girer. Parolasını unutan kullanıcı e-postayla sıfırlar.
 - **Satıcı başvurusu:** e-postası doğrulanmış kullanıcı belgesiyle satıcı olarak başvurur. Admin başvuruyu onaylar, reddeder, askıya alır veya askıdan çıkarır. Onaylı satıcı `ROLE_SELLER` alır ve vitrin yalnızca onaylı satıcıların ürünlerini gösterir.
 - **Ürün ilanları:** onaylı satıcı ilan açar, 1–5 fotoğraf yükler (sunucuda döndürülür, küçültülür, konum bilgisi atılır), yayına alır; vitrin kartında kapak, `/products/[slug]` sayfasında galeri görünür. Admin uygunsuz ilanı gerekçeyle kaldırır ve yeniden açar.
-- **Sepet ve sipariş:** onaylı satıcı ödeme bilgilerini girer; alıcı sepete ekler, teslimat adresini (İstanbul, İzmir, Ankara, Manisa) seçer ve sahte ödeme sağlayıcısıyla öder. Sipariş üreticilere bölünür; kargo ücreti üretici başına 99 TL (1000 TL ve üzeri ücretsiz), komisyon %5 + 3 TL. Stok ödeme anında düşer; kargodan önce alıcı veya satıcı iptal eder ve tam iade yapılır. Kargo gönderisi henüz yok.
+- **Sepet ve sipariş:** onaylı satıcı ödeme bilgilerini girer; alıcı sepete ekler, teslimat adresini (İstanbul, İzmir, Ankara, Manisa) seçer ve sahte ödeme sağlayıcısıyla öder. Sipariş üreticilere bölünür; kargo ücreti üretici başına 99 TL (1000 TL ve üzeri ücretsiz), komisyon %5 + 3 TL. Stok ödeme anında düşer; kargodan önce alıcı veya satıcı iptal eder ve tam iade yapılır.
+- **Kargo gönderisi:** satıcı koli boyutunu seçip sahte kargo entegratöründe gönderi açar, etiketi (PDF) yeni sekmede açar veya gönderi kodunu şubede söyler; paket şubeye teslim edilir. Gönderi durumu zamanlanmış sorguyla ilerler (kargoya verildi, yolda, teslim edildi, teslim edilemedi); alıcı firma ve takip numarasını görür ve "kargoya verildi" e-postası alır. Gönderisi açık sipariş iptal edilirse gönderi de iptal edilir. Teslim edilemeyen siparişte admin `/admin/orders`'tan tam iade eder veya gerekçeyle kapatır.
 - **Dil:** arayüz, sunucu mesajları ve e-postalar Türkçe ve İngilizce.
 
-237 `api` testi ve 194 `web` testi yeşil. Gerçek ödeme sağlayıcısı ve kargo gönderisi **yok**.
+271 `api` testi ve 226 `web` testi yeşil. Gerçek ödeme sağlayıcısı ve gerçek kargo entegratörü **yok**; ikisi de sahte uygulamayla çalışır.
 
 ## 2. Katman durumu
 
 | Katman | Durum | Kanıt |
 |---|---|---|
 | `AGENTS.md` (anayasa) | ✅ Yazıldı, yürürlükte | Depo kökü, 500 satır |
-| `docs/adr/` | ✅ ADR-001…068 (004 superseded; 008 §4, 017 ile değişti; 002'nin `web/` bütçesi 027 ve 029 ile, 027'nin tema maddesi 028 ile değişti) | [ADR index](../adr/index.md) |
+| `docs/adr/` | ✅ ADR-001…078 (004 superseded; 008 §4, 017 ile değişti; 002'nin `web/` bütçesi 027 ve 029 ile, 027'nin tema maddesi 028 ile değişti) | [ADR index](../adr/index.md) |
 | `docs/` (Diátaxis) | ✅ İskelet + şablonlar + beş how-to + altı feature kaydı + üç ürün belgesi + tasarım sistemi dökümü | `docs/` ağacı |
-| `openspec/` | ✅ Yedi change **archive edildi** | `changes/archive/2026-10-06-add-storefront-product-listing/`, `changes/archive/2026-10-07-add-account-and-session/`, `changes/archive/2026-10-07-add-i18n/`, `changes/archive/2026-10-07-add-password-reset/`, `changes/archive/2026-10-08-add-seller-onboarding/`, `changes/archive/2026-10-08-add-product-listings/`, `changes/archive/2026-10-08-add-cart-and-checkout/`; açık change yok; `specs/storefront-catalog`, `specs/account-identity`, `specs/localization`, `specs/seller-onboarding`, `specs/product-listings`, `specs/seller-payout-details`, `specs/cart-and-checkout` ve `specs/orders` geçerli davranış sözleşmeleri |
+| `openspec/` | ✅ Dokuz change **archive edildi** | `changes/archive/2026-10-06-add-storefront-product-listing/`, `changes/archive/2026-10-07-add-account-and-session/`, `changes/archive/2026-10-07-add-i18n/`, `changes/archive/2026-10-07-add-password-reset/`, `changes/archive/2026-10-08-add-seller-onboarding/`, `changes/archive/2026-10-08-add-product-listings/`, `changes/archive/2026-10-08-add-cart-and-checkout/`, `changes/archive/2026-10-09-change-session-persistence/`, `changes/archive/2026-10-10-add-shipments/`; açık change yok; `specs/storefront-catalog`, `specs/account-identity`, `specs/localization`, `specs/seller-onboarding`, `specs/product-listings`, `specs/seller-payout-details`, `specs/cart-and-checkout`, `specs/orders` ve `specs/shipments` geçerli davranış sözleşmeleri |
 | `.claude/` (opsx komutları + skill'ler) | ✅ Kurulu | `.claude/commands/opsx/`, `.claude/skills/` |
-| `shared/contracts/openapi.yaml` | ✅ Üretildi ve commit'lendi | 57 uç, `bearerAuth` güvenlik şeması; liste şemaları öğe tipine göre ayrı (`PageResponse<Tip>`); `api` DTO'larından üretilir, tazeliği `OpenApiContractTest` ile zorunlu ([ADR-009](../adr/009-contract-generated-from-spring.md), [ADR-015](../adr/015-contract-freshness-enforced-by-test.md)) |
-| `api/` (Spring Boot 3.5.16) | ✅ Çalışıyor | `catalog`, `account`, `seller`, `order` ve `payment` domainleri; ödeme sağlayıcısı arayüzü ve `fake` uygulaması ([ADR-054](../adr/054-split-payment-via-provider-port-provider-pending.md)); dosya depolama `common/storage` (yerel volume, [ADR-039](../adr/039-uploads-on-local-volume-served-by-api.md)); fotoğraf işleme `catalog/PhotoProcessor` (yalnızca JDK, [ADR-050](../adr/050-photo-processing-exif-orientation-two-sizes.md)); JWT resource server, hız sınırlayıcı, SMTP; **Liquibase** changelog'ları `001`…`012` ([ADR-016](../adr/016-liquibase-for-schema-migrations.md)); kullanıcı metinleri `messages*.properties`, `Accept-Language` ile `tr` / `en` ([ADR-031](../adr/031-api-messages-by-accept-language.md)), hesabın dili `accounts.locale` ([ADR-032](../adr/032-account-locale-stored-and-refreshed-on-login.md)); 237 test yeşil (`./mvnw -B verify`) |
-| `web/` (Next.js 16.3.8, React 19.3, TS 5.9.3) | ✅ Çalışıyor | Vitrin + hesap ekranları (`/register`, `/login`, `/verify-email`, `/account`, `/forgot-password`, `/reset-password`) + satıcı başvurusu (`/seller/application`) + satıcı ilanları (`/seller/products/*`) + ürün detayı (`/products/[slug]`) + sepet ve ödeme (`/cart`, `/checkout`, `/checkout/return`) + siparişler ve adresler (`/account/orders/*`, `/account/addresses`) + satıcı siparişleri ve ödeme bilgileri (`/seller/orders/*`, `/seller/payout`) + admin (`/admin/sellers`, `/admin/sellers/[id]`, `/admin/products`) + fotoğraf aktarma (`/media/product-photos/[key]`) + BFF Route Handler'ları (`/api/auth/*`, `/api/seller/*`, `/api/admin/*`); tipler sözleşmeden üretilir; 194 Vitest testi; `lint`/`typecheck`/`build` temiz. Metinler next-intl ile `messages/tr.json` + `en.json`, dil çerez → tarayıcı → Türkçe ([ADR-029](../adr/029-next-intl-without-routing.md), [ADR-030](../adr/030-locale-from-cookie-then-header.md)). Tasarım sistemi Tailwind v4 + shadcn/ui `base-nova` (Base UI, Lucide, Geist); Açık / Koyu / Sistem tema menüsü, Türkçe / English dil menüsü ([ADR-027](../adr/027-shadcn-ui-design-system.md), [ADR-028](../adr/028-theme-choice-and-color-roles.md), [döküm](03-design-system.md)) |
+| `shared/contracts/openapi.yaml` | ✅ Üretildi ve commit'lendi | 62 uç, `bearerAuth` güvenlik şeması; liste şemaları öğe tipine göre ayrı (`PageResponse<Tip>`); `api` DTO'larından üretilir, tazeliği `OpenApiContractTest` ile zorunlu ([ADR-009](../adr/009-contract-generated-from-spring.md), [ADR-015](../adr/015-contract-freshness-enforced-by-test.md)) |
+| `api/` (Spring Boot 3.5.16) | ✅ Çalışıyor | `catalog`, `account`, `seller`, `order`, `payment` ve `shipping` domainleri; ödeme sağlayıcısı arayüzü ve `fake` uygulaması ([ADR-054](../adr/054-split-payment-via-provider-port-provider-pending.md)); kargo entegratörü arayüzü, `fake` uygulaması ve zamanlanmış durum sorgusu ([ADR-071](../adr/071-shipping-package-integrator-port-fake-only.md), [ADR-075](../adr/075-shipment-status-by-scheduled-polling.md)); dosya depolama `common/storage` (yerel volume, [ADR-039](../adr/039-uploads-on-local-volume-served-by-api.md)); fotoğraf işleme `catalog/PhotoProcessor` (yalnızca JDK, [ADR-050](../adr/050-photo-processing-exif-orientation-two-sizes.md)); JWT resource server, hız sınırlayıcı, SMTP; **Liquibase** changelog'ları `001`…`013` ([ADR-016](../adr/016-liquibase-for-schema-migrations.md)); kullanıcı metinleri `messages*.properties`, `Accept-Language` ile `tr` / `en` ([ADR-031](../adr/031-api-messages-by-accept-language.md)), hesabın dili `accounts.locale` ([ADR-032](../adr/032-account-locale-stored-and-refreshed-on-login.md)); 271 test yeşil (`./mvnw -B verify`) |
+| `web/` (Next.js 16.3.8, React 19.3, TS 5.9.3) | ✅ Çalışıyor | Vitrin + hesap ekranları (`/register`, `/login`, `/verify-email`, `/account`, `/forgot-password`, `/reset-password`) + satıcı başvurusu (`/seller/application`) + satıcı ilanları (`/seller/products/*`) + ürün detayı (`/products/[slug]`) + sepet ve ödeme (`/cart`, `/checkout`, `/checkout/return`) + siparişler ve adresler (`/account/orders/*`, `/account/addresses`) + satıcı siparişleri ve ödeme bilgileri (`/seller/orders/*`, `/seller/payout`) + admin (`/admin/sellers`, `/admin/sellers/[id]`, `/admin/products`, `/admin/orders`, `/admin/orders/[id]`) + fotoğraf aktarma (`/media/product-photos/[key]`) + BFF Route Handler'ları (`/api/auth/*`, `/api/seller/*`, `/api/admin/*`); tipler sözleşmeden üretilir; 226 Vitest testi; `lint`/`typecheck`/`build` temiz. Metinler next-intl ile `messages/tr.json` + `en.json`, dil çerez → tarayıcı → Türkçe ([ADR-029](../adr/029-next-intl-without-routing.md), [ADR-030](../adr/030-locale-from-cookie-then-header.md)). Tasarım sistemi Tailwind v4 + shadcn/ui `base-nova` (Base UI, Lucide, Geist); Açık / Koyu / Sistem tema menüsü, Türkçe / English dil menüsü ([ADR-027](../adr/027-shadcn-ui-design-system.md), [ADR-028](../adr/028-theme-choice-and-color-roles.md), [döküm](03-design-system.md)) |
 | `docker-compose.yml` | ✅ Çalışıyor | `db` (postgres:17), `api` (8080), `web` (3000), `mailpit` (8025); api healthcheck'li; `uploads` volume'u `api`'de `/app/uploads` |
 | `.githooks/pre-commit` | ✅ Devrede | `git config core.hooksPath .githooks` çalıştırıldı |
 | `.github/workflows/ci.yml` | ✅ **4/4 yeşil** | Son koşu `37792192822` (PR #2 merge, ürün ilanları, 2026-10-08, 1m58s) |
@@ -54,7 +55,7 @@ Geliştirme makinesinde 2026-10-06'da doğrulanan sürümler:
 
 | # | Sınırlama | Etki |
 |---|---|---|
-| L1 | Kargo ve gerçek ödeme yok | Sepet, sipariş ve iptal çalışıyor; ödeme sahte sağlayıcıyla (her işlemi onaylar). Kargo gönderisi, etiket, takip ve ayıplı ürün iadesi **yok**; satıcı siparişi "Hazırlanıyor"da kalır |
+| L1 | Gerçek ödeme ve gerçek kargo yok | Ödeme sahte sağlayıcıyla (her işlemi onaylar), gönderi sahte entegratörle (zamanla ilerler, "teslim edilemedi" üretmez) çalışır; canlıda ödeme alınamaz ve gönderi açılamaz. Ayıplı ürün iadesi **yok** (sonraki change, ADR-056 §4–5) |
 | L2 | `openspec` CLI kurulu değil | `/opsx:*` komutları çalışmaz; change artefaktları ve spec sync elle yapılıyor (yapı `AGENTS.md` §5.2'ye uygun) |
 | L3 | Vitrin gözle doğrulanmadı | 375 px / 1440 px ve açık / koyu temada insan doğrulaması yapılmadı; CSS mobil önce yazıldı ve iki tema token'ı tanımlı |
 | L4 | `pre-commit` hook'u kabuğun JAVA_HOME'unu kullanır | Hook `./mvnw` çağırırken oturumdaki JDK ile koşar; bu makinede Corretto 24 enjekte edildiği için testler yerelde 24, CI'da 21 üzerinde çalıştı. Sürüm farkı bugün soruna yol açmadı ama tek doğru sürüm 21'dir |
@@ -84,6 +85,10 @@ Geliştirme makinesinde 2026-10-06'da doğrulanan sürümler:
 | L30 | IBAN ve kimlik numarası düz metin | Yanıtta maskeli, log'da yok; veritabanında şifresiz. Disk ve yedek şifrelemesi KALANLAR B5 ([ADR-060](../adr/060-seller-payout-account-validated-masked-sync-submerchant.md)) |
 | L31 | İş günü tatil bilmez | Kargoya verme son tarihi yalnızca hafta sonunu atlar; bayramlarda satıcı süre aşmış görünebilir (yalnızca bilgi) ([ADR-061](../adr/061-listing-dispatch-days-business-days-weekends-only.md)) |
 | L32 | Ödenmeyen siparişler birikir | Alıcı ödeme dönüşüne gelmezse sipariş `PENDING_PAYMENT` kalır; stok ve para etkisi yok, temizlik işi yok |
+| L33 | Gönderi durumu sorgusu tek örnek içindir | Zamanlayıcı her örnekte çalışır; iki örnekte iş tekrar eder (satır kilidi çift geçişi önler). Durum en çok bir sorgu aralığı kadar gecikir ([ADR-075](../adr/075-shipment-status-by-scheduled-polling.md)) |
+| L34 | "Teslim edilemedi" dev'de denenemez | Sahte entegratör yalnızca teslim edildiye ilerler; teslim edilemeyen akışı ve admin kararı testlerde sınanır |
+| L35 | Etiketler silinmiyor | Etiket alıcının adını ve adresini taşır; volume'da kalır, saklama süresi hukuk kararı bekliyor (KALANLAR A5) |
+| L36 | Paket şubeye verildikten sonraki ilk sorguya kadar iptal açık görünür | Bu pencerede alıcının iptali entegratörde reddedilir ve "kargo firmasına ulaşılamadı" hatası görülür ([ADR-076](../adr/076-cancel-cancels-shipment-before-refund.md)) |
 
 ## 5. Bilinen sapmalar (kod ↔ ADR/spec)
 
@@ -97,8 +102,8 @@ Kural (`AGENTS.md` §5.4): kod ile ADR birbirine aykırıysa bu bir **sapma**dı
 
 ## 6. Sıradaki adım
 
-1. `add-cart-and-checkout` PR'ının incelenip `main`'e alınması (change archive edildi). Açık soru: sipariş için e-posta doğrulama kapısı (L11).
-2. **Kargo gönderisi dilimi** ([ADR-057](../adr/057-shipping-via-integrator-port-integrator-pending.md)): `fake` entegratörle gönderi, etiket, durum, teslim; ardından ayıplı ürün iadesi (ADR-056 §4–5).
+1. `add-shipments` PR'ının (#5) incelenip `main`'e alınması (change archive edildi). Açık soru: sipariş için e-posta doğrulama kapısı (L11).
+2. **Ayıplı ürün iadesi** (ADR-056 §4–5): teslimden sonra 48 saat, fotoğraflı talep, satıcı yanıtı, kısmi iade, admin hakemliği; "teslim edildi" e-postası.
 3. Ticari: ödeme sağlayıcısı ve kargo entegratörü seçimi ve sözleşmeleri (KALANLAR A1, A2).
 4. Oturum açıkken parola değiştirme (L12). Karar alındı: bütün oturumlar kapanır.
 5. Hukuk: satıcı belgesinin yeterliliği, aydınlatma metni (IBAN, TCKN / VKN, sağlayıcıya ve entegratöre veri aktarımı), saklama süresi, mesafeli satış ve cayma metni (KALANLAR A5).

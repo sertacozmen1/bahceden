@@ -86,13 +86,21 @@ Architecture Decision Records, projedeki önemli mimari kararları ve bu kararla
 | 064 | [Sipariş üç seviyede; tutarlar ve adres sipariş anında yazılır; `Idempotency-Key` zorunlu](064-three-level-order-snapshot-idempotency-key.md) | Accepted | 2026-10-08 |
 | 065 | [Fiyatlama tek sınıfta: kuruş tamsayısı, `HALF_UP`; değerler yapılandırmada](065-order-pricing-integer-minor-units-half-up.md) | Accepted | 2026-10-08 |
 | 066 | [Ödeme: başlat, yönlendir, tamamla; stok tamamlamada kilitle düşer, yetmezse tam iade](066-payment-redirect-verify-lock-stock-on-success.md) | Accepted | 2026-10-08 |
-| 067 | [Kargodan önce iptal: alıcı her zaman, satıcı gerekçeyle; tam iade, stok geri eklenir](067-cancel-before-shipment-full-refund-restock.md) | Accepted | 2026-10-08 |
+| 067 | [Kargodan önce iptal: alıcı her zaman, satıcı gerekçeyle; tam iade, stok geri eklenir](067-cancel-before-shipment-full-refund-restock.md) | Accepted · gönderisi açık siparişte [076](076-cancel-cancels-shipment-before-refund.md) ile genişledi | 2026-10-08 |
 | 068 | [`web`: sepet ve ödeme vitrinde, siparişler hesapta, satıcı ekranları panelde; sepet sayısı sunucudan](068-checkout-web-routes-server-cart-count.md) | Accepted | 2026-10-08 |
 
 | 069 | [Yenileme token'ı: 30 saniyelik tekrar kullanım toleransı](069-refresh-token-reuse-grace-window.md) | Accepted | 2026-10-09 |
 | 070 | [Oturum her sayfada sessizce yenilenir; sekmeler Web Locks ile sıraya girer](070-silent-session-refresh-on-any-page.md) | Accepted | 2026-10-09 |
+| 071 | [`shipping` paketi; entegratör dört metotlu bir arayüz, tek uygulama `fake`](071-shipping-package-integrator-port-fake-only.md) | Accepted | 2026-10-10 |
+| 072 | [Gönderi ayrı tabloda; satıcı siparişi kargo durumlarıyla genişler](072-shipments-table-and-seller-order-shipping-states.md) | Accepted | 2026-10-10 |
+| 073 | [Gönderi açma: koli boyutu, şubeye teslim, tekrarlanabilir istek](073-shipment-creation-package-size-branch-dropoff.md) | Accepted | 2026-10-10 |
+| 074 | [Etiket korumalı sunulur; büyük puntolu gönderi kodu; sahte etiket fontsuz PDF](074-shipment-label-protected-serving-and-shipment-code.md) | Accepted | 2026-10-10 |
+| 075 | [Gönderi durumu zamanlanmış sorguyla alınır](075-shipment-status-by-scheduled-polling.md) | Accepted | 2026-10-10 |
+| 076 | [İptal önce gönderiyi iptal eder, sonra iade](076-cancel-cancels-shipment-before-refund.md) | Accepted | 2026-10-10 |
+| 077 | [Teslim edilemeyen sipariş: admin iade eder veya gerekçeyle kapatır](077-undelivered-order-admin-refund-or-close.md) | Accepted | 2026-10-10 |
+| 078 | [Kargo bildirimleri yalnızca e-posta, üç olay](078-shipping-notifications-email-only-three-events.md) | Accepted | 2026-10-10 |
 
-**Sıradaki numara: 071.**
+**Sıradaki numara: 079.**
 
 **Durum değerleri:** `Proposed` (öneri, henüz bağlayıcı değil) · `Accepted` (yürürlükte, bağlayıcı) · `Deprecated` (artık geçerli değil, yerine bir şey gelmedi) · `Superseded by [ADR-XXX]` (yerini başka bir karara bıraktı).
 

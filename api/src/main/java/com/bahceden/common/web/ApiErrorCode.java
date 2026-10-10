@@ -118,8 +118,17 @@ public enum ApiErrorCode {
     /** Satıcı siparişi yok, başkasına ait veya ödenmemiş (404, D6). */
     SELLER_ORDER_NOT_FOUND(HttpStatus.NOT_FOUND),
 
-    /** Satıcı siparişi bu durumdan iptal edilemez: zaten iptal edilmiş veya ödenmemiş (409, D9). */
+    /**
+     * Satıcı siparişi bu işlem için uygun durumda değil (409): iptal (D9), gönderi
+     * açma veya teslim edilemeyen sipariş kararı (add-shipments D3, D7).
+     */
     ORDER_INVALID_TRANSITION(HttpStatus.CONFLICT),
+
+    /** Gönderi açmak için satıcının telefonu kayıtlı olmalı; entegratör çağrılmadı (422, add-shipments D3). */
+    SHIPMENT_SENDER_PHONE_MISSING(HttpStatus.UNPROCESSABLE_ENTITY),
+
+    /** Kargo entegratörüne ulaşılamadı veya işlem reddedildi; kayıt değişmedi (502, add-shipments D3, D6). */
+    SHIPPING_INTEGRATOR_ERROR(HttpStatus.BAD_GATEWAY),
 
     /** Kısa sürede çok fazla istek ya da çok fazla hatalı kod denemesi (429, design.md D5). */
     RATE_LIMITED(HttpStatus.TOO_MANY_REQUESTS),

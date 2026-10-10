@@ -42,7 +42,54 @@ public record BahcedenProperties(
         @NotNull @Valid Jwt jwt,
         @NotNull @Valid Storage storage,
         @NotNull @Valid Payment payment,
-        @NotNull @Valid Commerce commerce) {
+        @NotNull @Valid Commerce commerce,
+        @NotNull @Valid Shipping shipping) {
+
+    /**
+     * Kargo entegratörü ve gönderi durumu sorgusu (ADR-057, add-shipments D1, D5).
+     *
+     * <p>Gerçek entegratör seçilene kadar tek geçerli değer {@code fake}'tir
+     * (KALANLAR A2): bilinmeyen bir değerle uygulama açılmaz.
+     *
+     * @param integrator     entegratör adı
+     * @param pollingEnabled durum sorgusu zamanlayıcısı açık mı; testlerde kapalı,
+     *                       testler sorguyu doğrudan çağırır
+     * @param pollInterval   iki sorgu turu arasındaki bekleme
+     * @param pollBatchSize  bir turda sorgulanan en çok gönderi
+     * @param packageDesi    koli boyutunun entegratöre bildirilen desi karşılığı (D3)
+     * @param fake           sahte entegratörün durum ilerletme süreleri
+     */
+    public record Shipping(
+            @NotBlank @Pattern(regexp = "fake") String integrator,
+            boolean pollingEnabled,
+            @NotNull Duration pollInterval,
+            @Positive int pollBatchSize,
+            @NotNull @Valid PackageDesi packageDesi,
+            @NotNull @Valid FakeIntegrator fake) {
+
+        /** Koli boyutlarının desi karşılığı; ücreti etkilemez (ADR-058). */
+        public record PackageDesi(@Positive int small, @Positive int medium, @Positive int large) {
+        }
+
+        /**
+         * Sahte entegratör gönderiyi açılışından bu süreler geçince ilerletir (D5).
+         *
+         * @param handedOverAfter kargoya verildi
+         * @param inTransitAfter  yolda
+         * @param deliveredAfter  teslim edildi
+         */
+        public record FakeIntegrator(@NotNull Duration handedOverAfter, @NotNull Duration inTransitAfter,
+                                     @NotNull Duration deliveredAfter) {
+
+            public FakeIntegrator {
+                if (handedOverAfter != null && inTransitAfter != null && deliveredAfter != null
+                        && (handedOverAfter.compareTo(inTransitAfter) > 0 || inTransitAfter.compareTo(deliveredAfter) > 0)) {
+                    throw new IllegalArgumentException(
+                            "bahceden.shipping.fake süreleri sıralı olmalıdır: handed-over ≤ in-transit ≤ delivered");
+                }
+            }
+        }
+    }
 
     /**
      * Ödeme sağlayıcısı (ADR-054, add-cart-and-checkout D8).
