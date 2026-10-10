@@ -2,7 +2,7 @@
 
 **Tarih:** 2026-10-10
 **Sahibi:** Ürün sahibi
-**Durum:** Geliştirmede (change `add-shipments`)
+**Durum:** Yayında (change `add-shipments`, archive edildi)
 
 ## 1. Kullanıcı Problemi ve Değer Önerisi
 

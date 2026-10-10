@@ -1,11 +1,11 @@
 # add-shipments
 
-**Durum:** Onaylandı (2026-10-10, proje sahibi "uygula") ve uygulandı; archive kullanıcı onayı bekliyor (`AGENTS.md` §5.3).
+**Durum:** Onaylandı (2026-10-10, proje sahibi "uygula"), uygulandı ve kullanıcı onayıyla archive edildi (2026-10-10); PR #5 ile `main`'e gidiyor.
 
 > Bu change şu kararlar üzerine kurulur:
-> - [ADR-057](../../../docs/adr/057-shipping-via-integrator-port-integrator-pending.md): gönderi kargo entegratörü API'siyle açılır; entegratör bir arayüzün arkasında, `fake` ile.
-> - [ADR-058](../../../docs/adr/058-flat-shipping-fee-per-seller-and-declared-handover.md): ücret ve kargoya verme süresi (bu change ücrete dokunmaz).
-> - [ADR-056](../../../docs/adr/056-cancel-before-shipment-and-defect-refund.md) §1–2: kargoya verilmeden önce iptal tam iadedir.
+> - [ADR-057](../../../../docs/adr/057-shipping-via-integrator-port-integrator-pending.md): gönderi kargo entegratörü API'siyle açılır; entegratör bir arayüzün arkasında, `fake` ile.
+> - [ADR-058](../../../../docs/adr/058-flat-shipping-fee-per-seller-and-declared-handover.md): ücret ve kargoya verme süresi (bu change ücrete dokunmaz).
+> - [ADR-056](../../../../docs/adr/056-cancel-before-shipment-and-defect-refund.md) §1–2: kargoya verilmeden önce iptal tam iadedir.
 >
 > Ürün sahibinin 2026-10-10 tarihli kararları:
 > - kapsam yalnızca gönderi: açma, etiket, durum, teslim. Ayıplı ürün talebi (ADR-056 §4–5) sonraki change'tir;

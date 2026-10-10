@@ -1,7 +1,7 @@
 # Kargo ve Teslimat
 
-**Durum:** Geliştirmede
-**İlk sürüm:** -
+**Durum:** Yayında
+**İlk sürüm:** 2026-10-10
 **Son değişiklik:** 2026-10-10
 
 | | |
@@ -9,7 +9,7 @@
 | **Ürün belgesi** | [Kargo ve Teslimat](../product/kargo-ve-teslimat.md) |
 | **Kararlar** | Çerçeve: [ADR-057](../adr/057-shipping-via-integrator-port-integrator-pending.md), [ADR-058](../adr/058-flat-shipping-fee-per-seller-and-declared-handover.md), [ADR-056](../adr/056-cancel-before-shipment-and-defect-refund.md). Uygulama: [ADR-071](../adr/071-shipping-package-integrator-port-fake-only.md) … [ADR-078](../adr/078-shipping-notifications-email-only-three-events.md) |
 | **Spec (capability)** | `openspec/specs/shipments` (yeni), `openspec/specs/orders` |
-| **Change'ler** | `openspec/changes/add-shipments` (açık) |
+| **Change'ler** | `openspec/changes/archive/2026-10-10-add-shipments` (archive edildi) |
 | **Rehberler** | [Yerel geliştirme](../how-to/yerel-gelistirme.md) |
 | **Referans** | [Domain modeli](../reference/01-domain-model.md), [API referansı](../reference/02-api-reference.md) |
 | **Kod** | `api/src/main/java/com/bahceden/shipping/` (`ShipmentService`, `ShipmentStatusPoller`, `FakeShippingIntegrator`), `api/src/main/java/com/bahceden/order/` (`ShipmentProgressService`, `UndeliveredOrderService`), `web/src/features/orders/components` (`PrepareShipment`, `ShipmentCard`), `web/src/app/(admin)/admin/orders` |
@@ -34,7 +34,8 @@
 
 ## Tarihçe
 
-- 2026-10-10: Change `add-shipments` uygulandı (archive bekliyor).
+- 2026-10-10: `add-shipments` change'i kullanıcı onayıyla archive edildi (`openspec/changes/archive/2026-10-10-add-shipments/`). Ön koşullar: delta spec'ler ana spec'lere sync edildi (`shipments` yeni, `orders` değişti); D1–D8 → ADR-071…078; dokümanlar güncel; `api` 271 ve `web` 226 test yeşil; PR #5. Taşımada göreli linkler bir seviye uzatıldı. Açık ve notlu: etiket saklama süresi ve iadesiz kapatmanın hukuki uygunluğu (KALANLAR A5), gerçek entegratör (KALANLAR A2).
+- 2026-10-10: Change `add-shipments` uygulandı.
   - `api` (`shipping` paketi): `ShippingIntegrator` + `FakeShippingIntegrator`; `POST /api/v1/sellers/me/orders/{id}/shipment`, `GET …/shipment/label`; zamanlanmış durum sorgusu; satıcı siparişi `SHIPPED`, `DELIVERED`, `DELIVERY_FAILED`, `REFUNDED`, `CLOSED`; iptal önce gönderiyi iptal eder; admin `GET/POST /api/v1/admin/seller-orders…`; üç e-posta.
   - Şema: `013-shipments.sql`.
   - `web`: satıcı sipariş detayında "Kargoya hazırla" ve gönderi kartı (etiket, gönderi kodu), alıcı detayında gönderi, `/admin/orders`; BFF `/api/seller/orders/[id]/shipment`, `…/label`, `/api/admin/seller-orders/[id]/resolution`.

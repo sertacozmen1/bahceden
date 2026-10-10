@@ -55,4 +55,4 @@ Bu faz bittiğinde gönderisi açılmış sipariş iptal edilebilir ve admin tes
 - [x] 4.3 ADR-071…078 (D1–D8) yazılır, `docs/adr/index.md` güncellenir.
 - [x] 4.4 `docs/reference/` API ve ER sayfaları; `00-current-state.md` (özet, L1 güncellenir; yeni sınırlamalar: poller tek örnek, `DELIVERY_FAILED` dev'de denenemez, etiketler silinmiyor); `openspec/KALANLAR.md` A2 notu ve A5'e etiket saklama süresi; `docs/features/kargo-ve-teslimat.md` ve `sepet-ve-siparis.md` *Tarihçe*; gerekiyorsa `docs/how-to/` (dev'de `fake` sürelerini değiştirme).
 - [x] 4.5 Spec sync (`openspec/specs/shipments/spec.md` yeni, `orders` delta birleşir; `orders` Purpose cümlesindeki "kargo durumları kapsam dışı" ifadesi güncellenir).
-- [ ] 4.6 §14 raporu; archive kullanıcı onayıyla.
+- [x] 4.6 §14 raporu; archive kullanıcı onayıyla.

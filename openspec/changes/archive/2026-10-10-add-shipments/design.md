@@ -17,13 +17,13 @@
 >
 > | ADR | Çerçeve |
 > |---|---|
-> | [ADR-057](../../../docs/adr/057-shipping-via-integrator-port-integrator-pending.md) | Gönderi entegratör API'siyle, arayüz arkasında |
-> | [ADR-056](../../../docs/adr/056-cancel-before-shipment-and-defect-refund.md) | Kargodan önce iptal tam iade |
-> | [ADR-058](../../../docs/adr/058-flat-shipping-fee-per-seller-and-declared-handover.md) | Ücret ve kargoya verme süresi |
-> | [ADR-045](../../../docs/adr/045-seller-documents-table-content-sniffing-protected-serving.md) | Kişisel veri içeren dosyanın korumalı sunumu |
-> | [ADR-039](../../../docs/adr/039-uploads-on-local-volume-served-by-api.md) | Dosyalar yerel volume'da |
-> | [ADR-007](../../../docs/adr/007-query-level-ownership-scoping.md) | Sorgu seviyesinde sahiplik |
-> | [ADR-066](../../../docs/adr/066-payment-redirect-verify-lock-stock-on-success.md), [ADR-067](../../../docs/adr/067-cancel-before-shipment-full-refund-restock.md) | Ödeme ve iptal akışı |
+> | [ADR-057](../../../../docs/adr/057-shipping-via-integrator-port-integrator-pending.md) | Gönderi entegratör API'siyle, arayüz arkasında |
+> | [ADR-056](../../../../docs/adr/056-cancel-before-shipment-and-defect-refund.md) | Kargodan önce iptal tam iade |
+> | [ADR-058](../../../../docs/adr/058-flat-shipping-fee-per-seller-and-declared-handover.md) | Ücret ve kargoya verme süresi |
+> | [ADR-045](../../../../docs/adr/045-seller-documents-table-content-sniffing-protected-serving.md) | Kişisel veri içeren dosyanın korumalı sunumu |
+> | [ADR-039](../../../../docs/adr/039-uploads-on-local-volume-served-by-api.md) | Dosyalar yerel volume'da |
+> | [ADR-007](../../../../docs/adr/007-query-level-ownership-scoping.md) | Sorgu seviyesinde sahiplik |
+> | [ADR-066](../../../../docs/adr/066-payment-redirect-verify-lock-stock-on-success.md), [ADR-067](../../../../docs/adr/067-cancel-before-shipment-full-refund-restock.md) | Ödeme ve iptal akışı |
 
 ## Kararlar
 

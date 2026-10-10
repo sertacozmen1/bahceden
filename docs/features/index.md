@@ -30,7 +30,7 @@ Feature dosyası içerik üretmez; yukarıdakilere **link verir** ve zaman için
 | [Ürün İlanları](urun-ilanlari.md) | Yayında | 2026-10-08 | 2026-10-08 | product-listings |
 | [Sepet ve Sipariş](sepet-ve-siparis.md) | Yayında | 2026-10-08 | 2026-10-10 | cart-and-checkout, orders |
 | [Ödeme ve Hakediş](odeme-ve-hakedis.md) | Yayında | 2026-10-08 | 2026-10-08 | seller-payout-details |
-| [Kargo ve Teslimat](kargo-ve-teslimat.md) | Geliştirmede | - | 2026-10-10 | shipments, orders |
+| [Kargo ve Teslimat](kargo-ve-teslimat.md) | Yayında | 2026-10-10 | 2026-10-10 | shipments, orders |
 | [Genel: feature'a bağlı olmayan işler](_genel.md) | - | - | 2026-10-08 | (dokümantasyon, araçlar, altyapı, AI kuralları) |
 
 **Planlanan feature'lar** (ilk dilimlerle birlikte dosyaları açılacak):
