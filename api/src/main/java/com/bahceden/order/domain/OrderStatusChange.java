@@ -16,7 +16,9 @@ import java.util.Optional;
  * hangisine, neden (orders spec'i, add-cart-and-checkout D6).
  *
  * <p>Yalnızca eklenir (ADR-040 deseni): değiştirici metodu yoktur ve
- * repository'si silme veya güncelleme sunmaz.
+ * repository'si silme veya güncelleme sunmaz. Gönderi durumu sorgusunun
+ * yaptığı geçişlerde yapan hesap yoktur; bu satırlarda hesap boştur ve
+ * "sistem" okunur (add-shipments D2).
  */
 @Entity
 @Table(name = "order_status_changes")
@@ -41,7 +43,8 @@ public class OrderStatusChange {
     @Column(length = 500)
     private String reason;
 
-    @Column(name = "actor_account_id", nullable = false)
+    /** Boşsa geçişi sistem yaptı (add-shipments D2). */
+    @Column(name = "actor_account_id")
     private Long actorAccountId;
 
     @Column(name = "created_at", nullable = false)
@@ -55,6 +58,18 @@ public class OrderStatusChange {
 
     public static OrderStatusChange record(long sellerOrderId, SellerOrderStatus fromStatus, SellerOrderStatus toStatus,
                                            String reason, long actorAccountId, Instant now) {
+        return create(sellerOrderId, fromStatus, toStatus, reason, actorAccountId, now);
+    }
+
+    /** Yapan hesabı olmayan geçiş: gönderi durumu sorgusu (add-shipments D2, D5). */
+    public static OrderStatusChange recordBySystem(long sellerOrderId, SellerOrderStatus fromStatus,
+                                                   SellerOrderStatus toStatus, Instant now) {
+        return create(sellerOrderId, fromStatus, toStatus, null, null, now);
+    }
+
+    private static OrderStatusChange create(long sellerOrderId, SellerOrderStatus fromStatus,
+                                            SellerOrderStatus toStatus, String reason, Long actorAccountId,
+                                            Instant now) {
         var change = new OrderStatusChange();
         change.sellerOrderId = sellerOrderId;
         change.fromStatus = fromStatus;

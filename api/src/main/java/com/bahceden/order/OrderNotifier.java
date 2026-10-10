@@ -20,7 +20,8 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 /**
- * Sipariş e-postaları (orders spec'i, add-cart-and-checkout D8, D9).
+ * Sipariş e-postaları (orders ve shipments spec'leri, add-cart-and-checkout D8,
+ * D9, add-shipments D8).
  *
  * <p>E-postalar transaction <strong>başarıyla bittikten sonra</strong> ve
  * alıcının ya da satıcının hesap dilinde gönderilir (ADR-032): geri alınan bir
@@ -107,6 +108,83 @@ class OrderNotifier {
             });
         }
         sendAfterCommit(mails);
+    }
+
+    /** Kargoya verildi: alıcıya firma ve takip numarası (add-shipments D8). */
+    void sellerOrderShipped(SellerOrder sellerOrder, String carrier, String trackingNumber) {
+        var order = sellerOrder.getOrder();
+        var mails = new ArrayList<Mail>();
+        accounts.findById(order.getBuyerAccountId()).ifPresent(buyer -> {
+            var locale = buyer.getLocale();
+            mails.add(new Mail(buyer.getEmail(),
+                    messages.get("mail.sellerOrderShipped.subject", locale, order.getOrderNumber()),
+                    messages.get("mail.sellerOrderShipped.body", locale, order.getOrderNumber(),
+                            sellerOrder.getSeller().getDisplayName(), carrier, trackingNumber,
+                            properties.webOrigin() + "/account/orders/" + order.getOrderNumber()),
+                    order.getOrderNumber()));
+        });
+        sendAfterCommit(mails);
+    }
+
+    /** Teslim edilemedi: alıcıya ve satıcıya; admin karar verecek (add-shipments D7, D8). */
+    void sellerOrderDeliveryFailed(SellerOrder sellerOrder) {
+        var order = sellerOrder.getOrder();
+        var mails = new ArrayList<Mail>();
+        accounts.findById(order.getBuyerAccountId()).ifPresent(buyer -> {
+            var locale = buyer.getLocale();
+            mails.add(new Mail(buyer.getEmail(),
+                    messages.get("mail.deliveryFailedBuyer.subject", locale, order.getOrderNumber()),
+                    messages.get("mail.deliveryFailedBuyer.body", locale, order.getOrderNumber(),
+                            sellerOrder.getSeller().getDisplayName(),
+                            properties.webOrigin() + "/account/orders/" + order.getOrderNumber()),
+                    order.getOrderNumber()));
+        });
+        sellerAccount(sellerOrder).ifPresent(seller -> {
+            var locale = seller.getLocale();
+            mails.add(new Mail(seller.getEmail(),
+                    messages.get("mail.deliveryFailedSeller.subject", locale, order.getOrderNumber()),
+                    messages.get("mail.deliveryFailedSeller.body", locale, order.getOrderNumber(),
+                            properties.webOrigin() + "/seller/orders/" + sellerOrder.getId()),
+                    order.getOrderNumber()));
+        });
+        sendAfterCommit(mails);
+    }
+
+    /**
+     * Teslim edilemeyen sipariş için admin kararı: alıcıya ve satıcıya
+     * (add-shipments D7).
+     *
+     * @param refunded {@code true} ise iade, değilse iadesiz kapatma
+     * @param reason   admin gerekçesi; iade kararında boş olabilir
+     */
+    void undeliveredResolved(SellerOrder sellerOrder, boolean refunded, String reason) {
+        var order = sellerOrder.getOrder();
+        var mails = new ArrayList<Mail>();
+        var kind = refunded ? "Refunded" : "Closed";
+        accounts.findById(order.getBuyerAccountId()).ifPresent(buyer -> {
+            var locale = buyer.getLocale();
+            mails.add(new Mail(buyer.getEmail(),
+                    messages.get("mail.undelivered" + kind + ".subject", locale, order.getOrderNumber()),
+                    messages.get("mail.undelivered" + kind + ".buyerBody", locale, order.getOrderNumber(),
+                            sellerOrder.getSeller().getDisplayName(),
+                            MoneyFormat.format(sellerOrder.refundableAmount(), order.getCurrency(), locale),
+                            reasonOrDash(reason),
+                            properties.webOrigin() + "/account/orders/" + order.getOrderNumber()),
+                    order.getOrderNumber()));
+        });
+        sellerAccount(sellerOrder).ifPresent(seller -> {
+            var locale = seller.getLocale();
+            mails.add(new Mail(seller.getEmail(),
+                    messages.get("mail.undelivered" + kind + ".subject", locale, order.getOrderNumber()),
+                    messages.get("mail.undelivered" + kind + ".sellerBody", locale, order.getOrderNumber(),
+                            reasonOrDash(reason), properties.webOrigin() + "/seller/orders/" + sellerOrder.getId()),
+                    order.getOrderNumber()));
+        });
+        sendAfterCommit(mails);
+    }
+
+    private static String reasonOrDash(String reason) {
+        return reason == null ? "-" : reason;
     }
 
     private Optional<Account> sellerAccount(SellerOrder sellerOrder) {

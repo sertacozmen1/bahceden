@@ -4,12 +4,14 @@ import com.bahceden.common.web.ApiErrorCode;
 import com.bahceden.common.web.ApiException;
 import com.bahceden.common.web.PageResponse;
 import com.bahceden.order.domain.Order;
+import com.bahceden.order.domain.SellerOrder;
 import com.bahceden.order.domain.SellerOrderStatus;
 import com.bahceden.order.dto.OrderDetail;
 import com.bahceden.order.dto.OrderSummary;
 import com.bahceden.order.dto.SellerOrderDetail;
 import com.bahceden.order.dto.SellerOrderSummary;
 import com.bahceden.seller.SellerService;
+import com.bahceden.shipping.ShipmentService;
 import java.time.Clock;
 import java.util.EnumSet;
 import java.util.Optional;
@@ -30,21 +32,24 @@ public class OrderService {
 
     static final int MAX_PAGE_SIZE = 50;
 
-    /** Satıcının görebildiği durumlar: ödemesi tamamlanmış satıcı siparişleri. */
-    static final Set<SellerOrderStatus> SELLER_VISIBLE = EnumSet.of(SellerOrderStatus.NEW, SellerOrderStatus.CANCELLED);
+    /** Satıcının görebildiği durumlar: ödemesi tamamlanmış satıcı siparişleri (add-shipments D2). */
+    static final Set<SellerOrderStatus> SELLER_VISIBLE = EnumSet.complementOf(
+            EnumSet.of(SellerOrderStatus.PENDING_PAYMENT, SellerOrderStatus.VOID));
 
     private final OrderRepository orders;
     private final SellerOrderRepository sellerOrders;
     private final SellerService sellers;
     private final OrderMapper mapper;
+    private final ShipmentService shipments;
     private final Clock clock;
 
     OrderService(OrderRepository orders, SellerOrderRepository sellerOrders, SellerService sellers, OrderMapper mapper,
-                 Clock clock) {
+                 ShipmentService shipments, Clock clock) {
         this.orders = orders;
         this.sellerOrders = sellerOrders;
         this.sellers = sellers;
         this.mapper = mapper;
+        this.shipments = shipments;
         this.clock = clock;
     }
 
@@ -63,7 +68,7 @@ public class OrderService {
     /**
      * Satıcının gelen siparişleri; durumla süzülebilir.
      *
-     * @param status yalnızca {@code NEW} veya {@code CANCELLED}; boşsa ikisi
+     * @param status satıcının görebildiği durumlardan biri; boşsa hepsi
      */
     @Transactional(readOnly = true)
     public PageResponse<SellerOrderSummary> listForSeller(long accountId, Optional<SellerOrderStatus> status, int page,
@@ -82,12 +87,14 @@ public class OrderService {
         var seller = sellers.requireApprovedSeller(accountId);
         var sellerOrder = sellerOrders.findOwnBySeller(sellerOrderId, seller.getId(), SELLER_VISIBLE)
                 .orElseThrow(OrderService::sellerOrderNotFound);
-        return mapper.toSellerDetail(sellerOrder, clock.instant());
+        return mapper.toSellerDetail(sellerOrder, shipments.activeView(sellerOrder.getId()), clock.instant());
     }
 
     /** Satıcılar ve satırlar tek sorguda (sipariş zaten okunmuş). */
     OrderDetail detailOf(Order order) {
-        return mapper.toDetail(order, sellerOrders.findForOrder(order.getId()), clock.instant());
+        var parts = sellerOrders.findForOrder(order.getId());
+        return mapper.toDetail(order, parts,
+                shipments.activeViews(parts.stream().map(SellerOrder::getId).toList()), clock.instant());
     }
 
     static ApiException orderNotFound() {

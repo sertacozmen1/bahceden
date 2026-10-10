@@ -8,8 +8,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { requireRole } from "@/features/account/requireSession";
 import { isSellerNotApproved, SellerNotApproved } from "@/features/listings/components/SellerNotApproved";
 import { getSellerOrder, type SellerOrderDetail } from "@/features/orders/api";
+import { orderBffPaths } from "@/features/orders/bff";
 import { CancelSellerOrder } from "@/features/orders/components/CancelSellerOrder";
 import { SellerOrderStatusBadge } from "@/features/orders/components/OrderStatusBadge";
+import { PrepareShipment } from "@/features/orders/components/PrepareShipment";
+import { ShipmentCard } from "@/features/orders/components/ShipmentCard";
 import { formatDateTime } from "@/lib/datetime";
 import { formatMoney } from "@/lib/money";
 
@@ -22,8 +25,10 @@ export async function generateMetadata(): Promise<Metadata> {
 /**
  * Satıcının satıcı siparişi (orders spec'i): satırlar, ürün tutarı, komisyon,
  * hakediş, kargoya verme son tarihi ve alıcının yalnızca il ve ilçesi (K10).
- * Başkasının veya ödenmemiş sipariş "bulunamadı" olur. Kargoya verilmemiş
- * sipariş gerekçeyle iptal edilebilir; yıkıcı eylem en altta durur (Fitts).
+ * Başkasının veya ödenmemiş sipariş "bulunamadı" olur. Hazırlanan siparişte
+ * birincil eylem "Kargoya hazırla"dır, gönderi açıldıysa gönderi kartı (etiket ve
+ * gönderi kodu) üstte durur (add-shipments D3, D4). Kargoya verilmemiş sipariş
+ * gerekçeyle iptal edilebilir; yıkıcı eylem en altta durur (Fitts).
  */
 export default async function SellerOrderPage({ params }: { readonly params: Promise<{ id: string }> }) {
   const id = Number((await params).id);
@@ -73,6 +78,16 @@ export default async function SellerOrderPage({ params }: { readonly params: Pro
             {order.dispatchOverdue
               ? t("sellerOrders.overdue")
               : t("orders.dispatchDue", { date: formatDateTime(order.dispatchDueAt, locale) })}
+          </p>
+        )}
+        {order.shipment ? (
+          <ShipmentCard shipment={order.shipment} labelHref={orderBffPaths.label(order.id)} />
+        ) : (
+          order.status === "NEW" && <PrepareShipment sellerOrderId={order.id} />
+        )}
+        {(order.status === "DELIVERY_FAILED" || order.status === "REFUNDED" || order.status === "CLOSED") && (
+          <p className="rounded-lg bg-muted px-3 py-2 text-sm text-pretty">
+            {t("sellerOrders.shippingNote", { status: order.status })}
           </p>
         )}
         {order.status === "CANCELLED" && (

@@ -438,6 +438,27 @@ Change `add-cart-and-checkout`; kararlar [ADR-054](../adr/054-split-payment-via-
 
 ---
 
+## Kargo gönderisi uçları
+
+Change `add-shipments`; kararlar [ADR-057](../adr/057-shipping-via-integrator-port-integrator-pending.md) (çerçeve) ve [ADR-071](../adr/071-shipping-package-integrator-port-fake-only.md)…[ADR-078](../adr/078-shipping-notifications-email-only-three-events.md).
+
+| Uç | Kimlik | Başarı | Hatalar | Hız sınırı |
+|---|---|---|---|---|
+| `POST /api/v1/sellers/me/orders/{id}/shipment` | `ROLE_SELLER` + onaylı satıcı | `201` `Shipment` (açıldı) / `200` `Shipment` (zaten açıktı) | 400 (`packageSize`), 401, 403, 404 (`SELLER_ORDER_NOT_FOUND`), 409 (`ORDER_INVALID_TRANSITION`), 422 (`SHIPMENT_SENDER_PHONE_MISSING`), 502 (`SHIPPING_INTEGRATOR_ERROR`) | - |
+| `GET /api/v1/sellers/me/orders/{id}/shipment/label` | aynı | `200` PDF veya PNG, korumalı başlıklarla | 401, 403, 404 | - |
+| `GET /api/v1/admin/seller-orders?status=` | `ROLE_ADMIN` | `200` `PageResponseAdminSellerOrderSummary` | 400 (`status`: yalnızca `DELIVERY_FAILED`, `REFUNDED`, `CLOSED`), 401, 403 | - |
+| `GET /api/v1/admin/seller-orders/{id}` | aynı | `200` `AdminSellerOrderDetail` | 401, 403, 404 | - |
+| `POST /api/v1/admin/seller-orders/{id}/resolution` | aynı | `200` `AdminSellerOrderDetail` | 400 (`decision`, `reason`), 401, 403, 404, 409 (`ORDER_INVALID_TRANSITION`), 502 (`PAYMENT_PROVIDER_ERROR`) | - |
+
+- **Gönderi açma:** yalnızca `NEW` satıcı siparişinde; gönderici satıcının adı, ili ve telefonu (paket şubeye teslim edilir), alıcı siparişin adres kopyası. Koli boyutunun desi karşılığı yapılandırmadadır, ücreti etkilemez. Gönderi açılması satıcı siparişini değiştirmez.
+- **Durum:** zamanlanmış sorgu (`bahceden.shipping.poll-interval`) açık gönderileri entegratörden okur. `HANDED_OVER` → satıcı siparişi `SHIPPED` (alıcıya e-posta), `DELIVERED` → `DELIVERED`, `DELIVERY_FAILED` → `DELIVERY_FAILED` (alıcıya ve satıcıya e-posta). `IN_TRANSIT` yalnızca gönderi durumudur.
+- **Görünüm:** `SellerOrderDetail.shipment` ve `BuyerSellerOrderView.shipment` (`Shipment`: firma, takip numarası, durum, koli boyutu, zamanlar). Etiket yalnızca satıcıya, ayrı uçtan.
+- **İptal (değişti):** gönderisi açılmış `NEW` siparişte önce gönderi entegratörde iptal edilir, sonra iade; entegratör reddederse 502 `SHIPPING_INTEGRATOR_ERROR` ve hiçbir şey değişmez. `SHIPPED` ve sonrası 409.
+- **Satıcı listesi:** `status` süzgeci artık `NEW`, `SHIPPED`, `DELIVERED`, `DELIVERY_FAILED`, `REFUNDED`, `CLOSED`, `CANCELLED` kabul eder.
+- **Admin kararı:** `REFUND` ürün + kargo ücretini iade eder (`refunds.reason = UNDELIVERED`), stok geri eklenmez; `CLOSE` gerekçe ister (10–500), para hareketi yok. Detayda alıcının adı ve telefonu var, açık adres yok.
+
+---
+
 ## Henüz olmayan uçlar
 
-Oturum açıkken parola değiştirme, gönderim (kargo etiketi, takip) ve ayıplı ürün iadesi uçları **yoktur**. Parola değiştirme karara bağlandı, change bekliyor; gönderim ADR-057 ile karara bağlandı, entegratör seçimi KALANLAR A2'de açık.
+Oturum açıkken parola değiştirme ve ayıplı ürün iadesi uçları **yoktur**. Parola değiştirme karara bağlandı, change bekliyor; ayıplı ürün iadesi ADR-056 §4–5 ile karara bağlandı, sonraki change. Gerçek kargo entegratörü ve durum bildirimi (webhook) entegratör seçimine bağlı (KALANLAR A2).

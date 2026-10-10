@@ -49,7 +49,10 @@ public class SellerOrderController {
     }
 
     @Operation(operationId = "listSellerOrders", summary = "Satıcının gelen siparişlerini listeler",
-            description = "Yalnızca ödemesi tamamlanmış satıcı siparişleri; en yeni üstte. Durumla süzülebilir (NEW, CANCELLED).",
+            description = """
+                    Yalnızca ödemesi tamamlanmış satıcı siparişleri; en yeni üstte. Durumla süzülebilir
+                    (NEW, SHIPPED, DELIVERED, DELIVERY_FAILED, REFUNDED, CLOSED, CANCELLED).
+                    """,
             security = @SecurityRequirement(name = OpenApiConfig.BEARER_SCHEME))
     @ApiResponse(responseCode = "200", description = "Satıcı siparişleri")
     @ApiResponse(responseCode = "400", description = "Süzgeç veya sayfalama değeri geçersiz (VALIDATION_FAILED)",
@@ -62,7 +65,7 @@ public class SellerOrderController {
     @GetMapping(produces = MediaType.APPLICATION_JSON_VALUE)
     public PageResponse<SellerOrderSummary> list(
             @Parameter(hidden = true) @AuthenticationPrincipal Jwt token,
-            @Parameter(description = "Durum süzgeci: NEW veya CANCELLED; boşsa ikisi", example = "NEW")
+            @Parameter(description = "Durum süzgeci; boşsa ödenmiş satıcı siparişlerinin hepsi", example = "NEW")
             @RequestParam(required = false) SellerOrderStatus status,
             @Parameter(description = "Sayfa numarası (sıfırdan başlar)", example = "0")
             @RequestParam(defaultValue = "0") @Min(value = 0, message = "{validation.page.min}") int page,
@@ -102,9 +105,9 @@ public class SellerOrderController {
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ApiError.class)))
     @ApiResponse(responseCode = "404", description = "Satıcı siparişi yok veya başkasına ait (SELLER_ORDER_NOT_FOUND)",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ApiError.class)))
-    @ApiResponse(responseCode = "409", description = "Satıcı siparişi iptal edilebilir durumda değil (ORDER_INVALID_TRANSITION)",
+    @ApiResponse(responseCode = "409", description = "Satıcı siparişi iptal edilebilir durumda değil: iptal edilmiş veya kargoya verilmiş (ORDER_INVALID_TRANSITION)",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ApiError.class)))
-    @ApiResponse(responseCode = "502", description = "İade yapılamadı; hiçbir şey değişmedi (PAYMENT_PROVIDER_ERROR)",
+    @ApiResponse(responseCode = "502", description = "Gönderi iptal edilemedi (SHIPPING_INTEGRATOR_ERROR) veya iade yapılamadı (PAYMENT_PROVIDER_ERROR); hiçbir şey değişmedi",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ApiError.class)))
     @PostMapping(path = "/{id}/cancel", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
     public SellerOrderDetail cancel(@Parameter(hidden = true) @AuthenticationPrincipal Jwt token, @PathVariable long id,

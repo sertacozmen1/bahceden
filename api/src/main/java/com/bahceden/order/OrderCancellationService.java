@@ -15,6 +15,8 @@ import com.bahceden.payment.PaymentProviderException;
 import com.bahceden.payment.PaymentService;
 import com.bahceden.payment.domain.RefundReason;
 import com.bahceden.seller.SellerService;
+import com.bahceden.shipping.ShipmentService;
+import com.bahceden.shipping.ShippingIntegratorException;
 import java.time.Clock;
 import java.util.Map;
 import java.util.Optional;
@@ -33,7 +35,9 @@ import org.springframework.transaction.annotation.Transactional;
  * bağlı iptal eder; satıcı gerekçeyle iptal eder. Tek transaction'da: satıcı
  * siparişi kilitlenir ve {@code CANCELLED} olur, ürünlerin stoğu geri eklenir,
  * geçmiş yazılır, satıcı siparişinin ürün tutarı ile kargo ücreti sağlayıcıdan
- * iade edilir. İade başarısız olursa hiçbir şey değişmez (502). Karşı tarafa
+ * iade edilir. Gönderi açılmışsa önce gönderi entegratörde iptal edilir
+ * (add-shipments D6): para dönüp paket yola çıkmasın diye iadeden önce.
+ * Entegratör veya iade başarısız olursa hiçbir şey değişmez (502). Karşı tarafa
  * e-posta transaction sonrasında gider. Siparişin diğer satıcı siparişleri
  * etkilenmez.
  */
@@ -53,12 +57,13 @@ public class OrderCancellationService {
     private final SellerService sellers;
     private final OrderService orderService;
     private final OrderNotifier notifier;
+    private final ShipmentService shipments;
     private final Clock clock;
 
     OrderCancellationService(OrderRepository orders, SellerOrderRepository sellerOrders,
                              OrderStatusChangeRepository statusChanges, ProductRepository products,
                              PaymentService payments, SellerService sellers, OrderService orderService,
-                             OrderNotifier notifier, Clock clock) {
+                             OrderNotifier notifier, ShipmentService shipments, Clock clock) {
         this.orders = orders;
         this.sellerOrders = sellerOrders;
         this.statusChanges = statusChanges;
@@ -67,12 +72,14 @@ public class OrderCancellationService {
         this.sellers = sellers;
         this.orderService = orderService;
         this.notifier = notifier;
+        this.shipments = shipments;
         this.clock = clock;
     }
 
     /**
      * @throws ApiException {@code ORDER_NOT_FOUND}, {@code SELLER_ORDER_NOT_FOUND},
-     *                      {@code ORDER_INVALID_TRANSITION} veya {@code PAYMENT_PROVIDER_ERROR}
+     *                      {@code ORDER_INVALID_TRANSITION}, {@code SHIPPING_INTEGRATOR_ERROR} veya
+     *                      {@code PAYMENT_PROVIDER_ERROR}
      */
     @Transactional
     public OrderDetail cancelByBuyer(long accountId, String orderNumber, long sellerOrderId, String reason) {
@@ -99,7 +106,7 @@ public class OrderCancellationService {
         if (text.length() < MIN_SELLER_REASON) {
             throw ApiException.invalidField("reason", "validation.cancelReason.length");
         }
-        var sellerOrder = sellerOrders.findForSellerCancel(sellerOrderId, seller.getId())
+        var sellerOrder = sellerOrders.findForSellerUpdate(sellerOrderId, seller.getId())
                 .filter(found -> OrderService.SELLER_VISIBLE.contains(found.getStatus()))
                 .orElseThrow(OrderService::sellerOrderNotFound);
         cancel(sellerOrder, CancelledBy.SELLER, text, accountId);
@@ -109,6 +116,12 @@ public class OrderCancellationService {
     private void cancel(SellerOrder sellerOrder, CancelledBy by, String reason, long actorAccountId) {
         if (!sellerOrder.allows(SellerOrderTransition.CANCEL)) {
             throw new ApiException(ApiErrorCode.ORDER_INVALID_TRANSITION, "error.orderInvalidTransition");
+        }
+        try {
+            shipments.cancelActive(sellerOrder.getId());
+        } catch (ShippingIntegratorException cause) {
+            log.warn("Gönderi iptal edilemedi, sipariş iptali yapılmadı: satıcı siparişi {}", sellerOrder.getId(), cause);
+            throw new ApiException(ApiErrorCode.SHIPPING_INTEGRATOR_ERROR, "error.shippingIntegrator");
         }
         var now = clock.instant();
         var quantities = sellerOrder.getItems().stream()

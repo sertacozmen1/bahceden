@@ -50,10 +50,18 @@ public interface SellerOrderRepository extends JpaRepository<SellerOrder, Long> 
     @Query("select so from SellerOrder so where so.id = :id and so.order.id = :orderId")
     Optional<SellerOrder> findForBuyerCancel(long id, long orderId);
 
-    /** İptal için satıcının kendi satıcı siparişini kilitler (D9). */
+    /**
+     * Satıcının kendi satıcı siparişini değişiklik için kilitler: iptal (D9) ve
+     * gönderi açma (add-shipments D3). Eşzamanlı iki istek sırayla işlenir.
+     */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select so from SellerOrder so where so.id = :id and so.seller.id = :sellerId")
-    Optional<SellerOrder> findForSellerCancel(long id, long sellerId);
+    Optional<SellerOrder> findForSellerUpdate(long id, long sellerId);
+
+    /** Gönderi durumu sorgusu ve admin kararı için kilitli okuma (add-shipments D5, D7). */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select so from SellerOrder so where so.id = :id")
+    Optional<SellerOrder> findByIdForUpdate(long id);
 
     /** Satıcının tek satıcı siparişi; başkasınınki veya ödenmemiş olan boş döner. */
     @Query("""
@@ -63,4 +71,25 @@ public interface SellerOrderRepository extends JpaRepository<SellerOrder, Long> 
             where so.id = :id and so.seller.id = :sellerId and so.status in :statuses
             """)
     Optional<SellerOrder> findOwnBySeller(long id, long sellerId, Collection<SellerOrderStatus> statuses);
+
+    /** Admin listesi: durumla, en yeni üstte; satıcı ve sipariş tek sorguda (add-shipments D7). */
+    @Query(value = """
+            select so from SellerOrder so
+            join fetch so.order
+            join fetch so.seller
+            where so.status = :status
+            order by so.createdAt desc, so.id desc
+            """,
+            countQuery = "select count(so) from SellerOrder so where so.status = :status")
+    Page<SellerOrder> findForAdmin(SellerOrderStatus status, Pageable pageable);
+
+    /** Admin detayı; durum admin'in görebildikleri arasında değilse boş döner. */
+    @Query("""
+            select distinct so from SellerOrder so
+            join fetch so.order
+            join fetch so.seller
+            join fetch so.items
+            where so.id = :id and so.status in :statuses
+            """)
+    Optional<SellerOrder> findForAdminDetail(long id, Collection<SellerOrderStatus> statuses);
 }

@@ -17,9 +17,14 @@ const orderVariants = {
 const sellerOrderVariants = {
   PENDING_PAYMENT: "warning",
   NEW: "info",
+  SHIPPED: "info",
+  DELIVERED: "success",
+  DELIVERY_FAILED: "destructive",
+  REFUNDED: "secondary",
+  CLOSED: "secondary",
   CANCELLED: "secondary",
   VOID: "secondary",
-} as const satisfies Record<SellerOrderStatus, "warning" | "info" | "secondary">;
+} as const satisfies Record<SellerOrderStatus, "warning" | "info" | "success" | "destructive" | "secondary">;
 
 export function OrderStatusBadge({ status }: { readonly status: OrderStatus }) {
   const t = useTranslations("orders");

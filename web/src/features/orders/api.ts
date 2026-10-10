@@ -1,10 +1,11 @@
 import type { components } from "@contract";
-import { ApiRequestError, apiGet, apiSend } from "@/lib/apiClient";
+import { ApiRequestError, apiDownload, apiGet, apiSend } from "@/lib/apiClient";
 
 /**
  * Siparişler (sunucu tarafı). `api`'nin `/orders` ve `/sellers/me/orders`
- * uçlarını sarar (cart-and-checkout ve orders spec'leri, add-cart-and-checkout
- * D6, D8). Tutarları sunucu hesaplar; ekran yalnızca gösterir.
+ * uçlarını sarar (cart-and-checkout, orders ve shipments spec'leri,
+ * add-cart-and-checkout D6, D8, add-shipments D3, D4). Tutarları ve durumları
+ * sunucu belirler; ekran yalnızca gösterir.
  */
 export type OrderPlaced = components["schemas"]["OrderPlaced"];
 export type OrderDetail = components["schemas"]["OrderDetail"];
@@ -14,11 +15,25 @@ export type BuyerSellerOrderView = components["schemas"]["BuyerSellerOrderView"]
 export type SellerOrderStatus = BuyerSellerOrderView["status"];
 export type SellerOrderSummary = components["schemas"]["SellerOrderSummary"];
 export type SellerOrderDetail = components["schemas"]["SellerOrderDetail"];
+export type Shipment = components["schemas"]["Shipment"];
+export type ShipmentStatus = Shipment["status"];
+export type PackageSize = Shipment["packageSize"];
 type OrderPage = components["schemas"]["PageResponseOrderSummary"];
 type SellerOrderPage = components["schemas"]["PageResponseSellerOrderSummary"];
 
-/** Satıcı listesindeki süzgeç seçenekleri; `api`'nin kabul ettiği durumlar. */
-export const sellerOrderFilters = ["NEW", "CANCELLED"] as const satisfies readonly SellerOrderStatus[];
+/** Satıcı listesindeki süzgeç seçenekleri; `api`'nin kabul ettiği durumlar, iş akışı sırasıyla. */
+export const sellerOrderFilters = [
+  "NEW",
+  "SHIPPED",
+  "DELIVERED",
+  "DELIVERY_FAILED",
+  "REFUNDED",
+  "CLOSED",
+  "CANCELLED",
+] as const satisfies readonly SellerOrderStatus[];
+
+/** Koli boyutları, küçükten büyüğe (add-shipments D3). */
+export const packageSizes = ["SMALL", "MEDIUM", "LARGE"] as const satisfies readonly PackageSize[];
 
 const HTTP_NOT_FOUND = 404;
 const ORDERS_PATH = "/api/v1/orders";
@@ -94,6 +109,21 @@ export async function cancelAsSeller(
   body: Readonly<Record<string, unknown>>,
 ): Promise<SellerOrderDetail> {
   return requireBody((await apiSend<SellerOrderDetail>("POST", `${SELLER_ORDERS_PATH}/${id}/cancel`, { accessToken, body })).data);
+}
+
+/** Kargoya hazırla: gönderi açar; açıksa mevcut gönderiyi döner (add-shipments D3). */
+export async function createShipment(
+  accessToken: string | undefined,
+  id: number,
+  body: Readonly<Record<string, unknown>>,
+): Promise<{ readonly status: number; readonly shipment: Shipment }> {
+  const result = await apiSend<Shipment>("POST", `${SELLER_ORDERS_PATH}/${id}/shipment`, { accessToken, body });
+  return { status: result.status, shipment: requireBody(result.data) };
+}
+
+/** Etiketin ham yanıtı; Route Handler onu tarayıcıya akış olarak iletir (D4). */
+export async function downloadShipmentLabel(accessToken: string | undefined, id: number): Promise<Response> {
+  return apiDownload(`${SELLER_ORDERS_PATH}/${id}/shipment/label`, accessToken);
 }
 
 function nullIfNotFound(error: unknown): null {

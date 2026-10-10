@@ -94,3 +94,44 @@ export async function decideProduct(
   });
   return result.data;
 }
+
+export type AdminSellerOrderSummary = components["schemas"]["AdminSellerOrderSummary"];
+export type AdminSellerOrderDetail = components["schemas"]["AdminSellerOrderDetail"];
+export type AdminSellerOrderPage = components["schemas"]["PageResponseAdminSellerOrderSummary"];
+
+/** Teslim edilemeyen sipariş sekmeleri; karar bekleyenler ilk sırada (add-shipments D7). */
+export const adminSellerOrderStatuses = ["DELIVERY_FAILED", "REFUNDED", "CLOSED"] as const satisfies readonly AdminSellerOrderSummary["status"][];
+export type AdminSellerOrderStatus = (typeof adminSellerOrderStatuses)[number];
+
+/** Admin kararları; BFF beyaz listesi. */
+export const undeliveredDecisions = ["REFUND", "CLOSE"] as const satisfies readonly components["schemas"]["UndeliveredResolutionRequest"]["decision"][];
+export type UndeliveredDecision = (typeof undeliveredDecisions)[number];
+
+const ADMIN_SELLER_ORDERS_PATH = "/api/v1/admin/seller-orders";
+
+export async function listUndeliveredForAdmin(
+  accessToken: string,
+  status: AdminSellerOrderStatus,
+  page: number,
+  size: number,
+): Promise<AdminSellerOrderPage> {
+  return apiGet<AdminSellerOrderPage>(ADMIN_SELLER_ORDERS_PATH, { accessToken, query: { status, page, size } });
+}
+
+export async function getUndeliveredForAdmin(accessToken: string, id: number): Promise<AdminSellerOrderDetail> {
+  return apiGet<AdminSellerOrderDetail>(`${ADMIN_SELLER_ORDERS_PATH}/${id}`, { accessToken });
+}
+
+/** İade veya gerekçeyle kapatma; güncel kaydı döner. Gerekçe kapatmada zorunludur, `api` denetler. */
+export async function resolveUndelivered(
+  accessToken: string | undefined,
+  id: number,
+  decision: UndeliveredDecision,
+  reason: string,
+): Promise<AdminSellerOrderDetail | undefined> {
+  const result = await apiSend<AdminSellerOrderDetail>("POST", `${ADMIN_SELLER_ORDERS_PATH}/${id}/resolution`, {
+    accessToken,
+    body: { decision, reason: reason === "" ? null : reason },
+  });
+  return result.data;
+}

@@ -5,6 +5,7 @@ import com.bahceden.catalog.dto.SellerSummary;
 import com.bahceden.order.domain.CancelledBy;
 import com.bahceden.order.domain.SellerOrderStatus;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
+import com.bahceden.shipping.dto.ShipmentView;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.Instant;
 import java.util.List;
@@ -24,6 +25,7 @@ import java.util.List;
  * @param dispatchOverdue son tarih geçti ve hâlâ kargoya verilmedi mi
  * @param cancelledBy     iptal eden taraf; iptal edilmediyse {@code null}
  * @param cancelReason    iptal gerekçesi; yoksa {@code null}
+ * @param shipment         etkin gönderi; açılmadıysa {@code null} (add-shipments)
  * @param cancellable     alıcı şu an iptal edebilir mi
  */
 @Schema(name = "BuyerSellerOrderView", description = "Alıcının gördüğü satıcı siparişi")
@@ -57,5 +59,8 @@ public record BuyerSellerOrderView(
         String cancelReason,
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Alıcı şu an iptal edebilir mi",
                 example = "true")
-        boolean cancellable) {
+        boolean cancellable,
+        @Schema(requiredMode = Schema.RequiredMode.NOT_REQUIRED, nullable = true,
+                description = "Kargo gönderisi; henüz açılmadıysa boş")
+        ShipmentView shipment) {
 }

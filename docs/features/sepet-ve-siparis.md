@@ -2,7 +2,7 @@
 
 **Durum:** Yayında
 **İlk sürüm:** 2026-10-08
-**Son değişiklik:** 2026-10-08
+**Son değişiklik:** 2026-10-10
 
 | | |
 |---|---|
@@ -40,6 +40,7 @@ Alıcı ürün sayfasında adet seçip ürünü sepete ekler; sepet hesabına ba
 
 ## Tarihçe
 
+- 2026-10-10: Satıcı siparişi kargo durumlarını kazandı (`SHIPPED`, `DELIVERED`, `DELIVERY_FAILED`, `REFUNDED`, `CLOSED`); gönderisi açık siparişin iptali önce gönderiyi iptal eder; kargoya verilmiş sipariş iptal edilemez. Ayrıntı: [Kargo ve Teslimat](kargo-ve-teslimat.md) (change `add-shipments`, ADR-072, ADR-076).
 - 2026-10-08: `add-cart-and-checkout` change'i kullanıcı onayıyla archive edildi (`openspec/changes/archive/2026-10-08-add-cart-and-checkout/`). Ön koşullar: delta spec'ler ana spec'lere sync edildi; D1–D10 → ADR-059…068; dokümanlar güncel; `api` 237 ve `web` 194 test yeşil. Taşımada göreli linkler bir seviye uzatıldı. Açık ve notlu: sipariş için e-posta doğrulama kapısı (`00-current-state` L11), hukuk teyidi (KALANLAR A5), gerçek cihaz doğrulaması.
 - 2026-10-08: İlk sürüm (change `add-cart-and-checkout`).
   - `api` (`order` paketi):

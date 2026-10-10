@@ -1,6 +1,6 @@
 # Domain Modeli ve Veritabanı Şeması
 
-**Son doğrulama:** 2026-10-08 (ürün ilanları) · Kaynak: `api/src/main/resources/db/changelog/`
+**Son doğrulama:** 2026-10-10 (kargo gönderisi) · Kaynak: `api/src/main/resources/db/changelog/`
 
 > Bu sayfa şemanın **mevcut halini** anlatır, hedefini değil. Şema yalnızca Liquibase ile değişir ([ADR-016](../adr/016-liquibase-for-schema-migrations.md)); changeset değiştiğinde bu sayfa aynı commit'te güncellenir (`AGENTS.md` K4).
 
@@ -12,10 +12,8 @@
 
 - **katalog:** ürün;
 - **satıcı:** üretici kaydı, başvuru belgeleri, durum geçmişi;
-- **sipariş ve ödeme:** satıcının ödeme hesabı, sepet, adresler, sipariş, satıcı siparişi, satırlar, geçmiş, ödeme ve iade (aşağıda);
+- **sipariş ve ödeme:** satıcının ödeme hesabı, sepet, adresler, sipariş, satıcı siparişi, satırlar, geçmiş, ödeme, iade ve kargo gönderisi (aşağıda);
 - **hesap:** hesap, roller, tek kullanımlık token'lar, oturum zinciri, ikinci faktör girişimleri.
-
-Gönderim (kargo) tabloları henüz yok ([güncel durum](00-current-state.md)).
 
 Satıcı ile hesap `sellers.account_id` üzerinden bağlıdır ([ADR-037](../adr/037-seller-application-with-document-and-manual-approval.md), [ADR-040](../adr/040-seller-application-is-the-seller-record.md)). Bu kolon NULL olabilir, çünkü dev seed'inden gelen satıcıların hesabı yok. Tekil kısıt, bir hesabın en fazla bir satıcı kaydı olmasını sağlar.
 
@@ -207,12 +205,13 @@ erDiagram
     SELLER_ORDERS ||--o{ ORDER_STATUS_CHANGES : "geçmiş"
     ORDERS ||--|| PAYMENTS : "ödeme"
     PAYMENTS ||--o{ REFUNDS : "iade"
+    SELLER_ORDERS ||--o{ SHIPMENTS : "gönderi (en çok bir etkin)"
 
     SELLER_ORDERS {
         bigserial id PK
         bigint order_id FK
         bigint seller_id FK
-        varchar(20) status "PENDING_PAYMENT | NEW | CANCELLED | VOID"
+        varchar(20) status "PENDING_PAYMENT | NEW | SHIPPED | DELIVERED | DELIVERY_FAILED | REFUNDED | CLOSED | CANCELLED | VOID"
         bigint items_total "kuruş"
         bigint shipping_fee "kuruş"
         integer commission_rate_bp "sipariş anındaki oran"
@@ -220,6 +219,22 @@ erDiagram
         bigint seller_payout "items_total - commission_amount"
         integer dispatch_days
         timestamptz dispatch_due_at "ödeme anında hesaplanır"
+    }
+
+    SHIPMENTS {
+        bigserial id PK
+        bigint seller_order_id FK
+        varchar(20) integrator "fake"
+        varchar(100) integrator_ref
+        varchar(80) carrier
+        varchar(60) tracking_number
+        varchar(10) package_size "SMALL | MEDIUM | LARGE"
+        varchar(20) status "CREATED | HANDED_OVER | IN_TRANSIT | DELIVERED | DELIVERY_FAILED | CANCELLED"
+        varchar(32) label_key "depolama anahtarı"
+        varchar(40) label_content_type "application/pdf | image/png"
+        timestamptz handed_over_at
+        timestamptz delivered_at
+        timestamptz last_polled_at
     }
 ```
 
@@ -231,11 +246,13 @@ erDiagram
 | `orders` | İş anahtarı `order_number`, alıcı, durum (`PENDING_PAYMENT`, `PAID`, `PAYMENT_FAILED`, `PAYMENT_EXPIRED`, `CANCELLED_OUT_OF_STOCK`), adres kopyası (`ship_*`), toplamlar, `idempotency_key` (alıcıyla tekil), `payment_expires_at`, `paid_at` | `grand_total = items_total + shipping_total` kısıtı ([ADR-064](../adr/064-three-level-order-snapshot-idempotency-key.md)) |
 | `seller_orders` | Siparişin bir satıcıya düşen kısmı: kargo, komisyon, hakediş, kargoya verme süresi ve son tarihi, iptal eden taraf ve gerekçe | `seller_payout = items_total - commission_amount` ve `commission_amount <= items_total` kısıtları |
 | `order_items` | Sipariş anındaki ürün adı, adresi, birimi, birim fiyatı, adet, satır tutarı | `line_total = unit_price * quantity` kısıtı |
-| `order_status_changes` | Satıcı siparişi durum geçişleri, yalnızca eklenir | Repository çıplak `Repository` |
+| `order_status_changes` | Satıcı siparişi durum geçişleri, yalnızca eklenir; `actor_account_id` boşsa geçişi sistem (gönderi durumu sorgusu) yaptı | Repository çıplak `Repository`; `013` ile `actor_account_id` boş geçilebilir ([ADR-072](../adr/072-shipments-table-and-seller-order-shipping-states.md)) |
 | `payments` | Siparişin ödemesi: sağlayıcı, referans, yönlendirme adresi, `INITIATED` / `SUCCEEDED` / `FAILED`, tutar | Sipariş başına bir ödeme ([ADR-066](../adr/066-payment-redirect-verify-lock-stock-on-success.md)) |
-| `refunds` | İadeler: neden (`OUT_OF_STOCK`, `PAYMENT_EXPIRED`, `CANCELLED`), tutar, sağlayıcı referansı; `seller_order_id` boşsa ödemenin tamamı | Yalnızca eklenir ([ADR-067](../adr/067-cancel-before-shipment-full-refund-restock.md)) |
+| `refunds` | İadeler: neden (`OUT_OF_STOCK`, `PAYMENT_EXPIRED`, `CANCELLED`, `UNDELIVERED`), tutar, sağlayıcı referansı; `seller_order_id` boşsa ödemenin tamamı | Yalnızca eklenir ([ADR-067](../adr/067-cancel-before-shipment-full-refund-restock.md)) |
 
-İndeksler: `orders (buyer_account_id, created_at desc, id desc)`, `seller_orders (seller_id, created_at desc, id desc)`, `addresses (account_id, id)`, `order_items (seller_order_id, id)`, `order_status_changes (seller_order_id, created_at, id)`, `refunds (payment_id)`.
+| `shipments` | Satıcı siparişinin kargo gönderisi: entegratör ve anahtarı, firma, takip numarası, koli boyutu, durum, etiketin depolama anahtarı ve türü, kargoya verilme ve teslim zamanları, son sorgu zamanı. `013-shipments.sql` | İptal edilen silinmez; satıcı siparişi başına tek etkin gönderi `unique (seller_order_id) where status <> 'CANCELLED'`; `DELIVERED` ise `delivered_at` dolu ([ADR-072](../adr/072-shipments-table-and-seller-order-shipping-states.md)) |
+
+İndeksler: `shipments (status, last_polled_at)` (durum sorgusu sırası), `orders (buyer_account_id, created_at desc, id desc)`, `seller_orders (seller_id, created_at desc, id desc)`, `addresses (account_id, id)`, `order_items (seller_order_id, id)`, `order_status_changes (seller_order_id, created_at, id)`, `refunds (payment_id)`.
 
 ## Hesap bölgesi
 
@@ -368,6 +385,7 @@ Hesaba bağlı token ve girişim tablolarında yabancı anahtar `on delete casca
 | `com.bahceden.order.domain.Address` | `addresses` | Hesaba kimlikle bağlı |
 | `com.bahceden.order.domain.Order`, `SellerOrder`, `OrderItem` | `orders`, `seller_orders`, `order_items` | Satıcı siparişleri ve satırlar `PERSIST` cascade ile siparişle yazılır; durum `SellerOrderTransition` ile değişir |
 | `com.bahceden.order.domain.OrderStatusChange` | `order_status_changes` | Yalnızca ekleme |
+| `com.bahceden.shipping.domain.Shipment` | `shipments` | Satıcı siparişine kimlikle bağlı (ilişki yok); durum `advanceTo` / `cancel` ile değişir ([ADR-071](../adr/071-shipping-package-integrator-port-fake-only.md), [ADR-072](../adr/072-shipments-table-and-seller-order-shipping-states.md)) |
 | `com.bahceden.account.domain.Account` | `accounts` + `account_roles` | Roller `@ElementCollection` (`EAGER`): yetkilendirme her zaman rollere ihtiyaç duyar |
 | `com.bahceden.account.domain.EmailVerificationToken` | `email_verification_tokens` | |
 | `com.bahceden.account.domain.PasswordResetToken` | `password_reset_tokens` | |

@@ -88,6 +88,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/admin/sellers", "/api/v1/admin/sellers/*",
                                 "/api/v1/admin/sellers/*/document").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/v1/admin/products").hasRole("ADMIN")
+                        // Admin: teslim edilemeyen satıcı siparişine karar (add-shipments D7).
+                        .requestMatchers(HttpMethod.GET, "/api/v1/admin/seller-orders", "/api/v1/admin/seller-orders/*")
+                                .hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/admin/seller-orders/*/resolution").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/v1/admin/products/*/remove",
                                 "/api/v1/admin/products/*/reinstate").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/v1/admin/sellers/*/approve", "/api/v1/admin/sellers/*/reject",

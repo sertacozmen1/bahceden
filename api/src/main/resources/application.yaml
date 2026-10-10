@@ -114,6 +114,24 @@ bahceden:
     payment-timeout: PT30M
     # Teslimat yapılan iller, plaka koduyla: İstanbul, İzmir, Ankara, Manisa (KALANLAR A4, D5).
     delivery-provinces: ["34", "35", "06", "45"]
+  shipping:
+    # Kargo entegratörü (ADR-057). Gerçek entegratör seçilene kadar (KALANLAR A2)
+    # tek değer `fake`: ağ çağrısı yapmaz, gönderiyi zamanla ilerletir.
+    integrator: fake
+    # Açık gönderilerin durumu bu aralıkla entegratörden sorgulanır (add-shipments D5).
+    polling-enabled: true
+    poll-interval: PT5M
+    poll-batch-size: 100
+    # Koli boyutunun desi karşılığı; yalnızca entegratöre bildirilir, ücreti etkilemez (D3).
+    package-desi:
+      small: 5
+      medium: 15
+      large: 30
+    # Sahte entegratörün ilerletme süreleri, gönderinin açılışından itibaren.
+    fake:
+      handed-over-after: PT6H
+      in-transit-after: PT12H
+      delivered-after: PT36H
 
 logging:
   level:

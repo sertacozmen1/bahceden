@@ -317,7 +317,8 @@
     "tabs": {
       "label": "Admin sections",
       "sellers": "Seller applications",
-      "products": "Listings"
+      "products": "Listings",
+      "orders": "Undelivered"
     },
     "products": {
       "title": "Listings",
@@ -335,6 +336,30 @@
       "reinstate": "Reopen",
       "reinstating": "Reopening…",
       "reason": "Reason: {reason}"
+    },
+    "orders": {
+      "title": "Undelivered orders",
+      "intro": "Review orders the carrier could not deliver; refund the buyer or close with a reason. The decision is emailed to the buyer and the producer.",
+      "tabsLabel": "Filter by status",
+      "emptyTitle": "No orders with this status",
+      "emptyBody": "You can check another tab.",
+      "loading": "Loading orders",
+      "backToList": "Back to the list",
+      "refundable": "Refund amount: {amount}",
+      "refundLabel": "Refund amount",
+      "contactTitle": "Buyer",
+      "decisionTitle": "Decision",
+      "decisionIntro": "Decide after talking to the buyer and, if needed, the producer. A refund does not restock the products.",
+      "actions": {
+        "refund": "Refund",
+        "refundTitle": "Refund the buyer",
+        "refundBody": "The products and the shipping fee ({amount}) are refunded to the buyer's card; the producer earns no payout. Your note is sent to both sides.",
+        "confirmRefund": "Refund",
+        "close": "Close without refund",
+        "closeTitle": "Close without refund",
+        "closeBody": "No money moves and the producer's payout stands. Your reason is sent to the buyer and the producer.",
+        "confirmClose": "Close"
+      }
     }
   },
   "footer": {
@@ -504,7 +529,7 @@
     "backToList": "Back to my orders",
     "placedAt": "Placed on {date}",
     "status": "{status, select, PENDING_PAYMENT {Awaiting payment} PAID {Paid} PAYMENT_FAILED {Payment failed} PAYMENT_EXPIRED {Expired} CANCELLED_OUT_OF_STOCK {Out of stock, refunded} other {Unknown}}",
-    "sellerOrderStatus": "{status, select, PENDING_PAYMENT {Awaiting payment} NEW {Being prepared} CANCELLED {Cancelled} VOID {Not completed} other {Unknown}}",
+    "sellerOrderStatus": "{status, select, PENDING_PAYMENT {Awaiting payment} NEW {Being prepared} SHIPPED {Shipped} DELIVERED {Delivered} DELIVERY_FAILED {Not delivered} REFUNDED {Refunded} CLOSED {Closed} CANCELLED {Cancelled} VOID {Did not go through} other {Unknown}}",
     "perUnit": "/ {unit, select, KILOGRAM {kg} PIECE {piece} BUNCH {bunch} other {unit}}",
     "shipping": "Shipping",
     "freeShipping": "Free",
@@ -522,20 +547,43 @@
       "sellerTitle": "Cancel the order",
       "sellerBody": "The buyer is refunded in full for the products and shipping, and the products are added back to your stock. Your reason is shared with the buyer.",
       "confirm": "Cancel order"
-    }
+    },
+    "shippingNote": "{status, select, DELIVERY_FAILED {The package could not be delivered to you. We will look into it, contact you and let you know the outcome by email.} REFUNDED {As the package could not be delivered, this producer's products and the shipping fee were refunded to your card.} CLOSED {The undelivered shipment was reviewed and closed without a refund; the reason is in your email.} other {}}"
   },
   "sellerOrders": {
     "title": "Incoming orders",
     "intro": "Your paid orders. Ship each order within the time you declared.",
     "loading": "Loading orders",
     "tabsLabel": "Order status",
-    "emptyTitle": "{status, select, NEW {No orders to prepare} other {No cancelled orders}}",
+    "emptyTitle": "{status, select, NEW {No orders to prepare} SHIPPED {No orders in transit} DELIVERED {No delivered orders} DELIVERY_FAILED {No undelivered orders} REFUNDED {No refunded orders} CLOSED {No closed orders} other {No cancelled orders}}",
     "payout": "Payout: {amount}",
     "detailTitle": "Order",
     "backToList": "Back to incoming orders",
     "overdue": "The dispatch deadline has passed. The buyer may cancel; ship as soon as possible.",
     "commission": "Commission",
     "payoutLabel": "Your payout",
-    "destination": "Delivery: {district} / {province}"
+    "destination": "Delivery: {district} / {province}",
+    "shippingNote": "{status, select, DELIVERY_FAILED {The carrier could not deliver the package to the buyer. The team will review it, decide and let you know by email.} REFUNDED {As the package could not be delivered, the buyer was refunded; this order earns no payout.} CLOSED {The undelivered shipment was closed without a refund; your payout stands.} other {}}"
+  },
+  "shipments": {
+    "title": "Shipment",
+    "status": "{status, select, CREATED {Awaiting drop-off} HANDED_OVER {Handed to carrier} IN_TRANSIT {In transit} DELIVERED {Delivered} DELIVERY_FAILED {Not delivered} CANCELLED {Cancelled} other {Unknown}}",
+    "trackingLabel": "Tracking number",
+    "codeLabel": "Shipment code",
+    "handoverHint": "Print the label, stick it on the package and drop the package off at a carrier branch. If you have no printer, tell the shipment code at the branch.",
+    "openLabel": "Open and print label",
+    "copy": "Copy code",
+    "copied": "Copied",
+    "handedOverAt": "Handed to carrier",
+    "deliveredAt": "Delivered",
+    "prepare": {
+      "title": "Prepare for shipping",
+      "intro": "Pack the products and choose the package size. Once the shipment is created, the label and shipment code appear here.",
+      "sizeLabel": "Package size",
+      "size": "{size, select, SMALL {Small} MEDIUM {Medium} LARGE {Large} other {Other}}",
+      "sizeHint": "{size, select, SMALL {About a shoe box, up to 5 kg} MEDIUM {About a fruit crate, up to 15 kg} LARGE {Large box, up to 30 kg} other {}}",
+      "action": "Create shipment",
+      "preparing": "Creating shipment…"
+    }
   }
 }

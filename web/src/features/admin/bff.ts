@@ -8,4 +8,5 @@ export const adminBffPaths = {
   decision: (sellerId: number, decision: SellerDecision) => `/api/admin/sellers/${sellerId}/${decision}`,
   document: (sellerId: number) => `/api/admin/sellers/${sellerId}/document`,
   productDecision: (productId: number, decision: ProductDecision) => `/api/admin/products/${productId}/${decision}`,
+  orderResolution: (sellerOrderId: number) => `/api/admin/seller-orders/${sellerOrderId}/resolution`,
 } as const;

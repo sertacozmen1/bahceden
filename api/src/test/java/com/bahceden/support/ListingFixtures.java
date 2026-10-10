@@ -22,13 +22,14 @@ public final class ListingFixtures {
     }
 
     /**
-     * Sipariş, ödeme, sepet ve adres kayıtları; hesaplı satıcıların ürünleri ve
+     * Gönderi, sipariş, ödeme, sepet ve adres kayıtları; hesaplı satıcıların ürünleri ve
      * geçmişleri, ödeme hesapları, satıcı kayıtları ve bütün hesaplar silinir.
      */
     public void cleanUp() {
         jdbc.execute("delete from refunds");
         jdbc.execute("delete from payments");
         jdbc.execute("delete from order_status_changes");
+        jdbc.execute("delete from shipments");
         jdbc.execute("delete from order_items");
         jdbc.execute("delete from seller_orders");
         jdbc.execute("delete from orders");

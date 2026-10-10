@@ -1,8 +1,11 @@
 package com.bahceden.order.domain;
 
 /**
- * Satıcı siparişinin durumu (add-cart-and-checkout D6). Kargo durumları
- * (kargoya verildi, teslim edildi) gönderi change'inde eklenir (ADR-057).
+ * Satıcı siparişinin durumu (add-cart-and-checkout D6, add-shipments D2).
+ *
+ * <p>Gönderinin açılması durumu değiştirmez: gönderisi açılmış ama kargoya
+ * verilmemiş sipariş {@link #NEW} kalır ve iptal edilebilir (ADR-056 §1).
+ * "Yolda" yalnızca gönderinin durumudur.
  */
 public enum SellerOrderStatus {
 
@@ -16,5 +19,20 @@ public enum SellerOrderStatus {
     CANCELLED,
 
     /** Ödeme gerçekleşmedi, süresi doldu veya stok yetmedi; satış hiç olmadı. */
-    VOID
+    VOID,
+
+    /** Kargo firması paketi teslim aldı; artık iptal edilemez (add-shipments D2). */
+    SHIPPED,
+
+    /** Alıcıya teslim edildi. */
+    DELIVERED,
+
+    /** Kargo teslim edemedi; admin kararı bekliyor (add-shipments D7). */
+    DELIVERY_FAILED,
+
+    /** Teslim edilemedi; admin kararıyla ürün ve kargo ücreti iade edildi. */
+    REFUNDED,
+
+    /** Teslim edilemedi; admin gerekçeyle iadesiz kapattı. */
+    CLOSED
 }

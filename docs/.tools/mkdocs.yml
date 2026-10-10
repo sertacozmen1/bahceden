@@ -160,6 +160,14 @@ nav:
     - "ADR-068 · Sepet ve sipariş ekranları": adr/068-checkout-web-routes-server-cart-count.md
     - "ADR-069 · Yenileme toleransı": adr/069-refresh-token-reuse-grace-window.md
     - "ADR-070 · Sessiz oturum yenileme": adr/070-silent-session-refresh-on-any-page.md
+    - "ADR-071 · Gönderi paketi ve entegratör arayüzü": adr/071-shipping-package-integrator-port-fake-only.md
+    - "ADR-072 · Gönderi tablosu ve kargo durumları": adr/072-shipments-table-and-seller-order-shipping-states.md
+    - "ADR-073 · Gönderi açma ve şubeye teslim": adr/073-shipment-creation-package-size-branch-dropoff.md
+    - "ADR-074 · Etiket ve gönderi kodu": adr/074-shipment-label-protected-serving-and-shipment-code.md
+    - "ADR-075 · Durum sorgusu": adr/075-shipment-status-by-scheduled-polling.md
+    - "ADR-076 · İptalde gönderi iptali": adr/076-cancel-cancels-shipment-before-refund.md
+    - "ADR-077 · Teslim edilemeyen sipariş kararı": adr/077-undelivered-order-admin-refund-or-close.md
+    - "ADR-078 · Kargo bildirimleri": adr/078-shipping-notifications-email-only-three-events.md
   - Nasıl Yapılır (How-to):
     - Genel Bakış: how-to/index.md
     - Yerel Geliştirme Ortamı: how-to/yerel-gelistirme.md
@@ -172,6 +180,7 @@ nav:
     - Satıcı Kaydı ve Onayı: product/satici-kaydi.md
     - Ürün İlanları: product/urun-ilanlari.md
     - Sepet ve Sipariş: product/sepet-ve-siparis.md
+    - Kargo ve Teslimat: product/kargo-ve-teslimat.md
   - Araştırma (Research): research/index.md
   - Eğitimler (Tutorials): tutorials/index.md
   - Açıklamalar (Explanation): explanation/index.md
@@ -183,6 +192,7 @@ nav:
     - Ürün İlanları: features/urun-ilanlari.md
     - Sepet ve Sipariş: features/sepet-ve-siparis.md
     - Ödeme ve Hakediş: features/odeme-ve-hakedis.md
+    - Kargo ve Teslimat: features/kargo-ve-teslimat.md
     - "Genel (feature dışı işler)": features/_genel.md
 
 copyright: Bahçeden Internal Documentation

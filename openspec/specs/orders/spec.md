@@ -1,7 +1,7 @@
 # orders Specification
 
 ## Purpose
-Alıcının ve satıcının siparişleri görmesini, kargoya verme son tarihini, kargodan önce iptal ve tam iadeyi, durum geçmişini ve sipariş e-postalarını tanımlar. Kararlar: ADR-056, ADR-058, ADR-064, ADR-066, ADR-067. Kargo durumları ve ayıplı ürün iadesi bu capability'nin bugünkü kapsamı dışındadır.
+Alıcının ve satıcının siparişleri görmesini, kargoya verme son tarihini, kargodan önce iptal ve tam iadeyi, durum geçmişini ve sipariş e-postalarını tanımlar. Kararlar: ADR-056, ADR-058, ADR-064, ADR-066, ADR-067, ADR-072, ADR-076. Gönderinin kendisi `shipments` capability'sindedir; ayıplı ürün iadesi bu capability'nin bugünkü kapsamı dışındadır.
 
 ## Requirements
 
@@ -14,9 +14,10 @@ Sistem, alıcının kendi siparişlerini en yeniden eskiye, sayfalı olarak list
 - satıcılara göre bölünmüş satırlar: ürün adı, adet, birim fiyat, satır tutarı;
 - her satıcı siparişinin kargo ücreti ve durumu;
 - kargoya verme son tarihi;
+- gönderi açılmışsa her satıcı siparişinin kargo firması, takip numarası, gönderi durumu, kargoya verilme ve teslim zamanı;
 - genel toplam.
 
-Komisyon ve satıcı hakedişi alıcıya gösterilmez.
+Komisyon ve satıcı hakedişi alıcıya gösterilmez. Gönderi etiketi alıcıya sunulmaz.
 
 #### Scenario: Siparişlerim
 - **WHEN** alıcı sipariş listesini ister
@@ -30,15 +31,20 @@ Komisyon ve satıcı hakedişi alıcıya gösterilmez.
 - **WHEN** kimlik bilgisi olmadan sipariş listesi veya detayı istenir
 - **THEN** istek 401 ile reddedilir
 
+#### Scenario: Kargodaki sipariş
+- **WHEN** alıcı kargoya verilmiş bir satıcı siparişi olan siparişinin detayını ister
+- **THEN** o satıcı siparişinde kargo firması, takip numarası, gönderi durumu ve kargoya verilme zamanı bulunur
+
 ### Requirement: Satıcı kendi satıcı siparişlerini görür
 
-Sistem, onaylı satıcının yalnızca kendisine ait satıcı siparişlerini en yeniden eskiye, sayfalı ve durumla süzülebilir biçimde listelemesini SHALL sağlar. Satıcı her satıcı siparişinin detayını da görür. Detay şunları içerir:
+Sistem, onaylı satıcının yalnızca kendisine ait satıcı siparişlerini en yeniden eskiye, sayfalı ve durumla süzülebilir biçimde listelemesini SHALL sağlar. Süzme `NEW`, `SHIPPED`, `DELIVERED`, `DELIVERY_FAILED`, `REFUNDED`, `CLOSED` ve `CANCELLED` durumlarını kabul eder. Satıcı her satıcı siparişinin detayını da görür. Detay şunları içerir:
 
 - satırlar;
 - ürün tutarı;
 - komisyon ve satıcı hakedişi;
 - kargoya verme son tarihi;
-- alıcı adresinden yalnızca il ve ilçe.
+- alıcı adresinden yalnızca il ve ilçe;
+- gönderi açılmışsa kargo firması, takip numarası, gönderi durumu ve koli boyutu; etiket ayrı ve yalnızca satıcıya açık bir uçtan alınır.
 
 Ödemesi tamamlanmamış satıcı siparişleri satıcıya gösterilmez. Her işlem önce onaylı satıcı kapısından, sonra sorgu seviyesindeki sahiplik denetiminden geçer.
 
@@ -58,18 +64,23 @@ Sistem, onaylı satıcının yalnızca kendisine ait satıcı siparişlerini en 
 - **WHEN** askıdaki veya onaylı olmayan bir satıcı sipariş uçlarından birini çağırır
 - **THEN** istek 403 ile reddedilir
 
+#### Scenario: Kargodakiler süzülür
+- **WHEN** satıcı listeyi `SHIPPED` durumuyla süzer
+- **THEN** yalnızca kargoya verilmiş ve henüz teslim edilmemiş satıcı siparişleri döner
+
 ### Requirement: Kargoya verilmemiş satıcı siparişi iptal edilir ve tamamı iade edilir
 
-Sistem, `NEW` durumundaki bir satıcı siparişinin alıcı tarafından, isteğe bağlı bir gerekçeyle iptal edilmesini SHALL sağlar. Satıcı da aynı siparişi zorunlu bir gerekçeyle iptal edebilir.
+Sistem, `NEW` durumundaki bir satıcı siparişinin alıcı tarafından, isteğe bağlı bir gerekçeyle iptal edilmesini SHALL sağlar. Satıcı da aynı siparişi zorunlu bir gerekçeyle iptal edebilir. Kargoya verilmiş (`SHIPPED` ve sonrası) satıcı siparişi iptal edilemez.
 
 İptal tek transaction'da yapılır ve şunları içerir:
 
+- gönderi açılmışsa gönderi önce entegratörde iptal edilir ve `CANCELLED` olur;
 - satıcı siparişi iptal edilir;
 - ürünlerin stoğu geri eklenir;
 - komisyon ve hakediş geçersiz olur;
 - satıcı siparişinin ürün tutarı ile kargo ücretinin toplamı ödeme sağlayıcısından iade edilir.
 
-İade başarısız olursa iptal gerçekleşmez. İptal, karşı tarafa hesabının dilinde e-postayla bildirilir. E-posta gönderilemezse iptal yine geçerlidir.
+Entegratör gönderi iptalini reddederse veya iade başarısız olursa iptal gerçekleşmez. İptal, karşı tarafa hesabının dilinde e-postayla bildirilir. E-posta gönderilemezse iptal yine geçerlidir.
 
 #### Scenario: Alıcı iptal eder
 - **WHEN** alıcı `NEW` durumundaki bir satıcı siparişini iptal eder
@@ -88,12 +99,20 @@ Sistem, `NEW` durumundaki bir satıcı siparişinin alıcı tarafından, isteğe
 - **THEN** diğer satıcı siparişi ve onun ödemesi değişmez
 
 #### Scenario: İptal edilemeyen durum
-- **WHEN** zaten iptal edilmiş veya ödemesi tamamlanmamış bir satıcı siparişi iptal edilmek istenir
+- **WHEN** zaten iptal edilmiş, ödemesi tamamlanmamış veya kargoya verilmiş bir satıcı siparişi iptal edilmek istenir
 - **THEN** istek çakışma hatasıyla reddedilir
 
 #### Scenario: İade başarısız olur
 - **WHEN** ödeme sağlayıcısı iadeyi reddeder
 - **THEN** satıcı siparişi değişmez, stok geri eklenmez ve istek sağlayıcı hatası döner
+
+#### Scenario: Gönderisi açılmış sipariş iptal edilir
+- **WHEN** gönderisi `CREATED` durumunda olan bir satıcı siparişi iptal edilir
+- **THEN** gönderi entegratörde iptal edilir ve `CANCELLED` olur, ardından tam iade yapılır
+
+#### Scenario: Entegratör gönderi iptalini reddeder
+- **WHEN** entegratör gönderi iptalini reddeder
+- **THEN** satıcı siparişi ve gönderi değişmez, iade yapılmaz ve istek entegratör hatası döner
 
 ### Requirement: Kargoya verme son tarihi gösterilir
 

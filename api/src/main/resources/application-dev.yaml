@@ -10,6 +10,15 @@ spring:
     # birlikte uygulanır.
     contexts: default,dev
 
+bahceden:
+  shipping:
+    # Geliştirmede gönderi birkaç dakikada teslim edilir: akış elle izlenebilir.
+    poll-interval: PT1M
+    fake:
+      handed-over-after: PT2M
+      in-transit-after: PT4M
+      delivered-after: PT6M
+
 logging:
   level:
     com.bahceden: DEBUG

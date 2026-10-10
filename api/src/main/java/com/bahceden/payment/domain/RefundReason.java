@@ -1,6 +1,6 @@
 package com.bahceden.payment.domain;
 
-/** İadenin nedeni (add-cart-and-checkout D8, D9). */
+/** İadenin nedeni (add-cart-and-checkout D8, D9; add-shipments D7). */
 public enum RefundReason {
 
     /** Ödeme alındı ama stok yetmedi; ödemenin tamamı iade edilir. */
@@ -10,5 +10,8 @@ public enum RefundReason {
     PAYMENT_EXPIRED,
 
     /** Satıcı siparişi kargodan önce iptal edildi; o satıcı payının tamamı iade edilir. */
-    CANCELLED
+    CANCELLED,
+
+    /** Teslim edilemeyen satıcı siparişi için admin tam iade kararı verdi; o satıcı payının tamamı iade edilir. */
+    UNDELIVERED
 }
