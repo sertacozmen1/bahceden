@@ -14,8 +14,11 @@ import com.bahceden.seller.SellerService;
 import com.bahceden.shipping.ShipmentService;
 import java.time.Clock;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,15 +44,17 @@ public class OrderService {
     private final SellerService sellers;
     private final OrderMapper mapper;
     private final ShipmentService shipments;
+    private final DefectClaimRepository claims;
     private final Clock clock;
 
     OrderService(OrderRepository orders, SellerOrderRepository sellerOrders, SellerService sellers, OrderMapper mapper,
-                 ShipmentService shipments, Clock clock) {
+                 ShipmentService shipments, DefectClaimRepository claims, Clock clock) {
         this.orders = orders;
         this.sellerOrders = sellerOrders;
         this.sellers = sellers;
         this.mapper = mapper;
         this.shipments = shipments;
+        this.claims = claims;
         this.clock = clock;
     }
 
@@ -87,14 +92,17 @@ public class OrderService {
         var seller = sellers.requireApprovedSeller(accountId);
         var sellerOrder = sellerOrders.findOwnBySeller(sellerOrderId, seller.getId(), SELLER_VISIBLE)
                 .orElseThrow(OrderService::sellerOrderNotFound);
-        return mapper.toSellerDetail(sellerOrder, shipments.activeView(sellerOrder.getId()), clock.instant());
+        var claim = claims.findWithDetailsForSellerOrders(List.of(sellerOrder.getId())).stream().findFirst();
+        return mapper.toSellerDetail(sellerOrder, shipments.activeView(sellerOrder.getId()), claim, clock.instant());
     }
 
-    /** Satıcılar ve satırlar tek sorguda (sipariş zaten okunmuş). */
+    /** Satıcılar ve satırlar tek sorguda, gönderiler ve talepler birer sorguda (sipariş zaten okunmuş). */
     OrderDetail detailOf(Order order) {
         var parts = sellerOrders.findForOrder(order.getId());
-        return mapper.toDetail(order, parts,
-                shipments.activeViews(parts.stream().map(SellerOrder::getId).toList()), clock.instant());
+        var ids = parts.stream().map(SellerOrder::getId).toList();
+        var claimsBySellerOrder = claims.findWithDetailsForSellerOrders(ids).stream()
+                .collect(Collectors.toMap(claim -> claim.getSellerOrder().getId(), Function.identity()));
+        return mapper.toDetail(order, parts, shipments.activeViews(ids), claimsBySellerOrder, clock.instant());
     }
 
     static ApiException orderNotFound() {

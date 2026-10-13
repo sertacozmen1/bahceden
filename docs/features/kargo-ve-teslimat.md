@@ -2,7 +2,7 @@
 
 **Durum:** Yayında
 **İlk sürüm:** 2026-10-10
-**Son değişiklik:** 2026-10-10
+**Son değişiklik:** 2026-10-14
 
 | | |
 |---|---|
@@ -34,6 +34,7 @@
 
 ## Tarihçe
 
+- 2026-10-14: Teslim zamanı (`shipments.delivered_at`) artık ayıplı ürün talebinin 48 saatlik penceresini başlatır. Ayrıntı: [Ayıplı Ürün ve İade](ayipli-urun-ve-iade.md) (change `add-defect-claims`, ADR-081).
 - 2026-10-10: `add-shipments` change'i kullanıcı onayıyla archive edildi (`openspec/changes/archive/2026-10-10-add-shipments/`). Ön koşullar: delta spec'ler ana spec'lere sync edildi (`shipments` yeni, `orders` değişti); D1–D8 → ADR-071…078; dokümanlar güncel; `api` 271 ve `web` 226 test yeşil; PR #5. Taşımada göreli linkler bir seviye uzatıldı. Açık ve notlu: etiket saklama süresi ve iadesiz kapatmanın hukuki uygunluğu (KALANLAR A5), gerçek entegratör (KALANLAR A2).
 - 2026-10-10: Change `add-shipments` uygulandı.
   - `api` (`shipping` paketi): `ShippingIntegrator` + `FakeShippingIntegrator`; `POST /api/v1/sellers/me/orders/{id}/shipment`, `GET …/shipment/label`; zamanlanmış durum sorgusu; satıcı siparişi `SHIPPED`, `DELIVERED`, `DELIVERY_FAILED`, `REFUNDED`, `CLOSED`; iptal önce gönderiyi iptal eder; admin `GET/POST /api/v1/admin/seller-orders…`; üç e-posta.

@@ -2,7 +2,7 @@
 
 **Durum:** Yayında
 **İlk sürüm:** 2026-10-08
-**Son değişiklik:** 2026-10-08
+**Son değişiklik:** 2026-10-14
 
 | | |
 |---|---|
@@ -34,6 +34,7 @@ Onaylı üretici ödeme bilgilerini (satıcı türü, yasal ad, T.C. kimlik veya
 
 ## Tarihçe
 
+- 2026-10-14: Ayıplı ürün iadesi satıcının payından `DEFECT` nedeniyle yapılır; kısmi iadede komisyon kalan ürün tutarı üzerinden yeniden hesaplanır, sabit ücret ve kargo yalnızca tam iadede döner. Satıcı sipariş detayında iade sonrası hakedişi görür. Gerçek sağlayıcıda pay bölüşümü KALANLAR A1'de. Ayrıntı: [Ayıplı Ürün ve İade](ayipli-urun-ve-iade.md) (change `add-defect-claims`, ADR-082).
 - 2026-10-08: `add-cart-and-checkout` change'i kullanıcı onayıyla archive edildi (`openspec/changes/archive/2026-10-08-add-cart-and-checkout/`). Ön koşullar: delta spec'ler ana spec'lere sync edildi; D1–D10 → ADR-059…068; dokümanlar güncel; `api` 237 ve `web` 194 test yeşil. Taşımada göreli linkler bir seviye uzatıldı. Açık ve notlu: sipariş için e-posta doğrulama kapısı (`00-current-state` L11), hukuk teyidi (KALANLAR A5), gerçek cihaz doğrulaması.
 - 2026-10-08: İlk sürüm (change `add-cart-and-checkout`).
   - `api` (`payment` paketi): satıcı ödeme hesabı (`/api/v1/sellers/me/payout-account`; TCKN, VKN, IBAN doğrulaması, maskeleme, eşzamanlı alt üye kaydı, sağlayıcı reddinde kaydı saklayıp 422); `PaymentProvider` arayüzü ve `FakePaymentProvider`; ödeme ve iade kayıtları.

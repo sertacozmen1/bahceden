@@ -13,7 +13,7 @@ import org.junit.jupiter.api.Test;
  * uygulama yapılandırmasıyla sınanır.
  */
 @Tag("critical")
-@DisplayName("OrderPricing: komisyon, yuvarlama ve üst sınır")
+@DisplayName("OrderPricing: komisyon, yuvarlama, üst sınır ve ayıplı ürün iadesi")
 class OrderPricingTest {
 
     private static final int RATE_BP = 500;
@@ -64,6 +64,54 @@ class OrderPricingTest {
     @DisplayName("Negatif tutar reddedilir")
     void negatif_tutar() {
         assertThatThrownBy(() -> OrderPricing.commission(-1, RATE_BP, FIXED))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    @DisplayName("Kısmi iade (ADR-082 örneği): 200 TL'de 50 TL iade; komisyon 10,50, hakediş 139,50, kargo dönmez")
+    void kismi_iade() {
+        var settlement = OrderPricing.afterRefund(20_000, 9_900, 5_000, RATE_BP, FIXED, false);
+
+        assertThat(settlement.itemsRefund()).isEqualTo(5_000);
+        assertThat(settlement.shippingRefund()).isZero();
+        assertThat(settlement.total()).isEqualTo(5_000);
+        assertThat(settlement.commissionAfter()).isEqualTo(1_050);
+        assertThat(settlement.payoutAfter()).isEqualTo(13_950);
+        assertThat(settlement.shippingRefunded()).isFalse();
+    }
+
+    @Test
+    @DisplayName("Tam iade: ürün ve kargo döner; komisyon ve hakediş sıfır")
+    void tam_iade() {
+        var settlement = OrderPricing.afterRefund(20_000, 9_900, 20_000, RATE_BP, FIXED, true);
+
+        assertThat(settlement.total()).isEqualTo(29_900);
+        assertThat(settlement.shippingRefunded()).isTrue();
+        assertThat(settlement.commissionAfter()).isZero();
+        assertThat(settlement.payoutAfter()).isZero();
+    }
+
+    @Test
+    @DisplayName("Kısmi iadede komisyon kalan tutarı aşamaz; yarım kuruş yukarı yuvarlanır")
+    void kalan_tutar_siniri_ve_yuvarlama() {
+        var small = OrderPricing.afterRefund(1_000, 9_900, 900, RATE_BP, FIXED, false);
+        assertThat(small.commissionAfter()).isEqualTo(100);
+        assertThat(small.payoutAfter()).isZero();
+
+        // Kalan 1010 kuruşun %5'i 50,5 → 51; + 300 sabit.
+        var rounded = OrderPricing.afterRefund(2_010, 0, 1_000, RATE_BP, FIXED, false);
+        assertThat(rounded.commissionAfter()).isEqualTo(351);
+        assertThat(rounded.payoutAfter()).isEqualTo(659);
+    }
+
+    @Test
+    @DisplayName("Sıfır, ürün tutarını aşan ya da eksik tam iade reddedilir")
+    void gecersiz_iade() {
+        assertThatThrownBy(() -> OrderPricing.afterRefund(1_000, 0, 0, RATE_BP, FIXED, false))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> OrderPricing.afterRefund(1_000, 0, 1_001, RATE_BP, FIXED, false))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> OrderPricing.afterRefund(1_000, 0, 999, RATE_BP, FIXED, true))
                 .isInstanceOf(IllegalArgumentException.class);
     }
 }

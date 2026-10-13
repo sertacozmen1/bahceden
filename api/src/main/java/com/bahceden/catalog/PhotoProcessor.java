@@ -59,17 +59,27 @@ public class PhotoProcessor {
     }
 
     public ProcessedPhoto process(byte[] bytes) {
+        return process(bytes, FIELD);
+    }
+
+    /**
+     * Fotoğrafı işler; hatalar verilen alana bağlanır. Ayıplı ürün talebi
+     * aynı hattı {@code photos} alanıyla kullanır (ADR-081, K9).
+     *
+     * @param field kullanıcının düzelteceği form alanının adı
+     */
+    public ProcessedPhoto process(byte[] bytes, String field) {
         if (bytes.length == 0) {
-            throw ApiException.invalidField(FIELD, "validation.photo.required");
+            throw ApiException.invalidField(field, "validation.photo.required");
         }
         if (bytes.length > properties.storage().maxPhotoBytes()) {
-            throw ApiException.invalidField(FIELD, "validation.photo.tooLarge");
+            throw ApiException.invalidField(field, "validation.photo.tooLarge");
         }
         var type = FileType.detect(Arrays.copyOf(bytes, Math.min(bytes.length, FileType.SIGNATURE_LENGTH)))
                 .filter(detected -> detected == FileType.JPEG || detected == FileType.PNG)
-                .orElseThrow(() -> ApiException.invalidField(FIELD, "validation.photo.type"));
+                .orElseThrow(() -> ApiException.invalidField(field, "validation.photo.type"));
 
-        var image = flattenToRgb(decode(bytes));
+        var image = flattenToRgb(decode(bytes, field));
         if (type == FileType.JPEG) {
             image = orient(image, ExifOrientation.read(bytes));
         }
@@ -79,18 +89,18 @@ public class PhotoProcessor {
     }
 
     /** Boyutlar başlıktan okunur; sınırı aşan görüntünün piksellerine hiç dokunulmaz. */
-    private static BufferedImage decode(byte[] bytes) {
+    private static BufferedImage decode(byte[] bytes, String field) {
         try (ImageInputStream input = ImageIO.createImageInputStream(new ByteArrayInputStream(bytes))) {
             var readers = ImageIO.getImageReaders(input);
             if (input == null || !readers.hasNext()) {
-                throw ApiException.invalidField(FIELD, "validation.photo.unreadable");
+                throw ApiException.invalidField(field, "validation.photo.unreadable");
             }
             ImageReader reader = readers.next();
             try {
                 reader.setInput(input, true, true);
                 long pixels = (long) reader.getWidth(0) * reader.getHeight(0);
                 if (pixels > MAX_PIXELS) {
-                    throw ApiException.invalidField(FIELD, "validation.photo.tooManyPixels");
+                    throw ApiException.invalidField(field, "validation.photo.tooManyPixels");
                 }
                 return reader.read(0);
             } finally {
@@ -98,7 +108,7 @@ public class PhotoProcessor {
             }
         } catch (IOException | IllegalArgumentException | IllegalStateException cause) {
             // Bozuk dosya veya ImageIO'nun desteklemediği biçim (örn. CMYK JPEG): kullanıcı başka dosya dener.
-            throw ApiException.invalidField(FIELD, "validation.photo.unreadable");
+            throw ApiException.invalidField(field, "validation.photo.unreadable");
         }
     }
 

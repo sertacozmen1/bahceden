@@ -12,7 +12,7 @@
 
 - **katalog:** ürün;
 - **satıcı:** üretici kaydı, başvuru belgeleri, durum geçmişi;
-- **sipariş ve ödeme:** satıcının ödeme hesabı, sepet, adresler, sipariş, satıcı siparişi, satırlar, geçmiş, ödeme, iade ve kargo gönderisi (aşağıda);
+- **sipariş ve ödeme:** satıcının ödeme hesabı, sepet, adresler, sipariş, satıcı siparişi, satırlar, geçmiş, ödeme, iade, kargo gönderisi ve ayıplı ürün talebi (aşağıda);
 - **hesap:** hesap, roller, tek kullanımlık token'lar, oturum zinciri, ikinci faktör girişimleri.
 
 Satıcı ile hesap `sellers.account_id` üzerinden bağlıdır ([ADR-037](../adr/037-seller-application-with-document-and-manual-approval.md), [ADR-040](../adr/040-seller-application-is-the-seller-record.md)). Bu kolon NULL olabilir, çünkü dev seed'inden gelen satıcıların hesabı yok. Tekil kısıt, bir hesabın en fazla bir satıcı kaydı olmasını sağlar.
@@ -206,6 +206,11 @@ erDiagram
     ORDERS ||--|| PAYMENTS : "ödeme"
     PAYMENTS ||--o{ REFUNDS : "iade"
     SELLER_ORDERS ||--o{ SHIPMENTS : "gönderi (en çok bir etkin)"
+    SELLER_ORDERS ||--o| DEFECT_CLAIMS : "ayıplı ürün talebi (en çok bir)"
+    DEFECT_CLAIMS ||--|{ DEFECT_CLAIM_LINES : "satır"
+    ORDER_ITEMS ||--o{ DEFECT_CLAIM_LINES : "talep edilir"
+    DEFECT_CLAIMS ||--|{ DEFECT_CLAIM_PHOTOS : "1–3 fotoğraf"
+    DEFECT_CLAIMS ||--|{ DEFECT_CLAIM_CHANGES : "geçmiş"
 
     SELLER_ORDERS {
         bigserial id PK
@@ -236,6 +241,31 @@ erDiagram
         timestamptz delivered_at
         timestamptz last_polled_at
     }
+
+    DEFECT_CLAIMS {
+        bigserial id PK
+        bigint seller_order_id FK "tekil"
+        varchar(20) status "OPEN | OFFERED | REJECTED | ESCALATED | REFUNDED | CLOSED"
+        varchar(1000) description "alıcının açıklaması"
+        varchar(500) seller_reason "ret gerekçesi"
+        timestamptz seller_deadline_at
+        timestamptz buyer_deadline_at "teklif veya retten sonra"
+        bigint refund_amount "kuruş"
+        boolean shipping_refunded
+        bigint commission_after "iade sonrası komisyon"
+        bigint payout_after "iade sonrası hakediş"
+        varchar(10) resolved_by "SELLER | BUYER | ADMIN | DEADLINE"
+        timestamptz resolved_at
+    }
+
+    DEFECT_CLAIM_LINES {
+        bigserial id PK
+        bigint claim_id FK
+        bigint order_item_id FK
+        integer claimed_quantity "1…99"
+        integer offered_quantity "0…claimed"
+        integer refunded_quantity
+    }
 ```
 
 | Tablo | İçerik | Not |
@@ -248,11 +278,15 @@ erDiagram
 | `order_items` | Sipariş anındaki ürün adı, adresi, birimi, birim fiyatı, adet, satır tutarı | `line_total = unit_price * quantity` kısıtı |
 | `order_status_changes` | Satıcı siparişi durum geçişleri, yalnızca eklenir; `actor_account_id` boşsa geçişi sistem (gönderi durumu sorgusu) yaptı | Repository çıplak `Repository`; `013` ile `actor_account_id` boş geçilebilir ([ADR-072](../adr/072-shipments-table-and-seller-order-shipping-states.md)) |
 | `payments` | Siparişin ödemesi: sağlayıcı, referans, yönlendirme adresi, `INITIATED` / `SUCCEEDED` / `FAILED`, tutar | Sipariş başına bir ödeme ([ADR-066](../adr/066-payment-redirect-verify-lock-stock-on-success.md)) |
-| `refunds` | İadeler: neden (`OUT_OF_STOCK`, `PAYMENT_EXPIRED`, `CANCELLED`, `UNDELIVERED`), tutar, sağlayıcı referansı; `seller_order_id` boşsa ödemenin tamamı | Yalnızca eklenir ([ADR-067](../adr/067-cancel-before-shipment-full-refund-restock.md)) |
+| `refunds` | İadeler: neden (`OUT_OF_STOCK`, `PAYMENT_EXPIRED`, `CANCELLED`, `UNDELIVERED`, `DEFECT`), tutar, sağlayıcı referansı; `seller_order_id` boşsa ödemenin tamamı | Yalnızca eklenir ([ADR-067](../adr/067-cancel-before-shipment-full-refund-restock.md)); `DEFECT` `014` ile eklendi ([ADR-082](../adr/082-defect-refund-amount-and-commission-recalculation.md)) |
 
 | `shipments` | Satıcı siparişinin kargo gönderisi: entegratör ve anahtarı, firma, takip numarası, koli boyutu, durum, etiketin depolama anahtarı ve türü, kargoya verilme ve teslim zamanları, son sorgu zamanı. `013-shipments.sql` | İptal edilen silinmez; satıcı siparişi başına tek etkin gönderi `unique (seller_order_id) where status <> 'CANCELLED'`; `DELIVERED` ise `delivered_at` dolu ([ADR-072](../adr/072-shipments-table-and-seller-order-shipping-states.md)) |
+| `defect_claims` | Ayıplı ürün talebi: durum, açıklama, satıcının gerekçesi, satıcı ve alıcı son tarihleri, sonuç (iade tutarı, kargonun dönüp dönmediği, iade sonrası komisyon ve hakediş, karar veren taraf ve zamanı). `014-defect-claims.sql` | Satıcı siparişi başına tekil; satıcı siparişinin durumu değişmez, sonucu talep taşır ([ADR-079](../adr/079-defect-claim-in-order-package-one-per-seller-order.md), [ADR-080](../adr/080-defect-claim-tables-and-state-machine.md)). Silinmez; açıklama kişisel veri olabilir, log'a yazılmaz |
+| `defect_claim_lines` | Talep satırı: sipariş satırı, istenen, önerilen ve iade edilen adet | `(claim_id, order_item_id)` tekil; önerilen adet istenenden büyük olamaz |
+| `defect_claim_photos` | 1–3 fotoğraf; sıra (0–2), iki boyutun depolama anahtarı, ölçüler | Yalnızca alıcıya, satıcıya ve admin'e sunulur ([ADR-081](../adr/081-defect-claim-opening-window-lines-photos.md), [ADR-084](../adr/084-defect-claim-authorization-and-protected-photos.md)) |
+| `defect_claim_changes` | Talep durum geçişleri ve gerekçe; `actor_account_id` boşsa geçişi süre işi yaptı | Yalnızca eklenir ([ADR-083](../adr/083-defect-claim-deadlines-by-scheduled-sweep.md)) |
 
-İndeksler: `shipments (status, last_polled_at)` (durum sorgusu sırası), `orders (buyer_account_id, created_at desc, id desc)`, `seller_orders (seller_id, created_at desc, id desc)`, `addresses (account_id, id)`, `order_items (seller_order_id, id)`, `order_status_changes (seller_order_id, created_at, id)`, `refunds (payment_id)`.
+İndeksler: `defect_claims (status, created_at desc, id desc)` (admin listesi), `defect_claims (seller_deadline_at) where status = 'OPEN'` ve `defect_claims (buyer_deadline_at) where status in ('OFFERED', 'REJECTED')` (süre işi), `defect_claim_lines (claim_id, id)`, `defect_claim_changes (claim_id, created_at, id)`, `shipments (status, last_polled_at)` (durum sorgusu sırası), `orders (buyer_account_id, created_at desc, id desc)`, `seller_orders (seller_id, created_at desc, id desc)`, `addresses (account_id, id)`, `order_items (seller_order_id, id)`, `order_status_changes (seller_order_id, created_at, id)`, `refunds (payment_id)`.
 
 ## Hesap bölgesi
 
@@ -386,6 +420,7 @@ Hesaba bağlı token ve girişim tablolarında yabancı anahtar `on delete casca
 | `com.bahceden.order.domain.Order`, `SellerOrder`, `OrderItem` | `orders`, `seller_orders`, `order_items` | Satıcı siparişleri ve satırlar `PERSIST` cascade ile siparişle yazılır; durum `SellerOrderTransition` ile değişir |
 | `com.bahceden.order.domain.OrderStatusChange` | `order_status_changes` | Yalnızca ekleme |
 | `com.bahceden.shipping.domain.Shipment` | `shipments` | Satıcı siparişine kimlikle bağlı (ilişki yok); durum `advanceTo` / `cancel` ile değişir ([ADR-071](../adr/071-shipping-package-integrator-port-fake-only.md), [ADR-072](../adr/072-shipments-table-and-seller-order-shipping-states.md)) |
+| `com.bahceden.order.domain.DefectClaim`, `DefectClaimLine`, `DefectClaimPhoto`, `DefectClaimChange` | `defect_claims`, `defect_claim_lines`, `defect_claim_photos`, `defect_claim_changes` | Talep satıcı siparişine `LAZY` ilişkiyle bağlı; satırlar ve fotoğraflar `PERSIST` cascade ile talepte yazılır. Durum yalnızca `DefectClaimTransition` ile değişir; iade sonucu `refund` / `close` ile yazılır |
 | `com.bahceden.account.domain.Account` | `accounts` + `account_roles` | Roller `@ElementCollection` (`EAGER`): yetkilendirme her zaman rollere ihtiyaç duyar |
 | `com.bahceden.account.domain.EmailVerificationToken` | `email_verification_tokens` | |
 | `com.bahceden.account.domain.PasswordResetToken` | `password_reset_tokens` | |

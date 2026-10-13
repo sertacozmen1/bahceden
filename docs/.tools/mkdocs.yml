@@ -168,6 +168,14 @@ nav:
     - "ADR-076 · İptalde gönderi iptali": adr/076-cancel-cancels-shipment-before-refund.md
     - "ADR-077 · Teslim edilemeyen sipariş kararı": adr/077-undelivered-order-admin-refund-or-close.md
     - "ADR-078 · Kargo bildirimleri": adr/078-shipping-notifications-email-only-three-events.md
+    - "ADR-079 · Ayıplı ürün talebi": adr/079-defect-claim-in-order-package-one-per-seller-order.md
+    - "ADR-080 · Talep durum makinesi": adr/080-defect-claim-tables-and-state-machine.md
+    - "ADR-081 · Talep açma": adr/081-defect-claim-opening-window-lines-photos.md
+    - "ADR-082 · Kısmi iade ve komisyon": adr/082-defect-refund-amount-and-commission-recalculation.md
+    - "ADR-083 · Talep süreleri": adr/083-defect-claim-deadlines-by-scheduled-sweep.md
+    - "ADR-084 · Talep yetkisi ve fotoğraflar": adr/084-defect-claim-authorization-and-protected-photos.md
+    - "ADR-085 · Talep e-postaları": adr/085-defect-claim-emails.md
+    - "ADR-086 · Talep ekranları": adr/086-defect-claim-web-surfaces.md
   - Nasıl Yapılır (How-to):
     - Genel Bakış: how-to/index.md
     - Yerel Geliştirme Ortamı: how-to/yerel-gelistirme.md
@@ -181,6 +189,7 @@ nav:
     - Ürün İlanları: product/urun-ilanlari.md
     - Sepet ve Sipariş: product/sepet-ve-siparis.md
     - Kargo ve Teslimat: product/kargo-ve-teslimat.md
+    - Ayıplı Ürün İadesi: product/ayipli-urun-iadesi.md
   - Araştırma (Research): research/index.md
   - Eğitimler (Tutorials): tutorials/index.md
   - Açıklamalar (Explanation): explanation/index.md
@@ -193,6 +202,7 @@ nav:
     - Sepet ve Sipariş: features/sepet-ve-siparis.md
     - Ödeme ve Hakediş: features/odeme-ve-hakedis.md
     - Kargo ve Teslimat: features/kargo-ve-teslimat.md
+    - Ayıplı Ürün ve İade: features/ayipli-urun-ve-iade.md
     - "Genel (feature dışı işler)": features/_genel.md
 
 copyright: Bahçeden Internal Documentation

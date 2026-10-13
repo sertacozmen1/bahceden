@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 /**
  * Sipariş satırı; değerler sipariş anındaki kopyadır (D6).
  *
+ * @param id          sipariş satırının kimliği (ayıplı ürün talebi satırı bununla seçer, ADR-081)
  * @param productSlug ürün adresi (ürün sonradan kaldırılmış olabilir)
  * @param productName sipariş anındaki ürün adı
  * @param unit        satış birimi
@@ -16,6 +17,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
  */
 @Schema(name = "OrderItemView", description = "Sipariş satırı; değerler sipariş anındaki kopyadır")
 public record OrderItemView(
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Sipariş satırının kimliği", example = "42")
+        long id,
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Ürün adresi", example = "salkim-domates")
         String productSlug,
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED, description = "Ürün adı", example = "Salkım Domates")

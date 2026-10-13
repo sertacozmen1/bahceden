@@ -130,6 +130,18 @@ public enum ApiErrorCode {
     /** Kargo entegratörüne ulaşılamadı veya işlem reddedildi; kayıt değişmedi (502, add-shipments D3, D6). */
     SHIPPING_INTEGRATOR_ERROR(HttpStatus.BAD_GATEWAY),
 
+    /** Satıcı siparişi için talep açılamaz: teslim edilmemiş ya da talebi zaten var (409, ADR-081). */
+    CLAIM_NOT_ALLOWED(HttpStatus.CONFLICT),
+
+    /** Teslimden bu yana talep süresi doldu (422, ADR-081). */
+    CLAIM_WINDOW_CLOSED(HttpStatus.UNPROCESSABLE_ENTITY),
+
+    /** Talep veya fotoğrafı yok ya da hesap talebin tarafı değil (404, ADR-084). */
+    CLAIM_NOT_FOUND(HttpStatus.NOT_FOUND),
+
+    /** Talebin şimdiki durumundan bu eylem yapılamaz (409, ADR-080). */
+    CLAIM_INVALID_TRANSITION(HttpStatus.CONFLICT),
+
     /** Kısa sürede çok fazla istek ya da çok fazla hatalı kod denemesi (429, design.md D5). */
     RATE_LIMITED(HttpStatus.TOO_MANY_REQUESTS),
 

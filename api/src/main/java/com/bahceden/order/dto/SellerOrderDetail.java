@@ -30,6 +30,9 @@ import java.util.List;
  * @param cancelledBy      iptal eden taraf; yoksa {@code null}
  * @param cancelReason     iptal gerekçesi; yoksa {@code null}
  * @param shipment         etkin gönderi; açılmadıysa {@code null} (add-shipments)
+ * @param claim            ayıplı ürün talebi; yoksa {@code null} (ADR-080)
+ * @param commissionAfterClaim ayıplı ürün iadesinden sonraki komisyon; iade yoksa {@code null} (ADR-082)
+ * @param payoutAfterClaim     ayıplı ürün iadesinden sonraki hakediş; iade yoksa {@code null} (ADR-082)
  * @param cancellable      satıcı şu an iptal edebilir mi
  */
 @Schema(name = "SellerOrderDetail", description = "Satıcının gördüğü satıcı siparişi")
@@ -75,5 +78,14 @@ public record SellerOrderDetail(
         boolean cancellable,
         @Schema(requiredMode = Schema.RequiredMode.NOT_REQUIRED, nullable = true,
                 description = "Kargo gönderisi; henüz açılmadıysa boş")
-        ShipmentView shipment) {
+        ShipmentView shipment,
+        @Schema(requiredMode = Schema.RequiredMode.NOT_REQUIRED, nullable = true,
+                description = "Ayıplı ürün talebi; açılmadıysa boş")
+        DefectClaimView claim,
+        @Schema(requiredMode = Schema.RequiredMode.NOT_REQUIRED, nullable = true,
+                description = "Ayıplı ürün iadesinden sonraki komisyon; iade yapılmadıysa boş")
+        MoneyView commissionAfterClaim,
+        @Schema(requiredMode = Schema.RequiredMode.NOT_REQUIRED, nullable = true,
+                description = "Ayıplı ürün iadesinden sonraki hakediş; iade yapılmadıysa boş")
+        MoneyView payoutAfterClaim) {
 }

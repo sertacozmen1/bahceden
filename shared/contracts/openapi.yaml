@@ -17,6 +17,8 @@ tags:
   description: Oturum sahibinin teslimat adresleri
 - name: Satıcı ilanları
   description: Onaylı satıcının kendi ürün ilanları
+- name: Ayıplı ürün talepleri
+  description: Teslim edilen siparişte sorun bildirme ve çözüm
 - name: Satıcı başvurusu
   description: Oturum sahibinin satıcı başvurusu ve kaydı
 - name: "Admin: ilanlar"
@@ -25,6 +27,8 @@ tags:
   description: Satıcı başvurularının listelenmesi ve karara bağlanması
 - name: Teslimat
   description: Teslimat yapılan iller
+- name: "Admin: ayıplı ürün talepleri"
+  description: Yönetime taşınan taleplerin kararı
 - name: Oturum
   description: "Oturum açma, yenileme ve kapatma"
 - name: Siparişler
@@ -1193,6 +1197,133 @@ paths:
                 $ref: "#/components/schemas/ApiError"
       security:
       - bearerAuth: []
+  /api/v1/sellers/me/orders/{id}/claim/response:
+    post:
+      tags:
+      - Ayıplı ürün talepleri
+      summary: Satıcı ayıplı ürün talebine yanıt verir
+      description: |
+        ACCEPT: istenen adetlerin tamamı iade edilir. OFFER: satır başına daha az adet önerilir; alıcının
+        48 saati olur, yanıt vermezse teklif uygulanır. REJECT: gerekçe (10–500 karakter) alıcıya
+        iletilir; alıcı 48 saat içinde yönetime taşıyabilir. Bütün satırlarda istenen adeti önermek
+        kabuldür. Stok geri eklenmez.
+      operationId: respondToDefectClaim
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClaimResponseRequest"
+        required: true
+      responses:
+        "200":
+          description: Satıcı siparişinin güncel hali
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SellerOrderDetail"
+        "400":
+          description: "Karar, satırlar veya gerekçe geçersiz (VALIDATION_FAILED)"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Oturum yok (AUTH_REQUIRED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "403":
+          description: Satıcı rolü yok (AUTH_FORBIDDEN) veya satıcı kaydı onaylı değil
+            (SELLER_NOT_APPROVED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: Talep yok veya başka satıcının (CLAIM_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "409":
+          description: Talep yanıt bekliyor değil (CLAIM_INVALID_TRANSITION)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "502":
+          description: İade yapılamadı; hiçbir şey değişmedi (PAYMENT_PROVIDER_ERROR)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+      security:
+      - bearerAuth: []
+  /api/v1/sellers/me/orders/{id}/claim/preview:
+    post:
+      tags:
+      - Ayıplı ürün talepleri
+      summary: Satıcı yanıtının para etkisini önizler
+      description: |
+        Yan etkisizdir. Satır verilmezse alıcının istediği adetler (tamamını kabul) hesaplanır. Dönen
+        tutarlar sunucunun kuralıyladır: tam iadede kargo ücreti de iade edilir ve hakediş sıfırlanır;
+        kısmi iadede komisyon kalan tutar üzerinden yeniden hesaplanır.
+      operationId: previewDefectClaimSettlement
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClaimPreviewRequest"
+        required: true
+      responses:
+        "200":
+          description: İadenin para etkisi
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClaimSettlementView"
+        "400":
+          description: Satırlar geçersiz (VALIDATION_FAILED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Oturum yok (AUTH_REQUIRED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "403":
+          description: Satıcı rolü yok (AUTH_FORBIDDEN) veya satıcı kaydı onaylı değil
+            (SELLER_NOT_APPROVED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: Talep yok veya başka satıcının (CLAIM_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+      security:
+      - bearerAuth: []
   /api/v1/sellers/me/orders/{id}/cancel:
     post:
       tags:
@@ -1447,6 +1578,178 @@ paths:
         "502":
           description: Gönderi iptal edilemedi (SHIPPING_INTEGRATOR_ERROR) veya iade
             yapılamadı (PAYMENT_PROVIDER_ERROR); hiçbir şey değişmedi
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+      security:
+      - bearerAuth: []
+  /api/v1/orders/{orderNumber}/seller-orders/{id}/claim:
+    post:
+      tags:
+      - Ayıplı ürün talepleri
+      summary: Alıcı teslim edilen satıcı siparişi için ayıplı ürün talebi açar
+      description: |
+        Teslimden itibaren 48 saat içinde, satır ve adet, açıklama ve 1–3 fotoğrafla açılır. Satıcı
+        siparişi başına tek talep vardır. Fotoğraflar yeniden boyutlandırılır ve konum bilgisi atılır.
+        Satıcının 48 saatlik yanıt süresi başlar.
+      operationId: openDefectClaim
+      parameters:
+      - name: orderNumber
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/DefectClaimForm"
+      responses:
+        "201":
+          description: Talep açıldı; siparişin güncel hali
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderDetail"
+        "400":
+          description: "Satır, adet, açıklama veya fotoğraf geçersiz (VALIDATION_FAILED)"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Oturum yok (AUTH_REQUIRED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: "Sipariş veya satıcı siparişi yok ya da başkasına ait (ORDER_NOT_FOUND,\
+            \ SELLER_ORDER_NOT_FOUND)"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "409":
+          description: Satıcı siparişi teslim edilmemiş ya da talebi zaten var (CLAIM_NOT_ALLOWED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "422":
+          description: Teslimden bu yana talep süresi doldu (CLAIM_WINDOW_CLOSED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "429":
+          description: Kısa sürede çok fazla talep (RATE_LIMITED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+      security:
+      - bearerAuth: []
+  /api/v1/orders/{orderNumber}/seller-orders/{id}/claim/escalate:
+    post:
+      tags:
+      - Ayıplı ürün talepleri
+      summary: Alıcı satıcının teklifini veya reddini yönetime taşır
+      description: Talep Bahçeden ekibinin kararına geçer; iki tarafa e-posta gider.
+      operationId: escalateDefectClaim
+      parameters:
+      - name: orderNumber
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: Siparişin güncel hali
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderDetail"
+        "401":
+          description: Oturum yok (AUTH_REQUIRED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: Talep yok veya başkasının (CLAIM_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "409":
+          description: Talep alıcının yanıtını beklemiyor (CLAIM_INVALID_TRANSITION)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+      security:
+      - bearerAuth: []
+  /api/v1/orders/{orderNumber}/seller-orders/{id}/claim/accept:
+    post:
+      tags:
+      - Ayıplı ürün talepleri
+      summary: Alıcı satıcının teklifini veya reddini kabul eder
+      description: Teklif kabul edilirse önerilen adetler iade edilir; ret kabul edilirse
+        talep iadesiz kapanır.
+      operationId: acceptDefectClaimAnswer
+      parameters:
+      - name: orderNumber
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: Siparişin güncel hali
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderDetail"
+        "401":
+          description: Oturum yok (AUTH_REQUIRED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: Talep yok veya başkasının (CLAIM_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "409":
+          description: Talep alıcının yanıtını beklemiyor (CLAIM_INVALID_TRANSITION)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "502":
+          description: İade yapılamadı; hiçbir şey değişmedi (PAYMENT_PROVIDER_ERROR)
           content:
             application/json:
               schema:
@@ -1901,6 +2204,127 @@ paths:
                 $ref: "#/components/schemas/ApiError"
         "404":
           description: İlan yok (PRODUCT_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+      security:
+      - bearerAuth: []
+  /api/v1/admin/claims/{id}/preview:
+    post:
+      tags:
+      - "Admin: ayıplı ürün talepleri"
+      summary: Admin kararının para etkisini önizler
+      description: Yan etkisizdir. Adet her satırda satın alınana kadar olabilir.
+      operationId: previewDefectClaimDecision
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClaimPreviewRequest"
+        required: true
+      responses:
+        "200":
+          description: "Talep, talepler veya para etkisi"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClaimSettlementView"
+        "400":
+          description: "Karar, satırlar, gerekçe veya süzgeç geçersiz (VALIDATION_FAILED)"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Oturum yok (AUTH_REQUIRED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "403":
+          description: Admin rolü yok (AUTH_FORBIDDEN)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: Talep yok (CLAIM_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+      security:
+      - bearerAuth: []
+  /api/v1/admin/claims/{id}/decision:
+    post:
+      tags:
+      - "Admin: ayıplı ürün talepleri"
+      summary: Admin yönetime taşınan talebe karar verir
+      description: |
+        REFUND: satır başına satın alınana kadar adet iade edilir (toplam en az bir); tam iadede kargo da
+        döner, stok geri eklenmez. REJECT: gerekçe zorunlu (10–500 karakter), iade yapılmaz. Karar ve
+        gerekçe geçmişe yazılır; alıcıya ve satıcıya e-posta gider.
+      operationId: decideDefectClaim
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AdminClaimDecisionRequest"
+        required: true
+      responses:
+        "409":
+          description: Talep karar bekliyor değil (CLAIM_INVALID_TRANSITION)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "502":
+          description: İade yapılamadı; hiçbir şey değişmedi (PAYMENT_PROVIDER_ERROR)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "200":
+          description: "Talep, talepler veya para etkisi"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminClaimDetail"
+        "400":
+          description: "Karar, satırlar, gerekçe veya süzgeç geçersiz (VALIDATION_FAILED)"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Oturum yok (AUTH_REQUIRED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "403":
+          description: Admin rolü yok (AUTH_FORBIDDEN)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: Talep yok (CLAIM_NOT_FOUND)
           content:
             application/json:
               schema:
@@ -2502,6 +2926,60 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/PageResponseDeliveryProvince"
+  /api/v1/claims/{claimId}/photos/{position}:
+    get:
+      tags:
+      - Ayıplı ürün talepleri
+      summary: Talep fotoğrafını döner
+      description: "Yalnızca talebin alıcısı, satıcısı ve admin görür. JPEG; önbelleğ\
+        e alınmaz."
+      operationId: getDefectClaimPhoto
+      parameters:
+      - name: claimId
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      - name: position
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int32
+      - name: size
+        in: query
+        description: "Boyut: CARD veya LARGE"
+        required: false
+        schema:
+          type: string
+          default: LARGE
+          enum:
+          - CARD
+          - LARGE
+        example: LARGE
+      responses:
+        "200":
+          description: Fotoğraf (JPEG)
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+        "401":
+          description: Oturum yok (AUTH_REQUIRED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: Fotoğraf yok veya hesap talebin tarafı değil (CLAIM_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+      security:
+      - bearerAuth: []
   /api/v1/cart:
     get:
       tags:
@@ -2880,6 +3358,132 @@ paths:
                 $ref: "#/components/schemas/ApiError"
         "404":
           description: İlan yok (PRODUCT_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+      security:
+      - bearerAuth: []
+  /api/v1/admin/claims:
+    get:
+      tags:
+      - "Admin: ayıplı ürün talepleri"
+      summary: Ayıplı ürün taleplerini listeler
+      description: |
+        Durum süzgeci varsayılan olarak ESCALATED'dır (karar bekleyen); diğer durumlar da süzülebilir.
+        En yeni üstte; sayfa boyutunun üst sınırı sunucuda 50'dir.
+      operationId: listDefectClaimsForAdmin
+      parameters:
+      - name: status
+        in: query
+        description: Durum süzgeci
+        required: false
+        schema:
+          type: string
+          default: ESCALATED
+          enum:
+          - OPEN
+          - OFFERED
+          - REJECTED
+          - ESCALATED
+          - REFUNDED
+          - CLOSED
+        example: ESCALATED
+      - name: page
+        in: query
+        description: Sayfa numarası (sıfırdan başlar)
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 0
+          minimum: 0
+        example: 0
+      - name: size
+        in: query
+        description: Sayfa boyutu; üst sınır sunucuda 50'ye çekilir
+        required: false
+        schema:
+          type: integer
+          format: int32
+          default: 20
+          minimum: 1
+        example: 20
+      responses:
+        "200":
+          description: "Talep, talepler veya para etkisi"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PageResponseAdminClaimSummary"
+        "400":
+          description: "Karar, satırlar, gerekçe veya süzgeç geçersiz (VALIDATION_FAILED)"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Oturum yok (AUTH_REQUIRED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "403":
+          description: Admin rolü yok (AUTH_FORBIDDEN)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: Talep yok (CLAIM_NOT_FOUND)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+      security:
+      - bearerAuth: []
+  /api/v1/admin/claims/{id}:
+    get:
+      tags:
+      - "Admin: ayıplı ürün talepleri"
+      summary: Ayıplı ürün talebinin detayı
+      description: "Talep, fotoğraflar, iki tarafın beyanı ve satın alınan adetler;\
+        \ alıcının kişisel verisi yok."
+      operationId: getDefectClaimForAdmin
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: integer
+          format: int64
+      responses:
+        "200":
+          description: "Talep, talepler veya para etkisi"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminClaimDetail"
+        "400":
+          description: "Karar, satırlar, gerekçe veya süzgeç geçersiz (VALIDATION_FAILED)"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: Oturum yok (AUTH_REQUIRED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "403":
+          description: Admin rolü yok (AUTH_FORBIDDEN)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "404":
+          description: Talep yok (CLAIM_NOT_FOUND)
           content:
             application/json:
               schema:
@@ -3882,23 +4486,215 @@ components:
       - packageSize
       - status
       - trackingNumber
-    CancellationRequest:
+    ClaimResponseLine:
       type: object
-      description: Kargodan önce iptal
+      description: Satır başına önerilen adet
       properties:
+        orderItemId:
+          type: integer
+          format: int64
+          description: Sipariş satırının kimliği
+          example: 42
+        quantity:
+          type: integer
+          format: int32
+          description: Önerilen adet
+          example: 1
+          maximum: 99
+          minimum: 0
+      required:
+      - orderItemId
+      - quantity
+    ClaimResponseRequest:
+      type: object
+      description: Satıcının ayıplı ürün talebine yanıtı
+      properties:
+        decision:
+          type: string
+          description: Karar
+          enum:
+          - ACCEPT
+          - OFFER
+          - REJECT
+          example: OFFER
+          minLength: 1
+          pattern: ACCEPT|OFFER|REJECT
+        lines:
+          type: array
+          description: Teklifte satır başına önerilen adet
+          items:
+            $ref: "#/components/schemas/ClaimResponseLine"
+          maxItems: 50
+          minItems: 0
         reason:
+          type: string
+          description: "Retde gerekçe, 10–500 karakter"
+          example: Paket gönderilirken sağlamdı; fotoğraftaki kasa bize ait değil.
+      required:
+      - decision
+    DefectClaimLineView:
+      type: object
+      description: Talepteki bir satır
+      properties:
+        orderItemId:
+          type: integer
+          format: int64
+          description: Sipariş satırının kimliği
+          example: 42
+        productName:
+          type: string
+          description: Ürün adı
+          example: Domates
+        unit:
+          type: string
+          description: Satış birimi
+          enum:
+          - KILOGRAM
+          - PIECE
+          - BUNCH
+          example: KILOGRAM
+        unitPrice:
+          $ref: "#/components/schemas/Money"
+          description: Birim fiyat
+        claimedQuantity:
+          type: integer
+          format: int32
+          description: Alıcının bildirdiği adet
+          example: 2
+        offeredQuantity:
+          type:
+          - integer
+          - "null"
+          format: int32
+          description: Satıcının önerdiği adet
+          example: 1
+        refundedQuantity:
+          type:
+          - integer
+          - "null"
+          format: int32
+          description: İade edilen adet
+          example: 1
+      required:
+      - claimedQuantity
+      - orderItemId
+      - productName
+      - unit
+      - unitPrice
+    DefectClaimPhotoView:
+      type: object
+      description: Talep fotoğrafı
+      properties:
+        position:
+          type: integer
+          format: int32
+          description: Konum
+          example: 0
+        width:
+          type: integer
+          format: int32
+          description: Büyük boyutun genişliği
+          example: 1600
+        height:
+          type: integer
+          format: int32
+          description: Büyük boyutun yüksekliği
+          example: 1200
+      required:
+      - height
+      - position
+      - width
+    DefectClaimView:
+      type: object
+      description: Ayıplı ürün talebi
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Talebin kimliği
+          example: 5
+        status:
+          type: string
+          description: Durum
+          enum:
+          - OPEN
+          - OFFERED
+          - REJECTED
+          - ESCALATED
+          - REFUNDED
+          - CLOSED
+          example: OPEN
+        description:
+          type: string
+          description: Alıcının açıklaması
+          example: Domates kasasının üst sırası ezik geldi.
+        lines:
+          type: array
+          description: Satırlar
+          items:
+            $ref: "#/components/schemas/DefectClaimLineView"
+        photos:
+          type: array
+          description: "Fotoğraflar, konum sırasıyla"
+          items:
+            $ref: "#/components/schemas/DefectClaimPhotoView"
+        sellerDeadlineAt:
+          type: string
+          format: date-time
+          description: Satıcının yanıt son anı (UTC)
+          example: 2026-10-15T10:00:00Z
+        sellerReason:
           type:
           - string
           - "null"
-          description: "İptal gerekçesi; satıcı için zorunlu (10–500 karakter), alı\
-            cı için isteğe bağlı"
-          example: "Hasat beklenenden az oldu, ürün kalmadı."
-          maxLength: 500
-          minLength: 0
+          description: Satıcının ret gerekçesi
+          example: Paket gönderilirken sağlamdı.
+        buyerDeadlineAt:
+          type:
+          - string
+          - "null"
+          format: date-time
+          description: "Teklif veya retten sonra alıcının yanıt son anı (UTC); geç\
+            erse teklif kabul, ret kesin sayılır"
+          example: 2026-10-17T10:00:00Z
+        refundAmount:
+          type: "null"
+          $ref: "#/components/schemas/Money"
+          description: İade edildiyse alıcıya dönen toplam
+        shippingRefunded:
+          type: boolean
+          description: Kargo ücreti de iade edildi mi
+          example: false
+        resolvedAt:
+          type:
+          - string
+          - "null"
+          format: date-time
+          description: Uç duruma geldiği an (UTC)
+          example: 2026-10-14T09:00:00Z
+        createdAt:
+          type: string
+          format: date-time
+          description: Açıldığı an (UTC)
+          example: 2026-10-13T10:00:00Z
+      required:
+      - createdAt
+      - description
+      - id
+      - lines
+      - photos
+      - sellerDeadlineAt
+      - shippingRefunded
+      - status
     OrderItemView:
       type: object
       description: Sipariş satırı; değerler sipariş anındaki kopyadır
       properties:
+        id:
+          type: integer
+          format: int64
+          description: Sipariş satırının kimliği
+          example: 42
         productSlug:
           type: string
           description: Ürün adresi
@@ -3927,6 +4723,7 @@ components:
           $ref: "#/components/schemas/Money"
           description: Satır tutarı
       required:
+      - id
       - lineTotal
       - productName
       - productSlug
@@ -4026,6 +4823,19 @@ components:
           type: "null"
           $ref: "#/components/schemas/Shipment"
           description: Kargo gönderisi; henüz açılmadıysa boş
+        claim:
+          type: "null"
+          $ref: "#/components/schemas/DefectClaimView"
+          description: Ayıplı ürün talebi; açılmadıysa boş
+        commissionAfterClaim:
+          type: "null"
+          $ref: "#/components/schemas/Money"
+          description: Ayıplı ürün iadesinden sonraki komisyon; iade yapılmadıysa
+            boş
+        payoutAfterClaim:
+          type: "null"
+          $ref: "#/components/schemas/Money"
+          description: Ayıplı ürün iadesinden sonraki hakediş; iade yapılmadıysa boş
       required:
       - cancellable
       - commissionAmount
@@ -4040,6 +4850,52 @@ components:
       - provinceName
       - sellerPayout
       - status
+    ClaimPreviewRequest:
+      type: object
+      description: Ayıplı ürün yanıtının para etkisini önizleme
+      properties:
+        lines:
+          type: array
+          description: Satır başına adet; boşsa alıcının istediği adetler
+          items:
+            $ref: "#/components/schemas/ClaimResponseLine"
+          maxItems: 50
+          minItems: 0
+    ClaimSettlementView:
+      type: object
+      description: Ayıplı ürün iadesinin para etkisi
+      properties:
+        refundAmount:
+          $ref: "#/components/schemas/Money"
+          description: Alıcıya iade edilecek toplam
+        shippingRefunded:
+          type: boolean
+          description: Kargo ücreti de iade ediliyor mu
+          example: false
+        commissionAfter:
+          $ref: "#/components/schemas/Money"
+          description: İadeden sonraki komisyon
+        payoutAfter:
+          $ref: "#/components/schemas/Money"
+          description: İadeden sonraki satıcı hakedişi
+      required:
+      - commissionAfter
+      - payoutAfter
+      - refundAmount
+      - shippingRefunded
+    CancellationRequest:
+      type: object
+      description: Kargodan önce iptal
+      properties:
+        reason:
+          type:
+          - string
+          - "null"
+          description: "İptal gerekçesi; satıcı için zorunlu (10–500 karakter), alı\
+            cı için isteğe bağlı"
+          example: "Hasat beklenenden az oldu, ürün kalmadı."
+          maxLength: 500
+          minLength: 0
     PlaceOrderRequest:
       type: object
       description: Sepetten sipariş oluşturma
@@ -4142,6 +4998,18 @@ components:
           type: "null"
           $ref: "#/components/schemas/Shipment"
           description: Kargo gönderisi; henüz açılmadıysa boş
+        claimableUntil:
+          type:
+          - string
+          - "null"
+          format: date-time
+          description: Ayıplı ürün talebi açılabiliyorsa son an (UTC); teslimden 48
+            saat sonra kapanır
+          example: 2026-10-15T10:00:00Z
+        claim:
+          type: "null"
+          $ref: "#/components/schemas/DefectClaimView"
+          description: Ayıplı ürün talebi; açılmadıysa boş
       required:
       - cancellable
       - dispatchDays
@@ -4249,6 +5117,52 @@ components:
       - provinceCode
       - provinceName
       - recipientName
+    DefectClaimForm:
+      type: object
+      description: Ayıplı ürün talebi açma
+      properties:
+        description:
+          type: string
+          description: "Sorunun açıklaması, 10–1000 karakter"
+          example: Domates kasasının üst sırası ezik geldi.
+          maxLength: 1000
+          minLength: 10
+        lines:
+          type: array
+          description: Sorunlu satırlar; aynı satır bir kez
+          items:
+            $ref: "#/components/schemas/DefectClaimFormLine"
+          maxItems: 50
+          minItems: 0
+        photos:
+          type: array
+          description: "1–3 fotoğraf: JPEG veya PNG; her biri en çok 10 MB ve 40 megapiksel"
+          items:
+            type: string
+            format: binary
+      required:
+      - description
+      - lines
+      - photos
+    DefectClaimFormLine:
+      type: object
+      description: Talepteki bir satır
+      properties:
+        orderItemId:
+          type: integer
+          format: int64
+          description: Sipariş satırının kimliği
+          example: 42
+        quantity:
+          type: integer
+          format: int32
+          description: Sorunlu adet
+          example: 2
+          maximum: 99
+          minimum: 1
+      required:
+      - orderItemId
+      - quantity
     SellerDecisionReason:
       type: object
       description: Ret veya askı gerekçesi; satıcıya gösterilir
@@ -4562,6 +5476,77 @@ components:
       - slug
       - status
       - updatedAt
+    AdminClaimDecisionRequest:
+      type: object
+      description: Admin'in ayıplı ürün talebine kararı
+      properties:
+        decision:
+          type: string
+          description: Karar
+          enum:
+          - REFUND
+          - REJECT
+          example: REFUND
+          minLength: 1
+          pattern: REFUND|REJECT
+        lines:
+          type: array
+          description: İadede satır başına iade adedi
+          items:
+            $ref: "#/components/schemas/ClaimResponseLine"
+          maxItems: 50
+          minItems: 0
+        reason:
+          type: string
+          description: Retde zorunlu gerekçe (10–500 karakter); iadede isteğe bağlı
+            açıklama
+          example: Fotoğraflar kasanın ezik geldiğini gösteriyor.
+      required:
+      - decision
+    AdminClaimDetail:
+      type: object
+      description: Admin'in ayıplı ürün talebi detayı
+      properties:
+        claim:
+          $ref: "#/components/schemas/DefectClaimView"
+          description: Talep
+        orderNumber:
+          type: string
+          description: Sipariş numarası
+          example: BHC-7K2M9QXA4T
+        sellerOrderId:
+          type: integer
+          format: int64
+          description: Satıcı siparişinin kimliği
+          example: 17
+        sellerName:
+          type: string
+          description: Üreticinin görünen adı
+          example: Üretici Bahçesi
+        items:
+          type: array
+          description: Satıcı siparişinin satırları
+          items:
+            $ref: "#/components/schemas/OrderItemView"
+        itemsTotal:
+          $ref: "#/components/schemas/Money"
+          description: Ürün tutarı
+        shippingFee:
+          $ref: "#/components/schemas/Money"
+          description: Kargo ücreti
+        decidable:
+          type: boolean
+          description: Admin şu an karar verebilir mi
+          example: true
+      required:
+      - claim
+      - decidable
+      - items
+      - itemsTotal
+      - orderNumber
+      - sellerName
+      - sellerOrderId
+      - shippingFee
     RegisterRequest:
       type: object
       description: Hesap açma isteği
@@ -5224,6 +6209,90 @@ components:
           description: Sayfadaki kayıtlar
           items:
             $ref: "#/components/schemas/AdminProductSummary"
+        page:
+          type: integer
+          format: int32
+          description: Geçerli sayfa numarası (sıfırdan başlar)
+          example: 0
+        size:
+          type: integer
+          format: int32
+          description: Uygulanan sayfa boyutu
+          example: 20
+        totalElements:
+          type: integer
+          format: int64
+          description: Süzgeçten geçen toplam kayıt sayısı
+          example: 137
+        totalPages:
+          type: integer
+          format: int32
+          description: Toplam sayfa sayısı
+          example: 7
+      required:
+      - items
+      - page
+      - size
+      - totalElements
+      - totalPages
+    AdminClaimSummary:
+      type: object
+      description: Admin talep listesinin satırı
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Talebin kimliği
+          example: 5
+        orderNumber:
+          type: string
+          description: Sipariş numarası
+          example: BHC-7K2M9QXA4T
+        sellerOrderId:
+          type: integer
+          format: int64
+          description: Satıcı siparişinin kimliği
+          example: 17
+        sellerName:
+          type: string
+          description: Üreticinin görünen adı
+          example: Üretici Bahçesi
+        status:
+          type: string
+          description: Talebin durumu
+          enum:
+          - OPEN
+          - OFFERED
+          - REJECTED
+          - ESCALATED
+          - REFUNDED
+          - CLOSED
+          example: ESCALATED
+        createdAt:
+          type: string
+          format: date-time
+          description: Açıldığı an (UTC)
+          example: 2026-10-13T10:00:00Z
+        refundAmount:
+          type: "null"
+          $ref: "#/components/schemas/Money"
+          description: İade edildiyse alıcıya dönen toplam
+      required:
+      - createdAt
+      - id
+      - orderNumber
+      - sellerName
+      - sellerOrderId
+      - status
+    PageResponseAdminClaimSummary:
+      type: object
+      description: Sayfalı liste yanıtı
+      properties:
+        items:
+          type: array
+          description: Sayfadaki kayıtlar
+          items:
+            $ref: "#/components/schemas/AdminClaimSummary"
         page:
           type: integer
           format: int32

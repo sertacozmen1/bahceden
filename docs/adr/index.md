@@ -99,8 +99,16 @@ Architecture Decision Records, projedeki önemli mimari kararları ve bu kararla
 | 076 | [İptal önce gönderiyi iptal eder, sonra iade](076-cancel-cancels-shipment-before-refund.md) | Accepted | 2026-10-10 |
 | 077 | [Teslim edilemeyen sipariş: admin iade eder veya gerekçeyle kapatır](077-undelivered-order-admin-refund-or-close.md) | Accepted | 2026-10-10 |
 | 078 | [Kargo bildirimleri yalnızca e-posta, üç olay](078-shipping-notifications-email-only-three-events.md) | Accepted | 2026-10-10 |
+| 079 | [Ayıplı ürün talebi `order` paketinde; satıcı siparişi başına tek talep; sonucu talep taşır](079-defect-claim-in-order-package-one-per-seller-order.md) | Accepted | 2026-10-13 |
+| 080 | [Talep tabloları ve durum makinesi: açık, teklif, ret, yönetimde, iade edildi, kapandı](080-defect-claim-tables-and-state-machine.md) | Accepted | 2026-10-13 |
+| 081 | [Talep açma: 48 saatlik pencere, satır ve adet, açıklama, 1–3 fotoğraf](081-defect-claim-opening-window-lines-photos.md) | Accepted | 2026-10-13 |
+| 082 | [Ayıplı ürün iadesi: birim fiyat × adet; kısmi iadede komisyon kalan tutardan; stok eklenmez](082-defect-refund-amount-and-commission-recalculation.md) | Accepted | 2026-10-13 |
+| 083 | [Talep süreleri zamanlanmış işte; alıcının sessizliği kabul sayılır](083-defect-claim-deadlines-by-scheduled-sweep.md) | Accepted | 2026-10-13 |
+| 084 | [Talep uçlarında yetki; fotoğraflar yalnızca üç tarafa korumalı](084-defect-claim-authorization-and-protected-photos.md) | Accepted | 2026-10-13 |
+| 085 | [Talep e-postaları: karşı tarafa, yönetime taşınınca ve sonuçta iki tarafa](085-defect-claim-emails.md) | Accepted | 2026-10-13 |
+| 086 | [`web`: talep formu ayrı sayfada, kart sipariş detayında, admin ekranı; para etkisi sunucudan](086-defect-claim-web-surfaces.md) | Accepted | 2026-10-13 |
 
-**Sıradaki numara: 079.**
+**Sıradaki numara: 087.**
 
 **Durum değerleri:** `Proposed` (öneri, henüz bağlayıcı değil) · `Accepted` (yürürlükte, bağlayıcı) · `Deprecated` (artık geçerli değil, yerine bir şey gelmedi) · `Superseded by [ADR-XXX]` (yerini başka bir karara bıraktı).
 

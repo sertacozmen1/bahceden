@@ -318,7 +318,8 @@
       "label": "Yönetim bölümleri",
       "sellers": "Satıcı başvuruları",
       "products": "İlanlar",
-      "orders": "Teslim edilemeyenler"
+      "orders": "Teslim edilemeyenler",
+      "claims": "Sorun bildirimleri"
     },
     "products": {
       "title": "İlanlar",
@@ -359,6 +360,29 @@
         "closeTitle": "İadesiz kapat",
         "closeBody": "Para hareketi olmaz, üreticinin hakedişi geçerli kalır. Gerekçeniz alıcıya ve üreticiye iletilir.",
         "confirmClose": "Kapat"
+      }
+    },
+    "claims": {
+      "title": "Sorun bildirimleri",
+      "intro": "Alıcının Bahçeden ekibine taşıdığı ya da üreticinin süresinde yanıtlamadığı ayıplı ürün talepleri. Fotoğraflara ve iki tarafın beyanına bakıp satır başına iade adedine karar verin.",
+      "tabsLabel": "Talep durumu",
+      "emptyTitle": "Bu sekmede talep yok",
+      "emptyBody": "Karar bekleyen talepler burada görünür.",
+      "loading": "Talepler yükleniyor",
+      "backToList": "Sorun bildirimlerine dön",
+      "refunded": "İade: {amount}",
+      "decisionTitle": "Karar",
+      "decisionIntro": "Her satırda satın alınan adede kadar iade edebilirsiniz. Ret gerekçesi iki tarafa iletilir. Stok geri eklenmez.",
+      "actions": {
+        "refund": "İade et",
+        "refundTitle": "İade kararı",
+        "refundBody": "Her ürün için iade edilecek adedi seçin; alıcının bildirdiği adetle başlar.",
+        "confirmRefund": "İade et",
+        "lineLabel": "{name} için iade adedi",
+        "reject": "Reddet",
+        "rejectTitle": "Talebi reddet",
+        "rejectBody": "Gerekçeniz alıcıya ve üreticiye e-postayla iletilir; iade yapılmaz.",
+        "confirmReject": "Reddet"
       }
     }
   },
@@ -563,7 +587,8 @@
     "commission": "Komisyon",
     "payoutLabel": "Hakedişiniz",
     "destination": "Teslimat: {district} / {province}",
-    "shippingNote": "{status, select, DELIVERY_FAILED {Kargo paketi alıcıya teslim edemedi. Yönetim durumu inceleyip karar verecek ve size e-postayla bildirecek.} REFUNDED {Paket teslim edilemediği için alıcıya iade yapıldı; bu siparişten hakediş oluşmaz.} CLOSED {Teslim edilemeyen gönderi iadesiz kapatıldı; hakedişiniz geçerlidir.} other {}}"
+    "shippingNote": "{status, select, DELIVERY_FAILED {Kargo paketi alıcıya teslim edemedi. Yönetim durumu inceleyip karar verecek ve size e-postayla bildirecek.} REFUNDED {Paket teslim edilemediği için alıcıya iade yapıldı; bu siparişten hakediş oluşmaz.} CLOSED {Teslim edilemeyen gönderi iadesiz kapatıldı; hakedişiniz geçerlidir.} other {}}",
+    "payoutAfterClaim": "İade sonrası hakedişiniz"
   },
   "shipments": {
     "title": "Kargo gönderisi",
@@ -584,6 +609,71 @@
       "sizeHint": "{size, select, SMALL {Ayakkabı kutusu kadar, 5 kg'a kadar} MEDIUM {Meyve kasası kadar, 15 kg'a kadar} LARGE {Büyük koli, 30 kg'a kadar} other {}}",
       "action": "Gönderi oluştur",
       "preparing": "Gönderi oluşturuluyor…"
+    }
+  },
+  "claims": {
+    "report": "Sorun bildir",
+    "reportUntil": "Ezik, bozuk ya da eksik ürün varsa {date} tarihine kadar bildirebilirsiniz.",
+    "cardTitle": "Sorun bildirimi",
+    "status": "{status, select, OPEN {Üreticinin yanıtı bekleniyor} OFFERED {Üretici teklif verdi} REJECTED {Üretici reddetti} ESCALATED {Bahçeden inceliyor} REFUNDED {İade edildi} CLOSED {Kapandı} other {Bilinmiyor}}",
+    "claimedQuantity": "{quantity} bildirildi",
+    "photosLabel": "Fotoğraflar",
+    "photoAlt": "Sorun fotoğrafı {position}",
+    "sellerDeadlineForBuyer": "Üretici {date} tarihine kadar yanıt verecek.",
+    "sellerDeadlineForSeller": "En geç {date} tarihine kadar yanıt verin; yanıt vermezseniz talebi Bahçeden ekibi karara bağlar.",
+    "sellerDeadlineForAdmin": "Üreticinin yanıt süresi {date} tarihinde doluyor; yanıt gelmezse talep buraya düşer.",
+    "pageTitle": "Sorun bildir",
+    "pageIntro": "{seller} siparişindeki sorunlu ürünleri ve adetlerini seçin, kısaca açıklayın ve fotoğraf ekleyin. Üretici 48 saat içinde yanıt verir; ürünü geri göndermeniz gerekmez.",
+    "backToOrder": "Siparişe dön",
+    "unavailableTitle": "Bu sipariş için sorun bildirilemez",
+    "unavailableBody": "Bildirim süresi dolmuş ya da bu sipariş için daha önce bildirim yapılmış olabilir.",
+    "form": {
+      "linesLabel": "Sorunlu ürünler",
+      "purchased": "Aldığınız: {quantity}",
+      "lineQuantity": "{name} için sorunlu adet",
+      "descriptionLabel": "Açıklama",
+      "descriptionHint": "Ne oldu? Örneğin: kasanın üst sırası ezik geldi.",
+      "photosLabel": "Fotoğraflar",
+      "photosHint": "1–3 fotoğraf; JPEG veya PNG, her biri en çok 10 MB.",
+      "submit": "Bildir",
+      "submitting": "Gönderiliyor…",
+      "errors": {
+        "linesRequired": "En az bir ürün seçin.",
+        "descriptionLength": "Açıklama en az 10, en çok 1000 karakter olmalıdır.",
+        "photosCount": "En az 1, en çok 3 fotoğraf ekleyin.",
+        "photoType": "Yalnızca JPEG veya PNG fotoğraf ekleyin.",
+        "photoTooLarge": "Her fotoğraf en çok 10 MB olabilir."
+      }
+    },
+    "offeredQuantity": "{quantity} önerildi",
+    "refundedQuantity": "{quantity} iade edildi",
+    "sellerReason": "Üreticinin gerekçesi: {reason}",
+    "buyerDeadlineForBuyer": "{status, select, OFFERED {{date} tarihine kadar teklifi kabul edebilir ya da Bahçeden ekibine taşıyabilirsiniz; yanıt vermezseniz teklif kabul edilmiş sayılır.} other {{date} tarihine kadar reddi kabul edebilir ya da Bahçeden ekibine taşıyabilirsiniz; yanıt vermezseniz bildirim kapanır.}}",
+    "buyerDeadlineForSeller": "{status, select, OFFERED {Alıcı {date} tarihine kadar yanıt verecek; yanıt vermezse teklifiniz uygulanır.} other {Alıcı {date} tarihine kadar yanıt verecek; yanıt vermezse bildirim kapanır.}}",
+    "buyerDeadlineForAdmin": "{status, select, OFFERED {Alıcının yanıt süresi {date} tarihinde doluyor; yanıt gelmezse teklif uygulanır.} other {Alıcının yanıt süresi {date} tarihinde doluyor; yanıt gelmezse bildirim kapanır.}}",
+    "refunded": "{amount} iade edildi.",
+    "shippingRefunded": "Bütün ürünler iade edildiği için kargo ücreti de iade edildi.",
+    "actions": {
+      "accept": "Tamamını kabul et",
+      "acceptTitle": "Talebin tamamını kabul et",
+      "acceptBody": "Alıcının bildirdiği bütün adetler iade edilir. Ürünü geri istemeniz gerekmez.",
+      "confirmAccept": "Kabul et ve iade et",
+      "offer": "Kısmi iade öner",
+      "offerTitle": "Kısmi iade öner",
+      "offerBody": "Her ürün için iade edeceğiniz adedi seçin. Alıcı 48 saat içinde kabul eder ya da Bahçeden ekibine taşır.",
+      "offerLine": "{name} için iade adedi",
+      "confirmOffer": "Teklifi gönder",
+      "reject": "Reddet",
+      "rejectTitle": "Talebi reddet",
+      "rejectBody": "Gerekçeniz alıcıya iletilir. Alıcı 48 saat içinde Bahçeden ekibine taşıyabilir.",
+      "confirmReject": "Reddet",
+      "cancel": "Vazgeç",
+      "sending": "Gönderiliyor…",
+      "calculating": "Hesaplanıyor…",
+      "settlement": "Alıcıya {refund} iade edilir; bu siparişteki hakedişiniz {payout} olur.",
+      "settlementShipping": "Bütün ürünler iade edildiği için kargo ücreti de iade edilir.",
+      "buyerAccept": "Kabul et",
+      "buyerEscalate": "Bahçeden ekibine taşı"
     }
   }
 }

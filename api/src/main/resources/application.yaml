@@ -43,9 +43,10 @@ spring:
     multipart:
       # Belge sınırı (bahceden.storage.max-document-bytes, 10 MB) ile aynı
       # tutulur; sınırı aşan dosya belleğe alınmadan reddedilir (ADR-039).
-      # İstek sınırı form alanları için küçük bir pay bırakır.
+      # İstek sınırı en kalabalık yüklemeye göredir: ayıplı ürün talebinde 3
+      # fotoğraf (ADR-081) ve form alanları için küçük bir pay.
       max-file-size: 10MB
-      max-request-size: 11MB
+      max-request-size: 31MB
 
   messages:
     # Kullanıcıya dönen metinler (ADR-031): messages.properties Türkçe ve
@@ -114,6 +115,19 @@ bahceden:
     payment-timeout: PT30M
     # Teslimat yapılan iller, plaka koduyla: İstanbul, İzmir, Ankara, Manisa (KALANLAR A4, D5).
     delivery-provinces: ["34", "35", "06", "45"]
+  claims:
+    # Ayıplı ürün talebi (ADR-056 §4, ADR-081): teslimden itibaren 48 saat
+    # içinde açılır; satıcının yanıt süresi 48 saattir, geçerse talep yönetime düşer.
+    # Satıcı kısmi teklif verir ya da reddederse alıcının 48 saati vardır; yanıt
+    # vermezse teklif kabul edilmiş, ret kesinleşmiş sayılır (ADR-083).
+    window: PT48H
+    seller-response: PT48H
+    buyer-response: PT48H
+    # Süresi dolan talepleri ilerleten iş (ADR-083): satıcı sessizse yönetime
+    # düşer, alıcı sessizse teklif uygulanır ya da ret kesinleşir.
+    sweep-enabled: true
+    sweep-interval: PT5M
+    sweep-batch-size: 100
   shipping:
     # Kargo entegratörü (ADR-057). Gerçek entegratör seçilene kadar (KALANLAR A2)
     # tek değer `fake`: ağ çağrısı yapmaz, gönderiyi zamanla ilerletir.

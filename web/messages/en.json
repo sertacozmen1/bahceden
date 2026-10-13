@@ -318,7 +318,8 @@
       "label": "Admin sections",
       "sellers": "Seller applications",
       "products": "Listings",
-      "orders": "Undelivered"
+      "orders": "Undelivered",
+      "claims": "Problem reports"
     },
     "products": {
       "title": "Listings",
@@ -359,6 +360,29 @@
         "closeTitle": "Close without refund",
         "closeBody": "No money moves and the producer's payout stands. Your reason is sent to the buyer and the producer.",
         "confirmClose": "Close"
+      }
+    },
+    "claims": {
+      "title": "Problem reports",
+      "intro": "Defect claims the buyer escalated to the Bahçeden team or the producer did not answer in time. Review the photos and both statements, then decide how many units to refund per line.",
+      "tabsLabel": "Claim status",
+      "emptyTitle": "No claims in this tab",
+      "emptyBody": "Claims awaiting a decision appear here.",
+      "loading": "Loading claims",
+      "backToList": "Back to problem reports",
+      "refunded": "Refund: {amount}",
+      "decisionTitle": "Decision",
+      "decisionIntro": "You can refund up to the purchased quantity on each line. The rejection reason is sent to both parties. Stock is not restored.",
+      "actions": {
+        "refund": "Refund",
+        "refundTitle": "Refund decision",
+        "refundBody": "Choose how many units to refund for each product; it starts with the quantity the buyer reported.",
+        "confirmRefund": "Refund",
+        "lineLabel": "Units to refund for {name}",
+        "reject": "Reject",
+        "rejectTitle": "Reject the claim",
+        "rejectBody": "Your reason is emailed to the buyer and the producer; no refund is made.",
+        "confirmReject": "Reject"
       }
     }
   },
@@ -563,7 +587,8 @@
     "commission": "Commission",
     "payoutLabel": "Your payout",
     "destination": "Delivery: {district} / {province}",
-    "shippingNote": "{status, select, DELIVERY_FAILED {The carrier could not deliver the package to the buyer. The team will review it, decide and let you know by email.} REFUNDED {As the package could not be delivered, the buyer was refunded; this order earns no payout.} CLOSED {The undelivered shipment was closed without a refund; your payout stands.} other {}}"
+    "shippingNote": "{status, select, DELIVERY_FAILED {The carrier could not deliver the package to the buyer. The team will review it, decide and let you know by email.} REFUNDED {As the package could not be delivered, the buyer was refunded; this order earns no payout.} CLOSED {The undelivered shipment was closed without a refund; your payout stands.} other {}}",
+    "payoutAfterClaim": "Your payout after refund"
   },
   "shipments": {
     "title": "Shipment",
@@ -584,6 +609,71 @@
       "sizeHint": "{size, select, SMALL {About a shoe box, up to 5 kg} MEDIUM {About a fruit crate, up to 15 kg} LARGE {Large box, up to 30 kg} other {}}",
       "action": "Create shipment",
       "preparing": "Creating shipment…"
+    }
+  },
+  "claims": {
+    "report": "Report a problem",
+    "reportUntil": "If something arrived bruised, spoiled or missing, you can report it until {date}.",
+    "cardTitle": "Problem report",
+    "status": "{status, select, OPEN {Awaiting producer} OFFERED {Producer made an offer} REJECTED {Producer rejected} ESCALATED {Under Bahçeden review} REFUNDED {Refunded} CLOSED {Closed} other {Unknown}}",
+    "claimedQuantity": "{quantity} reported",
+    "photosLabel": "Photos",
+    "photoAlt": "Problem photo {position}",
+    "sellerDeadlineForBuyer": "The producer will respond by {date}.",
+    "sellerDeadlineForSeller": "Respond by {date}; if you do not, the Bahçeden team will decide.",
+    "sellerDeadlineForAdmin": "The producer must answer by {date}; otherwise the claim comes here.",
+    "pageTitle": "Report a problem",
+    "pageIntro": "Select the affected products from {seller} and their quantities, describe the problem briefly and add photos. The producer responds within 48 hours; you do not need to send anything back.",
+    "backToOrder": "Back to order",
+    "unavailableTitle": "A problem cannot be reported for this order",
+    "unavailableBody": "The reporting period may have ended, or a report for this order may already exist.",
+    "form": {
+      "linesLabel": "Affected products",
+      "purchased": "You bought: {quantity}",
+      "lineQuantity": "Affected quantity for {name}",
+      "descriptionLabel": "Description",
+      "descriptionHint": "What happened? For example: the top layer of the crate arrived bruised.",
+      "photosLabel": "Photos",
+      "photosHint": "1–3 photos; JPEG or PNG, each up to 10 MB.",
+      "submit": "Report",
+      "submitting": "Sending…",
+      "errors": {
+        "linesRequired": "Select at least one product.",
+        "descriptionLength": "The description must be between 10 and 1000 characters.",
+        "photosCount": "Add at least 1 and at most 3 photos.",
+        "photoType": "Add only JPEG or PNG photos.",
+        "photoTooLarge": "Each photo can be at most 10 MB."
+      }
+    },
+    "offeredQuantity": "{quantity} offered",
+    "refundedQuantity": "{quantity} refunded",
+    "sellerReason": "Producer's reason: {reason}",
+    "buyerDeadlineForBuyer": "{status, select, OFFERED {You can accept the offer or ask the Bahçeden team to review until {date}; if you do not respond, the offer is accepted.} other {You can accept the rejection or ask the Bahçeden team to review until {date}; if you do not respond, the report is closed.}}",
+    "buyerDeadlineForSeller": "{status, select, OFFERED {The buyer will respond by {date}; if not, your offer is applied.} other {The buyer will respond by {date}; if not, the report is closed.}}",
+    "buyerDeadlineForAdmin": "{status, select, OFFERED {The buyer must answer by {date}; otherwise the offer is applied.} other {The buyer must answer by {date}; otherwise the report is closed.}}",
+    "refunded": "{amount} refunded.",
+    "shippingRefunded": "All products were refunded, so the shipping fee was refunded too.",
+    "actions": {
+      "accept": "Accept in full",
+      "acceptTitle": "Accept the claim in full",
+      "acceptBody": "All units the buyer reported are refunded. You do not need the products back.",
+      "confirmAccept": "Accept and refund",
+      "offer": "Offer partial refund",
+      "offerTitle": "Offer a partial refund",
+      "offerBody": "Choose how many units of each product you will refund. The buyer accepts within 48 hours or asks the Bahçeden team to review.",
+      "offerLine": "Units to refund for {name}",
+      "confirmOffer": "Send offer",
+      "reject": "Reject",
+      "rejectTitle": "Reject the claim",
+      "rejectBody": "Your reason is sent to the buyer. The buyer can ask the Bahçeden team to review within 48 hours.",
+      "confirmReject": "Reject",
+      "cancel": "Cancel",
+      "sending": "Sending…",
+      "calculating": "Calculating…",
+      "settlement": "The buyer is refunded {refund}; your payout for this order becomes {payout}.",
+      "settlementShipping": "All products are refunded, so the shipping fee is refunded too.",
+      "buyerAccept": "Accept",
+      "buyerEscalate": "Ask Bahçeden to review"
     }
   }
 }

@@ -76,4 +76,36 @@ describe("BuyerOrderView", () => {
 
     expect(screen.getByText(/Paket size teslim edilemedi/)).toBeDefined();
   });
+
+  it("talep süresi açıksa 'Sorun bildir' bağlantısı satıcı siparişinin formuna gider", () => {
+    renderWithIntl(<BuyerOrderView order={orderWith({ status: "DELIVERED", claimableUntil: "2026-10-15T10:00:00Z" })} />);
+
+    expect(screen.getByText(/tarihine kadar bildirebilirsiniz/)).toBeDefined();
+    expect(screen.getByRole("link", { name: "Sorun bildir" }).getAttribute("href")).toMatch(
+      /^\/account\/orders\/[^/]+\/claim\?sellerOrder=\d+$/,
+    );
+  });
+
+  it("talep varsa kartı gösterir, bağlantıyı göstermez", () => {
+    renderWithIntl(
+      <BuyerOrderView
+        order={orderWith({
+          status: "DELIVERED",
+          claim: {
+            id: 5,
+            status: "OPEN",
+            description: "Kasanın üst sırası ezik geldi.",
+            lines: [],
+            photos: [],
+            sellerDeadlineAt: "2026-10-15T10:00:00Z",
+            shippingRefunded: false,
+            createdAt: "2026-10-13T10:00:00Z",
+          },
+        })}
+      />,
+    );
+
+    expect(screen.getByText("Sorun bildirimi")).toBeDefined();
+    expect(screen.queryByRole("link", { name: "Sorun bildir" })).toBeNull();
+  });
 });

@@ -33,6 +33,8 @@ import org.springframework.validation.annotation.Validated;
  * @param storage   yüklenen dosyaların dizini ve sınırları (ADR-039)
  * @param payment   ödeme sağlayıcısı seçimi (ADR-054)
  * @param commerce  komisyon, kargo ücreti, ödeme süresi ve teslimat illeri (ADR-055, ADR-058)
+ * @param shipping  kargo entegratörü ve gönderi durumu sorgusu (ADR-071, ADR-075)
+ * @param claims    ayıplı ürün talebinin süreleri (ADR-081, ADR-083)
  */
 @Validated
 @ConfigurationProperties(prefix = "bahceden")
@@ -43,7 +45,39 @@ public record BahcedenProperties(
         @NotNull @Valid Storage storage,
         @NotNull @Valid Payment payment,
         @NotNull @Valid Commerce commerce,
-        @NotNull @Valid Shipping shipping) {
+        @NotNull @Valid Shipping shipping,
+        @NotNull @Valid Claims claims) {
+
+    /**
+     * Ayıplı ürün talebinin süreleri (ADR-056 §4, ADR-081, ADR-083).
+     *
+     * <p>Süreler takvim saatidir; hafta sonu dışlanmaz. Sıfır veya negatif
+     * süreyle uygulama açılmaz.
+     *
+     * @param window         teslimden itibaren talep açılabilen süre
+     * @param sellerResponse satıcının talebe yanıt süresi; geçerse talep yönetime düşer
+     * @param buyerResponse  alıcının teklife veya redde yanıt süresi; geçerse teklif kabul, ret kesinleşmiş sayılır
+     * @param sweepEnabled   süre işi zamanlayıcısı açık mı; testlerde kapalı, testler işi doğrudan çağırır
+     * @param sweepInterval  iki süre turu arasındaki bekleme
+     * @param sweepBatchSize bir turda işlenen en çok talep
+     */
+    public record Claims(@NotNull Duration window, @NotNull Duration sellerResponse,
+                         @NotNull Duration buyerResponse, boolean sweepEnabled, @NotNull Duration sweepInterval,
+                         @Positive int sweepBatchSize) {
+
+        public Claims {
+            requirePositive(window, "bahceden.claims.window");
+            requirePositive(sellerResponse, "bahceden.claims.seller-response");
+            requirePositive(buyerResponse, "bahceden.claims.buyer-response");
+            requirePositive(sweepInterval, "bahceden.claims.sweep-interval");
+        }
+
+        private static void requirePositive(Duration value, String name) {
+            if (value != null && (value.isZero() || value.isNegative())) {
+                throw new IllegalArgumentException(name + " pozitif bir süre olmalıdır");
+            }
+        }
+    }
 
     /**
      * Kargo entegratörü ve gönderi durumu sorgusu (ADR-057, add-shipments D1, D5).

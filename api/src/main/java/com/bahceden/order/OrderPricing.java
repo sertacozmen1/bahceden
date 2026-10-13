@@ -64,6 +64,58 @@ public class OrderPricing {
     }
 
     /**
+     * Ayıplı ürün iadesinden sonraki tutarlar (ADR-056 §5, ADR-082). Değerler
+     * satıcı siparişine sipariş anında yazılmış oran ve sabit ücrettir.
+     *
+     * <ul>
+     *   <li><b>Tam iade</b> (her satırın satın alınan bütün adetleri): ürün
+     *       tutarı ve kargo ücreti iade edilir; komisyon ve hakediş sıfırdır.</li>
+     *   <li><b>Kısmi iade</b>: kargo iade edilmez; komisyon kalan ürün tutarı
+     *       üzerinden aynı kuralla ({@link #commission(long, int, long)})
+     *       yeniden hesaplanır, sabit ücret korunur ve kalan tutarı aşamaz.</li>
+     * </ul>
+     *
+     * @param itemsTotal  satıcı siparişinin ürün tutarı
+     * @param shippingFee satıcı siparişinin kargo ücreti
+     * @param refunded    iade edilen ürün tutarı: Σ birim fiyat × adet
+     * @param full        her satırın bütün adetleri mi iade ediliyor
+     */
+    public static RefundSettlement afterRefund(long itemsTotal, long shippingFee, long refunded, int rateBp,
+                                               long fixedMinor, boolean full) {
+        if (refunded <= 0 || refunded > itemsTotal) {
+            throw new IllegalArgumentException("İade tutarı ürün tutarının dışında: " + refunded);
+        }
+        if (full) {
+            if (refunded != itemsTotal) {
+                throw new IllegalArgumentException("Tam iade ürün tutarının tamamı olmalı");
+            }
+            return new RefundSettlement(refunded, shippingFee, 0, 0);
+        }
+        var remaining = commission(itemsTotal - refunded, rateBp, fixedMinor);
+        return new RefundSettlement(refunded, 0, remaining.amount(), remaining.sellerPayout());
+    }
+
+    /**
+     * İadenin sonucu (ADR-082).
+     *
+     * @param itemsRefund     alıcıya iade edilen ürün tutarı
+     * @param shippingRefund  alıcıya iade edilen kargo ücreti; yalnızca tam iadede
+     * @param commissionAfter iadeden sonraki komisyon
+     * @param payoutAfter     iadeden sonraki satıcı hakedişi
+     */
+    public record RefundSettlement(long itemsRefund, long shippingRefund, long commissionAfter, long payoutAfter) {
+
+        /** Ödeme sağlayıcısından iade edilecek toplam. */
+        public long total() {
+            return itemsRefund + shippingRefund;
+        }
+
+        public boolean shippingRefunded() {
+            return shippingRefund > 0;
+        }
+    }
+
+    /**
      * Bir satıcı siparişinin komisyonu ve satıcı hakedişi.
      *
      * @param rateBp       uygulanan oran, baz puan

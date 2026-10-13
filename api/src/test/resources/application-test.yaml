@@ -37,6 +37,9 @@ bahceden:
   shipping:
     # Zamanlayıcı kapalı: testler durum sorgusunu sabit saatle doğrudan çağırır (add-shipments D5).
     polling-enabled: false
+  claims:
+    # Zamanlayıcı kapalı: testler süre işini sabit saatle doğrudan çağırır (ADR-083).
+    sweep-enabled: false
 
 logging:
   level:

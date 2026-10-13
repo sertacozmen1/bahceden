@@ -53,6 +53,7 @@ function anOrder(status: OrderDetail["status"]): OrderDetail {
         status: status === "PAID" ? "NEW" : "VOID",
         items: [
           {
+            id: 1,
             productSlug: "domates",
             productName: "Domates",
             unit: "KILOGRAM",
