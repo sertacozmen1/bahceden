@@ -17,6 +17,7 @@ export const bffPaths = {
   refresh: "/api/auth/refresh",
   passwordResetRequest: "/api/auth/password-reset-request",
   passwordReset: "/api/auth/password-reset",
+  passwordChange: "/api/auth/password-change",
 } as const;
 
 /** Girişin sonucu. Token taşımaz: token'lar yalnızca `HttpOnly` çerezde. */

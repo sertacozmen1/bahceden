@@ -54,7 +54,8 @@
       "passwordHint": "En az 10 karakter",
       "code": "Giriş kodu",
       "codeHint": "E-postanıza gelen 6 haneli kod",
-      "newPassword": "Yeni parola"
+      "newPassword": "Yeni parola",
+      "currentPassword": "Mevcut parola"
     },
     "register": {
       "title": "Kayıt ol",
@@ -106,6 +107,13 @@
       "missingTitle": "Bağlantı kullanılamadı",
       "missingToken": "Bağlantı eksik görünüyor. E-postadaki bağlantıyı tam olarak açtığınızdan emin olun ya da yeni bir bağlantı isteyin."
     },
+    "changePassword": {
+      "title": "Parolayı değiştirin",
+      "intro": "Mevcut parolanızı ve yeni parolanızı yazın. Parola değişince bu cihaz dahil bütün cihazlardaki oturumlarınız kapanır; yeni parolanızla tekrar giriş yaparsınız.",
+      "submit": "Parolayı değiştir",
+      "submitting": "Değiştiriliyor…",
+      "back": "Hesabıma dön"
+    },
     "myAccount": {
       "title": "Hesabım",
       "email": "E-posta",
@@ -119,7 +127,9 @@
       "resending": "Gönderiliyor…",
       "resent": "Yeni bağlantıyı e-posta adresinize gönderdik.",
       "loading": "Hesap bilgileri yükleniyor",
-      "shopping": "Alışveriş"
+      "shopping": "Alışveriş",
+      "security": "Güvenlik",
+      "changePassword": "Parolayı değiştir"
     },
     "errors": {
       "title": "Bir sorun oluştu",

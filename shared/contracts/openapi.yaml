@@ -2562,6 +2562,48 @@ paths:
                 $ref: "#/components/schemas/ApiError"
       security:
       - bearerAuth: []
+  /api/v1/accounts/me/password-changes:
+    post:
+      tags:
+      - Hesap
+      summary: Oturum açıkken parolayı değiştirir
+      description: |
+        Mevcut parolayı doğrular ve yeni parolayı belirler. Hesabın bütün oturumları,
+        bu istek yapan oturum dahil, ve açık giriş kodları kapanır; parolanın değiştiği
+        hesabın e-posta adresine bildirilir. Oturum açılmaz: kullanıcı yeni parolasıyla
+        giriş yapar. Mevcut parola yanlışsa ya da yeni parola mevcutla aynıysa ilgili
+        alanda hata döner ve hiçbir şey değişmez. Hesap başına 15 dakikada 5 istek.
+      operationId: changePassword
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasswordChangeRequest"
+        required: true
+      responses:
+        "204":
+          description: "Parola değişti, oturumlar kapandı"
+        "400":
+          description: "Alan eksik, yeni parola kurallara uymuyor, mevcut parola yanlı\
+            ş ya da yeni parola mevcutla aynı (VALIDATION_FAILED)"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: "Erişim token'ı yok, geçersiz ya da süresi dolmuş (AUTH_REQUIRED)"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "429":
+          description: Çok fazla istek (RATE_LIMITED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+      security:
+      - bearerAuth: []
   /api/v1/sellers/me/orders:
     get:
       tags:
@@ -5633,6 +5675,25 @@ components:
       required:
       - password
       - token
+    PasswordChangeRequest:
+      type: object
+      description: Oturum açıkken parola değiştirme isteği
+      properties:
+        currentPassword:
+          type: string
+          description: Hesabın şu anki parolası
+          example: eski-cok-gizli-parola
+          maxLength: 200
+          minLength: 0
+        newPassword:
+          type: string
+          description: "Yeni parola; en az 10 karakter, mevcut paroladan farklı"
+          example: yeni-cok-gizli-parola
+          maxLength: 200
+          minLength: 10
+      required:
+      - currentPassword
+      - newPassword
     PageResponseSellerListingView:
       type: object
       description: Sayfalı liste yanıtı

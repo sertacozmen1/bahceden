@@ -101,6 +101,22 @@ export async function resetPassword(token: string, password: string, forwardedFo
   });
 }
 
+/**
+ * Oturum açıkken parolayı değiştirir (add-password-change D1, D3). Başarıda
+ * `api` hesabın bütün oturumlarını, bu oturum dahil, kapatmıştır; çağıran
+ * çerezleri silmelidir.
+ */
+export async function changePassword(
+  accessToken: string | undefined,
+  currentPassword: string,
+  newPassword: string,
+): Promise<void> {
+  await apiSend<never>("POST", "/api/v1/accounts/me/password-changes", {
+    accessToken,
+    body: { currentPassword, newPassword },
+  });
+}
+
 /** Erişim token'ı yoksa başlık gönderilmez; api 401 döner. */
 export async function requestVerificationLink(accessToken: string | undefined): Promise<void> {
   await apiSend<never>("POST", "/api/v1/accounts/me/verification-requests", { accessToken });

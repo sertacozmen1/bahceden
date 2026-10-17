@@ -54,7 +54,8 @@
       "passwordHint": "At least 10 characters",
       "code": "Sign-in code",
       "codeHint": "The 6-digit code sent to your email",
-      "newPassword": "New password"
+      "newPassword": "New password",
+      "currentPassword": "Current password"
     },
     "register": {
       "title": "Sign up",
@@ -106,6 +107,13 @@
       "missingTitle": "This link cannot be used",
       "missingToken": "The link looks incomplete. Make sure you opened the full link from the email, or request a new link."
     },
+    "changePassword": {
+      "title": "Change your password",
+      "intro": "Enter your current password and a new one. Once it changes, you are signed out on every device, including this one, and sign in again with your new password.",
+      "submit": "Change password",
+      "submitting": "Changing…",
+      "back": "Back to my account"
+    },
     "myAccount": {
       "title": "My account",
       "email": "Email",
@@ -119,7 +127,9 @@
       "resending": "Sending…",
       "resent": "We sent a new link to your email address.",
       "loading": "Loading account details",
-      "shopping": "Shopping"
+      "shopping": "Shopping",
+      "security": "Security",
+      "changePassword": "Change password"
     },
     "errors": {
       "title": "Something went wrong",
