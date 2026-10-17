@@ -13,6 +13,8 @@ import { CancelSellerOrder } from "@/features/orders/components/CancelSellerOrde
 import { SellerOrderStatusBadge } from "@/features/orders/components/OrderStatusBadge";
 import { PrepareShipment } from "@/features/orders/components/PrepareShipment";
 import { ShipmentCard } from "@/features/orders/components/ShipmentCard";
+import { ClaimCard } from "@/features/claims/components/ClaimCard";
+import { SellerClaimActions } from "@/features/claims/components/SellerClaimActions";
 import { formatDateTime } from "@/lib/datetime";
 import { formatMoney } from "@/lib/money";
 
@@ -85,6 +87,15 @@ export default async function SellerOrderPage({ params }: { readonly params: Pro
         ) : (
           order.status === "NEW" && <PrepareShipment sellerOrderId={order.id} />
         )}
+        {order.claim && (
+          <ClaimCard
+            claim={order.claim}
+            viewer="seller"
+            actions={
+              order.claim.status === "OPEN" ? <SellerClaimActions sellerOrderId={order.id} claim={order.claim} /> : null
+            }
+          />
+        )}
         {(order.status === "DELIVERY_FAILED" || order.status === "REFUNDED" || order.status === "CLOSED") && (
           <p className="rounded-lg bg-muted px-3 py-2 text-sm text-pretty">
             {t("sellerOrders.shippingNote", { status: order.status })}
@@ -124,6 +135,12 @@ export default async function SellerOrderPage({ params }: { readonly params: Pro
                 <dt>{t("sellerOrders.payoutLabel")}</dt>
                 <dd className="tabular-nums">{formatMoney(order.sellerPayout, locale)}</dd>
               </div>
+              {order.payoutAfterClaim && (
+                <div className="flex justify-between gap-3 text-base font-semibold text-warning">
+                  <dt>{t("sellerOrders.payoutAfterClaim")}</dt>
+                  <dd className="tabular-nums">{formatMoney(order.payoutAfterClaim, locale)}</dd>
+                </div>
+              )}
             </dl>
           </CardContent>
         </Card>

@@ -83,6 +83,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/addresses", "/api/v1/addresses/**").authenticated()
                         // Siparişler: alıcı oturum ister; satıcı siparişleri satıcı rolü (D6, ADR-044).
                         .requestMatchers("/api/v1/orders", "/api/v1/orders/**").authenticated()
+                        // Talep fotoğrafı: tarafı olup olmadığı sorguda denetlenir (ADR-084).
+                        .requestMatchers(HttpMethod.GET, "/api/v1/claims/*/photos/*").authenticated()
                         .requestMatchers("/api/v1/sellers/me/orders", "/api/v1/sellers/me/orders/**").hasRole("SELLER")
                         // Admin: satıcı başvurularını karara bağlama (add-seller-onboarding D7). Rol token'dan gelir.
                         .requestMatchers(HttpMethod.GET, "/api/v1/admin/sellers", "/api/v1/admin/sellers/*",
@@ -92,6 +94,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/admin/seller-orders", "/api/v1/admin/seller-orders/*")
                                 .hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/v1/admin/seller-orders/*/resolution").hasRole("ADMIN")
+                        // Ayıplı ürün talepleri: yönetime taşınanlara admin karar verir (ADR-080).
+                        .requestMatchers(HttpMethod.GET, "/api/v1/admin/claims", "/api/v1/admin/claims/*").hasRole("ADMIN")
+                        .requestMatchers(HttpMethod.POST, "/api/v1/admin/claims/*/decision",
+                                "/api/v1/admin/claims/*/preview").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/v1/admin/products/*/remove",
                                 "/api/v1/admin/products/*/reinstate").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/v1/admin/sellers/*/approve", "/api/v1/admin/sellers/*/reject",

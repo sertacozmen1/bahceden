@@ -184,6 +184,16 @@ public class SellerOrder {
         return shippingFee;
     }
 
+    /** Sipariş anında uygulanan komisyon oranı, baz puan (ADR-055). */
+    public int getCommissionRateBp() {
+        return commissionRateBp;
+    }
+
+    /** Sipariş anında uygulanan sabit komisyon, kuruş (ADR-055). */
+    public long getCommissionFixed() {
+        return commissionFixed;
+    }
+
     public long getCommissionAmount() {
         return commissionAmount;
     }

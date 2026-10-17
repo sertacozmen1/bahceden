@@ -1,7 +1,7 @@
 # orders Specification
 
 ## Purpose
-Alıcının ve satıcının siparişleri görmesini, kargoya verme son tarihini, kargodan önce iptal ve tam iadeyi, durum geçmişini ve sipariş e-postalarını tanımlar. Kararlar: ADR-056, ADR-058, ADR-064, ADR-066, ADR-067, ADR-072, ADR-076. Gönderinin kendisi `shipments` capability'sindedir; ayıplı ürün iadesi bu capability'nin bugünkü kapsamı dışındadır.
+Alıcının ve satıcının siparişleri görmesini, kargoya verme son tarihini, kargodan önce iptal ve tam iadeyi, durum geçmişini ve sipariş e-postalarını tanımlar. Kararlar: ADR-056, ADR-058, ADR-064, ADR-066, ADR-067, ADR-072, ADR-076. Gönderinin kendisi `shipments`, ayıplı ürün talebi `defect-claims` capability'sindedir; bu capability talebin sipariş detayındaki görünümünü ve iade sonrası hakedişi kapsar (ADR-079, ADR-082, ADR-086).
 
 ## Requirements
 
@@ -15,6 +15,8 @@ Sistem, alıcının kendi siparişlerini en yeniden eskiye, sayfalı olarak list
 - her satıcı siparişinin kargo ücreti ve durumu;
 - kargoya verme son tarihi;
 - gönderi açılmışsa her satıcı siparişinin kargo firması, takip numarası, gönderi durumu, kargoya verilme ve teslim zamanı;
+- teslim edilmiş satıcı siparişinde ayıplı ürün talebi açılabilir mi ve son anı;
+- talep varsa talebin durumu, satırları ve adetleri (istenen, önerilen, iade edilen), fotoğrafları, satıcının gerekçesi, alıcının son tarihi ve iade tutarı;
 - genel toplam.
 
 Komisyon ve satıcı hakedişi alıcıya gösterilmez. Gönderi etiketi alıcıya sunulmaz.
@@ -35,16 +37,21 @@ Komisyon ve satıcı hakedişi alıcıya gösterilmez. Gönderi etiketi alıcıy
 - **WHEN** alıcı kargoya verilmiş bir satıcı siparişi olan siparişinin detayını ister
 - **THEN** o satıcı siparişinde kargo firması, takip numarası, gönderi durumu ve kargoya verilme zamanı bulunur
 
+#### Scenario: Talep açılabilir sipariş
+- **WHEN** alıcı teslimden 10 saat sonra siparişinin detayını ister
+- **THEN** teslim edilen satıcı siparişinde talep açılabildiği ve talep açmanın son anı bulunur
+
 ### Requirement: Satıcı kendi satıcı siparişlerini görür
 
 Sistem, onaylı satıcının yalnızca kendisine ait satıcı siparişlerini en yeniden eskiye, sayfalı ve durumla süzülebilir biçimde listelemesini SHALL sağlar. Süzme `NEW`, `SHIPPED`, `DELIVERED`, `DELIVERY_FAILED`, `REFUNDED`, `CLOSED` ve `CANCELLED` durumlarını kabul eder. Satıcı her satıcı siparişinin detayını da görür. Detay şunları içerir:
 
 - satırlar;
 - ürün tutarı;
-- komisyon ve satıcı hakedişi;
+- komisyon ve satıcı hakedişi; ayıplı ürün iadesi yapıldıysa iadeden sonraki komisyon ve hakediş;
 - kargoya verme son tarihi;
 - alıcı adresinden yalnızca il ve ilçe;
-- gönderi açılmışsa kargo firması, takip numarası, gönderi durumu ve koli boyutu; etiket ayrı ve yalnızca satıcıya açık bir uçtan alınır.
+- gönderi açılmışsa kargo firması, takip numarası, gönderi durumu ve koli boyutu; etiket ayrı ve yalnızca satıcıya açık bir uçtan alınır;
+- talep varsa talebin durumu, satırları ve adetleri, alıcının açıklaması, fotoğrafları, satıcının son tarihi ve sonucu.
 
 Ödemesi tamamlanmamış satıcı siparişleri satıcıya gösterilmez. Her işlem önce onaylı satıcı kapısından, sonra sorgu seviyesindeki sahiplik denetiminden geçer.
 
@@ -67,6 +74,10 @@ Sistem, onaylı satıcının yalnızca kendisine ait satıcı siparişlerini en 
 #### Scenario: Kargodakiler süzülür
 - **WHEN** satıcı listeyi `SHIPPED` durumuyla süzer
 - **THEN** yalnızca kargoya verilmiş ve henüz teslim edilmemiş satıcı siparişleri döner
+
+#### Scenario: İade sonrası hakediş
+- **WHEN** kısmi iadeyle sonuçlanmış talebi olan satıcı siparişinin detayı istenir
+- **THEN** yanıtta asıl komisyon ve hakedişin yanında iadeden sonraki komisyon ve hakediş bulunur
 
 ### Requirement: Kargoya verilmemiş satıcı siparişi iptal edilir ve tamamı iade edilir
 

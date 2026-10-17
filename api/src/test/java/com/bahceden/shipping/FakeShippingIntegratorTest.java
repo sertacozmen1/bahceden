@@ -34,7 +34,7 @@ class FakeShippingIntegratorTest {
                 new BahcedenProperties.Shipping.FakeIntegrator(Duration.ofMinutes(2), Duration.ofMinutes(4),
                         Duration.ofMinutes(6)));
         var properties = new BahcedenProperties("http://localhost:3000", "bahceden@ornek.test", null, null, null, null,
-                shipping);
+                shipping, null);
         integrator = new FakeShippingIntegrator(properties, clock);
     }
 

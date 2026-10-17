@@ -26,6 +26,10 @@ public final class ListingFixtures {
      * geçmişleri, ödeme hesapları, satıcı kayıtları ve bütün hesaplar silinir.
      */
     public void cleanUp() {
+        jdbc.execute("delete from defect_claim_changes");
+        jdbc.execute("delete from defect_claim_photos");
+        jdbc.execute("delete from defect_claim_lines");
+        jdbc.execute("delete from defect_claims");
         jdbc.execute("delete from refunds");
         jdbc.execute("delete from payments");
         jdbc.execute("delete from order_status_changes");

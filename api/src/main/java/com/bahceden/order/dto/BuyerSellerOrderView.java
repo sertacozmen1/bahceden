@@ -26,6 +26,8 @@ import java.util.List;
  * @param cancelledBy     iptal eden taraf; iptal edilmediyse {@code null}
  * @param cancelReason    iptal gerekçesi; yoksa {@code null}
  * @param shipment         etkin gönderi; açılmadıysa {@code null} (add-shipments)
+ * @param claimableUntil   ayıplı ürün talebi açılabiliyorsa son an; açılamıyorsa {@code null} (ADR-081)
+ * @param claim            ayıplı ürün talebi; yoksa {@code null} (ADR-080)
  * @param cancellable     alıcı şu an iptal edebilir mi
  */
 @Schema(name = "BuyerSellerOrderView", description = "Alıcının gördüğü satıcı siparişi")
@@ -62,5 +64,12 @@ public record BuyerSellerOrderView(
         boolean cancellable,
         @Schema(requiredMode = Schema.RequiredMode.NOT_REQUIRED, nullable = true,
                 description = "Kargo gönderisi; henüz açılmadıysa boş")
-        ShipmentView shipment) {
+        ShipmentView shipment,
+        @Schema(requiredMode = Schema.RequiredMode.NOT_REQUIRED, nullable = true,
+                description = "Ayıplı ürün talebi açılabiliyorsa son an (UTC); teslimden 48 saat sonra kapanır",
+                example = "2026-10-15T10:00:00Z")
+        Instant claimableUntil,
+        @Schema(requiredMode = Schema.RequiredMode.NOT_REQUIRED, nullable = true,
+                description = "Ayıplı ürün talebi; açılmadıysa boş")
+        DefectClaimView claim) {
 }

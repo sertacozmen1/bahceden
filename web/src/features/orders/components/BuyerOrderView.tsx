@@ -1,7 +1,11 @@
 import Link from "next/link";
-import { CalendarClock, MapPin } from "lucide-react";
+import { CalendarClock, MapPin, MessageSquareWarning } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
+import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { claimBffPaths } from "@/features/claims/bff";
+import { BuyerClaimActions } from "@/features/claims/components/BuyerClaimActions";
+import { ClaimCard } from "@/features/claims/components/ClaimCard";
 import type { BuyerSellerOrderView, OrderDetail } from "@/features/orders/api";
 import { formatDateTime } from "@/lib/datetime";
 import { formatMoney } from "@/lib/money";
@@ -13,7 +17,9 @@ import { ShipmentCard } from "./ShipmentCard";
  * kargo ücreti, kargoya verme son tarihi, gönderi (firma, takip numarası,
  * durum; add-shipments), teslimat adresi ve toplam. Sipariş
  * sayfası ve ödeme dönüşü paylaşır (K9). Satıcı siparişinin eylemi (iptal)
- * çağıran sayfadan `sellerOrderAction` ile verilir.
+ * çağıran sayfadan `sellerOrderAction` ile verilir. Teslim edilen satıcı
+ * siparişinde süre dolmadıysa "Sorun bildir" bağlantısı, talep varsa talep
+ * kartı görünür (ADR-086).
  */
 type BuyerOrderViewProps = {
   readonly order: OrderDetail;
@@ -22,6 +28,7 @@ type BuyerOrderViewProps = {
 
 export function BuyerOrderView({ order, sellerOrderAction }: BuyerOrderViewProps) {
   const t = useTranslations("orders");
+  const tClaims = useTranslations("claims");
   const locale = useLocale();
   const address = order.shippingAddress;
   return (
@@ -78,6 +85,31 @@ export function BuyerOrderView({ order, sellerOrderAction }: BuyerOrderViewProps
                   <p className="rounded-lg bg-muted px-3 py-2 text-sm text-pretty">
                     {t("shippingNote", { status: sellerOrder.status })}
                   </p>
+                )}
+                {sellerOrder.claim && (
+                  <ClaimCard
+                    claim={sellerOrder.claim}
+                    viewer="buyer"
+                    actions={
+                      sellerOrder.claim.status === "OFFERED" || sellerOrder.claim.status === "REJECTED" ? (
+                        <BuyerClaimActions orderNumber={order.orderNumber} sellerOrderId={sellerOrder.id} />
+                      ) : null
+                    }
+                  />
+                )}
+                {sellerOrder.claimableUntil && (
+                  <div className="flex flex-col gap-2 rounded-lg bg-muted px-3 py-2 text-sm sm:flex-row sm:items-center sm:justify-between">
+                    <p className="text-pretty">
+                      {tClaims("reportUntil", { date: formatDateTime(sellerOrder.claimableUntil, locale) })}
+                    </p>
+                    <Link
+                      className={buttonVariants({ variant: "outline", className: "shrink-0" })}
+                      href={claimBffPaths.form(order.orderNumber, sellerOrder.id)}
+                    >
+                      <MessageSquareWarning aria-hidden />
+                      {tClaims("report")}
+                    </Link>
+                  </div>
                 )}
                 {sellerOrder.status === "CANCELLED" && (
                   <p className="text-sm text-muted-foreground">

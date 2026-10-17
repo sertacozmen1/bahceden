@@ -1,6 +1,6 @@
 package com.bahceden.payment.domain;
 
-/** İadenin nedeni (add-cart-and-checkout D8, D9; add-shipments D7). */
+/** İadenin nedeni (add-cart-and-checkout D8, D9; add-shipments D7; add-defect-claims D4). */
 public enum RefundReason {
 
     /** Ödeme alındı ama stok yetmedi; ödemenin tamamı iade edilir. */
@@ -13,5 +13,8 @@ public enum RefundReason {
     CANCELLED,
 
     /** Teslim edilemeyen satıcı siparişi için admin tam iade kararı verdi; o satıcı payının tamamı iade edilir. */
-    UNDELIVERED
+    UNDELIVERED,
+
+    /** Ayıplı ürün talebi iadeyle sonuçlandı; tam veya kısmi, satıcı payından (ADR-082). */
+    DEFECT
 }

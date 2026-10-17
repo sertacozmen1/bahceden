@@ -15,6 +15,8 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 /**
  * Yüklenen dosyaların diske yazılması ve okunması: tek sınıf (ADR-039,
@@ -116,6 +118,26 @@ public class FileStorage {
     /** İçeriği bellekteki baytlardan yazar (işlenmiş fotoğraflar); {@link #write(InputStream)} ile aynı garanti. */
     public String write(byte[] content) {
         return write(new ByteArrayInputStream(content));
+    }
+
+    /**
+     * İçeriği yazar ve çevreleyen transaction commit'lenmezse dosyayı siler:
+     * kaydı oluşmayan dosya diskte yetim kalmaz. İlan fotoğrafı ve ayıplı ürün
+     * talebi fotoğrafı aynı garantiyi kullanır (K9).
+     *
+     * @throws IllegalStateException etkin bir transaction yoksa
+     */
+    public String writeWithinTransaction(byte[] content) {
+        var key = write(content);
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCompletion(int status) {
+                if (status != STATUS_COMMITTED) {
+                    delete(key);
+                }
+            }
+        });
+        return key;
     }
 
     /**

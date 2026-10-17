@@ -457,8 +457,31 @@ Change `add-shipments`; kararlar [ADR-057](../adr/057-shipping-via-integrator-po
 - **Satıcı listesi:** `status` süzgeci artık `NEW`, `SHIPPED`, `DELIVERED`, `DELIVERY_FAILED`, `REFUNDED`, `CLOSED`, `CANCELLED` kabul eder.
 - **Admin kararı:** `REFUND` ürün + kargo ücretini iade eder (`refunds.reason = UNDELIVERED`), stok geri eklenmez; `CLOSE` gerekçe ister (10–500), para hareketi yok. Detayda alıcının adı ve telefonu var, açık adres yok.
 
+## Ayıplı ürün talebi uçları
+
+Change `add-defect-claims`; kararlar [ADR-056](../adr/056-cancel-before-shipment-and-defect-refund.md) (çerçeve) ve [ADR-079](../adr/079-defect-claim-in-order-package-one-per-seller-order.md)…[ADR-086](../adr/086-defect-claim-web-surfaces.md).
+
+| Uç | Kimlik | Başarı | Hatalar | Hız sınırı |
+|---|---|---|---|---|
+| `POST /api/v1/orders/{orderNumber}/seller-orders/{id}/claim` (multipart: `lines[n].orderItemId`, `lines[n].quantity`, `description`, `photos`) | Oturum (siparişin alıcısı) | `201` `OrderDetail` + `Location` | 400 (`lines`, `description`, `photos`), 401, 404 (`ORDER_NOT_FOUND`, `SELLER_ORDER_NOT_FOUND`), 409 (`CLAIM_NOT_ALLOWED`: teslim edilmedi veya talep zaten var), 422 (`CLAIM_WINDOW_CLOSED`), 429 | Hesap başına saatte 10 |
+| `POST /api/v1/orders/{orderNumber}/seller-orders/{id}/claim/accept` | aynı | `200` `OrderDetail` | 401, 404 (`CLAIM_NOT_FOUND`), 409 (`CLAIM_INVALID_TRANSITION`), 502 (`PAYMENT_PROVIDER_ERROR`) | - |
+| `POST /api/v1/orders/{orderNumber}/seller-orders/{id}/claim/escalate` | aynı | `200` `OrderDetail` | 401, 404, 409 | - |
+| `POST /api/v1/sellers/me/orders/{id}/claim/response` (`decision`: `ACCEPT` / `OFFER` / `REJECT`, `lines`, `reason`) | `ROLE_SELLER` + onaylı satıcı | `200` `SellerOrderDetail` | 400, 401, 403, 404 (`CLAIM_NOT_FOUND`), 409 (`CLAIM_INVALID_TRANSITION`), 502 | - |
+| `POST /api/v1/sellers/me/orders/{id}/claim/preview` (`lines`; boşsa istenenin tamamı) | aynı | `200` `ClaimSettlementView` | 400, 401, 403, 404 | - |
+| `GET /api/v1/claims/{claimId}/photos/{position}?size=CARD` / `LARGE` (varsayılan `LARGE`) | Oturum (talebin alıcısı, satıcısı veya admin) | `200` JPEG, `no-store` + `nosniff` | 401, 404 (`CLAIM_NOT_FOUND`: yok veya taraf değil) | - |
+| `GET /api/v1/admin/claims?status=` | `ROLE_ADMIN` | `200` `PageResponseAdminClaimSummary` | 400 (`status`), 401, 403 | - |
+| `GET /api/v1/admin/claims/{id}` | aynı | `200` `AdminClaimDetail` | 401, 403, 404 | - |
+| `POST /api/v1/admin/claims/{id}/preview` | aynı | `200` `ClaimSettlementView` | 400, 401, 403, 404 | - |
+| `POST /api/v1/admin/claims/{id}/decision` (`decision`: `REFUND` / `REJECT`, `lines`, `reason`) | aynı | `200` `AdminClaimDetail` | 400, 401, 403, 404, 409 (`CLAIM_INVALID_TRANSITION`), 502 | - |
+
+- **Açma:** satıcı siparişi `DELIVERED` olmalı ve gönderinin teslim anından bu yana `bahceden.claims.window` (48 saat) dolmamış olmalı. Satıcı siparişi başına tek talep; satırlar o satıcı siparişine ait, adet 1…satın alınan; açıklama 10–1000 karakter; 1–3 fotoğraf (ilan fotoğrafı hattı: döndürme, iki boyut, konum bilgisi atılır).
+- **Durumlar:** `OPEN` → satıcı kabul ederse `REFUNDED`, kısmi teklif verirse `OFFERED`, reddederse `REJECTED`. `OFFERED` / `REJECTED` → alıcı kabul ederse `REFUNDED` / `CLOSED`, taşırsa `ESCALATED`. `ESCALATED` → admin `REFUNDED` veya `CLOSED`. Süreler: satıcı 48 saatte yanıtlamazsa `ESCALATED`; alıcı 48 saatte yanıtlamazsa teklif uygulanır (`REFUNDED`) veya ret kesinleşir (`CLOSED`). Süreleri zamanlanmış iş işler (`bahceden.claims.sweep-interval`).
+- **Para:** iade = Σ birim fiyat × adet; bütün satırlar tam adetle iade edilirse kargo ücreti de döner. Komisyon kalan ürün tutarı üzerinden yeniden hesaplanır, sabit ücret yalnızca tam iadede geri alınır. İade satıcının payından `refunds.reason = DEFECT` ile yapılır; stok geri eklenmez. Önizleme uçları yan etkisizdir ve aynı hesabı döner.
+- **Görünüm:** `BuyerSellerOrderView.claim` ve `claimableUntil` (talep açılabilecek son an); `SellerOrderDetail.claim`, `commissionAfterClaim`, `payoutAfterClaim`. `OrderItemView.id` talep satırı seçimi için eklendi. Admin detayında alıcının adı, telefonu ve adresi yoktur.
+- **E-postalar:** talep açıldı → satıcıya; satıcı yanıtladı → alıcıya; admin'e taşındı → iki tarafa; sonuçlandı → iki tarafa ([ADR-085](../adr/085-defect-claim-emails.md)).
+
 ---
 
 ## Henüz olmayan uçlar
 
-Oturum açıkken parola değiştirme ve ayıplı ürün iadesi uçları **yoktur**. Parola değiştirme karara bağlandı, change bekliyor; ayıplı ürün iadesi ADR-056 §4–5 ile karara bağlandı, sonraki change. Gerçek kargo entegratörü ve durum bildirimi (webhook) entegratör seçimine bağlı (KALANLAR A2).
+Oturum açıkken parola değiştirme uçları **yoktur**; karara bağlandı, change bekliyor. Gerçek kargo entegratörü ve durum bildirimi (webhook) entegratör seçimine bağlı (KALANLAR A2).

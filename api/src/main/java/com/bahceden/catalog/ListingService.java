@@ -148,10 +148,8 @@ public class ListingService {
             throw new ApiException(ApiErrorCode.PRODUCT_PHOTO_LIMIT_REACHED, "error.productPhotoLimitReached");
         }
         var processed = photoProcessor.process(bytesOf(file));
-        var cardKey = storage.write(processed.card());
-        deleteOnRollback(cardKey);
-        var largeKey = storage.write(processed.large());
-        deleteOnRollback(largeKey);
+        var cardKey = storage.writeWithinTransaction(processed.card());
+        var largeKey = storage.writeWithinTransaction(processed.large());
         var now = clock.instant();
         photos.save(ProductPhoto.of(productId, count, cardKey, largeKey, processed.width(), processed.height(), now));
         product.touch(now);
@@ -275,17 +273,6 @@ public class ListingService {
         } catch (IOException cause) {
             throw new UncheckedIOException("Yüklenen fotoğraf okunamadı", cause);
         }
-    }
-
-    private void deleteOnRollback(String key) {
-        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-            @Override
-            public void afterCompletion(int status) {
-                if (status != STATUS_COMMITTED) {
-                    storage.delete(key);
-                }
-            }
-        });
     }
 
     private void deleteAfterCommit(String key) {

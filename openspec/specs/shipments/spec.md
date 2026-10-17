@@ -1,7 +1,7 @@
 # shipments Specification
 
 ## Purpose
-Satıcının kargo gönderisi açmasını, etiketin korumalı sunumunu, gönderi durumunun entegratörden izlenmesini ve teslim edilemeyen siparişte admin kararını tanımlar. Kararlar: ADR-057, ADR-071…ADR-078. Gerçek entegratör seçimi (KALANLAR A2) ve ayıplı ürün iadesi (ADR-056 §4–5) bu capability'nin bugünkü kapsamı dışındadır.
+Satıcının kargo gönderisi açmasını, etiketin korumalı sunumunu, gönderi durumunun entegratörden izlenmesini ve teslim edilemeyen siparişte admin kararını tanımlar. Kararlar: ADR-057, ADR-071…ADR-078. Gerçek entegratör seçimi (KALANLAR A2) bu capability'nin bugünkü kapsamı dışındadır. Teslim zamanı ayıplı ürün talebinin penceresini başlatır; talebin kendisi `defect-claims` capability'sindedir (ADR-081).
 
 ## Requirements
 

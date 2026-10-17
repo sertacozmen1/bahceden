@@ -17,8 +17,11 @@ export function photoUrl(key: string): string {
   return `/media/product-photos/${encodeURIComponent(key)}`;
 }
 
-/** Kart boyutunun ölçüleri: büyük boyutla aynı oranda, uzun kenar en çok 400 px. */
-export function cardSize(photo: ProductPhoto): { readonly width: number; readonly height: number } {
+/**
+ * Kart boyutunun ölçüleri: büyük boyutla aynı oranda, uzun kenar en çok 400 px.
+ * Talep fotoğrafları aynı sunucu hattından geçtiği için aynı hesabı kullanır (K9).
+ */
+export function cardSize(photo: Pick<ProductPhoto, "width" | "height">): { readonly width: number; readonly height: number } {
   const longest = Math.max(photo.width, photo.height);
   if (longest <= CARD_EDGE) {
     return { width: photo.width, height: photo.height };

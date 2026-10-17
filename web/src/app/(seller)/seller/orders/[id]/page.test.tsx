@@ -36,7 +36,7 @@ const order: SellerOrderDetail = {
   status: "NEW",
   createdAt: "2026-10-08T09:30:00Z",
   items: [
-    { productSlug: "domates", productName: "Domates", unit: "KILOGRAM", unitPrice: money(24550), quantity: 1, lineTotal: money(24550) },
+    { id: 1, productSlug: "domates", productName: "Domates", unit: "KILOGRAM", unitPrice: money(24550), quantity: 1, lineTotal: money(24550) },
   ],
   itemsTotal: money(24550),
   commissionAmount: money(1528),

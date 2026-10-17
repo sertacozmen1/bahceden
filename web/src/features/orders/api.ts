@@ -15,6 +15,7 @@ export type BuyerSellerOrderView = components["schemas"]["BuyerSellerOrderView"]
 export type SellerOrderStatus = BuyerSellerOrderView["status"];
 export type SellerOrderSummary = components["schemas"]["SellerOrderSummary"];
 export type SellerOrderDetail = components["schemas"]["SellerOrderDetail"];
+export type OrderItemView = components["schemas"]["OrderItemView"];
 export type Shipment = components["schemas"]["Shipment"];
 export type ShipmentStatus = Shipment["status"];
 export type PackageSize = Shipment["packageSize"];

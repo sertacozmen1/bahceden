@@ -46,7 +46,10 @@ public enum RateLimitPolicy {
     PRODUCT_PHOTO_UPLOAD(60, Duration.ofHours(1)),
 
     /** Sipariş oluşturma: aynı hesap için saatte 20; her biri ödeme sağlayıcısına gider (add-cart-and-checkout D6). */
-    ORDER_CREATE(20, Duration.ofHours(1));
+    ORDER_CREATE(20, Duration.ofHours(1)),
+
+    /** Ayıplı ürün talebi: aynı hesap için saatte 10; her biri üç fotoğrafa kadar işler (ADR-081). */
+    DEFECT_CLAIM(10, Duration.ofHours(1));
 
     private final int limit;
     private final Duration window;

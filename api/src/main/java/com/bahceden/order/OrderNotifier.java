@@ -7,12 +7,15 @@ import com.bahceden.common.i18n.Messages;
 import com.bahceden.common.mail.MailSender;
 import com.bahceden.common.money.MoneyFormat;
 import com.bahceden.order.domain.CancelledBy;
+import com.bahceden.order.domain.DefectClaim;
 import com.bahceden.order.domain.Order;
 import com.bahceden.order.domain.OrderItem;
 import com.bahceden.order.domain.SellerOrder;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -185,6 +188,112 @@ class OrderNotifier {
 
     private static String reasonOrDash(String reason) {
         return reason == null ? "-" : reason;
+    }
+
+    /**
+     * Ayıplı ürün talebi açıldı: satıcıya satırlar, adetler ve yanıt süresi
+     * (ADR-085). Alıcının açıklaması e-postaya girmez; satıcı paneldeki
+     * talepte görür.
+     *
+     * @param responseTime satıcının yanıt süresi
+     */
+    void claimOpened(DefectClaim claim, Duration responseTime) {
+        var sellerOrder = claim.getSellerOrder();
+        var number = sellerOrder.getOrder().getOrderNumber();
+        var mails = new ArrayList<Mail>();
+        sellerAccount(sellerOrder).ifPresent(seller -> {
+            var locale = seller.getLocale();
+            var lines = claim.getLines().stream()
+                    .map(line -> messages.get("mail.claimOpened.line", locale, line.getOrderItem().getProductName(),
+                            line.getClaimedQuantity()))
+                    .collect(Collectors.joining("\n"));
+            mails.add(new Mail(seller.getEmail(),
+                    messages.get("mail.claimOpened.subject", locale, number),
+                    messages.get("mail.claimOpened.body", locale, number, lines, responseTime.toHours(),
+                            properties.webOrigin() + "/seller/orders/" + sellerOrder.getId()),
+                    number));
+        });
+        sendAfterCommit(mails);
+    }
+
+    /**
+     * Satıcı teklif verdi ya da reddetti: alıcıya teklif edilen tutar veya
+     * gerekçe ve yanıt süresi; sessiz kalırsa ne olacağı yazılır (ADR-083, ADR-085).
+     *
+     * @param offer kısmi teklifin para etkisi; retde {@code null}
+     */
+    void claimAnswered(DefectClaim claim, OrderPricing.RefundSettlement offer, Duration responseTime) {
+        var sellerOrder = claim.getSellerOrder();
+        var order = sellerOrder.getOrder();
+        var number = order.getOrderNumber();
+        var link = properties.webOrigin() + "/account/orders/" + number;
+        var mails = new ArrayList<Mail>();
+        accounts.findById(order.getBuyerAccountId()).ifPresent(buyer -> {
+            var locale = buyer.getLocale();
+            var seller = sellerOrder.getSeller().getDisplayName();
+            mails.add(offer == null
+                    ? new Mail(buyer.getEmail(), messages.get("mail.claimRejected.subject", locale, number),
+                            messages.get("mail.claimRejected.body", locale, number, seller,
+                                    claim.getSellerReason().orElse(""), responseTime.toHours(), link), number)
+                    : new Mail(buyer.getEmail(), messages.get("mail.claimOffered.subject", locale, number),
+                            messages.get("mail.claimOffered.body", locale, number, seller,
+                                    MoneyFormat.format(offer.total(), order.getCurrency(), locale),
+                                    responseTime.toHours(), link), number));
+        });
+        sendAfterCommit(mails);
+    }
+
+    /** Talep yönetime taşındı: iki tarafa (ADR-085). */
+    void claimEscalated(DefectClaim claim) {
+        var sellerOrder = claim.getSellerOrder();
+        var number = sellerOrder.getOrder().getOrderNumber();
+        var mails = new ArrayList<Mail>();
+        accounts.findById(sellerOrder.getOrder().getBuyerAccountId()).ifPresent(buyer -> mails.add(new Mail(
+                buyer.getEmail(), messages.get("mail.claimEscalated.subject", buyer.getLocale(), number),
+                messages.get("mail.claimEscalated.buyerBody", buyer.getLocale(), number,
+                        properties.webOrigin() + "/account/orders/" + number), number)));
+        sellerAccount(sellerOrder).ifPresent(seller -> mails.add(new Mail(
+                seller.getEmail(), messages.get("mail.claimEscalated.subject", seller.getLocale(), number),
+                messages.get("mail.claimEscalated.sellerBody", seller.getLocale(), number,
+                        properties.webOrigin() + "/seller/orders/" + sellerOrder.getId()), number)));
+        sendAfterCommit(mails);
+    }
+
+    /**
+     * Talep sonuçlandı: iadede alıcıya tutar, satıcıya tutar ve yeni hakediş;
+     * kapanışta iki tarafa gerekçe (ADR-085).
+     *
+     * @param closingReason kapanışın gerekçesi (satıcının reddi ya da admin'in kararı); iadede kullanılmaz
+     */
+    void claimResolved(DefectClaim claim, String closingReason) {
+        var sellerOrder = claim.getSellerOrder();
+        var order = sellerOrder.getOrder();
+        var number = order.getOrderNumber();
+        var refunded = claim.getRefundAmount();
+        var mails = new ArrayList<Mail>();
+        accounts.findById(order.getBuyerAccountId()).ifPresent(buyer -> {
+            var locale = buyer.getLocale();
+            var link = properties.webOrigin() + "/account/orders/" + number;
+            mails.add(refunded.isPresent()
+                    ? new Mail(buyer.getEmail(), messages.get("mail.claimRefunded.subject", locale, number),
+                            messages.get("mail.claimRefunded.buyerBody", locale, number,
+                                    MoneyFormat.format(refunded.get(), order.getCurrency(), locale), link), number)
+                    : new Mail(buyer.getEmail(), messages.get("mail.claimClosed.subject", locale, number),
+                            messages.get("mail.claimClosed.buyerBody", locale, number, closingReason, link), number));
+        });
+        sellerAccount(sellerOrder).ifPresent(seller -> {
+            var locale = seller.getLocale();
+            var link = properties.webOrigin() + "/seller/orders/" + sellerOrder.getId();
+            mails.add(refunded.isPresent()
+                    ? new Mail(seller.getEmail(), messages.get("mail.claimRefunded.subject", locale, number),
+                            messages.get("mail.claimRefunded.sellerBody", locale, number,
+                                    MoneyFormat.format(refunded.get(), order.getCurrency(), locale),
+                                    MoneyFormat.format(claim.getPayoutAfter().orElse(0L), order.getCurrency(), locale),
+                                    link), number)
+                    : new Mail(seller.getEmail(), messages.get("mail.claimClosed.subject", locale, number),
+                            messages.get("mail.claimClosed.sellerBody", locale, number, closingReason, link), number));
+        });
+        sendAfterCommit(mails);
     }
 
     private Optional<Account> sellerAccount(SellerOrder sellerOrder) {
