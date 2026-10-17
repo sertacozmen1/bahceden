@@ -107,8 +107,12 @@ Architecture Decision Records, projedeki önemli mimari kararları ve bu kararla
 | 084 | [Talep uçlarında yetki; fotoğraflar yalnızca üç tarafa korumalı](084-defect-claim-authorization-and-protected-photos.md) | Accepted | 2026-10-13 |
 | 085 | [Talep e-postaları: karşı tarafa, yönetime taşınınca ve sonuçta iki tarafa](085-defect-claim-emails.md) | Accepted | 2026-10-13 |
 | 086 | [`web`: talep formu ayrı sayfada, kart sipariş detayında, admin ekranı; para etkisi sunucudan](086-defect-claim-web-surfaces.md) | Accepted | 2026-10-13 |
+| 087 | [Oturum açıkken parola değiştirme: `POST /accounts/me/password-changes`, mevcut parola zorunlu](087-password-change-endpoint-requires-current-password.md) | Accepted | 2026-10-17 |
+| 088 | [Yanlış mevcut parola alan hatasıdır; hesap başına hız sınırı](088-wrong-current-password-is-field-error-rate-limited-per-account.md) | Accepted | 2026-10-17 |
+| 089 | [Parola değiştirme bütün oturumları kapatır (mevcut dahil); oturum açmaz; e-postayı doğrulamaz](089-password-change-signs-out-everywhere.md) | Accepted | 2026-10-17 |
+| 090 | [`web`: parola değiştirme ayrı sayfada; BFF başarıda çerezleri siler](090-password-change-page-bff-clears-cookies.md) | Accepted | 2026-10-17 |
 
-**Sıradaki numara: 087.**
+**Sıradaki numara: 091.**
 
 **Durum değerleri:** `Proposed` (öneri, henüz bağlayıcı değil) · `Accepted` (yürürlükte, bağlayıcı) · `Deprecated` (artık geçerli değil, yerine bir şey gelmedi) · `Superseded by [ADR-XXX]` (yerini başka bir karara bıraktı).
 

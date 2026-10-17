@@ -2,6 +2,7 @@ package com.bahceden.account;
 
 import com.bahceden.account.domain.Account;
 import com.bahceden.account.dto.AccountView;
+import com.bahceden.account.dto.PasswordChangeRequest;
 import com.bahceden.account.dto.PasswordResetConfirmation;
 import com.bahceden.account.dto.PasswordResetRequest;
 import com.bahceden.account.dto.PasswordResetRequested;
@@ -221,6 +222,40 @@ public class AccountController {
         var accountId = accountId(token);
         rateLimiter.check(RateLimitPolicy.VERIFICATION_REQUEST, Long.toString(accountId));
         service.requestVerificationLink(accountId);
+    }
+
+    @Operation(
+            operationId = "changePassword",
+            summary = "Oturum açıkken parolayı değiştirir",
+            description = """
+                    Mevcut parolayı doğrular ve yeni parolayı belirler. Hesabın bütün oturumları,
+                    bu istek yapan oturum dahil, ve açık giriş kodları kapanır; parolanın değiştiği
+                    hesabın e-posta adresine bildirilir. Oturum açılmaz: kullanıcı yeni parolasıyla
+                    giriş yapar. Mevcut parola yanlışsa ya da yeni parola mevcutla aynıysa ilgili
+                    alanda hata döner ve hiçbir şey değişmez. Hesap başına 15 dakikada 5 istek.
+                    """,
+            security = @SecurityRequirement(name = OpenApiConfig.BEARER_SCHEME))
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Parola değişti, oturumlar kapandı"),
+            @ApiResponse(responseCode = "400",
+                    description = "Alan eksik, yeni parola kurallara uymuyor, mevcut parola yanlış ya da yeni parola mevcutla aynı (VALIDATION_FAILED)",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ApiError.class))),
+            @ApiResponse(responseCode = "401", description = "Erişim token'ı yok, geçersiz ya da süresi dolmuş (AUTH_REQUIRED)",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ApiError.class))),
+            @ApiResponse(responseCode = "429", description = "Çok fazla istek (RATE_LIMITED)",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ApiError.class)))
+    })
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PostMapping(path = "/me/password-changes", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public void changePassword(@Valid @RequestBody PasswordChangeRequest request,
+                               @Parameter(hidden = true) @AuthenticationPrincipal Jwt token) {
+        var accountId = accountId(token);
+        // Sınır parola denetiminden önce: çalınmış oturumla kaba kuvvet durur (D2).
+        rateLimiter.check(RateLimitPolicy.PASSWORD_CHANGE, Long.toString(accountId));
+        service.changePassword(accountId, request.currentPassword(), request.newPassword());
     }
 
     /** Token'ın {@code sub} iddiası hesap kimliğidir (design.md D7). */
