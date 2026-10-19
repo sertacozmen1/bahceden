@@ -111,8 +111,10 @@ Architecture Decision Records, projedeki önemli mimari kararları ve bu kararla
 | 088 | [Yanlış mevcut parola alan hatasıdır; hesap başına hız sınırı](088-wrong-current-password-is-field-error-rate-limited-per-account.md) | Accepted | 2026-10-17 |
 | 089 | [Parola değiştirme bütün oturumları kapatır (mevcut dahil); oturum açmaz; e-postayı doğrulamaz](089-password-change-signs-out-everywhere.md) | Accepted | 2026-10-17 |
 | 090 | [`web`: parola değiştirme ayrı sayfada; BFF başarıda çerezleri siler](090-password-change-page-bff-clears-cookies.md) | Accepted | 2026-10-17 |
+| 091 | ["Teslim edildi" e-postası: yalnızca alıcıya, sorun bildirimi süresiyle](091-delivered-email-to-buyer-with-claim-deadline.md) | Accepted | 2026-10-19 |
+| 092 | [E-postalarda tarih-saat Türkiye saatiyle, sabit kalıpla, tek yardımcıda](092-email-datetime-turkey-time-fixed-pattern.md) | Accepted | 2026-10-19 |
 
-**Sıradaki numara: 091.**
+**Sıradaki numara: 093.**
 
 **Durum değerleri:** `Proposed` (öneri, henüz bağlayıcı değil) · `Accepted` (yürürlükte, bağlayıcı) · `Deprecated` (artık geçerli değil, yerine bir şey gelmedi) · `Superseded by [ADR-XXX]` (yerini başka bir karara bıraktı).
 

@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Gönderi durumunun satıcı siparişine yansıması (shipments spec'i "Gönderi
- * durumu entegratörden izlenir", add-shipments D2, D5, D8).
+ * durumu entegratörden izlenir", add-shipments D2, D5, D8; add-delivered-email D1).
  *
  * <p>Gönderi durumu sorgusu ({@code shipping} paketi) çağırır; geçiş mantığı
  * sipariş paketinde kalır. Her metot çağıranın transaction'ında çalışır,
@@ -45,10 +45,15 @@ public class ShipmentProgressService {
                 .ifPresent(sellerOrder -> notifier.sellerOrderShipped(sellerOrder, carrier, trackingNumber));
     }
 
-    /** Alıcıya teslim edildi: {@code DELIVERED}. */
+    /**
+     * Alıcıya teslim edildi: {@code DELIVERED}; alıcıya sorun bildirimi süresini
+     * söyleyen e-posta (add-delivered-email D1). {@code now} gönderinin teslim
+     * zamanıdır; talep penceresi de ondan başlar.
+     */
     @Transactional(propagation = Propagation.MANDATORY)
     public void delivered(long sellerOrderId, Instant now) {
-        apply(sellerOrderId, SellerOrderTransition.DELIVER, now);
+        apply(sellerOrderId, SellerOrderTransition.DELIVER, now)
+                .ifPresent(sellerOrder -> notifier.sellerOrderDelivered(sellerOrder, now));
     }
 
     /** Kargo teslim edemedi: {@code DELIVERY_FAILED}; alıcıya ve satıcıya e-posta, admin karar verir (D7). */

@@ -3,6 +3,7 @@
 **Tarih:** 2026-10-10
 **Durum:** Accepted
 **Kaynak:** `add-shipments` design.md D8
+**Not (2026-10-19):** Öngörülen dördüncü olay, "teslim edildi" e-postası, [ADR-091](091-delivered-email-to-buyer-with-claim-deadline.md) ile eklendi. Bu ADR'nin diğer kararları geçerlidir.
 
 ---
 

@@ -180,6 +180,8 @@ nav:
     - "ADR-088 · Yanlış mevcut parola": adr/088-wrong-current-password-is-field-error-rate-limited-per-account.md
     - "ADR-089 · Parola değişince oturumlar": adr/089-password-change-signs-out-everywhere.md
     - "ADR-090 · Parola değiştirme ekranı": adr/090-password-change-page-bff-clears-cookies.md
+    - "ADR-091 · Teslim edildi e-postası": adr/091-delivered-email-to-buyer-with-claim-deadline.md
+    - "ADR-092 · E-postada tarih-saat": adr/092-email-datetime-turkey-time-fixed-pattern.md
   - Nasıl Yapılır (How-to):
     - Genel Bakış: how-to/index.md
     - Yerel Geliştirme Ortamı: how-to/yerel-gelistirme.md

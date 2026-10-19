@@ -6,7 +6,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.bahceden.common.i18n.SupportedLocale;
 import com.bahceden.common.security.AccessTokenIssuer;
+import com.bahceden.common.time.DateTimeFormat;
+import com.bahceden.order.ShipmentProgressService;
 import com.bahceden.shipping.domain.ShipmentStatus;
 import com.bahceden.support.ListingFixtures;
 import com.bahceden.support.MutableClock;
@@ -17,6 +20,7 @@ import com.bahceden.support.ScriptedShippingIntegrator;
 import com.bahceden.support.TestcontainersConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Duration;
+import java.time.Instant;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -32,10 +36,11 @@ import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.support.TransactionTemplate;
 
 /**
  * Gönderi durumunun izlenmesi (shipments spec'i "Gönderi durumu entegratörden
- * izlenir"; add-shipments D2, D5, D8).
+ * izlenir"; add-shipments D2, D5, D8; add-delivered-email D1, D2).
  *
  * <p>{@code critical}: sipariş durumu geçişleri. Zamanlayıcı testlerde kapalıdır;
  * sorgu sabit saatle doğrudan çağrılır.
@@ -79,6 +84,12 @@ class ShipmentPollingTest {
 
     @Autowired
     private ApplicationContext context;
+
+    @Autowired
+    private ShipmentProgressService progress;
+
+    @Autowired
+    private TransactionTemplate transactions;
 
     private ListingFixtures fixtures;
     private OrderFlows flows;
@@ -161,9 +172,49 @@ class ShipmentPollingTest {
     }
 
     @Test
-    @DisplayName("Ara durum atlanırsa (CREATED → DELIVERED) iki geçiş sırayla yazılır")
+    @DisplayName("Teslim edildi: yalnızca alıcıya, hesabının dilinde, sorun bildiriminin son anı ve sipariş bağlantısıyla e-posta")
+    void teslim_edildi_epostasi() throws Exception {
+        var shipment = openedShipment();
+        integrator.report(shipment.ref(), ShipmentStatus.HANDED_OVER);
+        poller.pollOnce();
+        mail.reset();
+        integrator.report(shipment.ref(), ShipmentStatus.DELIVERED);
+
+        poller.pollOnce();
+
+        var deadline = clock.instant().plus(Duration.ofHours(48));
+        assertThat(mail.sent()).singleElement().satisfies(sent -> {
+            assertThat(sent.to()).isEqualTo("alici@ornek.test");
+            assertThat(sent.subject()).contains("delivered", shipment.number());
+            assertThat(sent.body()).contains(
+                    DateTimeFormat.format(deadline, SupportedLocale.EN) + " Turkey time",
+                    "48 hours",
+                    "/account/orders/" + shipment.number());
+        });
+    }
+
+    @Test
+    @DisplayName("E-postadaki son an, alıcının sipariş detayındaki talep son anıyla aynıdır")
+    void eposta_ve_ekran_ayni_ani_gosterir() throws Exception {
+        var shipment = openedShipment();
+        integrator.report(shipment.ref(), ShipmentStatus.DELIVERED);
+        poller.pollOnce();
+
+        var json = mockMvc.perform(get("/api/v1/orders/" + shipment.number())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + buyerToken))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        var claimableUntil = Instant.parse(objectMapper.readTree(json)
+                .at("/sellerOrders/0/claimableUntil").asText());
+
+        assertThat(mail.lastSent().body()).contains(DateTimeFormat.format(claimableUntil, SupportedLocale.EN));
+    }
+
+    @Test
+    @DisplayName("Ara durum atlanırsa (CREATED → DELIVERED) iki geçiş sırayla yazılır; önce kargoya verildi, sonra teslim edildi e-postası")
     void ara_durum_atlanir() throws Exception {
         var shipment = openedShipment();
+        mail.reset();
         integrator.report(shipment.ref(), ShipmentStatus.DELIVERED);
 
         poller.pollOnce();
@@ -172,6 +223,25 @@ class ShipmentPollingTest {
         assertThat(jdbc.queryForList("select to_status from order_status_changes order by id", String.class))
                 .containsExactly("PENDING_PAYMENT", "NEW", "SHIPPED", "DELIVERED");
         assertThat(jdbc.queryForObject("select handed_over_at is not null from shipments", Boolean.class)).isTrue();
+        assertThat(mail.sent()).extracting(RecordingMailSender.SentMail::subject)
+                .satisfiesExactly(
+                        subject -> assertThat(subject).contains("shipped"),
+                        subject -> assertThat(subject).contains("delivered"));
+    }
+
+    @Test
+    @DisplayName("Teslim bildirimi yinelenirse geçmiş değişmez ve ikinci e-posta gitmez")
+    void yinelenen_teslim_bildirimi() throws Exception {
+        var shipment = openedShipment();
+        integrator.report(shipment.ref(), ShipmentStatus.DELIVERED);
+        poller.pollOnce();
+        mail.reset();
+
+        transactions.executeWithoutResult(status -> progress.delivered(shipment.sellerOrder(), clock.instant()));
+
+        assertThat(mail.sent()).isEmpty();
+        assertThat(jdbc.queryForObject("select count(*) from order_status_changes where to_status = 'DELIVERED'",
+                Integer.class)).isEqualTo(1);
     }
 
     @Test
