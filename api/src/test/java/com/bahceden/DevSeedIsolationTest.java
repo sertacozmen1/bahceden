@@ -99,4 +99,15 @@ class DevSeedIsolationTest {
                 .as("sabit parolalı hesaplara bağlı ödeme hesabı ve adres yalnızca dev bağlamında oluşmalı (ADR-014)")
                 .isZero();
     }
+
+    @Test
+    @DisplayName("Dev alıcısını doğrulanmış yapan seed test bağlamında uygulanmaz")
+    void dev_dogrulanmis_alici_seedi_test_baglaminda_uygulanmaz() {
+        Integer applied = jdbc.queryForObject(
+                "select count(*) from databasechangelog where id = ?", Integer.class, "015-dev-seed-verified-buyer");
+
+        assertThat(applied)
+                .as("sabit parolalı hesabın doğrulama durumu yalnızca dev bağlamında değişmeli (ADR-014)")
+                .isZero();
+    }
 }

@@ -2,6 +2,7 @@
 
 **Tarih:** 2026-10-06
 **Durum:** Accepted
+**Not (2026-10-19):** Bu kararın kabul ettiği borç (doğrulanmamış hesapla ticari eylem) iki eylemde kapatıldı: satıcı başvurusu [ADR-043](043-seller-application-requires-verified-email.md), sipariş [ADR-093](093-order-requires-verified-email.md). Giriş yine engellenmez.
 **Supersedes:** [ADR-008](008-jwt-auth-with-opaque-refresh.md) §4'ün "doğrulanmadan giriş yapılamaz" kuralı. ADR-008'in diğer tüm kararları (JWT + opak yenileme, tek hesap tablosu, BCrypt, token kuralları, BFF) aynen yürürlüktedir.
 
 ---

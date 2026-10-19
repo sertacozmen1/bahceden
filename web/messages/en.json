@@ -546,6 +546,10 @@
     "addAddress": "Add a new address",
     "pay": "Continue to payment",
     "paying": "Opening payment…",
+    "verifyFirst": {
+      "title": "Verify your email first",
+      "body": "We send order, shipping and delivery updates by email, so please verify your address before placing an order. If you can't find the link we sent when you signed up, check your spam folder or request a new one. Refresh this page once you have verified."
+    },
     "return": {
       "title": "Payment result",
       "heading": "{status, select, PAID {Your order was received} PAYMENT_FAILED {The payment failed} PAYMENT_EXPIRED {The payment time ran out} CANCELLED_OUT_OF_STOCK {Products ran out, your payment is being refunded} other {Waiting for your payment}}",

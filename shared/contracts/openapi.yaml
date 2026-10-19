@@ -1494,8 +1494,8 @@ paths:
                 $ref: "#/components/schemas/ApiError"
         "422":
           description: |-
-            Sepet boş (CART_EMPTY), satın alınamayan veya stoğu aşan satır var (CART_HAS_UNAVAILABLE_ITEMS) ya da
-            adrese teslimat yok (ADDRESS_NOT_DELIVERABLE)
+            E-posta doğrulanmamış (ORDER_EMAIL_NOT_VERIFIED), sepet boş (CART_EMPTY), satın alınamayan veya stoğu
+            aşan satır var (CART_HAS_UNAVAILABLE_ITEMS) ya da adrese teslimat yok (ADDRESS_NOT_DELIVERABLE)
           content:
             application/json:
               schema:

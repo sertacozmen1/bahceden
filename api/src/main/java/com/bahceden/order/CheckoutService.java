@@ -1,5 +1,7 @@
 package com.bahceden.order;
 
+import com.bahceden.account.AccountRepository;
+import com.bahceden.account.domain.Account;
 import com.bahceden.catalog.ProductRepository;
 import com.bahceden.catalog.domain.Product;
 import com.bahceden.common.BahcedenProperties;
@@ -47,7 +49,8 @@ import org.springframework.transaction.annotation.Transactional;
  * satıcıya göre bölünür; fiyat, kargo ücreti, komisyon ve hakediş
  * {@link OrderPricing} ile hesaplanıp siparişe yazılır; adres kopyalanır.
  * Stok bu adımda düşmez. Ödeme sağlayıcıda bölünmüş ödeme olarak başlatılır.
- * Aynı {@code Idempotency-Key} ikinci siparişi açmaz.
+ * Aynı {@code Idempotency-Key} ikinci siparişi açmaz. Yeni sipariş yalnızca
+ * e-postası doğrulanmış alıcıya açılır (add-checkout-email-verification D1).
  *
  * <p><b>Tamamlama:</b> sonuç sağlayıcıdan doğrulanır. Başarılıysa ürünler
  * kimlik sırasıyla kilitlenir ve stok düşer; stok yetmezse ödemenin tamamı
@@ -70,6 +73,7 @@ public class CheckoutService {
     private static final char[] ORDER_NUMBER_ALPHABET = "0123456789ABCDEFGHJKMNPQRSTVWXYZ".toCharArray();
 
     private final OrderRepository orders;
+    private final AccountRepository accounts;
     private final OrderStatusChangeRepository statusChanges;
     private final CartService cartService;
     private final CartRepository carts;
@@ -84,11 +88,12 @@ public class CheckoutService {
     private final Clock clock;
     private final SecureRandom random = new SecureRandom();
 
-    CheckoutService(OrderRepository orders, OrderStatusChangeRepository statusChanges, CartService cartService,
+    CheckoutService(OrderRepository orders, AccountRepository accounts, OrderStatusChangeRepository statusChanges, CartService cartService,
                     CartRepository carts, CartItemRepository cartItems, AddressService addressService,
                     ProductRepository products, PaymentService payments, OrderPricing pricing,
                     OrderService orderService, OrderNotifier notifier, BahcedenProperties properties, Clock clock) {
         this.orders = orders;
+        this.accounts = accounts;
         this.statusChanges = statusChanges;
         this.cartService = cartService;
         this.carts = carts;
@@ -106,7 +111,8 @@ public class CheckoutService {
     /**
      * Sepetten sipariş oluşturur ve ödemeyi başlatır.
      *
-     * @throws ApiException alan bazlı {@code VALIDATION_FAILED} (Idempotency-Key), {@code ADDRESS_NOT_FOUND},
+     * @throws ApiException alan bazlı {@code VALIDATION_FAILED} (Idempotency-Key), {@code ORDER_EMAIL_NOT_VERIFIED},
+     *                      {@code ADDRESS_NOT_FOUND},
      *                      {@code ADDRESS_NOT_DELIVERABLE}, {@code CART_EMPTY},
      *                      {@code CART_HAS_UNAVAILABLE_ITEMS} veya {@code PAYMENT_PROVIDER_ERROR}
      */
@@ -119,6 +125,10 @@ public class CheckoutService {
         if (existing.isPresent()) {
             var order = existing.get();
             return new OrderPlaced(order.getOrderNumber(), payments.redirectUrlOf(order.getId()).orElseThrow());
+        }
+        // Tekrar anahtarından sonra: oluşmuş sipariş geri alınamaz. Durum güncel kayıttan (D1, ADR-024 deseni).
+        if (!accounts.findById(accountId).map(Account::isEmailVerified).orElse(false)) {
+            throw new ApiException(ApiErrorCode.ORDER_EMAIL_NOT_VERIFIED, "error.orderEmailNotVerified");
         }
 
         var address = addressService.own(accountId, addressId);

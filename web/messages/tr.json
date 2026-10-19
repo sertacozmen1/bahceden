@@ -546,6 +546,10 @@
     "addAddress": "Yeni adres ekle",
     "pay": "Ödemeye geç",
     "paying": "Ödeme sayfasına gidiliyor…",
+    "verifyFirst": {
+      "title": "Önce e-postanızı doğrulayın",
+      "body": "Sipariş, kargo ve teslim haberlerini e-postayla göndereceğiz; sipariş vermeden önce adresinizi doğrulayın. Kayıtta gönderdiğimiz bağlantıyı bulamıyorsanız spam klasörüne bakın ya da yenisini isteyin. Doğruladıktan sonra bu sayfayı yenileyin."
+    },
     "return": {
       "title": "Ödeme sonucu",
       "heading": "{status, select, PAID {Siparişiniz alındı} PAYMENT_FAILED {Ödeme başarısız oldu} PAYMENT_EXPIRED {Ödeme süresi doldu} CANCELLED_OUT_OF_STOCK {Ürünler tükendi, ödemeniz iade ediliyor} other {Ödemeniz bekleniyor}}",

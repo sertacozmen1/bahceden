@@ -2,7 +2,7 @@
 
 **Durum:** Yayında
 **İlk sürüm:** 2026-10-07
-**Son değişiklik:** 2026-10-17
+**Son değişiklik:** 2026-10-19
 
 | | |
 |---|---|
@@ -23,7 +23,7 @@ Kullanıcı e-posta adresi ve parolayla hesap açar ve hesabını hemen kullanı
 
 - **Parola değiştirme sadece "hepsini kapat" der.** Yalnızca diğer cihazları kapatma veya oturum listesi yok ([ADR-089](../adr/089-password-change-signs-out-everywhere.md)). E-posta adresini değiştirme de yok.
 - **İkinci faktörü kullanıcı açamaz** ([ADR-017](../adr/017-email-verification-non-blocking-and-2fa-switch.md)); anahtar yalnızca veritabanından veya dev seed'inden açılır.
-- **Doğrulanmamış e-postayla hesap açılabilir.** Bu kabul edilmiş bir borç. Kapı ilk olarak satıcı başvurusuna kondu ([ADR-043](../adr/043-seller-application-requires-verified-email.md)); sipariş dilimi kendi kapısını değerlendirecek.
+- **Doğrulanmamış e-postayla hesap açılabilir ve giriş yapılabilir** ([ADR-017](../adr/017-email-verification-non-blocking-and-2fa-switch.md)). Ticari eylemler doğrulama ister: satıcı başvurusu ([ADR-043](../adr/043-seller-application-requires-verified-email.md)) ve sipariş ([ADR-093](../adr/093-order-requires-verified-email.md)).
 - **Satıcılık ayrı feature'dır:** başvuru ve onay [Satıcı Kaydı ve Onayı](satici-kaydi-ve-onayi.md) dosyasında; `ROLE_SELLER` admin onayıyla verilir.
 - **Hesap silme, KVKK dışa aktarma ve sosyal giriş yok.** Yönetici ekranı bugün yalnızca satıcı başvuruları için var.
 - **Hız sınırı tek örnek içindir** ve istemci adresine dayanır ([ADR-022](../adr/022-in-memory-fixed-window-rate-limiting.md)).
@@ -36,6 +36,7 @@ Kullanıcı e-posta adresi ve parolayla hesap açar ve hesabını hemen kullanı
 
 ## Tarihçe
 
+- 2026-10-19: Sipariş de e-posta doğrulaması ister (change `add-checkout-email-verification`, ADR-093). Ayrıntı: [Sepet ve Sipariş](sepet-ve-siparis.md).
 - 2026-10-17: `add-password-change` change'i kullanıcı onayıyla archive edildi (`openspec/changes/archive/2026-10-17-add-password-change/`). Ön koşullar: delta spec `account-identity` ana spec'ine sync edildi; D1–D4 → ADR-087…090; dokümanlar güncel; `api` 318 ve `web` 275 test yeşil. Taşımada göreli linkler bir seviye uzatıldı.
 - 2026-10-17: Oturum açıkken parola değiştirme (change `add-password-change`). `api`: `POST /accounts/me/password-changes` (mevcut parola zorunlu; yanlışsa ve yeni parola mevcutla aynıysa alan hatası; hesap başına 15 dakikada 5 istek; başarıda değiştiren oturum dahil bütün oturumlar ve açık giriş kodları kapanır, "parolanız değişti" bildirimi gider; oturum açmaz, e-posta doğrulama durumu değişmez). `web`: `/account/password` sayfası, Hesabım'da "Güvenlik" bölümü, `/api/auth/password-change` (başarıda çerezleri siler). Kararlar ADR-087…090; 9 yeni `api` testi, 8 yeni `web` testi. L12 kapandı.
 - 2026-10-09: Oturum tarayıcı kapatılıp açıldığında her sayfada sürüyor (büyük e-ticaret sitelerindeki davranış). Süresi dolmuş oturumla açılan her sayfa oturumu sessizce yeniliyor ve kullanıcı aynı sayfaya oturumu açık olarak dönüyor; yenileme başarısızsa giriş ekranına itilmeden oturumsuz devam ediyor. Sekmeler Web Locks ile sıraya giriyor. `api` kullanılmış yenileme token'ını 30 saniye içinde tekrar kabul ediyor; pencere dışında aile iptali sürüyor. [ADR-069](../adr/069-refresh-token-reuse-grace-window.md), [ADR-070](../adr/070-silent-session-refresh-on-any-page.md); change `change-session-persistence`.

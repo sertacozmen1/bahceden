@@ -112,6 +112,9 @@ public enum ApiErrorCode {
     /** Sepette satın alınamayan veya stoğu aşan satır var (422, D6). */
     CART_HAS_UNAVAILABLE_ITEMS(HttpStatus.UNPROCESSABLE_ENTITY),
 
+    /** Sipariş için e-posta doğrulaması gerekir; sipariş haberleri bu adrese gider (422, add-checkout-email-verification D1). */
+    ORDER_EMAIL_NOT_VERIFIED(HttpStatus.UNPROCESSABLE_ENTITY),
+
     /** Sipariş yok veya başkasına ait (404, D6). */
     ORDER_NOT_FOUND(HttpStatus.NOT_FOUND),
 

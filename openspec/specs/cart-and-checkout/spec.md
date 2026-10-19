@@ -1,7 +1,7 @@
 # cart-and-checkout Specification
 
 ## Purpose
-Hesaba bağlı sepeti, satıcı başına kargo ücretini, teslimat illerini ve adresleri, sepetten sipariş oluşturmayı (satıcı siparişlerine bölme, tutarların sabitlenmesi, tekrar anahtarı) ve ödemenin sağlayıcıdan doğrulanıp stoğun ödeme anında düşmesini tanımlar. Kararlar: ADR-054…058, ADR-059, ADR-061…066. Kargo gönderisi ve gerçek ödeme sağlayıcısı bu capability'nin bugünkü kapsamı dışındadır.
+Hesaba bağlı sepeti, satıcı başına kargo ücretini, teslimat illerini ve adresleri, sepetten sipariş oluşturmayı (e-posta doğrulaması koşulu, satıcı siparişlerine bölme, tutarların sabitlenmesi, tekrar anahtarı) ve ödemenin sağlayıcıdan doğrulanıp stoğun ödeme anında düşmesini tanımlar. Kararlar: ADR-054…058, ADR-059, ADR-061…066, ADR-093, ADR-094. Kargo gönderisi ve gerçek ödeme sağlayıcısı bu capability'nin bugünkü kapsamı dışındadır.
 
 ## Requirements
 
@@ -95,7 +95,7 @@ Sistem, hesabın en çok 10 teslimat adresi kaydetmesini, güncellemesini ve sil
 
 ### Requirement: Sipariş sepetten oluşturulur, satıcı siparişlerine bölünür ve tutarlar o anda sabitlenir
 
-Sistem, sepetteki ürünlerden ve seçilen adresten bir sipariş SHALL oluşturur. Sipariş, sepetteki her satıcı için bir satıcı siparişine bölünür. Her satıcı siparişine o anki değerler yazılır:
+Sistem, e-posta adresi doğrulanmış alıcının sepetindeki ürünlerden ve seçilen adresten bir sipariş SHALL oluşturur. Sipariş, sepetteki her satıcı için bir satıcı siparişine bölünür. Her satıcı siparişine o anki değerler yazılır:
 
 - birim fiyatlar ve satır tutarları;
 - ürün tutarı ve kargo ücreti;
@@ -105,11 +105,23 @@ Sistem, sepetteki ürünlerden ve seçilen adresten bir sipariş SHALL oluşturu
 
 Komisyon `min(ürün tutarı, yuvarla(ürün tutarı × %5) + 3 TL)` olarak hesaplanır; yuvarlama kuruşa ve yarım yukarıdır. Satıcı hakedişi ürün tutarından komisyonun düşülmesiyle bulunur.
 
-Teslimat adresi siparişe kopyalanır. Sipariş oluşturma `Idempotency-Key` başlığı ister; aynı anahtarla tekrarlanan istek yeni sipariş açmaz.
+Teslimat adresi siparişe kopyalanır. Sipariş oluşturma `Idempotency-Key` başlığı ister; aynı anahtarla tekrarlanan istek yeni sipariş açmaz. E-posta doğrulaması yalnızca sipariş oluşturmanın koşuludur: giriş, sepet, adresler, ödemenin tamamlanması ve siparişleri görme doğrulamaya bağlı değildir.
 
 #### Scenario: Başarılı sipariş oluşturma
-- **WHEN** alıcı yalnızca satın alınabilir ürünler içeren sepetiyle ve teslimat yapılan bir adresle sipariş oluşturur
+- **WHEN** e-postası doğrulanmış alıcı yalnızca satın alınabilir ürünler içeren sepetiyle ve teslimat yapılan bir adresle sipariş oluşturur
 - **THEN** sipariş ödeme bekliyor durumunda oluşur, yanıt sipariş numarasını ve ödeme adresini döner ve stok henüz düşmez
+
+#### Scenario: E-postası doğrulanmamış alıcı
+- **WHEN** e-postası doğrulanmamış alıcı sipariş oluşturmaya çalışır
+- **THEN** istek e-posta doğrulamasını isteyen bir iş kuralı hatasıyla reddedilir, sipariş oluşmaz ve ödeme başlatılmaz
+
+#### Scenario: Doğruladıktan hemen sonra sipariş
+- **WHEN** alıcı e-postasını doğrular ve aynı erişim token'ıyla hemen sipariş oluşturur
+- **THEN** doğrulama durumu güncel kayıttan okunur ve sipariş oluşur
+
+#### Scenario: Doğrulama kapısı ödeme sayfasında anlatılır
+- **WHEN** e-postası doğrulanmamış alıcı ödeme sayfasını açar
+- **THEN** sipariş özeti ve toplamlar görünür, ödeme formu yerine e-postayı doğrulama açıklaması ve yeni doğrulama bağlantısı isteme eylemi gösterilir
 
 #### Scenario: Komisyon hesabı
 - **WHEN** bir satıcı siparişinin ürün tutarı 245,50 TL'dir

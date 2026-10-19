@@ -6,6 +6,7 @@ import { getTranslations } from "next-intl/server";
 import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { FormMessage } from "@/features/account/components/FormMessage";
+import { ResendVerificationButton } from "@/features/account/components/ResendVerificationButton";
 import { requireSignedIn } from "@/features/account/requireSession";
 import { listAddresses, listDeliveryProvinces } from "@/features/addresses/api";
 import { getCart } from "@/features/cart/api";
@@ -23,10 +24,14 @@ export async function generateMetadata(): Promise<Metadata> {
  * Ödeme adımı (cart-and-checkout spec'i, D10): adres, satıcılara göre özet,
  * toplam ve cayma bilgisi (ADR-056 §3), ardından ödeme. Boş sepet sepete
  * döner; satın alınamayan satır varsa önce sepet düzeltilir.
+ *
+ * E-postası doğrulanmamış alıcı özeti görür ama form yerine doğrulama
+ * yönlendirmesini ve yeni bağlantı düğmesini görür; sipariş doğrulanmış
+ * e-posta ister (add-checkout-email-verification D2). Otorite yine `api`'dir.
  */
 export default async function CheckoutPage() {
   const t = await getTranslations();
-  const { accessToken } = await requireSignedIn("/checkout");
+  const { account, accessToken } = await requireSignedIn("/checkout");
   const [cart, addresses, provinces] = await Promise.all([
     getCart(accessToken),
     listAddresses(accessToken),
@@ -56,7 +61,13 @@ export default async function CheckoutPage() {
             <p className="rounded-lg bg-muted px-3 py-2 text-sm text-pretty text-muted-foreground">
               {t("checkout.withdrawalNotice")}
             </p>
-            {cart.hasUnavailableItems ? (
+            {!account.emailVerified ? (
+              <div className="flex flex-col gap-3">
+                <h2 className="text-base font-semibold tracking-tight">{t("checkout.verifyFirst.title")}</h2>
+                <p className="text-sm text-pretty text-muted-foreground">{t("checkout.verifyFirst.body")}</p>
+                <ResendVerificationButton />
+              </div>
+            ) : cart.hasUnavailableItems ? (
               <>
                 <FormMessage tone="error">{t("cart.hasUnavailable")}</FormMessage>
                 <Link className={buttonVariants({ variant: "outline" })} href="/cart">
