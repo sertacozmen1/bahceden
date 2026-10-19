@@ -18,6 +18,9 @@ bahceden:
       handed-over-after: PT2M
       in-transit-after: PT4M
       delivered-after: PT6M
+  cleanup:
+    # Temizlik işleri dakikada bir döner: ödenmemiş siparişin kapanması elle izlenebilir.
+    interval: PT1M
 
 logging:
   level:

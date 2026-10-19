@@ -56,6 +56,10 @@ import org.springframework.transaction.annotation.Transactional;
  * kimlik sırasıyla kilitlenir ve stok düşer; stok yetmezse ödemenin tamamı
  * iade edilir. Süresi dolmuş ödeme alınmışsa iade edilir. Çağrı tekrarlanabilir.
  *
+ * <p><b>Dönüşü gelmeyen sipariş:</b> temizlik işi, ödeme süresi geçmiş
+ * siparişi aynı kuralla ve sistem adına sonuçlandırır
+ * (add-stale-record-cleanup D1); kilit ve yeniden okuma çift kapatmayı önler.
+ *
  * <p>Sağlayıcı hatası 502 döner ve transaction geri alınır: para ile kayıt
  * ayrışmaz. Log'a adres ve sipariş içeriği yazılmaz (K10).
  */
@@ -193,7 +197,28 @@ public class CheckoutService {
         return orderService.detailOf(order);
     }
 
-    private void settle(long accountId, Order order) {
+    /**
+     * Ödeme dönüşü hiç gelmeyen siparişi sonuçlandırır (add-stale-record-cleanup
+     * D1). Sipariş kilitlenir ve yeniden okunur: bu arada dönüşle sonuçlanmışsa
+     * ya da süresi dolmamışsa dokunulmaz. Süresi dolduğu için sonuç süresi dolmuş
+     * (alınmış ödeme iade edilir) ya da ödeme başarısızdır; yapan taraf sistemdir.
+     *
+     * @return sonuçlandıysa siparişin yeni durumu
+     * @throws PaymentProviderException sağlayıcıya ulaşılamadı; transaction geri alınır
+     */
+    @Transactional
+    public Optional<OrderStatus> expireUnpaid(long orderId) {
+        var order = orders.findByIdForUpdate(orderId).orElse(null);
+        if (order == null || order.getStatus() != OrderStatus.PENDING_PAYMENT
+                || !order.isPaymentExpired(clock.instant())) {
+            return Optional.empty();
+        }
+        settle(null, order);
+        return Optional.of(order.getStatus());
+    }
+
+    /** @param actorAccountId ödeme dönüşünde alıcı; temizlik işinde {@code null} (sistem) */
+    private void settle(Long actorAccountId, Order order) {
         var now = clock.instant();
         var outcome = payments.verify(order.getId());
         boolean expired = order.isPaymentExpired(now);
@@ -201,14 +226,14 @@ public class CheckoutService {
             return;
         }
         if (outcome == PaymentOutcome.FAILED) {
-            close(accountId, order, OrderStatus.PAYMENT_FAILED, now);
+            close(actorAccountId, order, OrderStatus.PAYMENT_FAILED, now);
             return;
         }
         if (expired) {
             if (outcome == PaymentOutcome.SUCCEEDED) {
                 payments.refund(order.getId(), null, RefundReason.PAYMENT_EXPIRED, order.getGrandTotal(), Optional.empty());
             }
-            close(accountId, order, OrderStatus.PAYMENT_EXPIRED, now);
+            close(actorAccountId, order, OrderStatus.PAYMENT_EXPIRED, now);
             return;
         }
 
@@ -224,7 +249,7 @@ public class CheckoutService {
                 locked.containsKey(entry.getKey()) && locked.get(entry.getKey()).getStockQuantity() >= entry.getValue());
         if (!enough) {
             payments.refund(order.getId(), null, RefundReason.OUT_OF_STOCK, order.getGrandTotal(), Optional.empty());
-            close(accountId, order, OrderStatus.CANCELLED_OUT_OF_STOCK, now);
+            close(actorAccountId, order, OrderStatus.CANCELLED_OUT_OF_STOCK, now);
             log.info("Stok yetmedi, ödeme iade edildi: sipariş {}", order.getOrderNumber());
             return;
         }
@@ -232,26 +257,28 @@ public class CheckoutService {
         quantities.forEach((productId, quantity) -> locked.get(productId).decreaseStock(quantity, now));
         order.markPaid(now);
         for (var sellerOrder : order.getSellerOrders()) {
-            transition(accountId, sellerOrder, SellerOrderTransition.PAY, now);
+            transition(actorAccountId, sellerOrder, SellerOrderTransition.PAY, now);
             sellerOrder.scheduleDispatch(BusinessDays.endOfBusinessDay(now, sellerOrder.getDispatchDays()));
         }
-        carts.findByAccountId(accountId).ifPresent(cart -> cartItems.deleteProducts(cart.getId(), quantities.keySet()));
+        carts.findByAccountId(order.getBuyerAccountId()).ifPresent(cart -> cartItems.deleteProducts(cart.getId(), quantities.keySet()));
         notifier.orderPaid(order, order.getSellerOrders());
         log.info("Ödeme alındı: sipariş {}", order.getOrderNumber());
     }
 
-    private void close(long accountId, Order order, OrderStatus outcome, Instant now) {
+    private void close(Long actorAccountId, Order order, OrderStatus outcome, Instant now) {
         order.close(outcome, now);
         for (var sellerOrder : order.getSellerOrders()) {
-            transition(accountId, sellerOrder, SellerOrderTransition.VOID, now);
+            transition(actorAccountId, sellerOrder, SellerOrderTransition.VOID, now);
         }
     }
 
-    private void transition(long actorAccountId, SellerOrder sellerOrder, SellerOrderTransition transition, Instant now) {
+    private void transition(Long actorAccountId, SellerOrder sellerOrder, SellerOrderTransition transition, Instant now) {
         var previous = sellerOrder.getStatus();
         sellerOrder.apply(transition, now);
-        statusChanges.save(OrderStatusChange.record(sellerOrder.getId(), previous, sellerOrder.getStatus(), null,
-                actorAccountId, now));
+        statusChanges.save(actorAccountId == null
+                ? OrderStatusChange.recordBySystem(sellerOrder.getId(), previous, sellerOrder.getStatus(), now)
+                : OrderStatusChange.record(sellerOrder.getId(), previous, sellerOrder.getStatus(), null,
+                        actorAccountId, now));
     }
 
     private SellerOrder sellerOrder(Order order, List<CartItem> lines, Instant now) {

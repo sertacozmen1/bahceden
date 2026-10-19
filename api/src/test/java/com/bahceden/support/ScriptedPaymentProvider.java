@@ -3,8 +3,10 @@ package com.bahceden.support;
 import com.bahceden.payment.PaymentProvider;
 import com.bahceden.payment.PaymentProviderException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
@@ -31,6 +33,7 @@ public class ScriptedPaymentProvider implements PaymentProvider {
     private boolean unavailable;
     private boolean refundsFailing;
     private PaymentOutcome outcome = PaymentOutcome.SUCCEEDED;
+    private final Set<String> failingVerifies = new HashSet<>();
 
     @Override
     public synchronized SubMerchantResult registerSubMerchant(SubMerchantDetails details) {
@@ -51,6 +54,9 @@ public class ScriptedPaymentProvider implements PaymentProvider {
     @Override
     public synchronized PaymentOutcome verify(String paymentReference) {
         failIfUnavailable();
+        if (failingVerifies.contains(paymentReference)) {
+            throw new PaymentProviderException("Test: bu ödeme doğrulanamıyor");
+        }
         return outcome;
     }
 
@@ -76,6 +82,11 @@ public class ScriptedPaymentProvider implements PaymentProvider {
         refundsFailing = true;
     }
 
+    /** Yalnızca bu ödemenin doğrulaması hata verir; diğerleri etkilenmez. */
+    public synchronized void failVerifyOf(String paymentReference) {
+        failingVerifies.add(paymentReference);
+    }
+
     public synchronized void answerVerifyWith(PaymentOutcome next) {
         outcome = next;
     }
@@ -94,6 +105,7 @@ public class ScriptedPaymentProvider implements PaymentProvider {
         rejectSubMerchants = false;
         unavailable = false;
         refundsFailing = false;
+        failingVerifies.clear();
         outcome = PaymentOutcome.SUCCEEDED;
     }
 

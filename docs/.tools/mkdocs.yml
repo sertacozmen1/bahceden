@@ -185,6 +185,8 @@ nav:
     - "ADR-093 · Sipariş için doğrulama": adr/093-order-requires-verified-email.md
     - "ADR-094 · Ödeme sayfasında doğrulama": adr/094-checkout-page-shows-verification-panel.md
     - "ADR-095 · Dev alıcısı doğrulanmış": adr/095-dev-buyer-verified-by-new-seed.md
+    - "ADR-096 · Ödenmemiş sipariş işi": adr/096-unpaid-orders-closed-by-scheduled-sweep.md
+    - "ADR-097 · Kimlik kayıtları temizliği": adr/097-expired-identity-records-deleted-refresh-by-family.md
   - Nasıl Yapılır (How-to):
     - Genel Bakış: how-to/index.md
     - Yerel Geliştirme Ortamı: how-to/yerel-gelistirme.md

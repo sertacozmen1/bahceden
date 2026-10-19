@@ -116,8 +116,10 @@ Architecture Decision Records, projedeki önemli mimari kararları ve bu kararla
 | 093 | [Sipariş oluşturma için e-posta doğrulaması zorunlu: `422 ORDER_EMAIL_NOT_VERIFIED`](093-order-requires-verified-email.md) | Accepted | 2026-10-19 |
 | 094 | [Ödeme sayfası doğrulanmamış alıcıya form yerine doğrulama paneli gösterir](094-checkout-page-shows-verification-panel.md) | Accepted | 2026-10-19 |
 | 095 | [Geliştirme alıcısı yeni bir dev changeset'iyle doğrulanmış yapılır](095-dev-buyer-verified-by-new-seed.md) | Accepted | 2026-10-19 |
+| 096 | [Ödeme dönüşü gelmeyen siparişler zamanlanmış işle, dönüşle aynı kuralla kapatılır](096-unpaid-orders-closed-by-scheduled-sweep.md) | Accepted | 2026-10-20 |
+| 097 | [Süresi geçmiş kimlik kayıtları saklama payından sonra silinir; yenileme token'ları aileyle](097-expired-identity-records-deleted-refresh-by-family.md) | Accepted | 2026-10-20 |
 
-**Sıradaki numara: 096.**
+**Sıradaki numara: 098.**
 
 **Durum değerleri:** `Proposed` (öneri, henüz bağlayıcı değil) · `Accepted` (yürürlükte, bağlayıcı) · `Deprecated` (artık geçerli değil, yerine bir şey gelmedi) · `Superseded by [ADR-XXX]` (yerini başka bir karara bıraktı).
 

@@ -400,6 +400,8 @@ Opak yenileme token'ı ([ADR-018](../adr/018-refresh-token-rotation-with-family-
 
 Hesaba bağlı token ve girişim tablolarında yabancı anahtar `on delete cascade`'dir: hesap silinirse roller, token'lar ve girişimler de gider. `sellers.account_id` ve `seller_status_changes.actor_account_id` ise **kısıtlıdır** (cascade yok): satıcı kaydı ve geçmişi yasal kayıttır, hesapla birlikte sessizce silinmez. Hesap silme akışı bugün yoktur.
 
+Süresi geçmiş kimlik kayıtları zamanlanmış işle silinir ([ADR-097](../adr/097-expired-identity-records-deleted-refresh-by-family.md)): `email_verification_tokens`, `password_reset_tokens` ve `login_challenges` satırları süreleri `bahceden.cleanup.token-retention` (7 gün) kadar önce dolmuşsa; `refresh_tokens` satırları yalnızca ailenin bütün token'larının süresi bu kadar önce dolmuşsa, aileyle birlikte. Ödenmemiş siparişler silinmez; iş onları sağlayıcıdan doğrulayıp kapatır ([ADR-096](../adr/096-unpaid-orders-closed-by-scheduled-sweep.md)). Bu iş için `orders (payment_expires_at, id) where status = 'PENDING_PAYMENT'` kısmi indeksi vardır (`016-pending-payment-index.sql`).
+
 ---
 
 ## Entity ↔ tablo eşlemesi

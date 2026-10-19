@@ -1,7 +1,7 @@
 # cart-and-checkout Specification
 
 ## Purpose
-Hesaba bağlı sepeti, satıcı başına kargo ücretini, teslimat illerini ve adresleri, sepetten sipariş oluşturmayı (e-posta doğrulaması koşulu, satıcı siparişlerine bölme, tutarların sabitlenmesi, tekrar anahtarı) ve ödemenin sağlayıcıdan doğrulanıp stoğun ödeme anında düşmesini tanımlar. Kararlar: ADR-054…058, ADR-059, ADR-061…066, ADR-093, ADR-094. Kargo gönderisi ve gerçek ödeme sağlayıcısı bu capability'nin bugünkü kapsamı dışındadır.
+Hesaba bağlı sepeti, satıcı başına kargo ücretini, teslimat illerini ve adresleri, sepetten sipariş oluşturmayı (e-posta doğrulaması koşulu, satıcı siparişlerine bölme, tutarların sabitlenmesi, tekrar anahtarı) ödemenin sağlayıcıdan doğrulanıp stoğun ödeme anında düşmesini ve dönüşü gelmeyen ödenmemiş siparişlerin zamanlanmış işle kapatılmasını tanımlar. Kararlar: ADR-054…058, ADR-059, ADR-061…066, ADR-093, ADR-094, ADR-096. Kargo gönderisi ve gerçek ödeme sağlayıcısı bu capability'nin bugünkü kapsamı dışındadır.
 
 ## Requirements
 
@@ -159,6 +159,8 @@ Başarılı ödemede tek transaction'da şunlar olur:
 
 Stok yetmezse ödemenin tamamı iade edilir ve sipariş stok yetersizliğiyle iptal olur. Ödeme yapılandırılmış süre (30 dakika) içinde tamamlanmazsa sipariş süresi dolmuş olur. Tamamlama işlemi tekrar çağrılabilir; sonuçlanmış siparişte mevcut sonuç döner.
 
+Alıcının ödeme dönüşü hiç gelmezse, ödeme süresi yapılandırılmış bir tolerans kadar önce dolmuş siparişleri zamanlanmış bir iş aynı kuralla kapatır: sağlayıcıdan doğrular, alınmış bir ödeme varsa tamamını iade eder ve siparişi sonuçlandırır. İş siparişi kilitleyip durumunu yeniden okur; sipariş silinmez.
+
 #### Scenario: Başarılı ödeme
 - **WHEN** sağlayıcı ödemenin başarılı olduğunu doğrular ve stok yeterlidir
 - **THEN** stok düşer, sipariş ödendi ve satıcı siparişleri yeni durumuna geçer, ürünler sepetten silinir, alıcıya ve her satıcıya e-posta gider
@@ -174,6 +176,22 @@ Stok yetmezse ödemenin tamamı iade edilir ve sipariş stok yetersizliğiyle ip
 #### Scenario: Süresi dolan ödeme
 - **WHEN** ödeme tamamlama isteği sipariş oluştuktan 30 dakika sonra gelir
 - **THEN** sipariş süresi dolmuş olur, stok ve sepet değişmez
+
+#### Scenario: Dönüşü gelmeyen ödenmemiş sipariş işle kapanır
+- **WHEN** sipariş ödeme bekliyor durumundadır, ödeme süresi toleranstan daha önce dolmuştur ve sağlayıcı ödemeyi beklemede ya da başarısız bildirir
+- **THEN** iş siparişi süresi dolmuş ya da ödeme başarısız durumuna geçirir, satıcı siparişleri kapanır, geçmişe yapan taraf sistem olarak yazılır; stok, sepet ve para değişmez
+
+#### Scenario: Geç alınmış ödeme işte iade edilir
+- **WHEN** iş, ödeme süresi dolmuş bir sipariş için sağlayıcıdan ödemenin başarılı olduğunu öğrenir
+- **THEN** ödemenin tamamı iade edilir ve sipariş süresi dolmuş durumuna geçer; stok düşmez
+
+#### Scenario: Tolerans dolmamış sipariş beklenir
+- **WHEN** siparişin ödeme süresi dolmuştur ama tolerans henüz geçmemiştir
+- **THEN** iş siparişe dokunmaz; alıcının ödeme dönüşü önceliklidir
+
+#### Scenario: Sağlayıcıya ulaşılamaz
+- **WHEN** iş bir siparişi işlerken sağlayıcı hata verir
+- **THEN** o sipariş değişmez ve sonraki turda yeniden denenir; diğer siparişler işlenir
 
 #### Scenario: Başkasının siparişi
 - **WHEN** bir hesap başka bir hesabın siparişinin ödemesini tamamlamaya çalışır
