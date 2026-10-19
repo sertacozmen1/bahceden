@@ -2,7 +2,7 @@
 
 **Durum:** Yayında
 **İlk sürüm:** 2026-10-14
-**Son değişiklik:** 2026-10-14
+**Son değişiklik:** 2026-10-19
 
 | | |
 |---|---|
@@ -17,7 +17,7 @@
 
 ## Ne yapar
 
-Alıcı teslim edilen siparişte ezik, bozuk ya da eksik ürün görürse teslimden sonraki 48 saat içinde sorunlu ürünleri ve adetleri seçip fotoğrafla bildirir. Üretici talebi kabul eder, daha az adetle iade önerir ya da gerekçesini yazarak reddeder; kararın hakedişine etkisini önceden görür. Alıcı teklifi kabul eder ya da yönetime taşır. Taraflardan biri süresinde yanıt vermezse talep kendiliğinden ilerler. Anlaşamayan talepleri admin fotoğraflarıyla görüp karara bağlar. Para kartına iade edilir; ürün geri gönderilmez.
+Alıcıya teslim e-postasında bu sürenin son anı yazılır. Alıcı teslim edilen siparişte ezik, bozuk ya da eksik ürün görürse teslimden sonraki 48 saat içinde sorunlu ürünleri ve adetleri seçip fotoğrafla bildirir. Üretici talebi kabul eder, daha az adetle iade önerir ya da gerekçesini yazarak reddeder; kararın hakedişine etkisini önceden görür. Alıcı teklifi kabul eder ya da yönetime taşır. Taraflardan biri süresinde yanıt vermezse talep kendiliğinden ilerler. Anlaşamayan talepleri admin fotoğraflarıyla görüp karara bağlar. Para kartına iade edilir; ürün geri gönderilmez.
 
 ## Bilinçli sınırlar
 
@@ -35,6 +35,7 @@ Alıcı teslim edilen siparişte ezik, bozuk ya da eksik ürün görürse teslim
 
 ## Tarihçe
 
+- 2026-10-19: Alıcı talep penceresinin son anını artık "teslim edildi" e-postasında da görür (change `add-delivered-email`, [ADR-091](../adr/091-delivered-email-to-buyer-with-claim-deadline.md)). Ayrıntı: [Kargo ve Teslimat](kargo-ve-teslimat.md).
 - 2026-10-14: `add-defect-claims` change'i kullanıcı onayıyla archive edildi (`openspec/changes/archive/2026-10-14-add-defect-claims/`). Ön koşullar: delta spec'ler ana spec'lere sync edildi (`defect-claims` yeni, `orders` değişti); D1–D8 → ADR-079…086; dokümanlar güncel; `api` 309 ve `web` 267 test yeşil. Taşımada göreli linkler bir seviye uzatıldı. Açık ve notlu: gerçek sağlayıcıda kısmi iadenin pay bölüşümü (KALANLAR A1), fotoğraf saklama süresi ve 48 saatlik sürenin hukuk teyidi (KALANLAR A5).
 - 2026-10-14: `add-defect-claims` Faz 5: referans belgeleri (domain modeli, API referansı, güncel durum L37–L41), yerel geliştirme rehberi, KALANLAR A1 notu; delta spec'ler ana spec'lere sync edildi (`defect-claims` yeni, `orders` değişti). Uçtan uca elle doğrulama (`docker compose`): sipariş → gönderi → sahte entegratör teslim etti → alıcı 2 adet için fotoğraflı talep açtı → satıcı 1 adet önerdi (önizleme ₺34,50 iade, hakediş ₺29,77) → alıcı ekibe taşıdı → admin 2 adedi iade etti (₺168,00, kargo dahil; `refunds.reason = DEFECT`); altı talep e-postası mailpit'te. Admin ve alıcı ekranları 375 px koyu ve 1440 px açık temada görüntülendi, yatay taşma ve konsol hatası yok.
 - 2026-10-13: `add-defect-claims` Faz 4: admin, yönetime taşınan ya da süresinde yanıtlanmayan talepleri `/admin/claims` ekranında görür; fotoğraflara ve iki tarafın beyanına bakıp satır başına satın alınan adede kadar iade eder (para etkisi sunucu önizlemesiyle) ya da gerekçeyle reddeder (ADR-080, ADR-086). Önizleme penceresi satıcı ve admin arasında ortak. `web` 267 test yeşil.

@@ -6,12 +6,14 @@ import com.bahceden.common.BahcedenProperties;
 import com.bahceden.common.i18n.Messages;
 import com.bahceden.common.mail.MailSender;
 import com.bahceden.common.money.MoneyFormat;
+import com.bahceden.common.time.DateTimeFormat;
 import com.bahceden.order.domain.CancelledBy;
 import com.bahceden.order.domain.DefectClaim;
 import com.bahceden.order.domain.Order;
 import com.bahceden.order.domain.OrderItem;
 import com.bahceden.order.domain.SellerOrder;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -123,6 +125,28 @@ class OrderNotifier {
                     messages.get("mail.sellerOrderShipped.subject", locale, order.getOrderNumber()),
                     messages.get("mail.sellerOrderShipped.body", locale, order.getOrderNumber(),
                             sellerOrder.getSeller().getDisplayName(), carrier, trackingNumber,
+                            properties.webOrigin() + "/account/orders/" + order.getOrderNumber()),
+                    order.getOrderNumber()));
+        });
+        sendAfterCommit(mails);
+    }
+
+    /**
+     * Teslim edildi: alıcıya; sorun bildirimi için son an Türkiye saatiyle ve
+     * süre saat olarak (add-delivered-email D1, D2). Son an sipariş detayındaki
+     * {@code claimableUntil} ile aynı toplamdır: teslim anı + talep süresi.
+     */
+    void sellerOrderDelivered(SellerOrder sellerOrder, Instant deliveredAt) {
+        var order = sellerOrder.getOrder();
+        var window = properties.claims().window();
+        var mails = new ArrayList<Mail>();
+        accounts.findById(order.getBuyerAccountId()).ifPresent(buyer -> {
+            var locale = buyer.getLocale();
+            mails.add(new Mail(buyer.getEmail(),
+                    messages.get("mail.sellerOrderDelivered.subject", locale, order.getOrderNumber()),
+                    messages.get("mail.sellerOrderDelivered.body", locale, order.getOrderNumber(),
+                            sellerOrder.getSeller().getDisplayName(),
+                            DateTimeFormat.format(deliveredAt.plus(window), locale), window.toHours(),
                             properties.webOrigin() + "/account/orders/" + order.getOrderNumber()),
                     order.getOrderNumber()));
         });
