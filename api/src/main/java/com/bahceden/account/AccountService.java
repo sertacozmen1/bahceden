@@ -242,6 +242,40 @@ public class AccountService {
     }
 
     /**
+     * Oturum açıkken parolayı değiştirir (add-password-change D1–D3).
+     *
+     * <p>Mevcut parola yanlışsa ya da yeni parola mevcutla aynıysa alan hatası
+     * döner ve hiçbir şey değişmez. Başarıda, sıfırlamadaki gibi (ADR-035),
+     * hesabın <strong>bütün</strong> oturumları, isteği yapan dahil, ve açık
+     * giriş kodları kapanır; oturum açılmaz. Sıfırlamadan farkı: e-posta
+     * doğrulanmış işaretlenmez, parolayı bilmek gelen kutusuna erişimi kanıtlamaz.
+     *
+     * @throws ApiException {@code VALIDATION_FAILED} ({@code currentPassword} ya da
+     *                      {@code newPassword} alanında); {@code AUTH_REQUIRED}: hesap artık yok
+     */
+    @Transactional
+    public void changePassword(long accountId, String currentPassword, String newPassword) {
+        var account = accounts.findById(accountId)
+                .orElseThrow(() -> new ApiException(ApiErrorCode.AUTH_REQUIRED, "error.sessionInvalid"));
+        if (!passwordHasher.matches(currentPassword, account.getPasswordHash())) {
+            throw ApiException.invalidField("currentPassword", "validation.currentPassword.invalid");
+        }
+        if (passwordHasher.matches(newPassword, account.getPasswordHash())) {
+            throw ApiException.invalidField("newPassword", "validation.newPassword.sameAsCurrent");
+        }
+        var now = clock.instant();
+        account.changePassword(passwordHasher.hash(newPassword), now);
+        int revoked = refreshTokens.revokeAllForAccount(account.getId(), now);
+        loginChallenges.closeOpenChallenges(account.getId(), now);
+
+        mailSender.send(account.getEmail(),
+                messages.get("mail.passwordChanged.subject", account.getLocale()),
+                messages.get("mail.passwordChanged.body", account.getLocale(),
+                        properties.webOrigin() + "/forgot-password"));
+        log.info("Parola değiştirildi: hesap {}, {} yenileme token'ı iptal edildi", account.getId(), revoked);
+    }
+
+    /**
      * Oturum sahibinin hesabı, veritabanından <strong>taze</strong> (D7): rol
      * değişikliği token ömrü dolmadan görünür.
      *

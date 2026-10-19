@@ -62,6 +62,19 @@ describe("Hesabım sayfası", () => {
     expect(redirect).not.toHaveBeenCalled();
   });
 
+  it("güvenlik bölümünde parola değiştirme sayfasına bağlantı verir", async () => {
+    session.current = {
+      kind: "signed-in",
+      accessToken: "test-erisim",
+      account: { email: "alici@ornek.test", roles: ["ROLE_CUSTOMER"], emailVerified: true },
+    };
+
+    renderWithIntl(await MyAccountPage());
+
+    expect(screen.getByRole("heading", { name: "Güvenlik" })).toBeDefined();
+    expect(screen.getByRole("link", { name: "Parolayı değiştir" }).getAttribute("href")).toBe("/account/password");
+  });
+
   it("satıcı kaydı yoksa başvuruya davet eder", async () => {
     session.current = {
       kind: "signed-in",

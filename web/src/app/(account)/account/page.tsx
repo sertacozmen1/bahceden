@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BadgeCheck, CircleAlert, MapPinHouse, Receipt } from "lucide-react";
+import { BadgeCheck, CircleAlert, KeyRound, MapPinHouse, Receipt } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
@@ -33,6 +33,9 @@ export async function generateMetadata(): Promise<Metadata> {
  *
  * Alışveriş bağlantıları (siparişler, adresler) satıcılıktan önce durur: hesabı olan
  * herkes alıcıdır (add-cart-and-checkout D10).
+ *
+ * Güvenlik bölümü tek bir bağlantıdır; parola formu kendi sayfasındadır
+ * (add-password-change D4), Hesabım tek odakta kalır.
  */
 export default async function MyAccountPage() {
   const t = await getTranslations();
@@ -83,6 +86,16 @@ export default async function MyAccountPage() {
           <Link className={buttonVariants({ variant: "outline" })} href="/account/addresses">
             <MapPinHouse aria-hidden />
             {t("addresses.title")}
+          </Link>
+        </div>
+      </nav>
+      <Separator />
+      <nav aria-label={t("account.myAccount.security")} className="flex flex-col gap-3">
+        <h2 className="text-base font-semibold tracking-tight">{t("account.myAccount.security")}</h2>
+        <div className="flex flex-wrap gap-2">
+          <Link className={buttonVariants({ variant: "outline" })} href="/account/password">
+            <KeyRound aria-hidden />
+            {t("account.myAccount.changePassword")}
           </Link>
         </div>
       </nav>

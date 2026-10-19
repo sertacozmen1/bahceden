@@ -1,7 +1,7 @@
 # account-identity Specification
 
 ## Purpose
-Hesap açma, e-posta doğrulama (girişi engellemeyen), oturum açma, hesap bazlı anahtarla e-posta ikinci faktörü, oturum yenileme ve sonlandırma, e-postayla parola sıfırlama ile oturum sahibinin kimliğini tanımlar. Token'lar tarayıcı JavaScript'ine verilmez. Oturum açıkken parola değiştirme ve hesap silme bu capability'nin bugünkü kapsamı dışındadır; satıcı olma `seller-onboarding` capability'sindedir.
+Hesap açma, e-posta doğrulama (girişi engellemeyen), oturum açma, hesap bazlı anahtarla e-posta ikinci faktörü, oturum yenileme ve sonlandırma, e-postayla parola sıfırlama, oturum açıkken parola değiştirme ile oturum sahibinin kimliğini tanımlar. Token'lar tarayıcı JavaScript'ine verilmez. E-posta adresini değiştirme ve hesap silme bu capability'nin bugünkü kapsamı dışındadır; satıcı olma `seller-onboarding` capability'sindedir.
 
 ## Requirements
 
@@ -236,3 +236,51 @@ Sistem, parolasını unutan kullanıcının e-posta adresine gönderilen bir ba�
 #### Scenario: Hız sınırı
 - **WHEN** aynı istemciden veya aynı e-posta adresi için kısa sürede çok sayıda sıfırlama talebi gelir
 - **THEN** sınırı aşan talepler hız sınırı hatasıyla reddedilir ve e-posta gönderilmez
+
+### Requirement: Oturum açıkken parola değiştirme
+
+Sistem, oturum açmış kullanıcının mevcut parolasını girerek yeni bir parola belirlemesini SHALL sağlar. Başarılı değişiklik hesabın, isteği yapan oturum dahil, bütün oturumlarını ve açık giriş kodlarını kapatır; yeni oturum açmaz. Mevcut parola yanlışsa veya yeni parola kurallara uymuyorsa hiçbir şey değişmez.
+
+#### Scenario: Doğru mevcut parola ile değiştirme
+- **WHEN** oturum açmış kullanıcı doğru mevcut parolasını ve kayıt kurallarına uyan, mevcut parolasından farklı bir yeni parola gönderir
+- **THEN** parola değişir, eski parola ile giriş reddedilir ve yeni parola ile giriş kabul edilir
+
+#### Scenario: Değişiklik mevcut oturum dahil bütün oturumları kapatır
+- **WHEN** parolası değişen hesabın, değişikliği yapan oturum dahil birden fazla açık oturumu ve süresi geçmemiş giriş kodu vardır
+- **THEN** o oturumların hiçbirinin yenileme token'ı ve hiçbir giriş kodu artık kabul edilmez
+
+#### Scenario: Değişiklik oturum açmaz
+- **WHEN** parola başarıyla değişir
+- **THEN** yanıt oturum token'ı içermez; kullanıcı olağan giriş akışından (varsa ikinci faktör dahil) geçer
+
+#### Scenario: Parola değişikliği bildirilir
+- **WHEN** parola oturum açıkken değiştirilir
+- **THEN** hesabın e-posta adresine, hesabın dilinde, parolanın değiştiğini ve değişikliği kullanıcı yapmadıysa nasıl sıfırlayacağını bildiren bir e-posta gönderilir
+
+#### Scenario: E-posta doğrulama durumu değişmez
+- **WHEN** e-postası doğrulanmamış bir hesabın parolası oturum açıkken değiştirilir
+- **THEN** hesabın e-postası doğrulanmamış olarak kalır
+
+#### Scenario: Yanlış mevcut parola
+- **WHEN** oturum açmış kullanıcı yanlış bir mevcut parola gönderir
+- **THEN** istek mevcut parola alanına bağlı bir doğrulama hatasıyla reddedilir; parola, oturumlar ve giriş kodları değişmez
+
+#### Scenario: Kurallara uymayan yeni parola
+- **WHEN** oturum açmış kullanıcı doğru mevcut parolayla kayıt kurallarına uymayan bir yeni parola gönderir
+- **THEN** istek yeni parola alanına bağlı bir doğrulama hatasıyla reddedilir; parola ve oturumlar değişmez
+
+#### Scenario: Yeni parola mevcut parolayla aynı
+- **WHEN** oturum açmış kullanıcı yeni parola olarak mevcut parolasını gönderir
+- **THEN** istek yeni parola alanına bağlı bir doğrulama hatasıyla reddedilir; oturumlar kapanmaz
+
+#### Scenario: Oturumsuz istek
+- **WHEN** erişim token'ı olmayan veya süresi dolmuş bir istek parola değiştirmeye çalışır
+- **THEN** istek kimlik doğrulama hatasıyla reddedilir
+
+#### Scenario: Hız sınırı
+- **WHEN** aynı hesap için kısa sürede çok sayıda parola değiştirme isteği gelir
+- **THEN** sınırı aşan istekler, mevcut parola doğru olsa bile, hız sınırı hatasıyla reddedilir ve parola değişmez
+
+#### Scenario: Tarayıcıdaki oturum da sona erer
+- **WHEN** kullanıcı Hesabım'daki parola değiştirme formunu başarıyla gönderir
+- **THEN** tarayıcıdaki oturum çerezleri silinir ve kullanıcı, parolasının değiştiğini ve oturumlarının kapandığını söyleyen giriş ekranına yönlendirilir

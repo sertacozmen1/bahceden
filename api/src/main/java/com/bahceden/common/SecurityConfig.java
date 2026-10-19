@@ -68,6 +68,7 @@ public class SecurityConfig {
                         // Oturum sahibi: geçerli erişim token'ı ister; rol fark etmez.
                         .requestMatchers(HttpMethod.GET, "/api/v1/accounts/me").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/v1/accounts/me/verification-requests").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/accounts/me/password-changes").authenticated()
                         // Satıcı başvurusu: başvuran henüz satıcı değildir; oturum yeter, rol aranmaz (ADR-037).
                         .requestMatchers(HttpMethod.GET, "/api/v1/sellers/me", "/api/v1/sellers/me/document").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/v1/sellers/me").authenticated()
