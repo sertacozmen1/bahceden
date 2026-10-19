@@ -438,7 +438,7 @@ Change `add-cart-and-checkout`; kararlar [ADR-054](../adr/054-split-payment-via-
 | `GET /api/v1/delivery/provinces` | açık | `200` `PageResponseDeliveryProvince` | - | - |
 | `GET`, `POST /api/v1/addresses` | oturum | `200` liste / `201` `AddressView` + `Location` | 400 (`provinceCode`, `phone`…), 401, 422 (`ADDRESS_LIMIT_REACHED`) | - |
 | `PUT`, `DELETE /api/v1/addresses/{id}` | oturum | `200` / `204` | 400, 401, 404 (`ADDRESS_NOT_FOUND`) | - |
-| `POST /api/v1/orders` (+ `Idempotency-Key` başlığı) | oturum | `201` `OrderPlaced` + `Location` | 400 (`Idempotency-Key`, `addressId`), 401, 404 (`ADDRESS_NOT_FOUND`), 422 (`CART_EMPTY`, `CART_HAS_UNAVAILABLE_ITEMS`, `ADDRESS_NOT_DELIVERABLE`), 429, 502 | hesap: saatte 20 |
+| `POST /api/v1/orders` (+ `Idempotency-Key` başlığı) | oturum | `201` `OrderPlaced` + `Location` | 400 (`Idempotency-Key`, `addressId`), 401, 404 (`ADDRESS_NOT_FOUND`), 422 (`ORDER_EMAIL_NOT_VERIFIED`, `CART_EMPTY`, `CART_HAS_UNAVAILABLE_ITEMS`, `ADDRESS_NOT_DELIVERABLE`), 429, 502 | hesap: saatte 20 |
 | `POST /api/v1/orders/{orderNumber}/payment` | oturum | `200` `OrderDetail` | 401, 404 (`ORDER_NOT_FOUND`), 502 | - |
 | `GET /api/v1/orders` | oturum | `200` `PageResponseOrderSummary` | 400, 401 | - |
 | `GET /api/v1/orders/{orderNumber}` | oturum | `200` `OrderDetail` | 401, 404 | - |
@@ -450,6 +450,7 @@ Change `add-cart-and-checkout`; kararlar [ADR-054](../adr/054-split-payment-via-
 - **Vitrin:** `ProductSummary` ve `ProductDetail` `purchasable` taşır; `ProductDetail` ayrıca `dispatchDays` ve `id` (sepete ekleme için). `ListingRequest.dispatchDays` isteğe bağlıdır (1–3; yoksa yeni ilanda 2).
 - **Sepet:** fiyat ve stok her okumada üründen gelir; satıcı grubu başına `itemsTotal`, `shippingFee`, `freeShippingRemaining`, `dispatchDays`; sepet için `itemCount`, toplamlar ve `hasUnavailableItems`. Satın alınamaz hale gelen satır `available = false` ile kalır ve toplama girmez.
 - **Kargo ücreti:** satıcı başına 9900 kuruş; satıcının ürün tutarı 100000 kuruş ve üzerindeyse 0. **Komisyon:** satıcı siparişi başına `min(tutar, yuvarla(tutar × %5) + 300)`, hakediş = tutar − komisyon. Değerler sipariş anında yazılır.
+- **E-posta doğrulaması:** `POST /orders` doğrulanmamış hesapta `422 ORDER_EMAIL_NOT_VERIFIED` döner; durum güncel kayıttan okunur. Aynı `Idempotency-Key` ile tekrar kapıdan önce değerlendirilir. Sepet, adresler ve `POST /orders/{n}/payment` doğrulama istemez ([ADR-093](../adr/093-order-requires-verified-email.md)).
 - **Ödeme:** `POST /orders` yanıtındaki `paymentRedirectUrl` adresine gidilir; dönüşte `POST /orders/{n}/payment` sonucu sağlayıcıdan doğrular. Stok bu anda kilitle düşer; yetmezse ödemenin tamamı iade edilir (`CANCELLED_OUT_OF_STOCK`). 30 dakikada tamamlanmayan ödeme `PAYMENT_EXPIRED`. Çağrı tekrarlanabilir.
 - **İptal:** yalnızca `NEW` durumundaki satıcı siparişi; alıcıda gerekçe isteğe bağlı, satıcıda 10–500 karakter zorunlu. Satıcı siparişinin ürün tutarı ve kargo ücreti iade edilir, stok geri eklenir.
 - **Gizlilik:** satıcı yanıtlarında alıcının adı, telefonu ve açık adresi yoktur; yalnızca il ve ilçe. Ödeme hesabında IBAN ve kimlik numarası maskelidir.

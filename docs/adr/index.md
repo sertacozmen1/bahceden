@@ -113,8 +113,11 @@ Architecture Decision Records, projedeki önemli mimari kararları ve bu kararla
 | 090 | [`web`: parola değiştirme ayrı sayfada; BFF başarıda çerezleri siler](090-password-change-page-bff-clears-cookies.md) | Accepted | 2026-10-17 |
 | 091 | ["Teslim edildi" e-postası: yalnızca alıcıya, sorun bildirimi süresiyle](091-delivered-email-to-buyer-with-claim-deadline.md) | Accepted | 2026-10-19 |
 | 092 | [E-postalarda tarih-saat Türkiye saatiyle, sabit kalıpla, tek yardımcıda](092-email-datetime-turkey-time-fixed-pattern.md) | Accepted | 2026-10-19 |
+| 093 | [Sipariş oluşturma için e-posta doğrulaması zorunlu: `422 ORDER_EMAIL_NOT_VERIFIED`](093-order-requires-verified-email.md) | Accepted | 2026-10-19 |
+| 094 | [Ödeme sayfası doğrulanmamış alıcıya form yerine doğrulama paneli gösterir](094-checkout-page-shows-verification-panel.md) | Accepted | 2026-10-19 |
+| 095 | [Geliştirme alıcısı yeni bir dev changeset'iyle doğrulanmış yapılır](095-dev-buyer-verified-by-new-seed.md) | Accepted | 2026-10-19 |
 
-**Sıradaki numara: 093.**
+**Sıradaki numara: 096.**
 
 **Durum değerleri:** `Proposed` (öneri, henüz bağlayıcı değil) · `Accepted` (yürürlükte, bağlayıcı) · `Deprecated` (artık geçerli değil, yerine bir şey gelmedi) · `Superseded by [ADR-XXX]` (yerini başka bir karara bıraktı).
 

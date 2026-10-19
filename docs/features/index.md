@@ -25,10 +25,10 @@ Feature dosyası içerik üretmez; yukarıdakilere **link verir** ve zaman için
 | Feature | Durum | İlk sürüm | Son değişiklik | Kapsadığı capability'ler |
 |---|---|---|---|---|
 | [Vitrin ve Arama](vitrin-ve-arama.md) | Yayında | 2026-10-06 | 2026-10-08 | storefront-catalog |
-| [Hesap ve Oturum](hesap-ve-oturum.md) | Yayında | 2026-10-07 | 2026-10-17 | account-identity |
+| [Hesap ve Oturum](hesap-ve-oturum.md) | Yayında | 2026-10-07 | 2026-10-19 | account-identity |
 | [Satıcı Kaydı ve Onayı](satici-kaydi-ve-onayi.md) | Yayında | 2026-10-08 | 2026-10-08 | seller-onboarding |
 | [Ürün İlanları](urun-ilanlari.md) | Yayında | 2026-10-08 | 2026-10-08 | product-listings |
-| [Sepet ve Sipariş](sepet-ve-siparis.md) | Yayında | 2026-10-08 | 2026-10-14 | cart-and-checkout, orders |
+| [Sepet ve Sipariş](sepet-ve-siparis.md) | Yayında | 2026-10-08 | 2026-10-19 | cart-and-checkout, orders |
 | [Ödeme ve Hakediş](odeme-ve-hakedis.md) | Yayında | 2026-10-08 | 2026-10-14 | seller-payout-details |
 | [Kargo ve Teslimat](kargo-ve-teslimat.md) | Yayında | 2026-10-10 | 2026-10-19 | shipments, orders |
 | [Ayıplı Ürün ve İade](ayipli-urun-ve-iade.md) | Yayında | 2026-10-14 | 2026-10-19 | defect-claims, orders |

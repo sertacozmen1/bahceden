@@ -3,6 +3,7 @@
 **Tarih:** 2026-10-08
 **Durum:** Accepted
 **Kaynak:** `add-seller-onboarding` design.md D4
+**Not (2026-10-19):** Sipariş dilimi bu kararı emsal aldı: [ADR-093](093-order-requires-verified-email.md).
 
 ---
 

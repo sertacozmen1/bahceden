@@ -1,6 +1,7 @@
 package com.bahceden.order;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -39,7 +40,7 @@ import org.springframework.test.web.servlet.ResultActions;
 /**
  * Sipariş oluşturma ve ödeme (cart-and-checkout spec'i "Sipariş sepetten
  * oluşturulur…", "Ödeme sağlayıcıdan doğrulanır; stok ödeme başarılı olunca
- * düşer"; add-cart-and-checkout D6–D8).
+ * düşer"; add-cart-and-checkout D6–D8; add-checkout-email-verification D1).
  *
  * <p>{@code critical}: para, stok ve sipariş durumu. Ödeme sağlayıcısı test
  * uygulamasıdır; dışarı çıkılmaz (K10).
@@ -159,6 +160,51 @@ class CheckoutTest {
         place(buyerToken, null, address)
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.fieldErrors[0].field").value("Idempotency-Key"));
+    }
+
+    @Test
+    @DisplayName("E-postası doğrulanmamış alıcı: 422 ORDER_EMAIL_NOT_VERIFIED; sipariş açılmaz, ödeme başlamaz")
+    void dogrulanmamis_alici_siparis_veremez() throws Exception {
+        fixtures.cartItem(buyer, fixtures.publishedProduct(seller, "domates", 2_450, 10), 1);
+        setEmailVerified(false);
+
+        place(buyerToken, "anahtar-0101", address)
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.code").value("ORDER_EMAIL_NOT_VERIFIED"))
+                .andExpect(jsonPath("$.message").isNotEmpty());
+
+        assertThat(jdbc.queryForObject("select count(*) from orders", Integer.class)).isZero();
+        assertThat(provider.initiated()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Doğruladıktan hemen sonra aynı token'la sipariş açılır: durum güncel kayıttan okunur")
+    void dogrulamadan_sonra_ayni_tokenla() throws Exception {
+        fixtures.cartItem(buyer, fixtures.publishedProduct(seller, "domates", 2_450, 10), 1);
+        setEmailVerified(false);
+        place(buyerToken, "anahtar-0102", address).andExpect(status().isUnprocessableEntity());
+
+        setEmailVerified(true);
+
+        place(buyerToken, "anahtar-0103", address).andExpect(status().isCreated());
+    }
+
+    @Test
+    @DisplayName("Aynı anahtarla tekrar kapıdan önce: oluşmuş sipariş döner; sepet, adres ve ödeme tamamlama kapısızdır")
+    void tekrar_ve_kapisiz_adimlar() throws Exception {
+        fixtures.cartItem(buyer, fixtures.publishedProduct(seller, "domates", 2_450, 10), 1);
+        var number = numberOf(place(buyerToken, "anahtar-0104", address).andExpect(status().isCreated()));
+        setEmailVerified(false);
+
+        assertThat(numberOf(place(buyerToken, "anahtar-0104", address).andExpect(status().isCreated())))
+                .isEqualTo(number);
+        complete(buyerToken, number).andExpect(status().isOk()).andExpect(jsonPath("$.status").value("PAID"));
+        mockMvc.perform(get("/api/v1/cart").header(HttpHeaders.AUTHORIZATION, "Bearer " + buyerToken))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/addresses").header(HttpHeaders.AUTHORIZATION, "Bearer " + buyerToken))
+                .andExpect(status().isOk());
+        mockMvc.perform(get(URL + "/" + number).header(HttpHeaders.AUTHORIZATION, "Bearer " + buyerToken))
+                .andExpect(status().isOk());
     }
 
     @Test
@@ -374,6 +420,10 @@ class CheckoutTest {
 
     private String numberOf(ResultActions result) throws Exception {
         return objectMapper.readTree(result.andReturn().getResponse().getContentAsString()).get("orderNumber").asText();
+    }
+
+    private void setEmailVerified(boolean verified) {
+        jdbc.update("update accounts set email_verified = ? where id = ?", verified, buyer);
     }
 
     private int stockOf(long productId) {

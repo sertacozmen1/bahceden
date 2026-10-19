@@ -75,8 +75,8 @@ public class OrderController {
     @ApiResponse(responseCode = "404", description = "Adres yok veya başkasına ait (ADDRESS_NOT_FOUND)",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ApiError.class)))
     @ApiResponse(responseCode = "422", description = """
-            Sepet boş (CART_EMPTY), satın alınamayan veya stoğu aşan satır var (CART_HAS_UNAVAILABLE_ITEMS) ya da
-            adrese teslimat yok (ADDRESS_NOT_DELIVERABLE)""",
+            E-posta doğrulanmamış (ORDER_EMAIL_NOT_VERIFIED), sepet boş (CART_EMPTY), satın alınamayan veya stoğu
+            aşan satır var (CART_HAS_UNAVAILABLE_ITEMS) ya da adrese teslimat yok (ADDRESS_NOT_DELIVERABLE)""",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ApiError.class)))
     @ApiResponse(responseCode = "429", description = "Çok fazla sipariş denemesi (RATE_LIMITED)",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ApiError.class)))
