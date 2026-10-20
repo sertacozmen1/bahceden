@@ -128,6 +128,17 @@ bahceden:
     sweep-enabled: true
     sweep-interval: PT5M
     sweep-batch-size: 100
+  cleanup:
+    # Temizlik işleri (add-stale-record-cleanup): ödeme dönüşü hiç gelmeyen siparişler
+    # sağlayıcıdan doğrulanıp kapatılır (D1); süresi geçmiş token satırları silinir (D2).
+    enabled: true
+    interval: PT10M
+    # Ödeme süresi dolduktan sonra işin beklediği süre: alıcının dönüşü önceliklidir ve
+    # sağlayıcıda geç tamamlanan ödeme de görülüp iade edilir.
+    pending-payment-grace: PT1H
+    pending-payment-batch-size: 100
+    # Süresi dolmuş token satırı bu kadar sonra silinir (destek için kısa iz).
+    token-retention: P7D
   shipping:
     # Kargo entegratörü (ADR-057). Gerçek entegratör seçilene kadar (KALANLAR A2)
     # tek değer `fake`: ağ çağrısı yapmaz, gönderiyi zamanla ilerletir.

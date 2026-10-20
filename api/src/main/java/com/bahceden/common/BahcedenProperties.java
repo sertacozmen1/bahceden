@@ -35,6 +35,7 @@ import org.springframework.validation.annotation.Validated;
  * @param commerce  komisyon, kargo ücreti, ödeme süresi ve teslimat illeri (ADR-055, ADR-058)
  * @param shipping  kargo entegratörü ve gönderi durumu sorgusu (ADR-071, ADR-075)
  * @param claims    ayıplı ürün talebinin süreleri (ADR-081, ADR-083)
+ * @param cleanup   ödenmemiş sipariş ve süresi geçmiş token temizliği (add-stale-record-cleanup)
  */
 @Validated
 @ConfigurationProperties(prefix = "bahceden")
@@ -46,7 +47,30 @@ public record BahcedenProperties(
         @NotNull @Valid Payment payment,
         @NotNull @Valid Commerce commerce,
         @NotNull @Valid Shipping shipping,
-        @NotNull @Valid Claims claims) {
+        @NotNull @Valid Claims claims,
+        @NotNull @Valid Cleanup cleanup) {
+
+    /**
+     * Temizlik işleri (add-stale-record-cleanup D1, D2).
+     *
+     * <p>Sıfır veya negatif süreyle uygulama açılmaz.
+     *
+     * @param enabled                 zamanlayıcı açık mı; testlerde kapalı, testler işleri doğrudan çağırır
+     * @param interval                iki tur arasındaki bekleme
+     * @param pendingPaymentGrace     ödeme süresi dolduktan sonra işin siparişe dokunmadan beklediği süre;
+     *                                alıcının ödeme dönüşü önceliklidir
+     * @param pendingPaymentBatchSize bir turda işlenen en çok ödenmemiş sipariş
+     * @param tokenRetention          süresi dolmuş token satırının silinmeden önce kaldığı süre
+     */
+    public record Cleanup(boolean enabled, @NotNull Duration interval, @NotNull Duration pendingPaymentGrace,
+                          @Positive int pendingPaymentBatchSize, @NotNull Duration tokenRetention) {
+
+        public Cleanup {
+            Claims.requirePositive(interval, "bahceden.cleanup.interval");
+            Claims.requirePositive(pendingPaymentGrace, "bahceden.cleanup.pending-payment-grace");
+            Claims.requirePositive(tokenRetention, "bahceden.cleanup.token-retention");
+        }
+    }
 
     /**
      * Ayıplı ürün talebinin süreleri (ADR-056 §4, ADR-081, ADR-083).

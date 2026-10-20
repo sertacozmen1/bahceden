@@ -42,4 +42,13 @@ public interface LoginChallengeRepository extends JpaRepository<LoginChallenge, 
              where c.accountId = :accountId
                and c.usedAt is null""")
     int closeOpenChallenges(@Param("accountId") Long accountId, @Param("now") Instant now);
+
+    /**
+     * Süresi verilen andan önce dolmuş giriş kodlarını siler (add-stale-record-cleanup D2).
+     *
+     * @return silinen satır sayısı
+     */
+    @Modifying
+    @Query("delete from LoginChallenge t where t.expiresAt < :cutoff")
+    int deleteExpiredBefore(@Param("cutoff") Instant cutoff);
 }

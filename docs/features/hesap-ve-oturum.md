@@ -2,13 +2,13 @@
 
 **Durum:** Yayında
 **İlk sürüm:** 2026-10-07
-**Son değişiklik:** 2026-10-19
+**Son değişiklik:** 2026-10-20
 
 | | |
 |---|---|
-| **Kararlar** | [ADR-008](../adr/008-jwt-auth-with-opaque-refresh.md), [ADR-017](../adr/017-email-verification-non-blocking-and-2fa-switch.md), [ADR-018](../adr/018-refresh-token-rotation-with-family-revocation.md) … [ADR-026](../adr/026-verification-link-resend-requires-session.md), parola sıfırlama [ADR-033](../adr/033-password-reset-token-separate-table-one-hour.md) … [ADR-036](../adr/036-password-reset-marks-email-verified.md), oturumun sürmesi [ADR-069](../adr/069-refresh-token-reuse-grace-window.md), [ADR-070](../adr/070-silent-session-refresh-on-any-page.md), parola değiştirme [ADR-087](../adr/087-password-change-endpoint-requires-current-password.md) … [ADR-090](../adr/090-password-change-page-bff-clears-cookies.md) |
+| **Kararlar** | [ADR-008](../adr/008-jwt-auth-with-opaque-refresh.md), [ADR-017](../adr/017-email-verification-non-blocking-and-2fa-switch.md), [ADR-018](../adr/018-refresh-token-rotation-with-family-revocation.md) … [ADR-026](../adr/026-verification-link-resend-requires-session.md), parola sıfırlama [ADR-033](../adr/033-password-reset-token-separate-table-one-hour.md) … [ADR-036](../adr/036-password-reset-marks-email-verified.md), oturumun sürmesi [ADR-069](../adr/069-refresh-token-reuse-grace-window.md), [ADR-070](../adr/070-silent-session-refresh-on-any-page.md), parola değiştirme [ADR-087](../adr/087-password-change-endpoint-requires-current-password.md) … [ADR-090](../adr/090-password-change-page-bff-clears-cookies.md), temizlik [ADR-097](../adr/097-expired-identity-records-deleted-refresh-by-family.md) |
 | **Spec (capability)** | `openspec/specs/account-identity` |
-| **Change'ler** | `openspec/changes/archive/2026-10-07-add-account-and-session`, `openspec/changes/archive/2026-10-07-add-password-reset`, `openspec/changes/archive/2026-10-09-change-session-persistence`, `openspec/changes/archive/2026-10-17-add-password-change` |
+| **Change'ler** | `openspec/changes/archive/2026-10-07-add-account-and-session`, `openspec/changes/archive/2026-10-07-add-password-reset`, `openspec/changes/archive/2026-10-09-change-session-persistence`, `openspec/changes/archive/2026-10-17-add-password-change`, `openspec/changes/archive/2026-10-20-add-stale-record-cleanup` (archive edildi) |
 | **Rehberler** | [Korunan uç ekleme](../how-to/korunan-uc-ekleme.md), [Yerel geliştirme](../how-to/yerel-gelistirme.md) |
 | **Referans** | [Domain modeli](../reference/01-domain-model.md), [API referansı](../reference/02-api-reference.md) |
 | **Kod** | `api/src/main/java/com/bahceden/account/`, `api/.../common/security/`, `api/.../common/ratelimit/`, `web/src/app/(account)/`, `web/src/app/api/auth/`, `web/src/features/account/` |
@@ -36,6 +36,8 @@ Kullanıcı e-posta adresi ve parolayla hesap açar ve hesabını hemen kullanı
 
 ## Tarihçe
 
+- 2026-10-20: `add-stale-record-cleanup` change'i kullanıcı onayıyla archive edildi (`openspec/changes/archive/2026-10-20-add-stale-record-cleanup/`). Ön koşullar: delta spec'ler (`cart-and-checkout`, `account-identity`) ana spec'lere sync edildi; D1–D2 → ADR-096, ADR-097; dokümanlar güncel; `api` 338 ve `web` 277 test yeşil.
+- 2026-10-20: Süresi geçmiş kimlik kayıtları temizlenir (change `add-stale-record-cleanup`). Doğrulama, sıfırlama ve giriş kodu satırları süreleri 7 günden önce dolmuşsa; yenileme token'ları yalnızca ailenin bütün token'larının süresi dolmuşsa aileyle silinir, tekrar kullanım koruması (ADR-018) korunur. Karar ADR-097. L15 kapandı.
 - 2026-10-19: Sipariş de e-posta doğrulaması ister (change `add-checkout-email-verification`, ADR-093). Ayrıntı: [Sepet ve Sipariş](sepet-ve-siparis.md).
 - 2026-10-17: `add-password-change` change'i kullanıcı onayıyla archive edildi (`openspec/changes/archive/2026-10-17-add-password-change/`). Ön koşullar: delta spec `account-identity` ana spec'ine sync edildi; D1–D4 → ADR-087…090; dokümanlar güncel; `api` 318 ve `web` 275 test yeşil. Taşımada göreli linkler bir seviye uzatıldı.
 - 2026-10-17: Oturum açıkken parola değiştirme (change `add-password-change`). `api`: `POST /accounts/me/password-changes` (mevcut parola zorunlu; yanlışsa ve yeni parola mevcutla aynıysa alan hatası; hesap başına 15 dakikada 5 istek; başarıda değiştiren oturum dahil bütün oturumlar ve açık giriş kodları kapanır, "parolanız değişti" bildirimi gider; oturum açmaz, e-posta doğrulama durumu değişmez). `web`: `/account/password` sayfası, Hesabım'da "Güvenlik" bölümü, `/api/auth/password-change` (başarıda çerezleri siler). Kararlar ADR-087…090; 9 yeni `api` testi, 8 yeni `web` testi. L12 kapandı.

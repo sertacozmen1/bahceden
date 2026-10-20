@@ -44,4 +44,20 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, Long
              where t.accountId = :accountId
                and t.revokedAt is null""")
     int revokeAllForAccount(@Param("accountId") Long accountId, @Param("now") Instant now);
+
+    /**
+     * Bütün token'larının süresi verilen andan önce dolmuş aileleri siler
+     * (add-stale-record-cleanup D2). Canlı bir ailenin eski token'ı silinmez:
+     * tekrar sunulursa aile iptal edilmelidir (ADR-018).
+     *
+     * @return silinen satır sayısı
+     */
+    @Modifying
+    @Query("""
+            delete from RefreshToken t
+             where t.familyId in (
+                   select f.familyId from RefreshToken f
+                    group by f.familyId
+                   having max(f.expiresAt) < :cutoff)""")
+    int deleteExpiredFamiliesBefore(@Param("cutoff") Instant cutoff);
 }

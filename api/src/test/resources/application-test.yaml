@@ -40,6 +40,9 @@ bahceden:
   claims:
     # Zamanlayıcı kapalı: testler süre işini sabit saatle doğrudan çağırır (ADR-083).
     sweep-enabled: false
+  cleanup:
+    # Zamanlayıcı kapalı: testler temizlik işlerini sabit saatle doğrudan çağırır.
+    enabled: false
 
 logging:
   level:

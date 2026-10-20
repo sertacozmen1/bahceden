@@ -30,4 +30,13 @@ public interface PasswordResetTokenRepository extends JpaRepository<PasswordRese
              where t.accountId = :accountId
                and t.usedAt is null""")
     int closeOpenTokens(@Param("accountId") Long accountId, @Param("now") Instant now);
+
+    /**
+     * Süresi verilen andan önce dolmuş sıfırlama token'larını siler (add-stale-record-cleanup D2).
+     *
+     * @return silinen satır sayısı
+     */
+    @Modifying
+    @Query("delete from PasswordResetToken t where t.expiresAt < :cutoff")
+    int deleteExpiredBefore(@Param("cutoff") Instant cutoff);
 }
