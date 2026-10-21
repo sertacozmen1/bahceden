@@ -1,6 +1,8 @@
 import type { Route } from "next";
+import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { currentSession, type SessionState } from "@/features/account/api";
+import { REQUEST_PATH_HEADER, returnPathFor } from "@/lib/requestPath";
 
 type SignedIn = Extract<SessionState, { kind: "signed-in" }>;
 
@@ -19,17 +21,26 @@ type SignedIn = Extract<SessionState, { kind: "signed-in" }>;
  * (Next.js yönlendirici başlıklarını `headers()`'tan çıkarır); bu yüzden kapı
  * her zaman önce `/session/refresh` sayfasına yönlendirir, o sayfa yenileme
  * ucuna tam sayfa gezintisiyle geçer.
+ *
+ * Dönüş adresi sayfanın sorgusunu da taşır (`?status=`, `?page=`): layout
+ * sorguyu göremediği için `proxy.ts`'in yazdığı başlıktan okunur (ADR-102).
+ * Başlık yoksa ya da `selfPath` altında değilse `selfPath` kullanılır.
  */
 export async function requireSignedIn(selfPath: Route): Promise<SignedIn> {
   const session = await currentSession();
-  const next = encodeURIComponent(selfPath);
   if (session.kind === "anonymous") {
-    redirect(`/login?next=${next}`);
+    redirect(`/login?next=${await returnParam(selfPath)}`);
   }
   if (session.kind === "expired") {
-    redirect(`/session/refresh?next=${next}`);
+    redirect(`/session/refresh?next=${await returnParam(selfPath)}`);
   }
   return session;
+}
+
+/** Yönlendirmenin `next` değeri; başlık yalnızca yönlendirme gerekince okunur. */
+async function returnParam(selfPath: Route): Promise<string> {
+  const requested = (await headers()).get(REQUEST_PATH_HEADER);
+  return encodeURIComponent(returnPathFor(selfPath, requested));
 }
 
 type AccountRole = SignedIn["account"]["roles"][number];

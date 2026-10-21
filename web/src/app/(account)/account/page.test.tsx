@@ -26,9 +26,14 @@ const redirect = vi.hoisted(() =>
 );
 vi.mock("next/navigation", () => ({ redirect, useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
 
+/** Proxy'nin yazdığı tam adres başlığı (ADR-102); varsayılan yok. */
+const requestHeaders = vi.hoisted(() => ({ current: new Headers() }));
+vi.mock("next/headers", () => ({ headers: async () => requestHeaders.current }));
+
 beforeEach(() => {
   redirect.mockClear();
   ownSeller.current = null;
+  requestHeaders.current = new Headers();
 });
 
 describe("Hesabım sayfası", () => {
@@ -44,6 +49,14 @@ describe("Hesabım sayfası", () => {
 
     await expect(MyAccountPage()).rejects.toThrow("yönlendirildi");
     expect(redirect).toHaveBeenCalledWith("/session/refresh?next=%2Faccount");
+  });
+
+  it("dönüş adresi proxy'nin yazdığı tam adresi, sorgusuyla taşır (ADR-102)", async () => {
+    session.current = { kind: "expired" };
+    requestHeaders.current = new Headers({ "x-bahceden-request-path": "/account?tab=guvenlik" });
+
+    await expect(MyAccountPage()).rejects.toThrow("yönlendirildi");
+    expect(redirect).toHaveBeenCalledWith("/session/refresh?next=%2Faccount%3Ftab%3Dguvenlik");
   });
 
   it("oturum açıksa hesap bilgisini ve doğrulama durumunu gösterir", async () => {
