@@ -5,6 +5,7 @@ import com.bahceden.order.domain.OrderStatus;
 import com.bahceden.payment.PaymentProviderException;
 import java.time.Clock;
 import java.time.Duration;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
@@ -14,11 +15,13 @@ import org.springframework.stereotype.Component;
  * Ödeme dönüşü hiç gelmeyen siparişlerin işi (cart-and-checkout spec'i,
  * add-stale-record-cleanup D1).
  *
- * <p>Bir turda ödeme süresi tolerans kadar önce dolmuş, en eski siparişlerden
- * yapılandırılmış sayıda alınır. Her sipariş kendi transaction'ında kilitlenip
- * yeniden denetlenir ({@link CheckoutService#expireUnpaid(long)}): sağlayıcı
- * hatası o siparişi değiştirmez, sonraki turda yeniden denenir; diğer siparişler
- * işlenmeye devam eder.
+ * <p>Bir tur, ödeme süresi tolerans kadar önce dolmuş bütün siparişleri en
+ * eskiden başlayarak yapılandırılmış boyutta sayfalarla dolaşır; sonraki sayfa
+ * son görülen siparişten sonrasıyla okunur (ADR-100). Her sipariş kendi
+ * transaction'ında kilitlenip yeniden denetlenir
+ * ({@link CheckoutService#expireUnpaid(long)}): sağlayıcı hatası o siparişi
+ * değiştirmez, sonraki turda yeniden denenir ve arkadaki siparişleri bekletmez.
+ * Bir turda her sipariş en çok bir kez denenir.
  *
  * <p>Tek örnek varsayılır (AGENTS.md §3); iki örnek aynı siparişi işlese de
  * kilit ve yeniden okuma çift kapatmayı ve çift iadeyi önler.
@@ -48,20 +51,33 @@ public class PendingPaymentSweep {
      * @return sonuçlandırılan sipariş sayısı
      */
     public int sweepOnce() {
-        var ids = orders.findIdsExpiredBefore(OrderStatus.PENDING_PAYMENT, clock.instant().minus(grace),
-                PageRequest.of(0, batchSize));
+        var cutoff = clock.instant().minus(grace);
+        var page = PageRequest.of(0, batchSize);
         int closed = 0;
-        for (var id : ids) {
-            try {
-                var outcome = checkout.expireUnpaid(id);
-                if (outcome.isPresent()) {
-                    closed++;
-                    log.info("Ödenmemiş sipariş kapatıldı: sipariş kimliği {}, {}", id, outcome.get());
+        int failed = 0;
+        SweepCursor last = null;
+        List<SweepCursor> batch;
+        do {
+            batch = last == null
+                    ? orders.findExpiredBefore(OrderStatus.PENDING_PAYMENT, cutoff, page)
+                    : orders.findExpiredBeforeAfter(OrderStatus.PENDING_PAYMENT, cutoff, last.dueAt(), last.id(), page);
+            for (var cursor : batch) {
+                try {
+                    var outcome = checkout.expireUnpaid(cursor.id());
+                    if (outcome.isPresent()) {
+                        closed++;
+                        log.info("Ödenmemiş sipariş kapatıldı: sipariş kimliği {}, {}", cursor.id(), outcome.get());
+                    }
+                } catch (PaymentProviderException cause) {
+                    failed++;
+                    log.warn("Ödenmemiş sipariş doğrulanamadı, sonraki turda yeniden denenecek: sipariş kimliği {}",
+                            cursor.id(), cause);
                 }
-            } catch (PaymentProviderException cause) {
-                log.warn("Ödenmemiş sipariş doğrulanamadı, sonraki turda yeniden denenecek: sipariş kimliği {}", id,
-                        cause);
+                last = cursor;
             }
+        } while (batch.size() == batchSize);
+        if (failed > 0) {
+            log.warn("Ödenmemiş sipariş turu: {} kapatıldı, {} hata", closed, failed);
         }
         return closed;
     }

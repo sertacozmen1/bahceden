@@ -263,7 +263,7 @@ public class DefectClaimService {
         var previous = claim.getStatus();
         claim.escalate(DefectClaimTransition.BUYER_ESCALATE, now);
         changes.save(DefectClaimChange.byAccount(claim.getId(), previous, claim.getStatus(), null, accountId, now));
-        notifier.claimEscalated(claim);
+        notifier.claimEscalated(claim, DefectClaimTransition.BUYER_ESCALATE);
         log.info("Talep yönetime taşındı: talep {}", claim.getId());
         return orderService.detail(accountId, orderNumber);
     }
@@ -355,7 +355,7 @@ public class DefectClaimService {
             case OPEN -> {
                 claim.escalate(DefectClaimTransition.DEADLINE_ESCALATE, now);
                 changes.save(DefectClaimChange.byDeadline(claimId, previous, claim.getStatus(), now));
-                notifier.claimEscalated(claim);
+                notifier.claimEscalated(claim, DefectClaimTransition.DEADLINE_ESCALATE);
             }
             case OFFERED -> settle(claim, DefectClaimTransition.DEADLINE_ACCEPT_OFFER, offered(claim),
                     DefectClaimResolver.DEADLINE, null, now);

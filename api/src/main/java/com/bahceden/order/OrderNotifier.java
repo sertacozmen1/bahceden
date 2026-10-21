@@ -2,6 +2,7 @@ package com.bahceden.order;
 
 import com.bahceden.account.AccountRepository;
 import com.bahceden.account.domain.Account;
+import com.bahceden.account.domain.AccountRole;
 import com.bahceden.common.BahcedenProperties;
 import com.bahceden.common.i18n.Messages;
 import com.bahceden.common.mail.MailSender;
@@ -9,6 +10,7 @@ import com.bahceden.common.money.MoneyFormat;
 import com.bahceden.common.time.DateTimeFormat;
 import com.bahceden.order.domain.CancelledBy;
 import com.bahceden.order.domain.DefectClaim;
+import com.bahceden.order.domain.DefectClaimTransition;
 import com.bahceden.order.domain.Order;
 import com.bahceden.order.domain.OrderItem;
 import com.bahceden.order.domain.SellerOrder;
@@ -267,8 +269,14 @@ class OrderNotifier {
         sendAfterCommit(mails);
     }
 
-    /** Talep yönetime taşındı: iki tarafa (ADR-085). */
-    void claimEscalated(DefectClaim claim) {
+    /**
+     * Talep yönetime taşındı: iki tarafa (ADR-085) ve her admin hesabına, kendi
+     * dilinde, nedeni ve talep sayfası bağlantısıyla (ADR-101). Admin e-postası
+     * alıcının açıklamasını, adını ve adresini taşımaz.
+     *
+     * @param transition yönetime düşüren geçiş: alıcının taşıması ya da satıcının süresinin dolması
+     */
+    void claimEscalated(DefectClaim claim, DefectClaimTransition transition) {
         var sellerOrder = claim.getSellerOrder();
         var number = sellerOrder.getOrder().getOrderNumber();
         var mails = new ArrayList<Mail>();
@@ -280,6 +288,16 @@ class OrderNotifier {
                 seller.getEmail(), messages.get("mail.claimEscalated.subject", seller.getLocale(), number),
                 messages.get("mail.claimEscalated.sellerBody", seller.getLocale(), number,
                         properties.webOrigin() + "/seller/orders/" + sellerOrder.getId()), number)));
+        var reasonKey = transition == DefectClaimTransition.DEADLINE_ESCALATE
+                ? "mail.claimEscalated.reason.sellerTimeout"
+                : "mail.claimEscalated.reason.buyer";
+        var adminLink = properties.webOrigin() + "/admin/claims/" + claim.getId();
+        for (var admin : accounts.findByRole(AccountRole.ROLE_ADMIN)) {
+            var locale = admin.getLocale();
+            mails.add(new Mail(admin.getEmail(), messages.get("mail.claimEscalated.adminSubject", locale, number),
+                    messages.get("mail.claimEscalated.adminBody", locale, number, messages.get(reasonKey, locale),
+                            adminLink), number));
+        }
         sendAfterCommit(mails);
     }
 

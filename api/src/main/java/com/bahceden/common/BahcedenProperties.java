@@ -59,7 +59,7 @@ public record BahcedenProperties(
      * @param interval                iki tur arasındaki bekleme
      * @param pendingPaymentGrace     ödeme süresi dolduktan sonra işin siparişe dokunmadan beklediği süre;
      *                                alıcının ödeme dönüşü önceliklidir
-     * @param pendingPaymentBatchSize bir turda işlenen en çok ödenmemiş sipariş
+     * @param pendingPaymentBatchSize ödenmemiş sipariş işinin sayfa boyutu; bir tur bütün süresi dolmuşları dolaşır (ADR-100)
      * @param tokenRetention          süresi dolmuş token satırının silinmeden önce kaldığı süre
      */
     public record Cleanup(boolean enabled, @NotNull Duration interval, @NotNull Duration pendingPaymentGrace,
@@ -83,7 +83,7 @@ public record BahcedenProperties(
      * @param buyerResponse  alıcının teklife veya redde yanıt süresi; geçerse teklif kabul, ret kesinleşmiş sayılır
      * @param sweepEnabled   süre işi zamanlayıcısı açık mı; testlerde kapalı, testler işi doğrudan çağırır
      * @param sweepInterval  iki süre turu arasındaki bekleme
-     * @param sweepBatchSize bir turda işlenen en çok talep
+     * @param sweepBatchSize talep süre işinin sayfa boyutu; bir tur bütün süresi dolmuşları dolaşır (ADR-100)
      */
     public record Claims(@NotNull Duration window, @NotNull Duration sellerResponse,
                          @NotNull Duration buyerResponse, boolean sweepEnabled, @NotNull Duration sweepInterval,

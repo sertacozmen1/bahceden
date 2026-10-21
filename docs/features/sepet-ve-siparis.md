@@ -2,14 +2,14 @@
 
 **Durum:** Yayında
 **İlk sürüm:** 2026-10-08
-**Son değişiklik:** 2026-10-20
+**Son değişiklik:** 2026-10-21
 
 | | |
 |---|---|
 | **Ürün belgesi** | [Sepet ve Sipariş](../product/sepet-ve-siparis.md) |
-| **Kararlar** | Çerçeve: [ADR-054](../adr/054-split-payment-via-provider-port-provider-pending.md) … [ADR-058](../adr/058-flat-shipping-fee-per-seller-and-declared-handover.md). Uygulama: [ADR-059](../adr/059-payment-and-order-packages-single-purchasability-rule.md), [ADR-061](../adr/061-listing-dispatch-days-business-days-weekends-only.md) … [ADR-068](../adr/068-checkout-web-routes-server-cart-count.md), e-posta doğrulaması [ADR-093](../adr/093-order-requires-verified-email.md) … [ADR-095](../adr/095-dev-buyer-verified-by-new-seed.md), temizlik [ADR-096](../adr/096-unpaid-orders-closed-by-scheduled-sweep.md) |
+| **Kararlar** | Çerçeve: [ADR-054](../adr/054-split-payment-via-provider-port-provider-pending.md) … [ADR-058](../adr/058-flat-shipping-fee-per-seller-and-declared-handover.md). Uygulama: [ADR-059](../adr/059-payment-and-order-packages-single-purchasability-rule.md), [ADR-061](../adr/061-listing-dispatch-days-business-days-weekends-only.md) … [ADR-068](../adr/068-checkout-web-routes-server-cart-count.md), e-posta doğrulaması [ADR-093](../adr/093-order-requires-verified-email.md) … [ADR-095](../adr/095-dev-buyer-verified-by-new-seed.md), temizlik [ADR-096](../adr/096-unpaid-orders-closed-by-scheduled-sweep.md), süre işi sayfalaması [ADR-100](../adr/100-deadline-sweeps-page-past-failures.md) |
 | **Spec (capability)** | `openspec/specs/cart-and-checkout`, `openspec/specs/orders` (yeni); `product-listings` ve `storefront-catalog` (kargoya verme süresi, satın alınabilirlik) |
-| **Change'ler** | `openspec/changes/archive/2026-10-08-add-cart-and-checkout` (archive edildi), `openspec/changes/archive/2026-10-19-add-checkout-email-verification` (archive edildi), `openspec/changes/archive/2026-10-20-add-stale-record-cleanup` (archive edildi) |
+| **Change'ler** | `openspec/changes/archive/2026-10-08-add-cart-and-checkout` (archive edildi), `openspec/changes/archive/2026-10-19-add-checkout-email-verification` (archive edildi), `openspec/changes/archive/2026-10-20-add-stale-record-cleanup` (archive edildi), `openspec/changes/archive/2026-10-21-change-deadline-sweeps-and-admin-claim-email` |
 | **Rehberler** | [Yerel geliştirme](../how-to/yerel-gelistirme.md) |
 | **Referans** | [Domain modeli](../reference/01-domain-model.md), [API referansı](../reference/02-api-reference.md), [Tasarım sistemi](../reference/03-design-system.md) |
 | **Kod** | `api/src/main/java/com/bahceden/order/` (`CartService`, `AddressService`, `CheckoutService`, `OrderService`, `OrderCancellationService`, `OrderPricing`), `web/src/app/(shop)/cart`, `web/src/app/(shop)/checkout`, `web/src/app/(account)/account/orders`, `web/src/app/(account)/account/addresses`, `web/src/app/(seller)/seller/orders`, `web/src/features/cart`, `web/src/features/addresses`, `web/src/features/orders` |
@@ -39,6 +39,8 @@ Alıcı ürün sayfasında adet seçip ürünü sepete ekler; sepet hesabına ba
 
 ## Tarihçe
 
+- 2026-10-21: `change-deadline-sweeps-and-admin-claim-email` change'i kullanıcı onayıyla archive edildi (`openspec/changes/archive/2026-10-21-change-deadline-sweeps-and-admin-claim-email/`). Ön koşullar: delta spec'ler (`defect-claims`, `cart-and-checkout`) ana spec'lere sync edildi; D1–D2 → ADR-100, ADR-101; dokümanlar güncel; `api` 347 test yeşil.
+- 2026-10-21: Ödenmemiş sipariş işi bir turda süresi dolmuş bütün siparişleri sayfalarla dolaşır; sağlayıcı hatası veren sipariş arkadakileri bekletmez (change `change-deadline-sweeps-and-admin-claim-email`, ADR-100; ADR-096'ya not).
 - 2026-10-20: `add-stale-record-cleanup` change'i kullanıcı onayıyla archive edildi (`openspec/changes/archive/2026-10-20-add-stale-record-cleanup/`). Ön koşullar: delta spec'ler (`cart-and-checkout`, `account-identity`) ana spec'lere sync edildi; D1–D2 → ADR-096, ADR-097; dokümanlar güncel; `api` 338 ve `web` 277 test yeşil.
 - 2026-10-20: Ödeme dönüşü gelmeyen siparişler kapanır (change `add-stale-record-cleanup`). Zamanlanmış iş, ödeme süresi 1 saatten önce dolmuş `PENDING_PAYMENT` siparişleri sağlayıcıdan doğrular ve dönüşle aynı kuralla sonuçlandırır: geç alınmış ödeme tam iade edilir, sipariş `PAYMENT_EXPIRED` ya da `PAYMENT_FAILED` olur; yapan taraf sistemdir. `016` kısmi indeksi. Karar ADR-096. L32 kapandı.
 - 2026-10-19: `add-checkout-email-verification` change'i kullanıcı onayıyla archive edildi (`openspec/changes/archive/2026-10-19-add-checkout-email-verification/`). Ön koşullar: delta spec `cart-and-checkout` ana spec'ine sync edildi; D1–D3 → ADR-093…095; dokümanlar güncel; `api` 327 ve `web` 277 test yeşil.

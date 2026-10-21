@@ -199,6 +199,27 @@ class PendingPaymentSweepTest {
     }
 
     @Test
+    @DisplayName("Sağlayıcı hatası veren en eski siparişler arkadakini bekletmez: sayfa boyutu 2, üçüncü sipariş aynı turda kapanır; her sipariş bir kez denenir (ADR-100)")
+    void hatali_siparisler_arkadakini_bekletmez() throws Exception {
+        var first = placedOrder();
+        var second = placedOrder();
+        var third = placedOrder();
+        // Test sayfa boyutu 2'dir: hata veren iki sipariş ilk sayfayı doldurur.
+        provider.failVerifyOf(paymentReference(first));
+        provider.failVerifyOf(paymentReference(second));
+        provider.answerVerifyWith(PaymentOutcome.PENDING);
+        clock.advance(PAST_GRACE);
+
+        assertThat(sweep.sweepOnce()).isEqualTo(1);
+
+        assertThat(orderStatus(first)).isEqualTo("PENDING_PAYMENT");
+        assertThat(orderStatus(second)).isEqualTo("PENDING_PAYMENT");
+        assertThat(orderStatus(third)).isEqualTo("PAYMENT_EXPIRED");
+        assertThat(provider.verifyCallsOf(paymentReference(first))).isEqualTo(1);
+        assertThat(provider.verifyCallsOf(paymentReference(second))).isEqualTo(1);
+    }
+
+    @Test
     @DisplayName("İşten sonra ödeme dönüşü sonuçlanmış siparişi döner; çift iade yok")
     void isten_sonra_odeme_donusu() throws Exception {
         var number = placedOrder();

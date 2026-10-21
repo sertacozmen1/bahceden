@@ -289,6 +289,29 @@ class DefectClaimResponseTest {
     }
 
     @Test
+    @DisplayName("Alıcı yönetime taşıyınca her admin'e kendi dilinde, nedeni ve talep bağlantısıyla e-posta gider; admin olmayana gitmez (ADR-101)")
+    void yonetime_tasima_admin_eposta() throws Exception {
+        fixtures.account("yonetici@ornek.test", "tr", "ROLE_ADMIN");
+        fixtures.account("admin-en@ornek.test", "en", "ROLE_ADMIN", "ROLE_CUSTOMER");
+        fixtures.account("baska-alici@ornek.test", "tr", "ROLE_CUSTOMER");
+        var claimId = claims.open(buyerToken, orderNumber, sellerOrder, Map.of(tomato, 2));
+        respond("{\"decision\":\"REJECT\",\"reason\":\"Paket gönderilirken sağlamdı.\"}").andExpect(status().isOk());
+        mail.reset();
+
+        buyerAction("escalate").andExpect(status().isOk());
+
+        assertThat(mail.sent()).hasSize(4);
+        assertThat(mail.sent()).noneMatch(sent -> sent.to().equals("baska-alici@ornek.test"));
+        var turkish = mail.onlySentTo("yonetici@ornek.test");
+        assertThat(turkish.subject()).contains("karar bekleyen sorun bildirimi").contains(orderNumber);
+        assertThat(turkish.body()).contains("alıcı bildirimi yönetime taşıdı").contains("/admin/claims/" + claimId)
+                .doesNotContain("Paket gönderilirken sağlamdı.");
+        var english = mail.onlySentTo("admin-en@ornek.test");
+        assertThat(english.subject()).contains("awaiting decision").contains(orderNumber);
+        assertThat(english.body()).contains("the buyer escalated the report").contains("/admin/claims/" + claimId);
+    }
+
+    @Test
     @DisplayName("Yanlış durumda eylem 409: açık talepte alıcı kabulü, yanıtlanmış talebe ikinci satıcı yanıtı")
     void yanlis_durum() throws Exception {
         claims.open(buyerToken, orderNumber, sellerOrder, Map.of(tomato, 2));

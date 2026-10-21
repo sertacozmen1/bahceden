@@ -3,6 +3,7 @@
 **Tarih:** 2026-10-13
 **Durum:** Accepted
 **Kaynak:** `add-defect-claims` design.md D5; ürün sahibinin 2026-10-13 kararları (satıcı süresi 48 saat; alıcı 48 saat içinde yanıt vermezse kabul)
+**Not (2026-10-21):** Bir turun nasıl dolaşıldığı [ADR-100](100-deadline-sweeps-page-past-failures.md) ile netleşti: tur süresi dolmuş bütün talepleri sayfalarla dolaşır, iadesi başarısız talep arkadakileri bekletmez; `sweep-batch-size` sayfa boyutudur. Bu ADR'nin diğer kararları geçerlidir.
 
 ---
 

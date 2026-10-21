@@ -3,8 +3,10 @@ package com.bahceden.support;
 import com.bahceden.payment.PaymentProvider;
 import com.bahceden.payment.PaymentProviderException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -34,6 +36,10 @@ public class ScriptedPaymentProvider implements PaymentProvider {
     private boolean refundsFailing;
     private PaymentOutcome outcome = PaymentOutcome.SUCCEEDED;
     private final Set<String> failingVerifies = new HashSet<>();
+    private final Set<String> failingRefunds = new HashSet<>();
+    /** Ödeme başına doğrulama ve iade denemeleri; başarısızlar dahil. */
+    private final Map<String, Integer> verifyCalls = new HashMap<>();
+    private final Map<String, Integer> refundAttempts = new HashMap<>();
 
     @Override
     public synchronized SubMerchantResult registerSubMerchant(SubMerchantDetails details) {
@@ -54,6 +60,7 @@ public class ScriptedPaymentProvider implements PaymentProvider {
     @Override
     public synchronized PaymentOutcome verify(String paymentReference) {
         failIfUnavailable();
+        verifyCalls.merge(paymentReference, 1, Integer::sum);
         if (failingVerifies.contains(paymentReference)) {
             throw new PaymentProviderException("Test: bu ödeme doğrulanamıyor");
         }
@@ -63,7 +70,8 @@ public class ScriptedPaymentProvider implements PaymentProvider {
     @Override
     public synchronized String refund(String paymentReference, long amount, Optional<String> subMerchantKey) {
         failIfUnavailable();
-        if (refundsFailing) {
+        refundAttempts.merge(paymentReference, 1, Integer::sum);
+        if (refundsFailing || failingRefunds.contains(paymentReference)) {
             throw new PaymentProviderException("Test: iade reddedildi");
         }
         refunds.add(new RecordedRefund(paymentReference, amount, subMerchantKey));
@@ -87,6 +95,19 @@ public class ScriptedPaymentProvider implements PaymentProvider {
         failingVerifies.add(paymentReference);
     }
 
+    /** Yalnızca bu ödemenin iadesi reddedilir; diğerleri etkilenmez. */
+    public synchronized void failRefundsOf(String paymentReference) {
+        failingRefunds.add(paymentReference);
+    }
+
+    public synchronized int verifyCallsOf(String paymentReference) {
+        return verifyCalls.getOrDefault(paymentReference, 0);
+    }
+
+    public synchronized int refundAttemptsOf(String paymentReference) {
+        return refundAttempts.getOrDefault(paymentReference, 0);
+    }
+
     public synchronized void answerVerifyWith(PaymentOutcome next) {
         outcome = next;
     }
@@ -106,6 +127,9 @@ public class ScriptedPaymentProvider implements PaymentProvider {
         unavailable = false;
         refundsFailing = false;
         failingVerifies.clear();
+        failingRefunds.clear();
+        verifyCalls.clear();
+        refundAttempts.clear();
         outcome = PaymentOutcome.SUCCEEDED;
     }
 

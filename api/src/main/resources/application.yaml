@@ -127,6 +127,8 @@ bahceden:
     # düşer, alıcı sessizse teklif uygulanır ya da ret kesinleşir.
     sweep-enabled: true
     sweep-interval: PT5M
+    # Sayfa boyutu: bir tur süresi dolmuş bütün talepleri bu boyutta sayfalarla
+    # dolaşır; hata veren talep arkadakileri bekletmez (ADR-100).
     sweep-batch-size: 100
   cleanup:
     # Temizlik işleri (add-stale-record-cleanup): ödeme dönüşü hiç gelmeyen siparişler
@@ -136,6 +138,7 @@ bahceden:
     # Ödeme süresi dolduktan sonra işin beklediği süre: alıcının dönüşü önceliklidir ve
     # sağlayıcıda geç tamamlanan ödeme de görülüp iade edilir.
     pending-payment-grace: PT1H
+    # Sayfa boyutu: bir tur bütün süresi dolmuş siparişleri dolaşır (ADR-100).
     pending-payment-batch-size: 100
     # Süresi dolmuş token satırı bu kadar sonra silinir (destek için kısa iz).
     token-retention: P7D

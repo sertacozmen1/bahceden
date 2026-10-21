@@ -3,6 +3,7 @@
 **Tarih:** 2026-10-13
 **Durum:** Accepted
 **Kaynak:** `add-defect-claims` design.md D7
+**Not (2026-10-21):** 3. madde ("admin'e e-posta gitmez") [ADR-101](101-admin-email-on-claim-escalation.md) ile değişti: talep yönetime düşünce her admin hesabına e-posta gider. Diğer maddeler geçerlidir.
 
 ---
 

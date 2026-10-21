@@ -3,6 +3,7 @@ package com.bahceden.order;
 import com.bahceden.common.BahcedenProperties;
 import com.bahceden.common.web.ApiException;
 import java.time.Clock;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.PageRequest;
@@ -11,11 +12,13 @@ import org.springframework.stereotype.Component;
 /**
  * Süresi dolan ayıplı ürün taleplerinin işi (ADR-083).
  *
- * <p>Bir turda en eski süreli taleplerden yapılandırılmış sayıda alınır. Her
- * talep kendi transaction'ında kilitlenip yeniden denetlenir
- * ({@link DefectClaimService#expire(long)}): bir talebin hatası (örneğin iade
- * yapılamadı) diğerlerini durdurmaz; o talep değişmeden kalır ve sonraki
- * turda yeniden denenir. Kullanıcı eylemiyle aynı anda işlenen talep çift
+ * <p>Bir tur, süresi dolmuş bütün talepleri en eski süreliden başlayarak
+ * yapılandırılmış boyutta sayfalarla dolaşır; sonraki sayfa son görülen
+ * talepten sonrasıyla okunur (ADR-100). Her talep kendi transaction'ında
+ * kilitlenip yeniden denetlenir ({@link DefectClaimService#expire(long)}): bir
+ * talebin hatası (örneğin iade yapılamadı) diğerlerini durdurmaz ve arkadaki
+ * talepleri bekletmez; o talep değişmeden kalır ve sonraki turda yeniden
+ * denenir. Bir turda her talep en çok bir kez denenir. Kullanıcı eylemiyle aynı anda işlenen talep çift
  * işlenmez: satır kilidinden sonra durum yeniden okunur.
  *
  * <p>Tek örnek varsayılır (AGENTS.md §3); iki örnek aynı talebi işlese de kilit
@@ -45,17 +48,31 @@ public class DefectClaimSweep {
      * @return ilerleyen talep sayısı
      */
     public int sweepOnce() {
-        var ids = claims.findOverdueIds(clock.instant(), PageRequest.of(0, batchSize));
+        var now = clock.instant();
+        var page = PageRequest.of(0, batchSize);
         int advanced = 0;
-        for (var id : ids) {
-            try {
-                if (service.expire(id).isPresent()) {
-                    advanced++;
+        int failed = 0;
+        SweepCursor last = null;
+        List<SweepCursor> batch;
+        do {
+            batch = last == null
+                    ? claims.findOverdue(now, page)
+                    : claims.findOverdueAfter(now, last.dueAt(), last.id(), page);
+            for (var cursor : batch) {
+                try {
+                    if (service.expire(cursor.id()).isPresent()) {
+                        advanced++;
+                    }
+                } catch (ApiException cause) {
+                    failed++;
+                    log.warn("Süresi dolan talep ilerletilemedi, sonraki turda yeniden denenecek: talep {}, {}",
+                            cursor.id(), cause.getCode());
                 }
-            } catch (ApiException cause) {
-                log.warn("Süresi dolan talep ilerletilemedi, sonraki turda yeniden denenecek: talep {}, {}", id,
-                        cause.getCode());
+                last = cursor;
             }
+        } while (batch.size() == batchSize);
+        if (failed > 0) {
+            log.warn("Talep süre işi turu: {} ilerledi, {} hata", advanced, failed);
         }
         return advanced;
     }

@@ -35,14 +35,24 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     /**
      * Ödeme süresi verilen andan önce dolmuş ve hâlâ ödeme bekleyen siparişler,
-     * en eski süreliden (add-stale-record-cleanup D1). Yalnızca kimlik döner;
-     * her sipariş işlenirken ayrıca kilitlenir.
+     * en eski süreliden (add-stale-record-cleanup D1). İş ilk sayfayı bununla,
+     * sonrakileri {@link #findExpiredBeforeAfter} ile okur (ADR-100). Yalnızca
+     * imleç döner; her sipariş işlenirken ayrıca kilitlenir.
      */
     @Query("""
-            select o.id from Order o
+            select new com.bahceden.order.SweepCursor(o.id, o.paymentExpiresAt) from Order o
             where o.status = :status and o.paymentExpiresAt < :cutoff
             order by o.paymentExpiresAt, o.id""")
-    List<Long> findIdsExpiredBefore(OrderStatus status, Instant cutoff, Pageable pageable);
+    List<SweepCursor> findExpiredBefore(OrderStatus status, Instant cutoff, Pageable pageable);
+
+    /** Aynı sorgu, imleçten ({@code afterDue}, {@code afterId}) sonrası (ADR-100); aynı kısmi indeks. */
+    @Query("""
+            select new com.bahceden.order.SweepCursor(o.id, o.paymentExpiresAt) from Order o
+            where o.status = :status and o.paymentExpiresAt < :cutoff
+              and (o.paymentExpiresAt > :afterDue or (o.paymentExpiresAt = :afterDue and o.id > :afterId))
+            order by o.paymentExpiresAt, o.id""")
+    List<SweepCursor> findExpiredBeforeAfter(OrderStatus status, Instant cutoff, Instant afterDue, long afterId,
+                                             Pageable pageable);
 
     /** Temizlik işi için siparişi kilitler; ödeme dönüşüyle aynı anda çalışırsa sırayla işlenir (D1). */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
