@@ -145,8 +145,9 @@ Tercih `bahceden_theme` çerezinde (bir yıl). Kök düzen onu sunucuda okur; il
 | `Pagination` | `components/` | Sayfalı listelerin önceki / sonraki gezintisi; diğer sorgu parametrelerini korur. Vitrin, satıcı ilanları ve admin listeleri paylaşır |
 | `ListSkeleton` | `components/` | Liste sayfalarının yükleniyor iskeleti (isteğe bağlı sekmelerle) |
 | `ReasonDialog` | `components/` | Gerekçe isteyen yıkıcı eylem; satıcı reddi, satıcı askısı, ilan kaldırma ve sipariş iptali paylaşır ([ADR-053](../adr/053-admin-listing-moderation-shared-reason-dialog.md)). `reasonOptional` ile gerekçe boş bırakılabilir (alıcının iptali) |
-| `SectionTabs` | `components/` | Panel bölümleri arası alt çizgili sekmeler (`aria-current`); `AdminNav` ve `SellerNav` kullanır |
-| `FilterTabs` | `components/` | Liste sayfalarının `?status=` süzgeci (dolgulu düğmeler); admin satıcıları, admin ilanları ve gelen siparişler paylaşır |
+| `SectionTabs` | `components/` | Panel bölümleri arası alt çizgili sekmeler (`aria-current`); `AdminNav` ve `SellerNav` kullanır. Dar ekranda yatay kayar, etkin bölüm görünür alana getirilir (`ScrollingNav`) |
+| `FilterTabs` | `components/` | Liste sayfalarının `?status=` süzgeci (dolgulu düğmeler); admin satıcıları, admin ilanları ve gelen siparişler paylaşır. Dar ekranda yatay kayar, etkin seçenek görünür alana getirilir (`ScrollingNav`) |
+| `ScrollingNav` | `components/` | Yatay kayan sekme şeridi (istemci): etkin seçenek (`aria-current="page"`) görünür alanın dışındaysa yalnızca şeridin `scrollLeft`'iyle ortalanır; sayfa dikeyde kaymaz. `SectionTabs` ve `FilterTabs` kullanır |
 | `StatusPanel` | `components/` | Tam sayfa hata ve bulunamadı kutusu: ikon (hatada `destructive` tonlu), başlık, tek cümle, tek eylem |
 | `AccountScreen` | `features/account/components/` | Hesap ekranlarının ortak tek sütun iskeleti |
 | `AccountSkeleton` | `features/account/components/` | Hesap sayfalarının yükleniyor iskeleti |

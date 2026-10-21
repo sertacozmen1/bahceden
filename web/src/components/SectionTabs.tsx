@@ -1,11 +1,13 @@
 import type { Route } from "next";
 import Link from "next/link";
+import { ScrollingNav } from "@/components/ScrollingNav";
 import { cn } from "@/lib/utils";
 
 /**
  * Bir paneldeki bölümler arasında sekme gezintisi. Admin ve satıcı panelleri
  * aynı biçimi kullanır (K9); etkin bölüm `aria-current` taşır. Dokunma hedefi
- * 44px (AGENTS.md §12.4); dar ekranda sekmeler yatay kayar.
+ * 44px (AGENTS.md §12.4); dar ekranda sekmeler yatay kayar ve etkin bölüm
+ * görünür alana getirilir (`ScrollingNav`).
  */
 type SectionTabsProps = {
   readonly label: string;
@@ -13,8 +15,9 @@ type SectionTabsProps = {
 };
 
 export function SectionTabs({ label, sections }: SectionTabsProps) {
+  const current = sections.find((section) => section.current)?.href ?? "";
   return (
-    <nav aria-label={label} className="mb-6 overflow-x-auto border-b border-border">
+    <ScrollingNav label={label} className="mb-6 overflow-x-auto border-b border-border" currentKey={current}>
       <ul className="-mb-px flex gap-4">
         {sections.map((section) => (
           <li key={section.href} className="shrink-0">
@@ -33,6 +36,6 @@ export function SectionTabs({ label, sections }: SectionTabsProps) {
           </li>
         ))}
       </ul>
-    </nav>
+    </ScrollingNav>
   );
 }

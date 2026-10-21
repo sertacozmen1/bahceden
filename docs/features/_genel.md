@@ -1,6 +1,6 @@
 # Genel: Feature'a Bağlı Olmayan İşler
 
-**Son değişiklik:** 2026-10-08
+**Son değişiklik:** 2026-10-21
 
 Dokümantasyon altyapısı, geliştirme araçları, AI kural dosyaları, CI ve tek bir feature'a bağlanamayan altyapı işleri burada kayıt altına alınır. Bir feature'a ait değişiklik buraya **yazılmaz**; ilgili feature dosyasına gider.
 
@@ -28,6 +28,7 @@ Dokümantasyon altyapısı, geliştirme araçları, AI kural dosyaları, CI ve t
 
 ## Tarihçe
 
+- 2026-10-21: Hata düzeltmesi: dar ekranda (375 px) bölüm sekmeleri (`SectionTabs`) ve durum süzgeci (`FilterTabs`) yatay kaydığında etkin sekme görünür alanın dışında kalıyordu (örn. `/admin/claims?status=CLOSED`'da ne "Sorun bildirimleri" ne "Kapandı" görünüyordu). Yeni istemci bileşeni `ScrollingNav` etkin seçeneği şeridi yatay kaydırarak ortalar; masaüstünde taşma olmadığı için davranış değişmez. Change gerektirmeyen küçük iş (`AGENTS.md` §5.1); spec ve sözleşme değişmedi.
 - 2026-10-08: `openspec/KALANLAR.md` A4'ün teslimat bölgesi sorusu ürün sahibinin kararıyla kapandı: başlangıçta İstanbul, İzmir, Ankara ve Manisa ([ADR-063](../adr/063-delivery-provinces-config-address-book.md), change `add-cart-and-checkout`). Mobil uygulama sorusu açık. `AGENTS.md` §15 tablosu güncellendi. Ayrıca `web` başlığında dar ekranda "Çıkış yap" yalnızca ikon oldu; admin listelerindeki durum süzgeci ortak `FilterTabs`'a, admin ve satıcı sekmeleri ortak `SectionTabs`'a çıkarıldı (K9).
 - 2026-10-08: `openspec/KALANLAR.md` A1 ve A2 ürün sahibinin kararıyla **kısmen** kapandı. A1 → [ADR-054](../adr/054-split-payment-via-provider-port-provider-pending.md) (bölünmüş ödeme / alt üye işyeri; sağlayıcı arayüz arkasında, `fake` ile), [ADR-055](../adr/055-commission-percent-plus-fixed-from-seller.md) (komisyon satıcıdan %5 + satıcı siparişi başına 3 TL), [ADR-056](../adr/056-cancel-before-shipment-and-defect-refund.md) (kargo öncesi iptal, teslim sonrası cayma yok, ayıplı ürün 48 saat). A2 → [ADR-057](../adr/057-shipping-via-integrator-port-integrator-pending.md) (kargo entegratörü API'si, arayüz arkasında) ve [ADR-058](../adr/058-flat-shipping-fee-per-seller-and-declared-handover.md) (satıcı başına 99 TL, 1000 TL ve üzeri ücretsiz, maliyet pazaryerinde, kargoya verme süresi ilanda 1–3 iş günü). Açık kalan: ödeme sağlayıcısı ve kargo entegratörü seçimi (ticari görüşme). `AGENTS.md` §15 tablosu, ADR index ve güncel durum güncellendi. Aynı gün `add-product-listings` change'i archive edildi. Kod yazılmadı.
 - 2026-10-08: `openspec/KALANLAR.md`'ye **A5** eklendi: satıcı verisinin saklama süresi, KVKK aydınlatma metni ve belgenin yasal yeterliliği (hukuk). `AGENTS.md` §15 tablosuna satır olarak işlendi. Kaynak: change `add-seller-onboarding` design.md Open Questions. ADR index'e ADR-040…046 eklendi; how-to dizinindeki "Satıcı başvurusunu elle onaylama" satırı [Admin yetkisi verme](../how-to/admin-yetkisi-verme.md) rehberiyle karşılandı. [Yerel geliştirme](../how-to/yerel-gelistirme.md) rehberinin 7. adımı, eskimiş "bugün çalışmaz" notu yerine gerçek komutlar, dev hesapları ve `uploads` volume'u ile yeniden yazıldı. `.gitignore`'a `api/uploads/` eklendi.
