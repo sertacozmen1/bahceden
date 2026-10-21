@@ -31,6 +31,7 @@ const redirect = vi.hoisted(() =>
   }),
 );
 vi.mock("next/navigation", () => ({ redirect, useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }) }));
+vi.mock("next/headers", () => ({ headers: async () => new Headers() }));
 
 function signedIn(emailVerified: boolean): SessionState {
   return {

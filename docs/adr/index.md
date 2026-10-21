@@ -122,8 +122,9 @@ Architecture Decision Records, projedeki önemli mimari kararları ve bu kararla
 | 099 | [Dil menüsü önce çerezi yazar, hesabın dilini en iyi çabayla BFF üzerinden eşitler](099-locale-menu-syncs-account-best-effort.md) | Accepted | 2026-10-21 |
 | 100 | [Süre işleri bir turda süresi dolmuş bütün kayıtları keyset sayfalamayla dolaşır; hata veren kayıt arkadakileri bekletmez](100-deadline-sweeps-page-past-failures.md) | Accepted | 2026-10-21 |
 | 101 | [Talep yönetime düşünce her admin hesabına kendi dilinde e-posta gider](101-admin-email-on-claim-escalation.md) | Accepted | 2026-10-21 |
+| 102 | [Oturum kapısının dönüş adresi sorguyu taşır; Next.js proxy isteğin tam adresini bir istek başlığına yazar](102-proxy-forwards-request-path-for-session-gate.md) | Accepted | 2026-10-21 |
 
-**Sıradaki numara: 102.**
+**Sıradaki numara: 103.**
 
 **Durum değerleri:** `Proposed` (öneri, henüz bağlayıcı değil) · `Accepted` (yürürlükte, bağlayıcı) · `Deprecated` (artık geçerli değil, yerine bir şey gelmedi) · `Superseded by [ADR-XXX]` (yerini başka bir karara bıraktı).
 
