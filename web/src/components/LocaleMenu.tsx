@@ -14,7 +14,9 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LOCALES, parseLocale, saveLocale } from "@/i18n/locale";
+import { bffPaths } from "@/features/account/bff";
+import { LOCALES, type Locale, parseLocale, saveLocale } from "@/i18n/locale";
+import { postToBff } from "@/lib/bffClient";
 
 /**
  * Dil menüsü: başlıkta tek ikon, altında Türkçe / English (ADR-030).
@@ -36,7 +38,10 @@ export function LocaleMenu() {
       return;
     }
     saveLocale(next);
-    startTransition(() => router.refresh());
+    startTransition(async () => {
+      await syncAccountLocale(next);
+      router.refresh();
+    });
   }
 
   return (
@@ -62,4 +67,12 @@ export function LocaleMenu() {
       </DropdownMenuContent>
     </DropdownMenu>
   );
+}
+
+/**
+ * Hesabın e-posta dilini eşitler. En iyi çabadır: sonuç ne olursa olsun ekrandaki
+ * dil değişmiştir; eşitlenemeyen dil bir sonraki girişte yetişir (ADR-032).
+ */
+async function syncAccountLocale(locale: Locale): Promise<void> {
+  await Promise.allSettled([postToBff(bffPaths.accountLocale, { locale }, "PUT")]);
 }

@@ -117,6 +117,13 @@ export async function changePassword(
   });
 }
 
+/** Hesabın e-posta dili (add-account-locale-update D1); sözleşmedeki `TR` / `EN`. */
+export type AccountLocale = components["schemas"]["AccountLocaleUpdate"]["locale"];
+
+export async function updateAccountLocale(accessToken: string, locale: AccountLocale): Promise<void> {
+  await apiSend<never>("PUT", "/api/v1/accounts/me/locale", { accessToken, body: { locale } });
+}
+
 /** Erişim token'ı yoksa başlık gönderilmez; api 401 döner. */
 export async function requestVerificationLink(accessToken: string | undefined): Promise<void> {
   await apiSend<never>("POST", "/api/v1/accounts/me/verification-requests", { accessToken });

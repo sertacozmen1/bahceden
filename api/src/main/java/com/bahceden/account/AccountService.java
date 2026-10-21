@@ -276,6 +276,17 @@ public class AccountService {
     }
 
     /**
+     * Oturum sahibinin dilini değiştirir (add-account-locale-update D1).
+     *
+     * <p>Dil menüsünden yapılan seçim girişi beklemeden hesaba yazılır; sonraki
+     * e-postalar bu dilde gider (ADR-032). Dil aynıysa kayıt değişmez.
+     */
+    @Transactional
+    public void changeLocale(long accountId, SupportedLocale locale) {
+        currentAccount(accountId).useLocale(locale, clock.instant());
+    }
+
+    /**
      * Oturum sahibinin hesabı, veritabanından <strong>taze</strong> (D7): rol
      * değişikliği token ömrü dolmadan görünür.
      *
