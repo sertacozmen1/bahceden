@@ -1,12 +1,14 @@
 import type { Route } from "next";
 import Link from "next/link";
+import { ScrollingNav } from "@/components/ScrollingNav";
 import { cn } from "@/lib/utils";
 
 /**
  * Liste sayfalarının durum süzgeci: seçenekler adreste (`?status=`) durur,
  * böylece geri tuşu ve yenileme aynı listeyi gösterir. Admin satıcıları, admin
  * ilanları ve satıcının siparişleri paylaşır (K9). Etkin seçenek
- * `aria-current` taşır; dokunma hedefi 44px.
+ * `aria-current` taşır; dokunma hedefi 44px. Dar ekranda şerit yatay kayar ve
+ * etkin seçenek görünür alana getirilir (`ScrollingNav`).
  */
 type FilterTabsProps<T extends string> = {
   readonly label: string;
@@ -17,7 +19,7 @@ type FilterTabsProps<T extends string> = {
 
 export function FilterTabs<T extends string>({ label, pathname, current, options }: FilterTabsProps<T>) {
   return (
-    <nav aria-label={label} className="mb-5 -mx-4 overflow-x-auto px-4">
+    <ScrollingNav label={label} className="mb-5 -mx-4 overflow-x-auto px-4" currentKey={current}>
       <ul className="flex gap-2">
         {options.map((option) => (
           <li key={option.value}>
@@ -36,6 +38,6 @@ export function FilterTabs<T extends string>({ label, pathname, current, options
           </li>
         ))}
       </ul>
-    </nav>
+    </ScrollingNav>
   );
 }
