@@ -5,18 +5,25 @@ import { LocaleMenu } from "./LocaleMenu";
 
 /**
  * Dil menüsü (localization spec'i "Kullanıcı dili değiştirir", ADR-030).
- * Yönlendirici taklit edilir; seçim çereze yazılır ve sayfa sunucuda yenilenir.
+ * Yönlendirici ve `fetch` taklit edilir; seçim çereze yazılır, hesaba eşitlenir
+ * (add-account-locale-update D2) ve sayfa sunucuda yenilenir.
  */
 
 const router = { refresh: vi.fn() };
 
 vi.mock("next/navigation", () => ({ useRouter: () => router }));
 
+const fetchMock = vi.fn();
+
 beforeEach(() => {
   router.refresh.mockReset();
+  fetchMock.mockReset();
+  fetchMock.mockResolvedValue(new Response(null, { status: 204 }));
+  vi.stubGlobal("fetch", fetchMock);
 });
 
 afterEach(() => {
+  vi.unstubAllGlobals();
   document.cookie = "bahceden_locale=; Path=/; Max-Age=0";
 });
 
@@ -47,6 +54,30 @@ describe("LocaleMenu", () => {
     await vi.waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
   });
 
+  it("seçimi hesaba eşitler, sonra sayfayı yeniler", async () => {
+    renderWithIntl(<LocaleMenu />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Dil: Türkçe" }));
+    fireEvent.click(await screen.findByRole("menuitemradio", { name: "English" }));
+
+    await vi.waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
+    expect(fetchMock).toHaveBeenCalledOnce();
+    const [path, init] = fetchMock.mock.calls[0] ?? [];
+    expect(path).toBe("/api/account/locale");
+    expect(init).toMatchObject({ method: "PUT", body: JSON.stringify({ locale: "en" }) });
+  });
+
+  it("eşitleme başarısız olsa da dil değişir ve sayfa yenilenir", async () => {
+    fetchMock.mockRejectedValue(new TypeError("ağ yok"));
+    renderWithIntl(<LocaleMenu />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Dil: Türkçe" }));
+    fireEvent.click(await screen.findByRole("menuitemradio", { name: "English" }));
+
+    expect(document.cookie).toContain("bahceden_locale=en");
+    await vi.waitFor(() => expect(router.refresh).toHaveBeenCalledTimes(1));
+  });
+
   it("seçili dil yeniden seçilirse bir şey yapmaz", async () => {
     renderWithIntl(<LocaleMenu />);
 
@@ -55,5 +86,6 @@ describe("LocaleMenu", () => {
 
     expect(document.cookie).not.toContain("bahceden_locale");
     expect(router.refresh).not.toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 });

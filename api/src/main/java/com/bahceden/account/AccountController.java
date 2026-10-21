@@ -1,6 +1,7 @@
 package com.bahceden.account;
 
 import com.bahceden.account.domain.Account;
+import com.bahceden.account.dto.AccountLocaleUpdate;
 import com.bahceden.account.dto.AccountView;
 import com.bahceden.account.dto.PasswordChangeRequest;
 import com.bahceden.account.dto.PasswordResetConfirmation;
@@ -32,6 +33,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -256,6 +258,31 @@ public class AccountController {
         // Sınır parola denetiminden önce: çalınmış oturumla kaba kuvvet durur (D2).
         rateLimiter.check(RateLimitPolicy.PASSWORD_CHANGE, Long.toString(accountId));
         service.changePassword(accountId, request.currentPassword(), request.newPassword());
+    }
+
+    @Operation(
+            operationId = "updateAccountLocale",
+            summary = "Oturum sahibinin dilini değiştirir",
+            description = """
+                    Hesaba giden e-postaların dilini değiştirir; kullanıcı dil menüsünden bir dil
+                    seçtiğinde çağrılır. Hesap oturumdan gelir. Dil aynıysa hiçbir şey değişmez.
+                    Yanıt mesajları her zaman isteğin dilindedir.
+                    """,
+            security = @SecurityRequirement(name = OpenApiConfig.BEARER_SCHEME))
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Hesabın dili güncellendi"),
+            @ApiResponse(responseCode = "400", description = "Dil eksik ya da tanınmıyor (VALIDATION_FAILED)",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ApiError.class))),
+            @ApiResponse(responseCode = "401", description = "Erişim token'ı yok, geçersiz ya da süresi dolmuş (AUTH_REQUIRED)",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ApiError.class)))
+    })
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PutMapping(path = "/me/locale", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public void updateLocale(@Valid @RequestBody AccountLocaleUpdate request,
+                             @Parameter(hidden = true) @AuthenticationPrincipal Jwt token) {
+        service.changeLocale(accountId(token), request.locale());
     }
 
     /** Token'ın {@code sub} iddiası hesap kimliğidir (design.md D7). */

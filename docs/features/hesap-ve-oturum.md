@@ -2,13 +2,13 @@
 
 **Durum:** Yayında
 **İlk sürüm:** 2026-10-07
-**Son değişiklik:** 2026-10-20
+**Son değişiklik:** 2026-10-21
 
 | | |
 |---|---|
-| **Kararlar** | [ADR-008](../adr/008-jwt-auth-with-opaque-refresh.md), [ADR-017](../adr/017-email-verification-non-blocking-and-2fa-switch.md), [ADR-018](../adr/018-refresh-token-rotation-with-family-revocation.md) … [ADR-026](../adr/026-verification-link-resend-requires-session.md), parola sıfırlama [ADR-033](../adr/033-password-reset-token-separate-table-one-hour.md) … [ADR-036](../adr/036-password-reset-marks-email-verified.md), oturumun sürmesi [ADR-069](../adr/069-refresh-token-reuse-grace-window.md), [ADR-070](../adr/070-silent-session-refresh-on-any-page.md), parola değiştirme [ADR-087](../adr/087-password-change-endpoint-requires-current-password.md) … [ADR-090](../adr/090-password-change-page-bff-clears-cookies.md), temizlik [ADR-097](../adr/097-expired-identity-records-deleted-refresh-by-family.md) |
+| **Kararlar** | [ADR-008](../adr/008-jwt-auth-with-opaque-refresh.md), [ADR-017](../adr/017-email-verification-non-blocking-and-2fa-switch.md), [ADR-018](../adr/018-refresh-token-rotation-with-family-revocation.md) … [ADR-026](../adr/026-verification-link-resend-requires-session.md), parola sıfırlama [ADR-033](../adr/033-password-reset-token-separate-table-one-hour.md) … [ADR-036](../adr/036-password-reset-marks-email-verified.md), oturumun sürmesi [ADR-069](../adr/069-refresh-token-reuse-grace-window.md), [ADR-070](../adr/070-silent-session-refresh-on-any-page.md), parola değiştirme [ADR-087](../adr/087-password-change-endpoint-requires-current-password.md) … [ADR-090](../adr/090-password-change-page-bff-clears-cookies.md), temizlik [ADR-097](../adr/097-expired-identity-records-deleted-refresh-by-family.md), dil eşitlemesi [ADR-098](../adr/098-account-locale-updated-by-explicit-endpoint.md), [ADR-099](../adr/099-locale-menu-syncs-account-best-effort.md) |
 | **Spec (capability)** | `openspec/specs/account-identity` |
-| **Change'ler** | `openspec/changes/archive/2026-10-07-add-account-and-session`, `openspec/changes/archive/2026-10-07-add-password-reset`, `openspec/changes/archive/2026-10-09-change-session-persistence`, `openspec/changes/archive/2026-10-17-add-password-change`, `openspec/changes/archive/2026-10-20-add-stale-record-cleanup` (archive edildi) |
+| **Change'ler** | `openspec/changes/archive/2026-10-07-add-account-and-session`, `openspec/changes/archive/2026-10-07-add-password-reset`, `openspec/changes/archive/2026-10-09-change-session-persistence`, `openspec/changes/archive/2026-10-17-add-password-change`, `openspec/changes/archive/2026-10-20-add-stale-record-cleanup` (archive edildi), `openspec/changes/archive/2026-10-21-add-account-locale-update` |
 | **Rehberler** | [Korunan uç ekleme](../how-to/korunan-uc-ekleme.md), [Yerel geliştirme](../how-to/yerel-gelistirme.md) |
 | **Referans** | [Domain modeli](../reference/01-domain-model.md), [API referansı](../reference/02-api-reference.md) |
 | **Kod** | `api/src/main/java/com/bahceden/account/`, `api/.../common/security/`, `api/.../common/ratelimit/`, `web/src/app/(account)/`, `web/src/app/api/auth/`, `web/src/features/account/` |
@@ -36,6 +36,8 @@ Kullanıcı e-posta adresi ve parolayla hesap açar ve hesabını hemen kullanı
 
 ## Tarihçe
 
+- 2026-10-21: `add-account-locale-update` change'i kullanıcı onayıyla archive edildi (`openspec/changes/archive/2026-10-21-add-account-locale-update/`). Ön koşullar: delta spec `localization` ana spec'e sync edildi; D1–D2 → ADR-098, ADR-099; dokümanlar güncel; `api` 343 ve `web` 285 test yeşil.
+- 2026-10-21: Oturum açıkken dil menüsünden yapılan seçim hesabın e-posta dilini de günceller (change `add-account-locale-update`). Yeni uç `PUT /api/v1/accounts/me/locale` ve BFF `PUT /api/account/locale`; eşitleme en iyi çabadır, oturum yoksa veya erişim token'ı geçmişse atlanır. Kararlar ADR-098, ADR-099; ADR-032'ye not. L19 kapandı.
 - 2026-10-20: `add-stale-record-cleanup` change'i kullanıcı onayıyla archive edildi (`openspec/changes/archive/2026-10-20-add-stale-record-cleanup/`). Ön koşullar: delta spec'ler (`cart-and-checkout`, `account-identity`) ana spec'lere sync edildi; D1–D2 → ADR-096, ADR-097; dokümanlar güncel; `api` 338 ve `web` 277 test yeşil.
 - 2026-10-20: Süresi geçmiş kimlik kayıtları temizlenir (change `add-stale-record-cleanup`). Doğrulama, sıfırlama ve giriş kodu satırları süreleri 7 günden önce dolmuşsa; yenileme token'ları yalnızca ailenin bütün token'larının süresi dolmuşsa aileyle silinir, tekrar kullanım koruması (ADR-018) korunur. Karar ADR-097. L15 kapandı.
 - 2026-10-19: Sipariş de e-posta doğrulaması ister (change `add-checkout-email-verification`, ADR-093). Ayrıntı: [Sepet ve Sipariş](sepet-ve-siparis.md).

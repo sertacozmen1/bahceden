@@ -18,6 +18,8 @@ export const bffPaths = {
   passwordResetRequest: "/api/auth/password-reset-request",
   passwordReset: "/api/auth/password-reset",
   passwordChange: "/api/auth/password-change",
+  // Yenileme çerezi gerekmez; `/api/auth` dışında (add-account-locale-update D2).
+  accountLocale: "/api/account/locale",
 } as const;
 
 /** Girişin sonucu. Token taşımaz: token'lar yalnızca `HttpOnly` çerezde. */

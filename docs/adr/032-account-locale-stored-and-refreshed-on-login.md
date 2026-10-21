@@ -3,6 +3,7 @@
 **Tarih:** 2026-10-07
 **Durum:** Accepted
 **Kaynak:** `add-i18n` design.md D4 · proje sahibi "hesabın dili saklansın" seçeneğini onayladı (şema değişikliği)
+**Not (2026-10-21):** Reddedilen "ayrı dil tercihi ucu" alternatifi, dil menüsü geldiği için [ADR-098](098-account-locale-updated-by-explicit-endpoint.md) ve [ADR-099](099-locale-menu-syncs-account-best-effort.md) ile eklendi: oturum açıkken yapılan dil seçimi hesaba da yazılır. Girişte güncelleme ve bu ADR'nin diğer kararları geçerlidir.
 
 ---
 

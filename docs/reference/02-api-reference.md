@@ -61,7 +61,7 @@ Tüm hatalar aynı şekli kullanır:
 | `INTERNAL_ERROR` | 500 | Beklenmeyen hata; ayrıntı yalnızca sunucu log'unda |
 
 - `message` kullanıcıya gösterilebilir ve **isteğin dilindedir**: `Accept-Language` başlığına göre `tr` ya da `en`; başlık yoksa veya yalnızca desteklenmeyen dil bildiriyorsa Türkçe. Alan hataları (`fieldErrors[].message`) ve bilgilendirme yanıtlarındaki `message` alanları da aynı kurala uyar. `code` dilden bağımsızdır ([ADR-031](../adr/031-api-messages-by-accept-language.md)).
-- `web` BFF her çağrıda sayfanın seçili dilini `Accept-Language` olarak iletir ([ADR-030](../adr/030-locale-from-cookie-then-header.md)). Hesaba giden e-postalar ise isteğin değil hesabın dilindedir ([ADR-032](../adr/032-account-locale-stored-and-refreshed-on-login.md)).
+- `web` BFF her çağrıda sayfanın seçili dilini `Accept-Language` olarak iletir ([ADR-030](../adr/030-locale-from-cookie-then-header.md)). Hesaba giden e-postalar ise isteğin değil hesabın dilindedir ([ADR-032](../adr/032-account-locale-stored-and-refreshed-on-login.md)); oturum açıkken dil menüsünden yapılan seçim hesabın dilini de günceller ([ADR-099](../adr/099-locale-menu-syncs-account-best-effort.md)).
 - `fieldErrors` her zaman vardır; alan hatası yoksa boş dizidir.
 - Stack trace, SQL ve iç sınıf adı gövdeye **sızmaz**.
 
@@ -167,6 +167,7 @@ Kimlik modeli: [ADR-008](../adr/008-jwt-auth-with-opaque-refresh.md), [ADR-017](
 | `GET /api/v1/accounts/me` | Bearer | `200` `AccountView` | 401 | - |
 | `POST /api/v1/accounts/me/verification-requests` | Bearer | `202` (gövdesiz) | 401 | hesap: saatte 3 |
 | `POST /api/v1/accounts/me/password-changes` | Bearer | `204` | 400 (`VALIDATION_FAILED`: `currentPassword`, `newPassword`), 401 | hesap: 15 dk'da 5 |
+| `PUT /api/v1/accounts/me/locale` | Bearer | `204` | 400 (`VALIDATION_FAILED`: `locale`), 401 | - |
 | `POST /api/v1/sessions` | açık | `200` `SessionTokens` · `202` `LoginChallengeIssued` | 400, 401 | IP + e-posta: 15 dk'da 10 |
 | `POST /api/v1/sessions/challenge` | açık | `200` `SessionTokens` | 400, 401 (`AUTH_CODE_INVALID`), 429 | IP + e-posta: 15 dk'da 10 |
 | `POST /api/v1/sessions/refresh` | açık (yenileme token'ı gövdede) | `200` `SessionTokens` (kullanılmış token 30 sn içinde tekrar gelirse de; [ADR-069](../adr/069-refresh-token-reuse-grace-window.md)) | 400 (`AUTH_TOKEN_INVALID`) | IP: 15 dk'da 60 |
@@ -240,6 +241,14 @@ Başarıda ([ADR-089](../adr/089-password-change-signs-out-everywhere.md)):
 - hesabın dilinde "parolanız değişti" bildirimi gider.
 
 Yanıt gövdesizdir ve **oturum açmaz**. E-posta doğrulama durumu değişmez (sıfırlamadan farkı).
+
+### `PUT /api/v1/accounts/me/locale`
+
+```json
+{ "locale": "EN" }
+```
+
+Hesabın e-posta dilini değiştirir ([ADR-098](../adr/098-account-locale-updated-by-explicit-endpoint.md)); değerler `TR` / `EN`. Hesap oturumdan gelir. Dil aynıysa kayıt değişmez. Yanıt gövdesizdir; yanıt mesajları her zaman isteğin dilindedir. Girişte dil güncellemesi de sürer ([ADR-032](../adr/032-account-locale-stored-and-refreshed-on-login.md)).
 
 ### `GET /api/v1/accounts/me`
 
@@ -319,6 +328,7 @@ Tarayıcı `api`'ye hiç konuşmaz ve token görmez ([ADR-023](../adr/023-web-bf
 | `/api/auth/password-reset-request` | POST | `POST /accounts/password-resets` | |
 | `/api/auth/password-reset` | POST | `POST /accounts/password-resets/confirmations` | Çerez yazmaz; tarayıcı `/login?reset=1`'e gider |
 | `/api/auth/password-change` | POST | `POST /accounts/me/password-changes` | Başarıda oturum çerezlerini siler, hatada dokunmaz; tarayıcı `/login?reset=1`'e gider ([ADR-090](../adr/090-password-change-page-bff-clears-cookies.md)) |
+| `/api/account/locale` | PUT | `PUT /accounts/me/locale` | Gövde `{"locale":"en"}`. Oturum çerezi yoksa `api`'ye gitmez; `api` 401 dönerse de `204`: dil menüsünün en iyi çaba eşitlemesi ([ADR-099](../adr/099-locale-menu-syncs-account-best-effort.md)) |
 | `/api/auth/logout` | POST | `DELETE /sessions/current` | `api`'ye ulaşılamasa da çerezler silinir |
 | `/api/auth/refresh?next=<yol>` | GET | `POST /sessions/refresh` | Gezinti; başarıda `next`'e, reddedilirse `/login?next=`'e 307 |
 | `/api/seller/application` | POST, PUT | `POST`, `PUT /sellers/me` | `multipart/form-data`; yalnızca formun beş alanı iletilir |

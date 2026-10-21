@@ -118,8 +118,10 @@ Architecture Decision Records, projedeki önemli mimari kararları ve bu kararla
 | 095 | [Geliştirme alıcısı yeni bir dev changeset'iyle doğrulanmış yapılır](095-dev-buyer-verified-by-new-seed.md) | Accepted | 2026-10-19 |
 | 096 | [Ödeme dönüşü gelmeyen siparişler zamanlanmış işle, dönüşle aynı kuralla kapatılır](096-unpaid-orders-closed-by-scheduled-sweep.md) | Accepted | 2026-10-20 |
 | 097 | [Süresi geçmiş kimlik kayıtları saklama payından sonra silinir; yenileme token'ları aileyle](097-expired-identity-records-deleted-refresh-by-family.md) | Accepted | 2026-10-20 |
+| 098 | [Hesabın dili oturum sahibinin açık değerle çağırdığı bir uçla da değişir](098-account-locale-updated-by-explicit-endpoint.md) | Accepted | 2026-10-21 |
+| 099 | [Dil menüsü önce çerezi yazar, hesabın dilini en iyi çabayla BFF üzerinden eşitler](099-locale-menu-syncs-account-best-effort.md) | Accepted | 2026-10-21 |
 
-**Sıradaki numara: 098.**
+**Sıradaki numara: 100.**
 
 **Durum değerleri:** `Proposed` (öneri, henüz bağlayıcı değil) · `Accepted` (yürürlükte, bağlayıcı) · `Deprecated` (artık geçerli değil, yerine bir şey gelmedi) · `Superseded by [ADR-XXX]` (yerini başka bir karara bıraktı).
 

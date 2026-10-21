@@ -73,6 +73,12 @@ async function runBffAction(
   }
 }
 
+/** Gövde okundu ama bir alan tanınmıyor: "gövde okunamadı" ile aynı yanıt, sayfanın dilinde. */
+export async function invalidRequestResponse(): Promise<Response> {
+  const t = await getTranslations();
+  return errorResponse(HTTP_BAD_REQUEST, bffErrorCodes.invalidBody, t("account.errors.invalidRequest"));
+}
+
 /** `api` hatasını tarayıcıya aynı ortak gövdeyle ve aynı durum koduyla iletir. */
 export function apiErrorResponse(error: ApiRequestError): Response {
   return Response.json(

@@ -594,6 +594,39 @@ paths:
                 $ref: "#/components/schemas/ApiError"
       security:
       - bearerAuth: []
+  /api/v1/accounts/me/locale:
+    put:
+      tags:
+      - Hesap
+      summary: Oturum sahibinin dilini değiştirir
+      description: |
+        Hesaba giden e-postaların dilini değiştirir; kullanıcı dil menüsünden bir dil
+        seçtiğinde çağrılır. Hesap oturumdan gelir. Dil aynıysa hiçbir şey değişmez.
+        Yanıt mesajları her zaman isteğin dilindedir.
+      operationId: updateAccountLocale
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountLocaleUpdate"
+        required: true
+      responses:
+        "204":
+          description: Hesabın dili güncellendi
+        "400":
+          description: Dil eksik ya da tanınmıyor (VALIDATION_FAILED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: "Erişim token'ı yok, geçersiz ya da süresi dolmuş (AUTH_REQUIRED)"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+      security:
+      - bearerAuth: []
   /api/v1/sessions:
     post:
       tags:
@@ -4353,6 +4386,19 @@ components:
       - provinceName
       - recipientName
       - title
+    AccountLocaleUpdate:
+      type: object
+      description: Hesabın e-posta dilini değiştirme isteği
+      properties:
+        locale:
+          type: string
+          description: Hesabın yeni dili; hesaba giden e-postalar bu dilde gönderilir
+          enum:
+          - TR
+          - EN
+          example: EN
+      required:
+      - locale
     LoginRequest:
       type: object
       description: Oturum açma isteği
