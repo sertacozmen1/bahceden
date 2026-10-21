@@ -91,6 +91,8 @@ class DefectClaimSweepTest {
     private DefectClaimService claimService;
 
     private ListingFixtures fixtures;
+    private OrderFlows orders;
+    private ClaimFlows claims;
     private long buyer;
     private long seller;
     private String orderNumber;
@@ -106,8 +108,8 @@ class DefectClaimSweepTest {
         mail.reset();
         fixtures = new ListingFixtures(jdbc, accessTokens);
         fixtures.cleanUp();
-        var orders = new OrderFlows(mockMvc, jdbc, objectMapper, fixtures);
-        var claims = new ClaimFlows(mockMvc, jdbc, orders, integrator, poller);
+        orders = new OrderFlows(mockMvc, jdbc, objectMapper, fixtures);
+        claims = new ClaimFlows(mockMvc, jdbc, orders, integrator, poller);
         buyer = fixtures.account("alici@ornek.test", "tr", "ROLE_CUSTOMER");
         seller = fixtures.approvedSeller("uretici@ornek.test");
         fixtures.activePayoutAccount(seller);
@@ -138,7 +140,7 @@ class DefectClaimSweepTest {
     }
 
     @Test
-    @DisplayName("Satıcı 48 saatte yanıt vermezse talep yönetime düşer; eylemcisiz geçmiş ve iki tarafa e-posta")
+    @DisplayName("Satıcı 48 saatte yanıt vermezse talep yönetime düşer; eylemcisiz geçmiş ve iki tarafa e-posta (admin hesabı yokken de)")
     void satici_sessiz() {
         clock.advance(PAST_DEADLINE);
 
@@ -151,6 +153,25 @@ class DefectClaimSweepTest {
                 .containsEntry("actor_account_id", null);
         assertThat(mail.sent()).hasSize(2);
         assertThat(provider.refunds()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Satıcının süresi dolunca her admin'e kendi dilinde, nedeni ve talep bağlantısıyla e-posta gider (ADR-101)")
+    void satici_sessiz_admin_eposta() {
+        fixtures.account("yonetici@ornek.test", "tr", "ROLE_ADMIN");
+        fixtures.account("admin-en@ornek.test", "en", "ROLE_ADMIN");
+        clock.advance(PAST_DEADLINE);
+
+        assertThat(sweep.sweepOnce()).isEqualTo(1);
+
+        assertThat(mail.sent()).hasSize(4);
+        assertThat(mail.onlySentTo("yonetici@ornek.test").body())
+                .contains("üretici süresinde yanıt vermedi")
+                .contains(orderNumber)
+                .contains("/admin/claims/" + claimId);
+        assertThat(mail.onlySentTo("admin-en@ornek.test").body())
+                .contains("the producer did not respond in time")
+                .contains("/admin/claims/" + claimId);
     }
 
     @Test
@@ -196,6 +217,31 @@ class DefectClaimSweepTest {
         assertThat(claimStatus()).isEqualTo("REFUNDED");
         assertThat(provider.refunds()).hasSize(1);
         assertThat(sweep.sweepOnce()).isZero();
+    }
+
+    @Test
+    @DisplayName("İadesi başarısız en eski talepler arkadakini bekletmez: sayfa boyutu 2, üçüncü talep aynı turda işlenir; her talep bir kez denenir (ADR-100)")
+    void basarisiz_talepler_arkadakini_bekletmez() throws Exception {
+        sellerRespond("{\"decision\":\"OFFER\",\"lines\":[{\"orderItemId\":" + tomato + ",\"quantity\":1}]}");
+        var second = offeredClaimOn("biber");
+        var third = offeredClaimOn("patlican");
+        clock.advance(PAST_DEADLINE);
+        // Test sayfa boyutu 2'dir: başarısız iki talep ilk sayfayı doldurur.
+        provider.failRefundsOf(paymentReference(orderNumber));
+        provider.failRefundsOf(paymentReference(second.orderNumber()));
+
+        assertThat(sweep.sweepOnce()).isEqualTo(1);
+
+        assertThat(claimStatus()).isEqualTo("OFFERED");
+        assertThat(statusOf(second.claimId())).isEqualTo("OFFERED");
+        assertThat(statusOf(third.claimId())).isEqualTo("REFUNDED");
+        assertThat(provider.refundAttemptsOf(paymentReference(orderNumber))).isEqualTo(1);
+        assertThat(provider.refundAttemptsOf(paymentReference(second.orderNumber()))).isEqualTo(1);
+
+        provider.reset();
+        assertThat(sweep.sweepOnce()).isEqualTo(2);
+        assertThat(claimStatus()).isEqualTo("REFUNDED");
+        assertThat(statusOf(second.claimId())).isEqualTo("REFUNDED");
     }
 
     @Test
@@ -260,6 +306,36 @@ class DefectClaimSweepTest {
 
     private String sellerToken() {
         return fixtures.sellerToken(seller);
+    }
+
+    private record OfferedClaim(String orderNumber, long claimId) {
+    }
+
+    /** Aynı alıcı ve satıcıyla, bir dakika sonra: sipariş, teslim, 2 adetlik talep ve 1 adetlik kısmi teklif. */
+    private OfferedClaim offeredClaimOn(String slug) throws Exception {
+        clock.advance(Duration.ofMinutes(1));
+        fixtures.cartItem(buyer, fixtures.publishedProduct(seller, slug, 1_500, 10), 2);
+        var number = orders.paidOrder(buyer, buyerToken());
+        var otherSellerOrder = orders.sellerOrderId(number);
+        claims.deliver(sellerToken(), otherSellerOrder);
+        var item = claims.itemId(slug);
+        var id = claims.open(buyerToken(), number, otherSellerOrder, Map.of(item, 2));
+        mockMvc.perform(post("/api/v1/sellers/me/orders/" + otherSellerOrder + "/claim/response")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + sellerToken())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"decision\":\"OFFER\",\"lines\":[{\"orderItemId\":" + item + ",\"quantity\":1}]}"))
+                .andExpect(status().isOk());
+        return new OfferedClaim(number, id);
+    }
+
+    private String paymentReference(String number) {
+        return jdbc.queryForObject("""
+                select p.provider_reference from payments p join orders o on o.id = p.order_id
+                where o.order_number = ?""", String.class, number);
+    }
+
+    private String statusOf(long id) {
+        return jdbc.queryForObject("select status from defect_claims where id = ?", String.class, id);
     }
 
     private String claimStatus() {

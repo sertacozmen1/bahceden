@@ -40,9 +40,12 @@ bahceden:
   claims:
     # Zamanlayıcı kapalı: testler süre işini sabit saatle doğrudan çağırır (ADR-083).
     sweep-enabled: false
+    # Küçük sayfa: bir turun birden fazla sayfayı dolaştığı yol her testte çalışır (ADR-100).
+    sweep-batch-size: 2
   cleanup:
     # Zamanlayıcı kapalı: testler temizlik işlerini sabit saatle doğrudan çağırır.
     enabled: false
+    pending-payment-batch-size: 2
 
 logging:
   level:

@@ -41,6 +41,8 @@ Roller erişim token'ına girişte ve her yenilemede yazılır. Rol, kişinin a�
 
 Her karar başvurana, hesabının dilinde e-postayla bildirilir. Geliştirmede bu e-postalar `http://localhost:8025` adresindeki mailpit'te görünür.
 
+Admin rolündeki her hesap, bir sorun bildirimi yönetime düştüğünde kendi dilinde e-posta alır: neden ve `/admin/claims/{id}` bağlantısıyla ([ADR-101](../adr/101-admin-email-on-claim-escalation.md)). Rol geri alınınca bu e-postalar da durur.
+
 ### 4. Rolü geri alın
 
 ```bash

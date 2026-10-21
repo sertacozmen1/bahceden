@@ -40,19 +40,35 @@ public interface DefectClaimRepository extends JpaRepository<DefectClaim, Long> 
     Optional<DefectClaim> findForBuyerUpdate(long sellerOrderId, String orderNumber, long accountId);
 
     /**
-     * Süresi dolmuş taleplerin kimlikleri, en eski süre önce (ADR-083): satıcı
-     * süresi geçmiş açık talepler ve alıcı süresi geçmiş teklif veya ret.
-     * Kısmi indeksler ({@code 014-defect-claims.sql}) bu iki koşula göredir.
+     * Süre işinin ilk sayfası: süresi dolmuş talepler, en eski süre önce
+     * (ADR-083): satıcı süresi geçmiş açık talepler ve alıcı süresi geçmiş
+     * teklif veya ret. Kısmi indeksler ({@code 014-defect-claims.sql}) bu iki
+     * koşula göredir. Sonraki sayfalar {@link #findOverdueAfter} ile (ADR-100).
      */
     @Query("""
-            select c.id from DefectClaim c
+            select new com.bahceden.order.SweepCursor(c.id, coalesce(c.buyerDeadlineAt, c.sellerDeadlineAt))
+            from DefectClaim c
             where (c.status = com.bahceden.order.domain.DefectClaimStatus.OPEN and c.sellerDeadlineAt <= :now)
                or (c.status in (com.bahceden.order.domain.DefectClaimStatus.OFFERED,
                                 com.bahceden.order.domain.DefectClaimStatus.REJECTED)
                    and c.buyerDeadlineAt <= :now)
             order by coalesce(c.buyerDeadlineAt, c.sellerDeadlineAt), c.id
             """)
-    List<Long> findOverdueIds(Instant now, Pageable pageable);
+    List<SweepCursor> findOverdue(Instant now, Pageable pageable);
+
+    /** Aynı sorgu, imleçten ({@code afterDue}, {@code afterId}) sonrası (ADR-100). */
+    @Query("""
+            select new com.bahceden.order.SweepCursor(c.id, coalesce(c.buyerDeadlineAt, c.sellerDeadlineAt))
+            from DefectClaim c
+            where ((c.status = com.bahceden.order.domain.DefectClaimStatus.OPEN and c.sellerDeadlineAt <= :now)
+                   or (c.status in (com.bahceden.order.domain.DefectClaimStatus.OFFERED,
+                                    com.bahceden.order.domain.DefectClaimStatus.REJECTED)
+                       and c.buyerDeadlineAt <= :now))
+              and (coalesce(c.buyerDeadlineAt, c.sellerDeadlineAt) > :afterDue
+                   or (coalesce(c.buyerDeadlineAt, c.sellerDeadlineAt) = :afterDue and c.id > :afterId))
+            order by coalesce(c.buyerDeadlineAt, c.sellerDeadlineAt), c.id
+            """)
+    List<SweepCursor> findOverdueAfter(Instant now, Instant afterDue, long afterId, Pageable pageable);
 
     /** Süre işi için talebi kilitler; kullanıcı eylemiyle eşzamanlılık sıraya girer (ADR-083). */
     @Lock(LockModeType.PESSIMISTIC_WRITE)

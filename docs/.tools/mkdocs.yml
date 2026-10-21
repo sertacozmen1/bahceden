@@ -189,6 +189,8 @@ nav:
     - "ADR-097 · Kimlik kayıtları temizliği": adr/097-expired-identity-records-deleted-refresh-by-family.md
     - "ADR-098 · Hesap dili ucu": adr/098-account-locale-updated-by-explicit-endpoint.md
     - "ADR-099 · Dil menüsü eşitlemesi": adr/099-locale-menu-syncs-account-best-effort.md
+    - "ADR-100 · Süre işi sayfalaması": adr/100-deadline-sweeps-page-past-failures.md
+    - "ADR-101 · Admin talep e-postası": adr/101-admin-email-on-claim-escalation.md
   - Nasıl Yapılır (How-to):
     - Genel Bakış: how-to/index.md
     - Yerel Geliştirme Ortamı: how-to/yerel-gelistirme.md

@@ -2,14 +2,14 @@
 
 **Durum:** Yayında
 **İlk sürüm:** 2026-10-14
-**Son değişiklik:** 2026-10-19
+**Son değişiklik:** 2026-10-21
 
 | | |
 |---|---|
 | **Ürün belgesi** | [Ayıplı Ürün İadesi](../product/ayipli-urun-iadesi.md) |
-| **Kararlar** | Çerçeve: [ADR-056](../adr/056-cancel-before-shipment-and-defect-refund.md), [ADR-055](../adr/055-commission-percent-plus-fixed-from-seller.md). Uygulama: [ADR-079](../adr/079-defect-claim-in-order-package-one-per-seller-order.md) … [ADR-086](../adr/086-defect-claim-web-surfaces.md) |
+| **Kararlar** | Çerçeve: [ADR-056](../adr/056-cancel-before-shipment-and-defect-refund.md), [ADR-055](../adr/055-commission-percent-plus-fixed-from-seller.md). Uygulama: [ADR-079](../adr/079-defect-claim-in-order-package-one-per-seller-order.md) … [ADR-086](../adr/086-defect-claim-web-surfaces.md). Süre işi sayfalaması ve admin e-postası: [ADR-100](../adr/100-deadline-sweeps-page-past-failures.md), [ADR-101](../adr/101-admin-email-on-claim-escalation.md) |
 | **Spec (capability)** | `openspec/specs/defect-claims`; `orders` (talep bölümü, iade sonrası hakediş) |
-| **Change'ler** | `openspec/changes/archive/2026-10-14-add-defect-claims` (archive edildi) |
+| **Change'ler** | `openspec/changes/archive/2026-10-14-add-defect-claims` (archive edildi), `openspec/changes/archive/2026-10-21-change-deadline-sweeps-and-admin-claim-email` |
 | **Rehberler** | [Yerel geliştirme](../how-to/yerel-gelistirme.md) |
 | **Kod** | `api/src/main/java/com/bahceden/order/` (`DefectClaim*`), `web/src/features/claims` |
 
@@ -24,7 +24,7 @@ Alıcıya teslim e-postasında bu sürenin son anı yazılır. Alıcı teslim ed
 - **Ürün geri gönderilmez** ve stok geri eklenmez ([ADR-082](../adr/082-defect-refund-amount-and-commission-recalculation.md)).
 - **Satıcı siparişi başına tek talep** ([ADR-079](../adr/079-defect-claim-in-order-package-one-per-seller-order.md)); ikinci talep veya itiraz yok.
 - **Kargo ücreti yalnızca tam iadede döner** (ADR-056 §5).
-- **Admin'e bildirim yok**; admin listeyi izler ([ADR-085](../adr/085-defect-claim-emails.md)).
+- **Admin'e yalnızca talep yönetime düştüğünde e-posta gider** ([ADR-101](../adr/101-admin-email-on-claim-escalation.md)); sonuç ve iadesi başarısız talepler için admin listeyi izler.
 - **Ödeme sahte sağlayıcıyla**; gerçek sağlayıcıda kısmi iadenin pay bölüşümü açık (KALANLAR A1).
 
 ## Açık konular
@@ -35,6 +35,8 @@ Alıcıya teslim e-postasında bu sürenin son anı yazılır. Alıcı teslim ed
 
 ## Tarihçe
 
+- 2026-10-21: `change-deadline-sweeps-and-admin-claim-email` change'i kullanıcı onayıyla archive edildi (`openspec/changes/archive/2026-10-21-change-deadline-sweeps-and-admin-claim-email/`). Ön koşullar: delta spec'ler (`defect-claims`, `cart-and-checkout`) ana spec'lere sync edildi; D1–D2 → ADR-100, ADR-101; dokümanlar güncel; `api` 347 test yeşil.
+- 2026-10-21: Talep yönetime düşünce (alıcı taşıdı ya da üretici süresinde yanıt vermedi) her admin hesabına kendi dilinde, nedeni ve talep bağlantısıyla e-posta gider; iadesi başarısız talepler süre işinde arkadaki talepleri bekletmez (change `change-deadline-sweeps-and-admin-claim-email`). Kararlar ADR-100, ADR-101; ADR-083 ve ADR-085'e not. L37 ve L40 kapandı.
 - 2026-10-19: Alıcı talep penceresinin son anını artık "teslim edildi" e-postasında da görür (change `add-delivered-email`, [ADR-091](../adr/091-delivered-email-to-buyer-with-claim-deadline.md)). Ayrıntı: [Kargo ve Teslimat](kargo-ve-teslimat.md).
 - 2026-10-14: `add-defect-claims` change'i kullanıcı onayıyla archive edildi (`openspec/changes/archive/2026-10-14-add-defect-claims/`). Ön koşullar: delta spec'ler ana spec'lere sync edildi (`defect-claims` yeni, `orders` değişti); D1–D8 → ADR-079…086; dokümanlar güncel; `api` 309 ve `web` 267 test yeşil. Taşımada göreli linkler bir seviye uzatıldı. Açık ve notlu: gerçek sağlayıcıda kısmi iadenin pay bölüşümü (KALANLAR A1), fotoğraf saklama süresi ve 48 saatlik sürenin hukuk teyidi (KALANLAR A5).
 - 2026-10-14: `add-defect-claims` Faz 5: referans belgeleri (domain modeli, API referansı, güncel durum L37–L41), yerel geliştirme rehberi, KALANLAR A1 notu; delta spec'ler ana spec'lere sync edildi (`defect-claims` yeni, `orders` değişti). Uçtan uca elle doğrulama (`docker compose`): sipariş → gönderi → sahte entegratör teslim etti → alıcı 2 adet için fotoğraflı talep açtı → satıcı 1 adet önerdi (önizleme ₺34,50 iade, hakediş ₺29,77) → alıcı ekibe taşıdı → admin 2 adedi iade etti (₺168,00, kargo dahil; `refunds.reason = DEFECT`); altı talep e-postası mailpit'te. Admin ve alıcı ekranları 375 px koyu ve 1440 px açık temada görüntülendi, yatay taşma ve konsol hatası yok.

@@ -159,7 +159,7 @@ Başarılı ödemede tek transaction'da şunlar olur:
 
 Stok yetmezse ödemenin tamamı iade edilir ve sipariş stok yetersizliğiyle iptal olur. Ödeme yapılandırılmış süre (30 dakika) içinde tamamlanmazsa sipariş süresi dolmuş olur. Tamamlama işlemi tekrar çağrılabilir; sonuçlanmış siparişte mevcut sonuç döner.
 
-Alıcının ödeme dönüşü hiç gelmezse, ödeme süresi yapılandırılmış bir tolerans kadar önce dolmuş siparişleri zamanlanmış bir iş aynı kuralla kapatır: sağlayıcıdan doğrular, alınmış bir ödeme varsa tamamını iade eder ve siparişi sonuçlandırır. İş siparişi kilitleyip durumunu yeniden okur; sipariş silinmez.
+Alıcının ödeme dönüşü hiç gelmezse, ödeme süresi yapılandırılmış bir tolerans kadar önce dolmuş siparişleri zamanlanmış bir iş aynı kuralla kapatır: sağlayıcıdan doğrular, alınmış bir ödeme varsa tamamını iade eder ve siparişi sonuçlandırır. İş siparişi kilitleyip durumunu yeniden okur; sipariş silinmez. Sağlayıcı hatası veren bir sipariş, aynı çalışmada ödeme süresi dolmuş diğer siparişlerin işlenmesini engellemez; bir çalışmada her sipariş en çok bir kez denenir.
 
 #### Scenario: Başarılı ödeme
 - **WHEN** sağlayıcı ödemenin başarılı olduğunu doğrular ve stok yeterlidir
@@ -192,6 +192,10 @@ Alıcının ödeme dönüşü hiç gelmezse, ödeme süresi yapılandırılmış
 #### Scenario: Sağlayıcıya ulaşılamaz
 - **WHEN** iş bir siparişi işlerken sağlayıcı hata verir
 - **THEN** o sipariş değişmez ve sonraki turda yeniden denenir; diğer siparişler işlenir
+
+#### Scenario: Hatalı siparişler arkadakileri bekletmez
+- **WHEN** ödeme süresi dolmuş siparişlerin en eskileri, bir çalışmanın bir seferde okuduğu sayıdan fazla olacak kadar çok ve sağlayıcı hepsinde hata verir
+- **THEN** aynı çalışmada arkadaki siparişler de işlenir, hatalı siparişler değişmeden kalır ve her biri bu çalışmada yalnızca bir kez denenir
 
 #### Scenario: Başkasının siparişi
 - **WHEN** bir hesap başka bir hesabın siparişinin ödemesini tamamlamaya çalışır

@@ -3,6 +3,7 @@
 **Tarih:** 2026-10-20
 **Durum:** Accepted
 **Kaynak:** `add-stale-record-cleanup` design.md D1
+**Not (2026-10-21):** Bir turun nasıl dolaşıldığı [ADR-100](100-deadline-sweeps-page-past-failures.md) ile netleşti: tur süresi dolmuş bütün siparişleri sayfalarla dolaşır, sağlayıcı hatası arkadakileri bekletmez; `pending-payment-batch-size` sayfa boyutudur. Bu ADR'nin diğer kararları geçerlidir.
 
 ---
 

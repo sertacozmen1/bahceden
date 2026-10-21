@@ -45,6 +45,15 @@ public class RecordingMailSender implements MailSender {
         return sent.get(sent.size() - 1);
     }
 
+    /** Bu adrese giden tek e-posta; yoksa ya da birden fazlaysa test düşer. */
+    public synchronized SentMail onlySentTo(String to) {
+        var matching = sent.stream().filter(mail -> mail.to().equals(to)).toList();
+        if (matching.size() != 1) {
+            throw new AssertionError(to + " adresine " + matching.size() + " e-posta gitti, 1 bekleniyordu");
+        }
+        return matching.get(0);
+    }
+
     public synchronized void failNextSends() {
         failing = true;
     }
