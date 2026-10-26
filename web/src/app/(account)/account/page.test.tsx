@@ -63,7 +63,7 @@ describe("Hesabım sayfası", () => {
     session.current = {
       kind: "signed-in",
       accessToken: "test-erisim",
-      account: { email: "alici@ornek.test", roles: ["ROLE_CUSTOMER"], emailVerified: false },
+      account: { email: "alici@ornek.test", roles: ["ROLE_CUSTOMER"], emailVerified: false, twoFactorEnabled: false },
     };
 
     renderWithIntl(await MyAccountPage());
@@ -79,20 +79,22 @@ describe("Hesabım sayfası", () => {
     session.current = {
       kind: "signed-in",
       accessToken: "test-erisim",
-      account: { email: "alici@ornek.test", roles: ["ROLE_CUSTOMER"], emailVerified: true },
+      account: { email: "alici@ornek.test", roles: ["ROLE_CUSTOMER"], emailVerified: true, twoFactorEnabled: false },
     };
 
     renderWithIntl(await MyAccountPage());
 
     expect(screen.getByRole("heading", { name: "Güvenlik" })).toBeDefined();
     expect(screen.getByRole("link", { name: "Parolayı değiştir" }).getAttribute("href")).toBe("/account/password");
+    expect(screen.getByRole("link", { name: /İki adımlı giriş/ }).getAttribute("href")).toBe("/account/two-factor");
+    expect(screen.getByRole("link", { name: /İki adımlı giriş/ }).textContent).toContain("Kapalı");
   });
 
   it("satıcı kaydı yoksa başvuruya davet eder", async () => {
     session.current = {
       kind: "signed-in",
       accessToken: "test-erisim",
-      account: { email: "alici@ornek.test", roles: ["ROLE_CUSTOMER"], emailVerified: true },
+      account: { email: "alici@ornek.test", roles: ["ROLE_CUSTOMER"], emailVerified: true, twoFactorEnabled: false },
     };
 
     renderWithIntl(await MyAccountPage());
@@ -105,7 +107,7 @@ describe("Hesabım sayfası", () => {
     session.current = {
       kind: "signed-in",
       accessToken: "test-erisim",
-      account: { email: "alici@ornek.test", roles: ["ROLE_CUSTOMER"], emailVerified: true },
+      account: { email: "alici@ornek.test", roles: ["ROLE_CUSTOMER"], emailVerified: true, twoFactorEnabled: false },
     };
     ownSeller.current = { status: "PENDING" };
 

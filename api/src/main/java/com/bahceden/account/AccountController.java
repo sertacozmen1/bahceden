@@ -9,6 +9,7 @@ import com.bahceden.account.dto.PasswordResetRequest;
 import com.bahceden.account.dto.PasswordResetRequested;
 import com.bahceden.account.dto.RegisterRequest;
 import com.bahceden.account.dto.RegistrationAccepted;
+import com.bahceden.account.dto.TwoFactorUpdate;
 import com.bahceden.account.dto.VerifyEmailRequest;
 import com.bahceden.common.i18n.Messages;
 import com.bahceden.common.i18n.SupportedLocale;
@@ -258,6 +259,43 @@ public class AccountController {
         // Sınır parola denetiminden önce: çalınmış oturumla kaba kuvvet durur (D2).
         rateLimiter.check(RateLimitPolicy.PASSWORD_CHANGE, Long.toString(accountId));
         service.changePassword(accountId, request.currentPassword(), request.newPassword());
+    }
+
+    @Operation(
+            operationId = "updateTwoFactor",
+            summary = "Oturum açıkken iki adımlı girişi açar veya kapatır",
+            description = """
+                    Mevcut parolayı doğrular ve iki adımlı girişi açar ya da kapatır. Açmak
+                    doğrulanmış e-posta adresi ister; kod bu adrese gider. Değişiklik hesabın
+                    e-posta adresine bildirilir. Kapatmak açık giriş kodlarını geçersiz kılar;
+                    açık oturumlar iki yönde de sürer. Değer zaten istenen durumdaysa hiçbir şey
+                    değişmez. Hesap başına 15 dakikada 5 istek.
+                    """,
+            security = @SecurityRequirement(name = OpenApiConfig.BEARER_SCHEME))
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "İki adımlı giriş istenen durumda"),
+            @ApiResponse(responseCode = "400",
+                    description = "Alan eksik ya da mevcut parola yanlış (VALIDATION_FAILED)",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ApiError.class))),
+            @ApiResponse(responseCode = "401", description = "Erişim token'ı yok, geçersiz ya da süresi dolmuş (AUTH_REQUIRED)",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ApiError.class))),
+            @ApiResponse(responseCode = "422", description = "Açmak için e-posta doğrulanmamış (TWO_FACTOR_EMAIL_NOT_VERIFIED)",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ApiError.class))),
+            @ApiResponse(responseCode = "429", description = "Çok fazla istek (RATE_LIMITED)",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ApiError.class)))
+    })
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PutMapping(path = "/me/two-factor", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public void updateTwoFactor(@Valid @RequestBody TwoFactorUpdate request,
+                                @Parameter(hidden = true) @AuthenticationPrincipal Jwt token) {
+        var accountId = accountId(token);
+        // Sınır parola denetiminden önce: çalınmış oturumla parola denenemez (ADR-103).
+        rateLimiter.check(RateLimitPolicy.TWO_FACTOR_CHANGE, Long.toString(accountId));
+        service.changeTwoFactor(accountId, request.enabled(), request.currentPassword());
     }
 
     @Operation(

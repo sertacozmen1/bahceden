@@ -130,6 +130,21 @@ public class Account {
     }
 
     /**
+     * İkinci adımı açar veya kapatır (ADR-103). Kurallar (parola, doğrulanmış
+     * e-posta) servistedir; değer değişmediyse kayıt güncellenmez.
+     *
+     * @return değer gerçekten değişti mi
+     */
+    public boolean useTwoFactor(boolean enabled, Instant now) {
+        if (twoFactorEnabled == enabled) {
+            return false;
+        }
+        twoFactorEnabled = enabled;
+        updatedAt = now;
+        return true;
+    }
+
+    /**
      * Kullanıcının en son kullandığı dil: başarılı girişte çağrılır (ADR-032).
      * Dil değişmediyse kayıt güncellenmez.
      */

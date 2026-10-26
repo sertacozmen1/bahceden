@@ -114,6 +114,22 @@
       "submitting": "Değiştiriliyor…",
       "back": "Hesabıma dön"
     },
+    "twoFactor": {
+      "title": "İki adımlı giriş",
+      "intro": "Açıkken her girişte parolanızdan sonra e-posta adresinize gönderdiğimiz tek kullanımlık kodu da girersiniz. Parolanız başka bir yerde ele geçirilse bile hesabınıza girilemez.",
+      "status": "Durum",
+      "on": "Açık",
+      "off": "Kapalı",
+      "enable": "Aç",
+      "disable": "Kapat",
+      "submitting": "Kaydediliyor…",
+      "enabled": "İki adımlı giriş açıldı. Bir sonraki girişinizde e-postanıza kod göndereceğiz.",
+      "disabled": "İki adımlı giriş kapatıldı. Girişte artık yalnızca parolanız istenecek.",
+      "passwordHint": "Değişikliği onaylamak için mevcut parolanızı yazın.",
+      "verifyFirstTitle": "Önce e-posta adresinizi doğrulayın",
+      "verifyFirstBody": "Giriş kodlarını e-posta adresinize göndereceğiz. İki adımlı girişi açmadan önce adresin size ait olduğunu doğrulayın.",
+      "back": "Hesabıma dön"
+    },
     "myAccount": {
       "title": "Hesabım",
       "email": "E-posta",
@@ -129,7 +145,8 @@
       "loading": "Hesap bilgileri yükleniyor",
       "shopping": "Alışveriş",
       "security": "Güvenlik",
-      "changePassword": "Parolayı değiştir"
+      "changePassword": "Parolayı değiştir",
+      "twoFactor": "İki adımlı giriş"
     },
     "errors": {
       "title": "Bir sorun oluştu",

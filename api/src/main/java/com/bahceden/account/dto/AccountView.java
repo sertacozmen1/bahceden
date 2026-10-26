@@ -14,6 +14,7 @@ import java.util.List;
  * @param email         hesabın e-posta adresi
  * @param roles         hesabın rolleri, alfabetik
  * @param emailVerified e-posta doğrulandı mı; giriş koşulu değil, bilgidir (ADR-017)
+ * @param twoFactorEnabled iki adımlı giriş açık mı (ADR-103)
  */
 @Schema(name = "AccountView", description = "Oturum sahibinin kimliği ve rolleri")
 public record AccountView(
@@ -27,5 +28,9 @@ public record AccountView(
 
         @Schema(requiredMode = Schema.RequiredMode.REQUIRED,
                 description = "E-posta adresi doğrulandı mı; giriş koşulu değildir", example = "false")
-        boolean emailVerified) {
+        boolean emailVerified,
+
+        @Schema(requiredMode = Schema.RequiredMode.REQUIRED,
+                description = "İki adımlı giriş açık mı; açıksa her girişte e-postaya kod gider", example = "false")
+        boolean twoFactorEnabled) {
 }

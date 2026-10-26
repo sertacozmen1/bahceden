@@ -16,6 +16,7 @@ public class AccountMapper {
         return new AccountView(
                 account.getEmail(),
                 account.getRoles().stream().sorted(Comparator.comparing(Enum::name)).toList(),
-                account.isEmailVerified());
+                account.isEmailVerified(),
+                account.isTwoFactorEnabled());
     }
 }

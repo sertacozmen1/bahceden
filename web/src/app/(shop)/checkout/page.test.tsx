@@ -65,7 +65,7 @@ function signedIn(emailVerified: boolean): SessionState {
   return {
     kind: "signed-in",
     accessToken: "test-erisim",
-    account: { email: "alici@ornek.test", roles: ["ROLE_CUSTOMER"], emailVerified },
+    account: { email: "alici@ornek.test", roles: ["ROLE_CUSTOMER"], emailVerified, twoFactorEnabled: false },
   };
 }
 

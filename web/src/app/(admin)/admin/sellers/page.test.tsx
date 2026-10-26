@@ -30,7 +30,7 @@ const notFound = vi.hoisted(() =>
 vi.mock("next/navigation", () => ({ notFound, redirect: vi.fn() }));
 
 function signedIn(roles: ReadonlyArray<"ROLE_CUSTOMER" | "ROLE_SELLER" | "ROLE_ADMIN">): SessionState {
-  return { kind: "signed-in", accessToken: "test-erisim", account: { email: "admin@ornek.test", roles: [...roles], emailVerified: true } };
+  return { kind: "signed-in", accessToken: "test-erisim", account: { email: "admin@ornek.test", roles: [...roles], emailVerified: true, twoFactorEnabled: false } };
 }
 
 function aPage(items: AdminSellerPage["items"]): AdminSellerPage {

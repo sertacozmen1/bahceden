@@ -114,6 +114,22 @@
       "submitting": "Changing…",
       "back": "Back to my account"
     },
+    "twoFactor": {
+      "title": "Two-step sign-in",
+      "intro": "When it is on, after your password you also enter a one-time code we send to your email address. Even if your password is exposed somewhere else, nobody can get into your account.",
+      "status": "Status",
+      "on": "On",
+      "off": "Off",
+      "enable": "Turn on",
+      "disable": "Turn off",
+      "submitting": "Saving…",
+      "enabled": "Two-step sign-in is on. We will email you a code the next time you sign in.",
+      "disabled": "Two-step sign-in is off. Only your password will be asked when you sign in.",
+      "passwordHint": "Enter your current password to confirm the change.",
+      "verifyFirstTitle": "Verify your email address first",
+      "verifyFirstBody": "We will send sign-in codes to your email address. Verify that the address is yours before turning on two-step sign-in.",
+      "back": "Back to my account"
+    },
     "myAccount": {
       "title": "My account",
       "email": "Email",
@@ -129,7 +145,8 @@
       "loading": "Loading account details",
       "shopping": "Shopping",
       "security": "Security",
-      "changePassword": "Change password"
+      "changePassword": "Change password",
+      "twoFactor": "Two-step sign-in"
     },
     "errors": {
       "title": "Something went wrong",

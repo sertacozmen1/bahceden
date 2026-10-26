@@ -276,6 +276,38 @@ public class AccountService {
     }
 
     /**
+     * Oturum sahibi iki adımlı girişi açar veya kapatır (add-two-factor-toggle D1, ADR-103).
+     *
+     * <p>Mevcut parola yanlışsa alan hatası döner (ADR-088 deseni). Açmak
+     * doğrulanmış e-posta ister: kod bu adrese gider. Değer zaten istenen
+     * durumdaysa hiçbir şey değişmez ve e-posta gitmez. Kapatmak açık giriş
+     * kodlarını kapatır; açık oturumlar iki yönde de sürer. Değişiklik hesabın
+     * dilinde bildirilir.
+     */
+    @Transactional
+    public void changeTwoFactor(long accountId, boolean enabled, String currentPassword) {
+        var account = currentAccount(accountId);
+        if (!passwordHasher.matches(currentPassword, account.getPasswordHash())) {
+            throw ApiException.invalidField("currentPassword", "validation.currentPassword.invalid");
+        }
+        if (enabled && !account.isEmailVerified()) {
+            throw new ApiException(ApiErrorCode.TWO_FACTOR_EMAIL_NOT_VERIFIED, "error.twoFactorEmailNotVerified");
+        }
+        var now = clock.instant();
+        if (!account.useTwoFactor(enabled, now)) {
+            return;
+        }
+        if (!enabled) {
+            loginChallenges.closeOpenChallenges(account.getId(), now);
+        }
+        var key = enabled ? "mail.twoFactorEnabled" : "mail.twoFactorDisabled";
+        mailSender.send(account.getEmail(),
+                messages.get(key + ".subject", account.getLocale()),
+                messages.get(key + ".body", account.getLocale(), properties.webOrigin() + "/forgot-password"));
+        log.info("İki adımlı giriş {}: hesap {}", enabled ? "açıldı" : "kapatıldı", account.getId());
+    }
+
+    /**
      * Oturum sahibinin dilini değiştirir (add-account-locale-update D1).
      *
      * <p>Dil menüsünden yapılan seçim girişi beklemeden hesaba yazılır; sonraki

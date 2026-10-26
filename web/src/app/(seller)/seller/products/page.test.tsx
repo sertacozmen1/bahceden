@@ -35,7 +35,7 @@ function signedIn(roles: ReadonlyArray<"ROLE_CUSTOMER" | "ROLE_SELLER" | "ROLE_A
   return {
     kind: "signed-in",
     accessToken: "test-erisim",
-    account: { email: "uretici@ornek.test", roles: [...roles], emailVerified: true },
+    account: { email: "uretici@ornek.test", roles: [...roles], emailVerified: true, twoFactorEnabled: false },
   };
 }
 

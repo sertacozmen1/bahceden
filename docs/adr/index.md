@@ -36,7 +36,7 @@ Architecture Decision Records, projedeki önemli mimari kararları ve bu kararla
 | 014 | [Geliştirme verisi dev profilli tekrarlanabilir migration ile](014-dev-seed-via-profiled-repeatable-migration.md) | Accepted | 2026-10-06 |
 | 015 | [Sözleşme tazeliği testle zorunlu; dosya testten üretilir](015-contract-freshness-enforced-by-test.md) | Accepted | 2026-10-06 |
 | 016 | [Şema değişiklikleri Liquibase ile yönetilir](016-liquibase-for-schema-migrations.md) | Accepted | 2026-10-06 |
-| 017 | [E-posta doğrulaması girişi engellemez; 2FA hesap anahtarıyla açılır](017-email-verification-non-blocking-and-2fa-switch.md) | Accepted | 2026-10-06 |
+| 017 | [E-posta doğrulaması girişi engellemez; 2FA hesap anahtarıyla açılır](017-email-verification-non-blocking-and-2fa-switch.md) | Accepted · §2'nin "uç yok" cümlesi [103](103-user-toggles-two-factor-with-current-password.md) ile değişti | 2026-10-06 |
 | 018 | [Yenileme token'ı: rotasyon ve tekrar kullanımda aile iptali](018-refresh-token-rotation-with-family-revocation.md) | Accepted · tolerans penceresi [069](069-refresh-token-reuse-grace-window.md) ile değişti | 2026-10-07 |
 | 019 | [E-posta SMTP üzerinden, sağlayıcıdan bağımsız, akışı kesmeden](019-email-via-smtp-provider-agnostic.md) | Accepted | 2026-10-07 |
 | 020 | [Tek kullanımlık token'lar: 256 bit, SHA-256 hash'li, süreli](020-verification-tokens-sha256-single-use.md) | Accepted | 2026-10-07 |
@@ -44,7 +44,7 @@ Architecture Decision Records, projedeki önemli mimari kararları ve bu kararla
 | 022 | [Kimlik uçlarında bellek içi sabit pencere hız sınırı](022-in-memory-fixed-window-rate-limiting.md) | Accepted | 2026-10-07 |
 | 023 | [`web` BFF: HttpOnly çerezler, başlık tabanlı CSRF, yönlendirmeyle yenileme](023-web-bff-cookies-and-header-csrf.md) | Accepted · yenileme tetikleyicisi [070](070-silent-session-refresh-on-any-page.md) ile genişledi | 2026-10-07 |
 | 024 | [Yetkilendirme JWT iddialarıyla; `/accounts/me` taze okunur](024-roles-in-jwt-claims-fresh-me-endpoint.md) | Accepted | 2026-10-07 |
-| 025 | [İkinci faktör kodu hesaba bağlı; ikinci adım e-posta + kod](025-second-factor-code-bound-to-account.md) | Accepted | 2026-10-07 |
+| 025 | [İkinci faktör kodu hesaba bağlı; ikinci adım e-posta + kod](025-second-factor-code-bound-to-account.md) | Accepted · son madde [103](103-user-toggles-two-factor-with-current-password.md) ile değişti | 2026-10-07 |
 | 026 | [Doğrulama bağlantısını yeniden gönderme oturum ister](026-verification-link-resend-requires-session.md) | Accepted | 2026-10-07 |
 | 027 | [Tasarım sistemi: shadcn/ui (Base UI) + Tailwind v4](027-shadcn-ui-design-system.md) | Accepted · tema maddesi [028](028-theme-choice-and-color-roles.md) ile değişti | 2026-10-07 |
 | 028 | [Tema seçimi çerezle sunucuda; renkler iki katmanlı (merdiven + rol)](028-theme-choice-and-color-roles.md) | Accepted | 2026-10-07 |
@@ -123,8 +123,10 @@ Architecture Decision Records, projedeki önemli mimari kararları ve bu kararla
 | 100 | [Süre işleri bir turda süresi dolmuş bütün kayıtları keyset sayfalamayla dolaşır; hata veren kayıt arkadakileri bekletmez](100-deadline-sweeps-page-past-failures.md) | Accepted | 2026-10-21 |
 | 101 | [Talep yönetime düşünce her admin hesabına kendi dilinde e-posta gider](101-admin-email-on-claim-escalation.md) | Accepted | 2026-10-21 |
 | 102 | [Oturum kapısının dönüş adresi sorguyu taşır; Next.js proxy isteğin tam adresini bir istek başlığına yazar](102-proxy-forwards-request-path-for-session-gate.md) | Accepted | 2026-10-21 |
+| 103 | [Oturum sahibi iki adımlı girişi mevcut parolasıyla açar veya kapatır; açmak doğrulanmış e-posta ister](103-user-toggles-two-factor-with-current-password.md) | Accepted | 2026-10-26 |
+| 104 | [İki adımlı giriş kendi sayfasında: durum, mevcut parola ve tek düğme; doğrulanmamış e-postada önce doğrulama](104-two-factor-page-current-password-single-button.md) | Accepted | 2026-10-26 |
 
-**Sıradaki numara: 103.**
+**Sıradaki numara: 105.**
 
 **Durum değerleri:** `Proposed` (öneri, henüz bağlayıcı değil) · `Accepted` (yürürlükte, bağlayıcı) · `Deprecated` (artık geçerli değil, yerine bir şey gelmedi) · `Superseded by [ADR-XXX]` (yerini başka bir karara bıraktı).
 
