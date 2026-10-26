@@ -594,6 +594,53 @@ paths:
                 $ref: "#/components/schemas/ApiError"
       security:
       - bearerAuth: []
+  /api/v1/accounts/me/two-factor:
+    put:
+      tags:
+      - Hesap
+      summary: Oturum açıkken iki adımlı girişi açar veya kapatır
+      description: |
+        Mevcut parolayı doğrular ve iki adımlı girişi açar ya da kapatır. Açmak
+        doğrulanmış e-posta adresi ister; kod bu adrese gider. Değişiklik hesabın
+        e-posta adresine bildirilir. Kapatmak açık giriş kodlarını geçersiz kılar;
+        açık oturumlar iki yönde de sürer. Değer zaten istenen durumdaysa hiçbir şey
+        değişmez. Hesap başına 15 dakikada 5 istek.
+      operationId: updateTwoFactor
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TwoFactorUpdate"
+        required: true
+      responses:
+        "204":
+          description: İki adımlı giriş istenen durumda
+        "400":
+          description: Alan eksik ya da mevcut parola yanlış (VALIDATION_FAILED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "401":
+          description: "Erişim token'ı yok, geçersiz ya da süresi dolmuş (AUTH_REQUIRED)"
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "422":
+          description: Açmak için e-posta doğrulanmamış (TWO_FACTOR_EMAIL_NOT_VERIFIED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "429":
+          description: Çok fazla istek (RATE_LIMITED)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+      security:
+      - bearerAuth: []
   /api/v1/accounts/me/locale:
     put:
       tags:
@@ -4386,6 +4433,23 @@ components:
       - provinceName
       - recipientName
       - title
+    TwoFactorUpdate:
+      type: object
+      description: İki adımlı girişi açma veya kapatma isteği
+      properties:
+        enabled:
+          type: boolean
+          description: İki adımlı giriş açık mı olsun
+          example: true
+        currentPassword:
+          type: string
+          description: Hesabın şu anki parolası
+          example: cok-gizli-parola
+          maxLength: 200
+          minLength: 0
+      required:
+      - currentPassword
+      - enabled
     AccountLocaleUpdate:
       type: object
       description: Hesabın e-posta dilini değiştirme isteği
@@ -6484,10 +6548,16 @@ components:
           type: boolean
           description: E-posta adresi doğrulandı mı; giriş koşulu değildir
           example: false
+        twoFactorEnabled:
+          type: boolean
+          description: İki adımlı giriş açık mı; açıksa her girişte e-postaya kod
+            gider
+          example: false
       required:
       - email
       - emailVerified
       - roles
+      - twoFactorEnabled
   securitySchemes:
     bearerAuth:
       type: http

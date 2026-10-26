@@ -3,6 +3,7 @@
 **Tarih:** 2026-10-07
 **Durum:** Accepted
 **Kaynak:** `add-account-and-session` design.md D8
+**Not (2026-10-26):** Son madde ("anahtarı değiştiren uç veya ekran yoktur") [ADR-103](103-user-toggles-two-factor-with-current-password.md) ile değişti. Kodun hesaba bağlanması, süresi ve deneme sınırı geçerlidir.
 
 ---
 

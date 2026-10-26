@@ -42,6 +42,9 @@ public enum RateLimitPolicy {
     /** Oturum açıkken parola değiştirme: aynı hesap için 15 dakikada 5; çalınmış oturumla mevcut parola denenemez (add-password-change D2). */
     PASSWORD_CHANGE(5, Duration.ofMinutes(15)),
 
+    /** İkinci adımı açma ve kapatma: aynı hesap için 15 dakikada 5; parola şartı kaba kuvvetle aşılamaz (ADR-103). */
+    TWO_FACTOR_CHANGE(5, Duration.ofMinutes(15)),
+
     /** Satıcı başvurusu veya yeniden gönderim: aynı hesap için saatte 5; her biri bir dosya yazar (add-seller-onboarding). */
     SELLER_APPLICATION(5, Duration.ofHours(1)),
 

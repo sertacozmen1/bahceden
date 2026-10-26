@@ -117,6 +117,18 @@ export async function changePassword(
   });
 }
 
+/** İki adımlı girişi açar veya kapatır (add-two-factor-toggle D1); kurallar `api`'de. */
+export async function changeTwoFactor(
+  accessToken: string | undefined,
+  enabled: boolean,
+  currentPassword: string,
+): Promise<void> {
+  await apiSend<never>("PUT", "/api/v1/accounts/me/two-factor", {
+    accessToken,
+    body: { enabled, currentPassword },
+  });
+}
+
 /** Hesabın e-posta dili (add-account-locale-update D1); sözleşmedeki `TR` / `EN`. */
 export type AccountLocale = components["schemas"]["AccountLocaleUpdate"]["locale"];
 

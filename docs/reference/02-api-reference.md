@@ -168,6 +168,7 @@ Kimlik modeli: [ADR-008](../adr/008-jwt-auth-with-opaque-refresh.md), [ADR-017](
 | `POST /api/v1/accounts/me/verification-requests` | Bearer | `202` (gövdesiz) | 401 | hesap: saatte 3 |
 | `POST /api/v1/accounts/me/password-changes` | Bearer | `204` | 400 (`VALIDATION_FAILED`: `currentPassword`, `newPassword`), 401 | hesap: 15 dk'da 5 |
 | `PUT /api/v1/accounts/me/locale` | Bearer | `204` | 400 (`VALIDATION_FAILED`: `locale`), 401 | - |
+| `PUT /api/v1/accounts/me/two-factor` | Bearer | `204` | 400 (`VALIDATION_FAILED`: `enabled`, `currentPassword`), 401, 422 (`TWO_FACTOR_EMAIL_NOT_VERIFIED`) | hesap: 15 dk'da 5 |
 | `POST /api/v1/sessions` | açık | `200` `SessionTokens` · `202` `LoginChallengeIssued` | 400, 401 | IP + e-posta: 15 dk'da 10 |
 | `POST /api/v1/sessions/challenge` | açık | `200` `SessionTokens` | 400, 401 (`AUTH_CODE_INVALID`), 429 | IP + e-posta: 15 dk'da 10 |
 | `POST /api/v1/sessions/refresh` | açık (yenileme token'ı gövdede) | `200` `SessionTokens` (kullanılmış token 30 sn içinde tekrar gelirse de; [ADR-069](../adr/069-refresh-token-reuse-grace-window.md)) | 400 (`AUTH_TOKEN_INVALID`) | IP: 15 dk'da 60 |
@@ -250,12 +251,22 @@ Yanıt gövdesizdir ve **oturum açmaz**. E-posta doğrulama durumu değişmez (
 
 Hesabın e-posta dilini değiştirir ([ADR-098](../adr/098-account-locale-updated-by-explicit-endpoint.md)); değerler `TR` / `EN`. Hesap oturumdan gelir. Dil aynıysa kayıt değişmez. Yanıt gövdesizdir; yanıt mesajları her zaman isteğin dilindedir. Girişte dil güncellemesi de sürer ([ADR-032](../adr/032-account-locale-stored-and-refreshed-on-login.md)).
 
+### `PUT /api/v1/accounts/me/two-factor`
+
+```json
+{ "enabled": true, "currentPassword": "cok-gizli-parola" }
+```
+
+İki adımlı girişi açar veya kapatır ([ADR-103](../adr/103-user-toggles-two-factor-with-current-password.md)). Hesap oturumdan gelir; mevcut parola her iki yönde de gerekir, yanlışsa `400` ve `currentPassword` alanında hata. Açmak doğrulanmış e-posta ister (`422 TWO_FACTOR_EMAIL_NOT_VERIFIED`); kapatmak istemez. Hız sınırı parola denetiminden önce uygulanır.
+
+Değer değiştiyse hesabın dilinde bildirim e-postası gider; kapatmak açık giriş kodlarını geçersiz kılar. Açık oturumlar iki yönde de sürer. Değer zaten istenen durumdaysa hiçbir şey değişmez ve e-posta gitmez.
+
 ### `GET /api/v1/accounts/me`
 
 Güncel kayıttan okunur ([ADR-024](../adr/024-roles-in-jwt-claims-fresh-me-endpoint.md)); hesap kimliği dönmez.
 
 ```json
-{ "email": "alici@ornek.test", "roles": ["ROLE_CUSTOMER"], "emailVerified": false }
+{ "email": "alici@ornek.test", "roles": ["ROLE_CUSTOMER"], "emailVerified": false, "twoFactorEnabled": false }
 ```
 
 ### `POST /api/v1/accounts/me/verification-requests`
@@ -329,6 +340,7 @@ Tarayıcı `api`'ye hiç konuşmaz ve token görmez ([ADR-023](../adr/023-web-bf
 | `/api/auth/password-reset` | POST | `POST /accounts/password-resets/confirmations` | Çerez yazmaz; tarayıcı `/login?reset=1`'e gider |
 | `/api/auth/password-change` | POST | `POST /accounts/me/password-changes` | Başarıda oturum çerezlerini siler, hatada dokunmaz; tarayıcı `/login?reset=1`'e gider ([ADR-090](../adr/090-password-change-page-bff-clears-cookies.md)) |
 | `/api/account/locale` | PUT | `PUT /accounts/me/locale` | Gövde `{"locale":"en"}`. Oturum çerezi yoksa `api`'ye gitmez; `api` 401 dönerse de `204`: dil menüsünün en iyi çaba eşitlemesi ([ADR-099](../adr/099-locale-menu-syncs-account-best-effort.md)) |
+| `/api/account/two-factor` | PUT | `PUT /accounts/me/two-factor` | Gövde `{"enabled":true,"currentPassword":…}`; `enabled` mantıksal değilse `api`'ye gitmez. Çerezlere dokunmaz; hata gövdesi aynen iletilir ([ADR-104](../adr/104-two-factor-page-current-password-single-button.md)) |
 | `/api/auth/logout` | POST | `DELETE /sessions/current` | `api`'ye ulaşılamasa da çerezler silinir |
 | `/api/auth/refresh?next=<yol>` | GET | `POST /sessions/refresh` | Gezinti; başarıda `next`'e, reddedilirse `/login?next=`'e 307 |
 | `/api/seller/application` | POST, PUT | `POST`, `PUT /sellers/me` | `multipart/form-data`; yalnızca formun beş alanı iletilir |

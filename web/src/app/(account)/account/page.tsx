@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BadgeCheck, CircleAlert, KeyRound, MapPinHouse, Receipt } from "lucide-react";
+import { BadgeCheck, CircleAlert, KeyRound, MapPinHouse, Receipt, ShieldCheck } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
@@ -34,8 +34,9 @@ export async function generateMetadata(): Promise<Metadata> {
  * Alışveriş bağlantıları (siparişler, adresler) satıcılıktan önce durur: hesabı olan
  * herkes alıcıdır (add-cart-and-checkout D10).
  *
- * Güvenlik bölümü tek bir bağlantıdır; parola formu kendi sayfasındadır
- * (add-password-change D4), Hesabım tek odakta kalır.
+ * Güvenlik bölümü yalnızca bağlantı verir; parola formu (add-password-change
+ * D4) ve iki adımlı giriş (add-two-factor-toggle D2) kendi sayfalarındadır,
+ * Hesabım tek odakta kalır. İki adımlı girişin durumu bağlantıda görünür.
  */
 export default async function MyAccountPage() {
   const t = await getTranslations();
@@ -96,6 +97,13 @@ export default async function MyAccountPage() {
           <Link className={buttonVariants({ variant: "outline" })} href="/account/password">
             <KeyRound aria-hidden />
             {t("account.myAccount.changePassword")}
+          </Link>
+          <Link className={buttonVariants({ variant: "outline" })} href="/account/two-factor">
+            <ShieldCheck aria-hidden />
+            {t("account.myAccount.twoFactor")}
+            <Badge variant={account.twoFactorEnabled ? "success" : "secondary"}>
+              {t(account.twoFactorEnabled ? "account.twoFactor.on" : "account.twoFactor.off")}
+            </Badge>
           </Link>
         </div>
       </nav>
