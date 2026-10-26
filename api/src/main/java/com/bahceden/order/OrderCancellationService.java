@@ -16,16 +16,19 @@ import com.bahceden.payment.PaymentService;
 import com.bahceden.payment.domain.RefundReason;
 import com.bahceden.seller.SellerService;
 import com.bahceden.shipping.ShipmentService;
+import com.bahceden.shipping.ShipmentStatusPoller;
 import com.bahceden.shipping.ShippingIntegratorException;
 import java.time.Clock;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 /**
  * Kargodan önce iptal ve tam iade (orders spec'i, ADR-056 §1–2,
@@ -40,6 +43,14 @@ import org.springframework.transaction.annotation.Transactional;
  * Entegratör veya iade başarısız olursa hiçbir şey değişmez (502). Karşı tarafa
  * e-posta transaction sonrasında gider. Siparişin diğer satıcı siparişleri
  * etkilenmez.
+ *
+ * <p>Entegratör gönderi iptalini reddederse, iptal transaction'ı geri
+ * alındıktan sonra gönderinin durumu hemen okunur
+ * (change-cancel-rejection-syncs-shipment D1): paket kargoya verilmişse
+ * gönderi ve satıcı siparişi durum sorgusunun kurallarıyla güncellenir ve
+ * yanıt 409 {@code ORDER_ALREADY_SHIPPED} olur. Okuma iptal transaction'ının
+ * dışındadır; içeride yapılsa ya geri alınır ya da aynı satırların kilidini
+ * bekler. Bu yüzden transaction sınırı {@link TransactionTemplate} ile çizilir.
  */
 @Service
 public class OrderCancellationService {
@@ -58,12 +69,15 @@ public class OrderCancellationService {
     private final OrderService orderService;
     private final OrderNotifier notifier;
     private final ShipmentService shipments;
+    private final ShipmentStatusPoller shipmentStatus;
+    private final TransactionTemplate transactions;
     private final Clock clock;
 
     OrderCancellationService(OrderRepository orders, SellerOrderRepository sellerOrders,
                              OrderStatusChangeRepository statusChanges, ProductRepository products,
                              PaymentService payments, SellerService sellers, OrderService orderService,
-                             OrderNotifier notifier, ShipmentService shipments, Clock clock) {
+                             OrderNotifier notifier, ShipmentService shipments, ShipmentStatusPoller shipmentStatus,
+                             PlatformTransactionManager transactionManager, Clock clock) {
         this.orders = orders;
         this.sellerOrders = sellerOrders;
         this.statusChanges = statusChanges;
@@ -73,44 +87,65 @@ public class OrderCancellationService {
         this.orderService = orderService;
         this.notifier = notifier;
         this.shipments = shipments;
+        this.shipmentStatus = shipmentStatus;
+        this.transactions = new TransactionTemplate(transactionManager);
         this.clock = clock;
     }
 
     /**
      * @throws ApiException {@code ORDER_NOT_FOUND}, {@code SELLER_ORDER_NOT_FOUND},
-     *                      {@code ORDER_INVALID_TRANSITION}, {@code SHIPPING_INTEGRATOR_ERROR} veya
-     *                      {@code PAYMENT_PROVIDER_ERROR}
+     *                      {@code ORDER_INVALID_TRANSITION}, {@code ORDER_ALREADY_SHIPPED},
+     *                      {@code SHIPPING_INTEGRATOR_ERROR} veya {@code PAYMENT_PROVIDER_ERROR}
      */
-    @Transactional
     public OrderDetail cancelByBuyer(long accountId, String orderNumber, long sellerOrderId, String reason) {
-        var order = orders.findByOrderNumberAndBuyerAccountId(orderNumber, accountId)
-                .orElseThrow(OrderService::orderNotFound);
-        var sellerOrder = sellerOrders.findForBuyerCancel(sellerOrderId, order.getId())
-                .orElseThrow(OrderService::sellerOrderNotFound);
-        cancel(sellerOrder, CancelledBy.BUYER, Optional.ofNullable(reason).map(String::trim).filter(text -> !text.isEmpty())
-                .orElse(null), accountId);
-        return orderService.detailOf(order);
+        return syncingShipmentOnRefusal(() -> {
+            var order = orders.findByOrderNumberAndBuyerAccountId(orderNumber, accountId)
+                    .orElseThrow(OrderService::orderNotFound);
+            var sellerOrder = sellerOrders.findForBuyerCancel(sellerOrderId, order.getId())
+                    .orElseThrow(OrderService::sellerOrderNotFound);
+            cancel(sellerOrder, CancelledBy.BUYER, Optional.ofNullable(reason).map(String::trim)
+                    .filter(text -> !text.isEmpty()).orElse(null), accountId);
+            return orderService.detailOf(order);
+        });
     }
 
     /**
      * @throws ApiException alan bazlı {@code VALIDATION_FAILED} (gerekçe), {@code SELLER_ORDER_NOT_FOUND},
-     *                      {@code ORDER_INVALID_TRANSITION} veya {@code PAYMENT_PROVIDER_ERROR}
+     *                      {@code ORDER_INVALID_TRANSITION}, {@code ORDER_ALREADY_SHIPPED},
+     *                      {@code SHIPPING_INTEGRATOR_ERROR} veya {@code PAYMENT_PROVIDER_ERROR}
      */
-    @Transactional
     public SellerOrderDetail cancelBySeller(long accountId, long sellerOrderId, String reason) {
-        var seller = sellers.requireApprovedSeller(accountId);
-        var text = Optional.ofNullable(reason).map(String::trim).orElse("");
-        if (text.isEmpty()) {
-            throw ApiException.invalidField("reason", "validation.cancelReason.required");
+        return syncingShipmentOnRefusal(() -> {
+            var seller = sellers.requireApprovedSeller(accountId);
+            var text = Optional.ofNullable(reason).map(String::trim).orElse("");
+            if (text.isEmpty()) {
+                throw ApiException.invalidField("reason", "validation.cancelReason.required");
+            }
+            if (text.length() < MIN_SELLER_REASON) {
+                throw ApiException.invalidField("reason", "validation.cancelReason.length");
+            }
+            var sellerOrder = sellerOrders.findForSellerUpdate(sellerOrderId, seller.getId())
+                    .filter(found -> OrderService.SELLER_VISIBLE.contains(found.getStatus()))
+                    .orElseThrow(OrderService::sellerOrderNotFound);
+            cancel(sellerOrder, CancelledBy.SELLER, text, accountId);
+            return orderService.detailForSeller(accountId, sellerOrderId);
+        });
+    }
+
+    /**
+     * İptali tek transaction'da yapar. Entegratör gönderi iptalini reddederse
+     * transaction geri alınır, ardından gönderinin durumu okunur (D1).
+     */
+    private <T> T syncingShipmentOnRefusal(Supplier<T> cancellation) {
+        try {
+            return transactions.execute(status -> cancellation.get());
+        } catch (ShipmentCancelRefused refused) {
+            if (shipmentStatus.refreshActive(refused.sellerOrderId)) {
+                log.info("İptal reddedildi, paket kargoya verilmiş: satıcı siparişi {}", refused.sellerOrderId);
+                throw new ApiException(ApiErrorCode.ORDER_ALREADY_SHIPPED, "error.orderAlreadyShipped");
+            }
+            throw new ApiException(ApiErrorCode.SHIPPING_INTEGRATOR_ERROR, "error.shippingIntegrator");
         }
-        if (text.length() < MIN_SELLER_REASON) {
-            throw ApiException.invalidField("reason", "validation.cancelReason.length");
-        }
-        var sellerOrder = sellerOrders.findForSellerUpdate(sellerOrderId, seller.getId())
-                .filter(found -> OrderService.SELLER_VISIBLE.contains(found.getStatus()))
-                .orElseThrow(OrderService::sellerOrderNotFound);
-        cancel(sellerOrder, CancelledBy.SELLER, text, accountId);
-        return orderService.detailForSeller(accountId, sellerOrderId);
     }
 
     private void cancel(SellerOrder sellerOrder, CancelledBy by, String reason, long actorAccountId) {
@@ -121,7 +156,7 @@ public class OrderCancellationService {
             shipments.cancelActive(sellerOrder.getId());
         } catch (ShippingIntegratorException cause) {
             log.warn("Gönderi iptal edilemedi, sipariş iptali yapılmadı: satıcı siparişi {}", sellerOrder.getId(), cause);
-            throw new ApiException(ApiErrorCode.SHIPPING_INTEGRATOR_ERROR, "error.shippingIntegrator");
+            throw new ShipmentCancelRefused(sellerOrder.getId());
         }
         var now = clock.instant();
         var quantities = sellerOrder.getItems().stream()
@@ -151,5 +186,16 @@ public class OrderCancellationService {
         notifier.sellerOrderCancelled(sellerOrder, by, reason);
         log.info("Satıcı siparişi iptal edildi: sipariş {}, satıcı siparişi {}, {}", order.getOrderNumber(),
                 sellerOrder.getId(), by);
+    }
+
+    /** Entegratör gönderi iptalini reddetti; transaction'ı geri aldırır, yanıtı çağıran seçer. */
+    private static final class ShipmentCancelRefused extends RuntimeException {
+
+        private final long sellerOrderId;
+
+        ShipmentCancelRefused(long sellerOrderId) {
+            super(null, null, false, false);
+            this.sellerOrderId = sellerOrderId;
+        }
     }
 }

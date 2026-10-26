@@ -160,7 +160,7 @@ public class OrderController {
     @ApiResponse(responseCode = "404",
             description = "Sipariş (ORDER_NOT_FOUND) veya satıcı siparişi (SELLER_ORDER_NOT_FOUND) yok ya da başkasına ait",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ApiError.class)))
-    @ApiResponse(responseCode = "409", description = "Satıcı siparişi iptal edilebilir durumda değil: iptal edilmiş veya kargoya verilmiş (ORDER_INVALID_TRANSITION)",
+    @ApiResponse(responseCode = "409", description = "Satıcı siparişi iptal edilebilir durumda değil: iptal edilmiş veya kargoya verilmiş (ORDER_INVALID_TRANSITION); ya da iptal reddedildi ve paketin kargoya verildiği okundu, gönderi ve sipariş güncellendi (ORDER_ALREADY_SHIPPED)",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ApiError.class)))
     @ApiResponse(responseCode = "502", description = "Gönderi iptal edilemedi (SHIPPING_INTEGRATOR_ERROR) veya iade yapılamadı (PAYMENT_PROVIDER_ERROR); hiçbir şey değişmedi",
             content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE, schema = @Schema(implementation = ApiError.class)))

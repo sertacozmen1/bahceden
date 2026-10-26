@@ -464,10 +464,10 @@ Change `add-cart-and-checkout`; kararlar [ADR-054](../adr/054-split-payment-via-
 | `POST /api/v1/orders/{orderNumber}/payment` | oturum | `200` `OrderDetail` | 401, 404 (`ORDER_NOT_FOUND`), 502 | - |
 | `GET /api/v1/orders` | oturum | `200` `PageResponseOrderSummary` | 400, 401 | - |
 | `GET /api/v1/orders/{orderNumber}` | oturum | `200` `OrderDetail` | 401, 404 | - |
-| `POST /api/v1/orders/{orderNumber}/seller-orders/{id}/cancel` | oturum | `200` `OrderDetail` | 400, 401, 404, 409 (`ORDER_INVALID_TRANSITION`), 502 | - |
+| `POST /api/v1/orders/{orderNumber}/seller-orders/{id}/cancel` | oturum | `200` `OrderDetail` | 400, 401, 404, 409 (`ORDER_INVALID_TRANSITION`, `ORDER_ALREADY_SHIPPED`), 502 | - |
 | `GET /api/v1/sellers/me/orders?status=` | `ROLE_SELLER` + onaylı satıcı | `200` `PageResponseSellerOrderSummary` | 400, 401, 403 | - |
 | `GET /api/v1/sellers/me/orders/{id}` | aynı | `200` `SellerOrderDetail` | 401, 403, 404 (`SELLER_ORDER_NOT_FOUND`) | - |
-| `POST /api/v1/sellers/me/orders/{id}/cancel` | aynı | `200` `SellerOrderDetail` | 400 (`reason`), 401, 403, 404, 409, 502 | - |
+| `POST /api/v1/sellers/me/orders/{id}/cancel` | aynı | `200` `SellerOrderDetail` | 400 (`reason`), 401, 403, 404, 409 (`ORDER_INVALID_TRANSITION`, `ORDER_ALREADY_SHIPPED`), 502 | - |
 
 - **Vitrin:** `ProductSummary` ve `ProductDetail` `purchasable` taşır; `ProductDetail` ayrıca `dispatchDays` ve `id` (sepete ekleme için). `ListingRequest.dispatchDays` isteğe bağlıdır (1–3; yoksa yeni ilanda 2).
 - **Sepet:** fiyat ve stok her okumada üründen gelir; satıcı grubu başına `itemsTotal`, `shippingFee`, `freeShippingRemaining`, `dispatchDays`; sepet için `itemCount`, toplamlar ve `hasUnavailableItems`. Satın alınamaz hale gelen satır `available = false` ile kalır ve toplama girmez.
@@ -494,7 +494,7 @@ Change `add-shipments`; kararlar [ADR-057](../adr/057-shipping-via-integrator-po
 - **Gönderi açma:** yalnızca `NEW` satıcı siparişinde; gönderici satıcının adı, ili ve telefonu (paket şubeye teslim edilir), alıcı siparişin adres kopyası. Koli boyutunun desi karşılığı yapılandırmadadır, ücreti etkilemez. Gönderi açılması satıcı siparişini değiştirmez.
 - **Durum:** zamanlanmış sorgu (`bahceden.shipping.poll-interval`) açık gönderileri entegratörden okur. `HANDED_OVER` → satıcı siparişi `SHIPPED` (alıcıya e-posta), `DELIVERED` → `DELIVERED`, `DELIVERY_FAILED` → `DELIVERY_FAILED` (alıcıya ve satıcıya e-posta). `IN_TRANSIT` yalnızca gönderi durumudur.
 - **Görünüm:** `SellerOrderDetail.shipment` ve `BuyerSellerOrderView.shipment` (`Shipment`: firma, takip numarası, durum, koli boyutu, zamanlar). Etiket yalnızca satıcıya, ayrı uçtan.
-- **İptal (değişti):** gönderisi açılmış `NEW` siparişte önce gönderi entegratörde iptal edilir, sonra iade; entegratör reddederse 502 `SHIPPING_INTEGRATOR_ERROR` ve hiçbir şey değişmez. `SHIPPED` ve sonrası 409.
+- **İptal (değişti):** gönderisi açılmış `NEW` siparişte önce gönderi entegratörde iptal edilir, sonra iade; entegratör reddederse hiçbir şey değişmez ve gönderinin durumu hemen okunur ([ADR-105](../adr/105-cancel-refusal-reads-shipment-status-409-when-shipped.md)): paket kargoya verilmişse gönderi ve satıcı siparişi durum sorgusunun kurallarıyla güncellenir ve yanıt 409 `ORDER_ALREADY_SHIPPED`; değilse veya durum okunamazsa 502 `SHIPPING_INTEGRATOR_ERROR`. `SHIPPED` ve sonrası 409 `ORDER_INVALID_TRANSITION`.
 - **Satıcı listesi:** `status` süzgeci artık `NEW`, `SHIPPED`, `DELIVERED`, `DELIVERY_FAILED`, `REFUNDED`, `CLOSED`, `CANCELLED` kabul eder.
 - **Admin kararı:** `REFUND` ürün + kargo ücretini iade eder (`refunds.reason = UNDELIVERED`), stok geri eklenmez; `CLOSE` gerekçe ister (10–500), para hareketi yok. Detayda alıcının adı ve telefonu var, açık adres yok.
 

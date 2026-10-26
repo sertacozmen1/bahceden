@@ -3,6 +3,7 @@
 **Tarih:** 2026-10-10
 **Durum:** Accepted
 **Kaynak:** `add-shipments` design.md D6; [ADR-067](067-cancel-before-shipment-full-refund-restock.md)'yi genişletir
+**Not (2026-10-26):** "Olumsuz" bölümündeki ilk madde [ADR-105](105-cancel-refusal-reads-shipment-status-409-when-shipped.md) ile giderildi: entegratör reddedince gönderinin durumu hemen okunur; paket kargoya verilmişse sipariş "Kargoda"ya geçer ve yanıt 409 `ORDER_ALREADY_SHIPPED` olur. Bu ADR'nin kararları geçerlidir.
 
 ---
 

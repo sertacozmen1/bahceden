@@ -2,6 +2,7 @@ package com.bahceden.shipping;
 
 import com.bahceden.common.BahcedenProperties;
 import com.bahceden.order.ShipmentProgressService;
+import com.bahceden.shipping.domain.Shipment;
 import com.bahceden.shipping.domain.ShipmentStatus;
 import java.time.Clock;
 import java.util.EnumSet;
@@ -73,11 +74,41 @@ public class ShipmentStatusPoller {
         return changed;
     }
 
+    /**
+     * Satıcı siparişinin etkin gönderisinin durumunu hemen okur ve sorgu
+     * kurallarıyla uygular (change-cancel-rejection-syncs-shipment D1). İptal
+     * entegratörde reddedildikten sonra, iptal transaction'ı geri alınmışken
+     * çağrılır; kendi transaction'ında çalışır.
+     *
+     * @return gönderi artık kargoya verilmişse {@code true}; gönderi yoksa veya
+     *         durum okunamazsa {@code false}
+     */
+    public boolean refreshActive(long sellerOrderId) {
+        try {
+            return Boolean.TRUE.equals(transactions.execute(status -> shipments.findActiveForUpdate(sellerOrderId)
+                    .map(shipment -> {
+                        if (shipment.getStatus().isOpen()) {
+                            apply(shipment);
+                        }
+                        return shipment.getStatus().isHandedOver();
+                    })
+                    .orElse(false)));
+        } catch (ShippingIntegratorException cause) {
+            log.warn("Gönderi durumu iptal reddinden sonra okunamadı: satıcı siparişi {}", sellerOrderId, cause);
+            return false;
+        }
+    }
+
     private boolean pollOne(long id) {
         var shipment = shipments.findByIdForUpdate(id).orElse(null);
         if (shipment == null || !shipment.getStatus().isOpen()) {
             return false;
         }
+        return apply(shipment);
+    }
+
+    private boolean apply(Shipment shipment) {
+        var id = shipment.getId();
         var previous = shipment.getStatus();
         var reported = integrator.status(shipment.getIntegratorRef());
         var now = clock.instant();

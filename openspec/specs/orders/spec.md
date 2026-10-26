@@ -91,7 +91,7 @@ Sistem, `NEW` durumundaki bir satıcı siparişinin alıcı tarafından, isteğe
 - komisyon ve hakediş geçersiz olur;
 - satıcı siparişinin ürün tutarı ile kargo ücretinin toplamı ödeme sağlayıcısından iade edilir.
 
-Entegratör gönderi iptalini reddederse veya iade başarısız olursa iptal gerçekleşmez. İptal, karşı tarafa hesabının dilinde e-postayla bildirilir. E-posta gönderilemezse iptal yine geçerlidir.
+Entegratör gönderi iptalini reddederse veya iade başarısız olursa iptal gerçekleşmez. Entegratör gönderi iptalini reddederse sistem, iptal geri alındıktan sonra gönderinin durumunu hemen entegratörden okur ve durum sorgusunun kurallarıyla uygular. Paket kargoya verilmiş çıkarsa istek `ORDER_ALREADY_SHIPPED` çakışma hatasıyla reddedilir; değilse veya durum okunamazsa entegratör hatası döner. İptal, karşı tarafa hesabının dilinde e-postayla bildirilir. E-posta gönderilemezse iptal yine geçerlidir.
 
 #### Scenario: Alıcı iptal eder
 - **WHEN** alıcı `NEW` durumundaki bir satıcı siparişini iptal eder
@@ -122,8 +122,12 @@ Entegratör gönderi iptalini reddederse veya iade başarısız olursa iptal ger
 - **THEN** gönderi entegratörde iptal edilir ve `CANCELLED` olur, ardından tam iade yapılır
 
 #### Scenario: Entegratör gönderi iptalini reddeder
-- **WHEN** entegratör gönderi iptalini reddeder
+- **WHEN** entegratör gönderi iptalini reddeder ve gönderinin entegratördeki durumu hâlâ kargoya verilmemiştir veya okunamaz
 - **THEN** satıcı siparişi ve gönderi değişmez, iade yapılmaz ve istek entegratör hatası döner
+
+#### Scenario: Paket durum sorgusundan önce kargoya verilmiş
+- **WHEN** gönderisi sistemde `CREATED` görünen ama entegratörde kargoya verilmiş bir satıcı siparişi iptal edilmek istenir
+- **THEN** iptal ve iade yapılmaz, stok değişmez; gönderi ve satıcı siparişi kargoya verildi durumuna geçer, alıcıya kargo e-postası gider ve istek `ORDER_ALREADY_SHIPPED` çakışma hatasıyla reddedilir
 
 ### Requirement: Kargoya verme son tarihi gösterilir
 

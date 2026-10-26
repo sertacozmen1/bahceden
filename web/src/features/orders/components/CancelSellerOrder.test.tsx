@@ -4,7 +4,8 @@ import { renderWithIntl } from "@/test/intl";
 import { CancelSellerOrder } from "./CancelSellerOrder";
 
 /**
- * Kargodan önce iptal (orders spec'i, ADR-056 §1, D9). Ağ ve yönlendirici
+ * Kargodan önce iptal (orders spec'i, ADR-056 §1, D9;
+ * change-cancel-rejection-syncs-shipment D2). Ağ ve yönlendirici
  * taklit edilir (AGENTS.md §12.6).
  */
 
@@ -72,6 +73,47 @@ describe("CancelSellerOrder", () => {
     fireEvent.click(await screen.findByRole("button", { name: "İptal et" }));
 
     expect(await screen.findByText("Ödeme kuruluşuna şu anda ulaşılamıyor.")).toBeDefined();
+    expect(router.refresh).not.toHaveBeenCalled();
+  });
+
+  it("paket kargoya verilmişse mesajı pencerede gösterir; sayfayı pencere kapanınca yeniler", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        jsonResponse(409, {
+          code: "ORDER_ALREADY_SHIPPED",
+          message: "Paket kargo firmasına verildi; bu sipariş artık iptal edilemez.",
+          fieldErrors: [],
+        }),
+      ),
+    );
+    renderWithIntl(<CancelSellerOrder as="buyer" orderNumber="BHC-1" sellerOrderId={17} sellerName="Üretici" />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Siparişi iptal et" }));
+    fireEvent.click(await screen.findByRole("button", { name: "İptal et" }));
+
+    expect(await screen.findByText("Paket kargo firmasına verildi; bu sipariş artık iptal edilemez.")).toBeDefined();
+    expect(router.refresh).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole("button", { name: "Vazgeç" }));
+    await waitFor(() => expect(router.refresh).toHaveBeenCalledOnce());
+  });
+
+  it("diğer hatalarda pencere kapanınca sayfayı yenilemez", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue(
+        jsonResponse(502, { code: "SHIPPING_INTEGRATOR_ERROR", message: "Kargo firmasına şu anda ulaşılamıyor.", fieldErrors: [] }),
+      ),
+    );
+    renderWithIntl(<CancelSellerOrder as="buyer" orderNumber="BHC-1" sellerOrderId={17} sellerName="Üretici" />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Siparişi iptal et" }));
+    fireEvent.click(await screen.findByRole("button", { name: "İptal et" }));
+    expect(await screen.findByText("Kargo firmasına şu anda ulaşılamıyor.")).toBeDefined();
+
+    fireEvent.click(screen.getByRole("button", { name: "Vazgeç" }));
+    await waitFor(() => expect(screen.queryByText("Kargo firmasına şu anda ulaşılamıyor.")).toBeNull());
     expect(router.refresh).not.toHaveBeenCalled();
   });
 });

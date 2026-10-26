@@ -21,7 +21,8 @@ import org.springframework.context.annotation.Primary;
  * <p>Uygulamanın sahte entegratörü durumu zamanla ilerletir ve hiç hata
  * vermez; "teslim edilemedi", ara durum atlama, geri giden bildirim ve hata
  * dalları bu uygulamayla sınanır. Dış dünyaya çıkmaz (K10). Gönderi
- * isteklerini ve iptalleri kaydeder.
+ * isteklerini ve iptalleri kaydeder. Gerçek entegratör gibi kargoya verilmiş
+ * gönderinin iptalini reddeder.
  */
 public class ScriptedShippingIntegrator implements ShippingIntegrator {
 
@@ -65,7 +66,7 @@ public class ScriptedShippingIntegrator implements ShippingIntegrator {
     @Override
     public synchronized void cancel(String integratorRef) {
         failIfUnavailable();
-        if (cancelRefused) {
+        if (cancelRefused || statuses.getOrDefault(integratorRef, ShipmentStatus.CREATED) != ShipmentStatus.CREATED) {
             throw new ShippingIntegratorException("Test: iptal reddedildi");
         }
         cancelled.add(integratorRef);
