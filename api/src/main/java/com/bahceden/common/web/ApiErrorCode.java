@@ -130,6 +130,13 @@ public enum ApiErrorCode {
      */
     ORDER_INVALID_TRANSITION(HttpStatus.CONFLICT),
 
+    /**
+     * İptal entegratörde reddedildi ve paketin kargoya verildiği hemen okundu;
+     * gönderi ve satıcı siparişi güncellendi, iptal yapılmadı
+     * (409, change-cancel-rejection-syncs-shipment D1).
+     */
+    ORDER_ALREADY_SHIPPED(HttpStatus.CONFLICT),
+
     /** Gönderi açmak için satıcının telefonu kayıtlı olmalı; entegratör çağrılmadı (422, add-shipments D3). */
     SHIPMENT_SENDER_PHONE_MISSING(HttpStatus.UNPROCESSABLE_ENTITY),
 

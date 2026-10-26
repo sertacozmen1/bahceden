@@ -1460,7 +1460,9 @@ paths:
                 $ref: "#/components/schemas/ApiError"
         "409":
           description: "Satıcı siparişi iptal edilebilir durumda değil: iptal edilmiş\
-            \ veya kargoya verilmiş (ORDER_INVALID_TRANSITION)"
+            \ veya kargoya verilmiş (ORDER_INVALID_TRANSITION); ya da iptal reddedildi\
+            \ ve paketin kargoya verildiği okundu, gönderi ve sipariş güncellendi\
+            \ (ORDER_ALREADY_SHIPPED)"
           content:
             application/json:
               schema:
@@ -1650,7 +1652,9 @@ paths:
                 $ref: "#/components/schemas/ApiError"
         "409":
           description: "Satıcı siparişi iptal edilebilir durumda değil: iptal edilmiş\
-            \ veya kargoya verilmiş (ORDER_INVALID_TRANSITION)"
+            \ veya kargoya verilmiş (ORDER_INVALID_TRANSITION); ya da iptal reddedildi\
+            \ ve paketin kargoya verildiği okundu, gönderi ve sipariş güncellendi\
+            \ (ORDER_ALREADY_SHIPPED)"
           content:
             application/json:
               schema:

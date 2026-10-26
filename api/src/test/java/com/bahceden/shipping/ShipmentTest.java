@@ -9,6 +9,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.bahceden.common.security.AccessTokenIssuer;
 import com.bahceden.common.web.ApiErrorCode;
+import com.bahceden.shipping.domain.ShipmentStatus;
 import com.bahceden.support.ListingFixtures;
 import com.bahceden.support.MutableClock;
 import com.bahceden.support.OrderFlows;
@@ -42,7 +43,7 @@ import org.springframework.test.web.servlet.ResultActions;
  * Gönderi açma, etiket ve gönderisi açık siparişin iptali (shipments spec'i
  * "Satıcı kargoya hazır siparişi için gönderi açar", "Etiket yalnızca
  * satıcısına korumalı olarak sunulur"; orders spec'i iptal; add-shipments D3,
- * D4, D6).
+ * D4, D6; change-cancel-rejection-syncs-shipment D1).
  *
  * <p>{@code critical}: sipariş durumu, sahiplik ve iade.
  */
@@ -301,6 +302,68 @@ class ShipmentTest {
         var sellerOrder = flows.sellerOrderId(number);
         flows.openShipment(sellerToken, sellerOrder);
         integrator.refuseCancels();
+
+        buyerCancel(number, sellerOrder)
+                .andExpect(status().isBadGateway())
+                .andExpect(jsonPath("$.code").value(ApiErrorCode.SHIPPING_INTEGRATOR_ERROR.name()));
+
+        assertThat(jdbc.queryForObject("select status from seller_orders", String.class)).isEqualTo("NEW");
+        assertThat(jdbc.queryForObject("select status from shipments", String.class)).isEqualTo("CREATED");
+        assertThat(provider.refunds()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Paket durum sorgusundan önce kargoya verilmişse alıcı iptali: 409 ORDER_ALREADY_SHIPPED; "
+            + "gönderi ve sipariş kargoda, alıcıya kargo e-postası, iade ve stok değişikliği yok")
+    void kargoya_verilmis_paketin_iptali_durumu_esitler() throws Exception {
+        var number = paidOrderNumber();
+        var sellerOrder = flows.sellerOrderId(number);
+        var ref = flows.openShipment(sellerToken, sellerOrder);
+        var stock = jdbc.queryForObject("select stock_quantity from products", Integer.class);
+        integrator.report(ref, ShipmentStatus.HANDED_OVER);
+        mail.reset();
+
+        buyerCancel(number, sellerOrder)
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value(ApiErrorCode.ORDER_ALREADY_SHIPPED.name()))
+                .andExpect(jsonPath("$.message").value(
+                        "Paket kargo firmasına verildi; bu sipariş artık iptal edilemez. "
+                                + "Teslim aldıktan sonra sorun bildirebilirsiniz."));
+
+        assertThat(jdbc.queryForObject("select status from seller_orders", String.class)).isEqualTo("SHIPPED");
+        assertThat(jdbc.queryForObject("select status from shipments", String.class)).isEqualTo("HANDED_OVER");
+        assertThat(jdbc.queryForObject("select stock_quantity from products", Integer.class)).isEqualTo(stock);
+        assertThat(integrator.cancelled()).isEmpty();
+        assertThat(provider.refunds()).isEmpty();
+        assertThat(mail.onlySentTo("alici@ornek.test").subject()).contains("kargoya verildi");
+    }
+
+    @Test
+    @DisplayName("Paket kargoya verilmişse satıcı iptali de 409 ORDER_ALREADY_SHIPPED ve sipariş kargoda")
+    void kargoya_verilmis_paketin_satici_iptali() throws Exception {
+        var sellerOrder = paidSellerOrder();
+        var ref = flows.openShipment(sellerToken, sellerOrder);
+        integrator.report(ref, ShipmentStatus.IN_TRANSIT);
+
+        mockMvc.perform(post("/api/v1/sellers/me/orders/" + sellerOrder + "/cancel")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + sellerToken)
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"reason\":\"Ürün elimde kalmadı, üzgünüm\"}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value(ApiErrorCode.ORDER_ALREADY_SHIPPED.name()));
+
+        assertThat(jdbc.queryForObject("select status from seller_orders", String.class)).isEqualTo("SHIPPED");
+        assertThat(jdbc.queryForObject("select status from shipments", String.class)).isEqualTo("IN_TRANSIT");
+        assertThat(provider.refunds()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("İptal reddedilir ve durum da okunamazsa: 502, sipariş NEW, gönderi CREATED, iade yok")
+    void iptal_reddi_ve_durum_okunamaz() throws Exception {
+        var number = paidOrderNumber();
+        var sellerOrder = flows.sellerOrderId(number);
+        var ref = flows.openShipment(sellerToken, sellerOrder);
+        integrator.refuseCancels();
+        integrator.failStatusOf(ref);
 
         buyerCancel(number, sellerOrder)
                 .andExpect(status().isBadGateway())

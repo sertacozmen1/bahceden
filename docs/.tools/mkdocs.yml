@@ -194,6 +194,8 @@ nav:
     - "ADR-102 · Kapı dönüş adresi": adr/102-proxy-forwards-request-path-for-session-gate.md
     - "ADR-103 · İki adımlı giriş ucu": adr/103-user-toggles-two-factor-with-current-password.md
     - "ADR-104 · İki adımlı giriş sayfası": adr/104-two-factor-page-current-password-single-button.md
+    - "ADR-105 · İptal reddinde gönderi durumu": adr/105-cancel-refusal-reads-shipment-status-409-when-shipped.md
+    - "ADR-106 · İptal penceresi ve yenileme": adr/106-cancel-dialog-keeps-message-refreshes-on-close.md
   - Nasıl Yapılır (How-to):
     - Genel Bakış: how-to/index.md
     - Yerel Geliştirme Ortamı: how-to/yerel-gelistirme.md

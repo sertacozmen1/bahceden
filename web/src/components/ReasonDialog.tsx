@@ -45,6 +45,8 @@ type Props = {
   readonly onSubmit: (reason: string) => Promise<void>;
   /** Gerekçe boş bırakılabilir; yazılırsa uzunluk sınırını yine `api` denetler. */
   readonly reasonOptional?: boolean;
+  /** Kullanıcı pencereyi gönderim olmadan kapattı (vazgeç, dışarı tıklama, Esc). */
+  readonly onClose?: () => void;
 };
 
 export function ReasonDialog({
@@ -56,6 +58,7 @@ export function ReasonDialog({
   confirmLabel,
   onSubmit,
   reasonOptional = false,
+  onClose,
 }: Props) {
   const t = useTranslations("reasonDialog");
   const errorTexts = useFormErrorTexts();
@@ -85,7 +88,15 @@ export function ReasonDialog({
 
   const reasonError = errors.fields.reason;
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        setOpen(next);
+        if (!next) {
+          onClose?.();
+        }
+      }}
+    >
       <DialogTrigger render={<Button variant="destructive" type="button" className="self-start" />}>
         <Icon aria-hidden />
         {triggerLabel}
