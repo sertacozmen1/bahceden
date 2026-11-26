@@ -53,7 +53,7 @@ Tüm hatalar aynı şekli kullanır:
 | `SELLER_ALREADY_EXISTS` | 409 | Hesabın zaten bir satıcı kaydı var |
 | `SELLER_INVALID_TRANSITION` | 409 | Kaydın şimdiki durumundan bu geçiş yapılamaz |
 | `SELLER_EMAIL_NOT_VERIFIED` | 422 | Başvuru için e-posta doğrulaması gerekir ([ADR-043](../adr/043-seller-application-requires-verified-email.md)) |
-| `SELLER_NOT_APPROVED` | 403 | Satıcıya özgü işlem onaylı satıcı ister ([ADR-044](../adr/044-seller-role-follows-status-with-query-gate.md)); bugün bunu çağıran uç yok |
+| `SELLER_NOT_APPROVED` | 403 | Satıcıya özgü işlem onaylı satıcı ister ([ADR-044](../adr/044-seller-role-follows-status-with-query-gate.md)); satıcı ilan ve sorun bildirimi uçları döner |
 | `PRODUCT_NOT_FOUND` | 404 | İlan yok, başkasına ait ya da vitrinde görünmüyor; fotoğraf anahtarı kayıtlı değil |
 | `PRODUCT_INVALID_TRANSITION` | 409 | İlanın şimdiki durumundan bu geçiş yapılamaz ([ADR-047](../adr/047-listing-states-removed-and-named-transitions.md)) |
 | `PRODUCT_PHOTO_REQUIRED` | 409 | Yayına alma / yeniden açma fotoğraf ister; yayındaki ilanın son fotoğrafı silinemez |
@@ -525,4 +525,4 @@ Change `add-defect-claims`; kararlar [ADR-056](../adr/056-cancel-before-shipment
 
 ## Henüz olmayan uçlar
 
-Oturum açıkken parola değiştirme uçları **yoktur**; karara bağlandı, change bekliyor. Gerçek kargo entegratörü ve durum bildirimi (webhook) entegratör seçimine bağlı (KALANLAR A2).
+Oturum açıkken parola değiştirme artık var ([ADR-087](../adr/087-password-change-endpoint-requires-current-password.md)). Gerçek kargo entegratörü ve durum bildirimi (webhook) entegratör seçimine bağlı (KALANLAR A2).

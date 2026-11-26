@@ -22,10 +22,10 @@ Bir üretici, alıcı olarak açtığı hesaptan "Hesabım → Satıcı olarak b
 
 ## Bilinçli sınırlar
 
-- **Ürün ilanı ekleme yok.** Onaylı satıcının bugün yapabileceği bir satış işlemi yok; ilan ve fotoğraf ayrı bir change olacak ([ADR-038](../adr/038-listings-publish-immediately-with-admin-takedown.md), [ADR-039](../adr/039-uploads-on-local-volume-served-by-api.md)).
+- **İlan ve fotoğraf ayrı feature'dır:** onaylı satıcı ilanlarını [Ürün İlanları](urun-ilanlari.md) üzerinden açar ([ADR-038](../adr/038-listings-publish-immediately-with-admin-takedown.md), [ADR-039](../adr/039-uploads-on-local-volume-served-by-api.md)).
 - **Admin'e yeni başvuru bildirimi yok.** Bildirim kanalları KALANLAR B4'e bağlı; admin listeyi panelden izler.
 - **Profil düzenleme yok.** Onaylı satıcı adını, şehrini ve telefonunu değiştiremez.
-- **TCKN, VKN, IBAN alınmıyor** ([ADR-037](../adr/037-seller-application-with-document-and-manual-approval.md) §4). IBAN ödeme kararıyla (A1) gelecek.
+- **Başvuruda TCKN, VKN, IBAN alınmıyor** ([ADR-037](../adr/037-seller-application-with-document-and-manual-approval.md) §4). Ödeme bilgileri onaydan sonra ayrı ekranda (`/seller/payout`) girilir ([Ödeme ve Hakediş](odeme-ve-hakedis.md)).
 - **Belge otomatik doğrulanmıyor ve antivirüsten geçmiyor.** Tür içerikten tespit ediliyor ve belge korumalı başlıklarla sunuluyor ([ADR-045](../adr/045-seller-documents-table-content-sniffing-protected-serving.md)).
 - **`ROLE_ADMIN` ürün yüzeyinden verilemez** ([ADR-046](../adr/046-admin-surface-in-web-first-admin-by-sql.md)).
 - **HEIC ve WebP desteklenmiyor**; telefondan JPEG veya PNG istenir.

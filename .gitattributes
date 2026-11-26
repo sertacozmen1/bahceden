@@ -1,0 +1,7 @@
+# Kabuk betikleri her işletim sisteminde LF satır sonuyla çıkar: Linux
+# konteynerlerinde ve Git hook'larında çalışırlar. Bu satırlar olmadan Windows'ta
+# core.autocrlf=true ile alınan klonda api/mvnw CRLF'li gelir ve
+# `docker compose up --build` api imajında exit 127 ile düşer.
+api/mvnw     text eol=lf
+*.sh         text eol=lf
+.githooks/*  text eol=lf

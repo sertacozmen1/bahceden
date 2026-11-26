@@ -34,11 +34,11 @@ Feature dosyası içerik üretmez; yukarıdakilere **link verir** ve zaman için
 | [Ayıplı Ürün ve İade](ayipli-urun-ve-iade.md) | Yayında | 2026-10-14 | 2026-10-21 | defect-claims, orders |
 | [Genel: feature'a bağlı olmayan işler](_genel.md) | - | - | 2026-10-21 | (dokümantasyon, araçlar, altyapı, AI kuralları) |
 
-**Planlanan feature'lar** (ilk dilimlerle birlikte dosyaları açılacak):
+**Planlanan feature'lar** (karar verilince dosyaları açılacak):
 
 | Feature | Kapsam | Bloke eden karar |
 |---|---|---|
-| Bildirimler | Sipariş/kargo e-postası, satıcı bildirimi | KALANLAR B4 |
+| Bildirimler | SMS kanalı (sipariş, kargo ve talep bildirimleri bugün e-postayla gidiyor) | KALANLAR B4 |
 
 **Durum değerleri:** `Fikir` (yalnızca product belgesi var) · `Geliştirmede` (change açık) · `Yayında` (change archive edildi, `main`'de) · `Kaldırıldı`.
 
