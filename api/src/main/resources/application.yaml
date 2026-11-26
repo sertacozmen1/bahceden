@@ -39,6 +39,20 @@ spring:
       mail.smtp.timeout: 5000
       mail.smtp.writetimeout: 5000
 
+  data:
+    redis:
+      # Hız sınırı ve vitrin cache'i (ADR-107). Varsayılan YOKTUR: değişken
+      # tanımsızsa uygulama açılmaz (K10 fail-fast). Bağlantı dizesinde parola
+      # varsa yalnızca ortamdan gelir.
+      url: ${BAHCEDEN_REDIS_URL}
+      # Redis yavaşsa istek beklemez: hız sınırı ve cache fail-open çalışır (ADR-108, ADR-109).
+      timeout: 500ms
+      connect-timeout: 1s
+
+  kafka:
+    # İş olayları (ADR-107, ADR-110). Varsayılan YOKTUR (K10 fail-fast).
+    bootstrap-servers: ${BAHCEDEN_KAFKA_BOOTSTRAP}
+
   servlet:
     multipart:
       # Belge sınırı (bahceden.storage.max-document-bytes, 10 MB) ile aynı

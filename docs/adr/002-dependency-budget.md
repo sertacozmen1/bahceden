@@ -1,7 +1,7 @@
 # [ADR-002] Bağımlılık bütçesi: Spring starters, Liquibase, Next.js çekirdeği
 
 **Tarih:** 2026-10-06
-**Durum:** Accepted · bütçe [ADR-009](009-contract-generated-from-spring.md) ile bir kalem genişletildi (2026-10-06) · `web/` bütçesi ve stil yöntemi [ADR-027](027-shadcn-ui-design-system.md), çeviri paketi [ADR-029](029-next-intl-without-routing.md) ile değişti (2026-10-07)
+**Durum:** Accepted · bütçe [ADR-009](009-contract-generated-from-spring.md) ile bir kalem genişletildi (2026-10-06) · `web/` bütçesi ve stil yöntemi [ADR-027](027-shadcn-ui-design-system.md), çeviri paketi [ADR-029](029-next-intl-without-routing.md) ile değişti (2026-10-07) · Redis ve Kafka [ADR-107](107-redis-and-kafka-added-to-budget.md) ile eklendi (2026-11-26)
 
 ---
 
@@ -16,6 +16,7 @@
 > | 2026-10-06 | `api/` runtime: `spring-boot-starter-mail` (SMTP; doğrulama bağlantısı ve ikinci faktör kodu). K7'nin dört sorusu `openspec/changes/archive/2026-10-07-add-account-and-session/proposal.md` içinde cevaplandı; kullanıcı onayı alındı. Sağlayıcı seçimi yapılmadı: SMTP sağlayıcıdan bağımsızdır, geliştirmede `mailpit` | [ADR-017](017-email-verification-non-blocking-and-2fa-switch.md) |
 > | 2026-10-07 | `web/` runtime: `@base-ui/react`, `class-variance-authority`, `clsx`, `tailwind-merge`, `lucide-react`; `web/` dev: `tailwindcss`, `@tailwindcss/postcss`, `tw-animate-css`. Aşağıdaki "Tailwind CSS veya UI kütüphanesi" reddi bu kapsamda kalktı: CSS Modules yerine Tailwind v4 + shadcn/ui. K7'nin dört sorusu cevaplandı, kullanıcı onayı alındı | [ADR-027](027-shadcn-ui-design-system.md) |
 > | 2026-10-07 | `web/` runtime: `next-intl` (çeviri, yönlendirmesiz). K7'nin dört sorusu `openspec/changes/archive/2026-10-07-add-i18n/proposal.md` içinde cevaplandı; proje sahibi "sektör standardı" seçeneğini onayladı. `createNextIntlPlugin` kullanılmaz | [ADR-029](029-next-intl-without-routing.md) |
+> | 2026-11-26 | `api/` runtime: `spring-boot-starter-data-redis`, `spring-boot-starter-cache`, `spring-kafka`; `api/` test: `org.testcontainers:kafka`; sistem: `redis:7.2-alpine`, `apache/kafka:3.9.1`. Kullanım yerleri sınırlı: dağıtık hız sınırı, vitrin cache'i, outbox ile iş olayları. K7'nin dört sorusu `openspec/changes/add-redis-cache-and-order-paid-event/` içinde cevaplandı; proje sahibi onayladı | [ADR-107](107-redis-and-kafka-added-to-budget.md) |
 
 ## Context
 

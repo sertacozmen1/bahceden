@@ -35,7 +35,7 @@ Bu anayasa **kod yazılmadan önce** yazıldı. Kural, doküman ve planlama appa
 | `.claude/` | `/opsx:*` komutları (`commands/opsx/`) ve openspec skill'leri (`skills/`). Karar ve konvansiyonların tek kaynağı bu dosya ve `docs/adr/`'dir; branch notu tutulmaz. | ✅ Kurulu |
 | `.githooks/pre-commit` | Değişen katmanın doğrulamasını commit öncesi koşar + K6/K10 taraması (`git config core.hooksPath .githooks`). | ✅ Kurulu |
 | `.github/workflows/ci.yml` | CI: `api` testleri, `web` lint + typecheck + test + build, `docs` strict derleme, K6/K10 kural denetimi. | ✅ Kurulu, 4/4 yeşil |
-| `docker-compose.yml` | Geliştirme ortamı: `db` (PostgreSQL 17), `api`, `web`, `mailpit` (e-posta yakalama). | Hedef |
+| `docker-compose.yml` | Geliştirme ortamı: `db` (PostgreSQL 17), `api`, `web`, `mailpit` (e-posta yakalama), `redis` (hız sınırı + vitrin cache'i), `kafka` (iş olayları; KRaft tek düğüm) ([ADR-107](docs/adr/107-redis-and-kafka-added-to-budget.md)). | ✅ Kurulu |
 
 **Yeni üst seviye dizin açmak mimari karardır** (ADR + kullanıcı onayı). "Ortak kod" için üçüncü bir modül (`common/`, `core-lib/`) açmak §3'ü ihlal eder; paylaşılan tek şey sözleşmedir.
 
@@ -63,6 +63,7 @@ web/  (yalnızca HTTP ile api/'ye konuşur)
 - Dış servisler (kargo firması, ödeme sağlayıcı, SMS/e-posta) **yalnızca** `api/` üzerinden çağrılır; `web/` bir dış servise kendi anahtarıyla gitmez. (İstisna: sağlayıcının zorunlu kıldığı tarayıcı tarafı SDK'sı — ADR gerektirir.)
 - Circular dependency **yasaktır.** Dependency yönünü değiştirecek her tasarım ADR gerektirir ve kullanıcı onayı olmadan uygulanmaz.
 - **MVP ölçeği için over-engineering yapılmaz.** Hedef: az sayıda satıcı, tek bölge, tek sunucu. Bugün gerekmeyen soyutlama (mikroservis, event bus, kuyruk, CQRS, plugin sistemi, çok bölgeli kurulum, genel amaçlı framework, konfigürasyon üstüne konfigürasyon) eklenmez; "ileride lazım olur" gerekçe değildir, ihtiyaç doğduğunda ADR ile gelir.
+  - **Tek istisna ([ADR-107](docs/adr/107-redis-and-kafka-added-to-budget.md)):** Redis yalnızca dağıtık hız sınırı ve herkese açık vitrin okumalarının cache'i için, Kafka yalnızca transactional outbox üzerinden yayınlanan iş olayları için bütçededir. Redis/Kafka'ya yalnızca `api/` konuşur. Yeni bir cache, yeni bir olay veya başka bir kullanım (oturum, sepet, iş kuyruğu) yine change + ADR gerektirir; mikroservis ayırmak, schema registry ve Kafka Streams yasak kapsamında kalır.
 
 ## 4. Dokunulmaz Kurallar
 
@@ -140,11 +141,11 @@ Bağımlılık bütçesi bir ADR'dir: [ADR-002](docs/adr/002-dependency-budget.m
 
 | Katman | İzinli | Not |
 |---|---|---|
-| `api/` runtime | `spring-boot-starter-web`, `spring-boot-starter-data-jpa`, `spring-boot-starter-validation`, `spring-boot-starter-security`, `postgresql` sürücüsü, `liquibase-core`, `springdoc-openapi-starter-webmvc-api` (spec üretimi; UI paketi **değil**), `spring-boot-starter-oauth2-resource-server` (JWT imzalama/doğrulama; Nimbus JOSE dahil), `spring-boot-starter-mail` (SMTP; ADR-017) | Java 21, Maven, Spring Boot 3.x. Üçüncü parti JWT kütüphanesi (jjwt vb.) **alınmaz**: Spring'in kendi paketi yeterli |
-| `api/` test | `spring-boot-starter-test` (JUnit 5 + AssertJ + MockMvc), `spring-security-test`, Testcontainers (PostgreSQL) | Test gerçek PostgreSQL'e karşı koşar; H2 ile sapma kabul edilmez |
+| `api/` runtime | `spring-boot-starter-web`, `spring-boot-starter-data-jpa`, `spring-boot-starter-validation`, `spring-boot-starter-security`, `postgresql` sürücüsü, `liquibase-core`, `springdoc-openapi-starter-webmvc-api` (spec üretimi; UI paketi **değil**), `spring-boot-starter-oauth2-resource-server` (JWT imzalama/doğrulama; Nimbus JOSE dahil), `spring-boot-starter-mail` (SMTP; ADR-017), `spring-boot-starter-data-redis`, `spring-boot-starter-cache`, `spring-kafka` (ADR-107; kullanım yerleri §3 istisnasıyla sınırlı) | Java 21, Maven, Spring Boot 3.x. Üçüncü parti JWT kütüphanesi (jjwt vb.) **alınmaz**: Spring'in kendi paketi yeterli |
+| `api/` test | `spring-boot-starter-test` (JUnit 5 + AssertJ + MockMvc), `spring-security-test`, Testcontainers (PostgreSQL, Kafka; Redis `GenericContainer` ile) | Test gerçek PostgreSQL, Redis ve Kafka'ya karşı koşar; H2 veya gömülü broker ile sapma kabul edilmez |
 | `web/` runtime | `next`, `react`, `react-dom`, `@base-ui/react`, `class-variance-authority`, `clsx`, `tailwind-merge`, `lucide-react`, `next-intl` | TypeScript, App Router. UI: shadcn/ui `base-nova` bileşenleri projeye kopyalanır, primitive Base UI, ikon Lucide ([ADR-027](docs/adr/027-shadcn-ui-design-system.md)); `cn` ve `shadcn` paketleri **alınmaz**. Çeviri next-intl, yönlendirmesiz; `createNextIntlPlugin` **kullanılmaz** (yerel ikili yükler), `next-intl/config` takma adı `next.config.ts`'te ([ADR-029](docs/adr/029-next-intl-without-routing.md)) |
 | `web/` dev | `typescript`, `eslint` (+ `eslint-config-next`), `vitest` + `@testing-library/react`, `@playwright/test`, OpenAPI → TS tip üreteci, `tailwindcss` + `@tailwindcss/postcss`, `tw-animate-css` | Tailwind v4 ([ADR-027](docs/adr/027-shadcn-ui-design-system.md)) |
-| Sistem | PostgreSQL 17, Docker Compose, `mailpit` (geliştirme e-postası) | |
+| Sistem | PostgreSQL 17, Docker Compose, `mailpit` (geliştirme e-postası), `redis:7.2-alpine`, `apache/kafka:3.9.1` (ADR-107) | |
 
 Bu listenin **dışındaki** her paket / servis / Docker imajı **mimari karardır.** Eklemeden önce kullanıcıya yaz ve **onay al**:
 
@@ -270,7 +271,7 @@ Her değişiklikte en az şunlar sorulur; "etkilenmiyor" cevabı da raporda yaz�
 
 ```bash
 # Ortam
-docker compose up                       # api http://localhost:8080, web http://localhost:3000, mailpit http://localhost:8025
+docker compose up                       # api http://localhost:8080, web http://localhost:3000, mailpit http://localhost:8025, redis localhost:6379, kafka localhost:9094
 
 # api/ doğrulama (her dilim sonunda, tamamı)
 docker compose exec -T api ./mvnw -B verify             # derleme + birim/entegrasyon testleri

@@ -8,6 +8,8 @@
 #   db       PostgreSQL 17  (ADR-004)
 #   api      Spring Boot 3  (ADR-001) http://localhost:8080
 #   mailpit  e-posta yakalayıcı       http://localhost:8025
+#   redis    Redis 7.2 (ADR-107)      localhost:6379; hız sınırı + vitrin cache'i, kalıcılık kapalı
+#   kafka    Apache Kafka 3.9 (ADR-107) localhost:9094; KRaft tek düğüm, iş olayları
 #
 # web servisi (Next.js) dilimin 4. fazında eklenir; o faza kadar bu dosya
 # tek başına çalışır durumdadır (AGENTS.md K5).
@@ -47,6 +49,9 @@ services:
       # Yüklenen dosyalar (satıcı belgeleri) volume'da durur (ADR-039); konteyner
       # yeniden kurulduğunda kaybolmaz. Yedeklemesi barındırma kararına bağlı (B5).
       BAHCEDEN_STORAGE_DIR: /app/uploads
+      # Redis ve Kafka konteyner ağı içinde servis adıyla çözülür (ADR-107).
+      BAHCEDEN_REDIS_URL: redis://redis:6379
+      BAHCEDEN_KAFKA_BOOTSTRAP: kafka:9092
     ports:
       - "8080:8080"
     volumes:
@@ -56,6 +61,10 @@ services:
         condition: service_healthy
       mailpit:
         condition: service_started
+      redis:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "wget -q -O- http://localhost:8080/api/v1/health || exit 1"]
       interval: 10s
@@ -86,6 +95,50 @@ services:
       - "8025:8025"
     environment:
       MP_MAX_MESSAGES: 500
+
+  redis:
+    image: redis:7.2-alpine
+    # Cache ve hız sınırı sayaçları geçicidir: diske yazılmaz. Kaybolurlarsa
+    # cache yeniden dolar, sayaç pencere başından sayar (ADR-107).
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep -q PONG"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  kafka:
+    image: apache/kafka:3.9.1
+    # KRaft tek düğüm: aynı süreç hem broker hem controller; ZooKeeper yok.
+    # İki dinleyici: konteyner ağı (kafka:9092, api buradan bağlanır) ve
+    # makineden erişim (localhost:9094, olayları izlemek için).
+    # Veri volume'a yazılmaz: olayın doğruluk kaynağı outbox tablosudur (ADR-110).
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      # Topic'leri uygulama açılışta tanımlar; yazım hatasıyla topic doğmaz.
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+      KAFKA_HEAP_OPTS: -Xmx512m -Xms256m
+    ports:
+      - "9094:9094"
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 > /dev/null 2>&1"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+      start_period: 20s
 
 volumes:
   db-data:
