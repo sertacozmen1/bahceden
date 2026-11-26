@@ -29,7 +29,7 @@ Alıcı ürün sayfasında adet seçip ürünü sepete ekler; sepet hesabına ba
 - **Stok rezervasyonu yok**; son ürünü iki alıcı ödeyebilir, ikincisi tam iade alır.
 - **Teslimat dört ille sınırlı** ([ADR-063](../adr/063-delivery-provinces-config-address-book.md)); ilçe doğrulanmaz.
 - **İş günü hesabı resmi tatilleri bilmez** ([ADR-061](../adr/061-listing-dispatch-days-business-days-weekends-only.md)).
-- **Admin sipariş ekranı, kupon, asgari sepet, fatura yok.**
+- **Kupon, asgari sepet ve fatura yok.** Admin sipariş ekranı (`/admin/orders`) yalnızca teslim edilemeyen siparişler içindir ([ADR-077](../adr/077-undelivered-order-admin-refund-or-close.md)).
 - **Ödenmemiş sipariş için e-posta gitmez**; iş onu kapatır, alıcı listesinde durumu görür ([ADR-096](../adr/096-unpaid-orders-closed-by-scheduled-sweep.md)).
 
 ## Açık konular

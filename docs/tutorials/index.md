@@ -12,7 +12,7 @@ How-to rehberlerinden farkı: how-to **bilen** birinin belirli bir işi yapması
 |---|---|
 | (henüz yok) | - |
 
-Bugün depoda uygulama kodu olmadığı için anlatılacak uçtan uca bir akış yok ([güncel durum](../reference/00-current-state.md)). İlk dikey dilimle birlikte planlanan eğitim:
+Henüz yazılmış bir eğitim yok; uygulama çalışıyor ([güncel durum](../reference/00-current-state.md)) ve akışları elle denemek için [yerel geliştirme rehberinin](../how-to/yerel-gelistirme.md) 7. adımı kullanılabilir. Planlanan eğitim:
 
 | Planlanan | Kapsam |
 |---|---|

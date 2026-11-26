@@ -372,7 +372,7 @@ Tek hesap tablosu; aynı kişi hem alıcı hem satıcı olabilir ([ADR-008](../a
 
 ### `account_roles`
 
-Hesabın rolleri, değer kümesi olarak (`@ElementCollection`). Birincil anahtar `(account_id, role)`. Kayıt olan herkes `ROLE_CUSTOMER` alır; `ROLE_SELLER` atama akışı yok (A3), `ROLE_ADMIN` yalnızca veritabanından verilir.
+Hesabın rolleri, değer kümesi olarak (`@ElementCollection`). Birincil anahtar `(account_id, role)`. Kayıt olan herkes `ROLE_CUSTOMER` alır; `ROLE_SELLER` satıcı başvurusu admin tarafından onaylanınca eklenir, askıya almada kaldırılır ([ADR-044](../adr/044-seller-role-follows-status-with-query-gate.md)); `ROLE_ADMIN` yalnızca veritabanından verilir.
 
 ### `email_verification_tokens`
 

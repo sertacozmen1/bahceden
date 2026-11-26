@@ -22,9 +22,9 @@ Onaylı üretici "Ürünlerim" ekranından yeni ilan açar: ad, birim, fiyat ve 
 
 ## Bilinçli sınırlar
 
-- **Sepet, sipariş ve stok düşme yok** (KALANLAR A1). Stok satıcının elle güncellediği bir sayıdır.
+- **Sepet ve sipariş** ayrı feature'dır: [Sepet ve Sipariş](sepet-ve-siparis.md). Stok ödeme anında düşer ([ADR-066](../adr/066-payment-redirect-verify-lock-stock-on-success.md)); satıcı stoğu ilandan da günceller.
 - **Kategori, arama, filtre ve varyant yok.**
-- **Kargo bilgisi yok** (KALANLAR A2).
+- **Kargo** ayrı feature'dır: [Kargo ve Teslimat](kargo-ve-teslimat.md). İlan yalnızca kargoya verme süresini taşır ([ADR-061](../adr/061-listing-dispatch-days-business-days-weekends-only.md)).
 - **Alıcı ilan şikâyet edemez.**
 - **Seed ürünleri fotoğrafsızdır.** Liquibase volume'a dosya yazamaz; kart ve detay sayfası fotoğrafsız ürünü yer tutucu olmadan gösterir.
 - **HEIC / WebP kabul edilmez**; ImageIO'nun okuyamadığı JPEG çeşitleri (örn. CMYK) reddedilir.

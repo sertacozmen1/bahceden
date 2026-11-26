@@ -3,7 +3,7 @@
 **Özet:** Bu rehber, Bahçeden deposunu yeni bir makinede çalışır hale getirmek için gereken araçları ve doğrulama adımlarını gösterir. Rehber, 2026-10-06 tarihinde kurulumu yapılmış bir Windows 11 makinesindeki gerçek adımlara dayanır.
 
 > [!NOTE]
-> Bugün depoda yalnızca kurallar ve dokümantasyon var; `api/` ve `web/` henüz yazılmadı ([güncel durum](../reference/00-current-state.md)). Bu rehberin "Uygulamayı çalıştırma" bölümü ilk dikey dilimle birlikte doldurulacaktır. Araç kurulumu bölümü bugün geçerlidir.
+> Yalnızca uygulamayı çalıştırmak istiyorsanız Docker yeterlidir: doğrudan aşağıdaki **7. Uygulamayı çalıştırma** adımına geçin. JDK, Maven ve Node testleri ve geliştirmeyi yerelde koşmak içindir ([güncel durum](../reference/00-current-state.md)).
 
 ## Ön koşullar
 

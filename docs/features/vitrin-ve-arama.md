@@ -22,11 +22,10 @@ Alıcı, giriş yapmadan vitrine girer ve üreticilerin yayınladığı ürünle
 ## Bilinçli sınırlar
 
 - **Arama, filtre, sıralama ve kategori yok.** Liste sabit sırada; bunlar sonraki dilimde gelecek.
-- **Ürün detay sayfası yok.** Liste tek ekrandır; ürün açıklaması şemada var ama sözleşmede yok.
-- **Ürün görseli yok** (`openspec/KALANLAR.md` B3 kararı bekliyor). Tasarım yer tutucu gri kutular koymak yerine tipografiye yaslanıyor.
+- **Ürün detay sayfası ve fotoğraflar** artık var: `/products/[slug]` galerisi ve vitrin kartında kapak ([Ürün İlanları](urun-ilanlari.md)). Fotoğrafsız seed ürünleri yer tutucu olmadan, tipografiyle gösterilir.
 - **Sepet ve satın alma** artık var: [Sepet ve Sipariş](sepet-ve-siparis.md).
-- **Üretici kaydı yok** ([ADR-013](../adr/013-minimal-seller-table-ahead-of-onboarding.md)): üreticiler bugün yalnızca geliştirme seed'i ile oluşur; satıcı başvuru ve onay akışı KALANLAR A3'e bağlı.
-- **Tek dil (Türkçe)** (KALANLAR A4); metinler tek modülde toplandı, kapı açık.
+- **Üretici kaydı** artık var: başvuru ve admin onayı [Satıcı Kaydı ve Onayı](satici-kaydi-ve-onayi.md) dosyasında; vitrin yalnızca onaylı satıcıların ürünlerini gösterir ([ADR-041](../adr/041-storefront-filters-seller-status-in-query.md)).
+- **Dil:** Türkçe ve İngilizce ([ADR-029](../adr/029-next-intl-without-routing.md)); dil URL'de görünmediği için İngilizce sayfalar ayrı indekslenmez ([ADR-030](../adr/030-locale-from-cookie-then-header.md)).
 
 ## Açık konular
 

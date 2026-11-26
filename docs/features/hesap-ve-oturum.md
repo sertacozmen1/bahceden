@@ -25,7 +25,7 @@ Kullanıcı e-posta adresi ve parolayla hesap açar ve hesabını hemen kullanı
 - **İkinci adım yalnızca e-postayla** ([ADR-103](../adr/103-user-toggles-two-factor-with-current-password.md)): doğrulayıcı uygulama, SMS, kurtarma kodu ve "bu cihazı hatırla" yok. Açmak doğrulanmış e-posta ister; e-postasına erişimi kaybeden kullanıcı ikinci adım açıksa giremez.
 - **Doğrulanmamış e-postayla hesap açılabilir ve giriş yapılabilir** ([ADR-017](../adr/017-email-verification-non-blocking-and-2fa-switch.md)). Ticari eylemler doğrulama ister: satıcı başvurusu ([ADR-043](../adr/043-seller-application-requires-verified-email.md)) ve sipariş ([ADR-093](../adr/093-order-requires-verified-email.md)).
 - **Satıcılık ayrı feature'dır:** başvuru ve onay [Satıcı Kaydı ve Onayı](satici-kaydi-ve-onayi.md) dosyasında; `ROLE_SELLER` admin onayıyla verilir.
-- **Hesap silme, KVKK dışa aktarma ve sosyal giriş yok.** Yönetici ekranı bugün yalnızca satıcı başvuruları için var.
+- **Hesap silme, KVKK dışa aktarma ve sosyal giriş yok.** Yönetici ekranları satıcı başvuruları, ilan moderasyonu, teslim edilemeyen siparişler ve sorun bildirimleri içindir; hesap yönetimi ekranı yok.
 - **Hız sınırı tek örnek içindir** ve istemci adresine dayanır ([ADR-022](../adr/022-in-memory-fixed-window-rate-limiting.md)).
 
 ## Açık konular
