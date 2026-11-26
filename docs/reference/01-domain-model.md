@@ -1,6 +1,6 @@
 # Domain Modeli ve Veritabanı Şeması
 
-**Son doğrulama:** 2026-10-10 (kargo gönderisi) · Kaynak: `api/src/main/resources/db/changelog/`
+**Son doğrulama:** 2026-11-26 (outbox) · Kaynak: `api/src/main/resources/db/changelog/`
 
 > Bu sayfa şemanın **mevcut halini** anlatır, hedefini değil. Şema yalnızca Liquibase ile değişir ([ADR-016](../adr/016-liquibase-for-schema-migrations.md)); changeset değiştiğinde bu sayfa aynı commit'te güncellenir (`AGENTS.md` K4).
 
@@ -404,6 +404,27 @@ Süresi geçmiş kimlik kayıtları zamanlanmış işle silinir ([ADR-097](../ad
 
 ---
 
+## Olay bölgesi (outbox)
+
+İş olayları onları doğuran veriyle aynı transaction'da `outbox_events` tablosuna yazılır. Zamanlanmış relay yayınlanmamış satırları Kafka'ya aktarır ([ADR-110](../adr/110-transactional-outbox-relay-skip-locked.md), `017-outbox-events.sql`). Tablo başka tabloya yabancı anahtarla bağlı değildir; `aggregate_key` iş anahtarını (sipariş numarası) metin olarak taşır. Olay sözleşmeleri: [Olay kataloğu](04-event-catalog.md).
+
+| Kolon | Tip | Not |
+|---|---|---|
+| `id` | `bigserial` PK | Relay bu sırayla gönderir |
+| `event_id` | `uuid` tekil | Tüketicinin tekrar teslimi tanıdığı kimlik |
+| `event_type` | `varchar(64)` | `ORDER_PAID` |
+| `topic` | `varchar(128)` | `bahceden.order.paid.v1` |
+| `aggregate_key` | `varchar(64)` | Kafka anahtarı |
+| `payload` | `jsonb` | Gönderilen gövde; kişisel veri yok ([ADR-111](../adr/111-order-paid-event-contract-versioned-topic-no-pii.md)) |
+| `occurred_at` | `timestamptz` | Olay anı |
+| `published_at` | `timestamptz` NULL | Relay gönderince dolar |
+| `attempts` | `integer` ≥ 0 | Başarısız gönderim sayısı |
+| `created_at`, `updated_at` | `timestamptz` | |
+
+İndeksler: `outbox_events (id) where published_at is null` (relay taraması), `outbox_events (published_at) where published_at is not null` (saklama temizliği). Yayınlanmış satırlar `bahceden.outbox.retention` (7 gün) sonra silinir; yayınlanmamış satır silinmez.
+
+---
+
 ## Entity ↔ tablo eşlemesi
 
 | Java tipi | Tablo | Not |
@@ -428,5 +449,6 @@ Süresi geçmiş kimlik kayıtları zamanlanmış işle silinir ([ADR-097](../ad
 | `com.bahceden.account.domain.PasswordResetToken` | `password_reset_tokens` | |
 | `com.bahceden.account.domain.RefreshToken` | `refresh_tokens` | |
 | `com.bahceden.account.domain.LoginChallenge` | `login_challenges` | |
+| `com.bahceden.common.outbox.OutboxEvent` | `outbox_events` | `payload` `@JdbcTypeCode(JSON)` ile metin olarak eşlenir; satır yalnızca `OutboxPublisher` ile yazılır, `OutboxRelay` işaretler ve siler |
 
 `spring.jpa.hibernate.ddl-auto` her ortamda `validate`: entity ile şema uyuşmazsa uygulama **ayağa kalkmaz**. Bu koruma, geliştirme sırasında `char(3)` / `varchar(3)` uyumsuzluğunu gerçekten yakaladı.

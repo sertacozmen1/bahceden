@@ -88,6 +88,7 @@ nav:
     - Domain Modeli ve Şema: reference/01-domain-model.md
     - API Referansı: reference/02-api-reference.md
     - Tasarım Sistemi: reference/03-design-system.md
+    - Olay Kataloğu: reference/04-event-catalog.md
   - ADR:
     - Genel Bakış: adr/index.md
     - "ADR-001 · Spring API + Next.js web": adr/001-spring-api-and-next-web.md
@@ -199,6 +200,8 @@ nav:
     - "ADR-107 · Redis ve Kafka bütçede": adr/107-redis-and-kafka-added-to-budget.md
     - "ADR-108 · Hız sınırı Redis'te": adr/108-rate-limit-counters-in-redis-fail-open.md
     - "ADR-109 · Vitrin cache'i": adr/109-storefront-read-cache-redis-evict-after-commit.md
+    - "ADR-110 · Transactional outbox": adr/110-transactional-outbox-relay-skip-locked.md
+    - "ADR-111 · ORDER_PAID olay sözleşmesi": adr/111-order-paid-event-contract-versioned-topic-no-pii.md
   - Nasıl Yapılır (How-to):
     - Genel Bakış: how-to/index.md
     - Yerel Geliştirme Ortamı: how-to/yerel-gelistirme.md

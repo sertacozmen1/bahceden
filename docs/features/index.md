@@ -28,7 +28,7 @@ Feature dosyası içerik üretmez; yukarıdakilere **link verir** ve zaman için
 | [Hesap ve Oturum](hesap-ve-oturum.md) | Yayında | 2026-10-07 | 2026-11-26 | account-identity |
 | [Satıcı Kaydı ve Onayı](satici-kaydi-ve-onayi.md) | Yayında | 2026-10-08 | 2026-10-08 | seller-onboarding |
 | [Ürün İlanları](urun-ilanlari.md) | Yayında | 2026-10-08 | 2026-10-08 | product-listings |
-| [Sepet ve Sipariş](sepet-ve-siparis.md) | Yayında | 2026-10-08 | 2026-10-21 | cart-and-checkout, orders |
+| [Sepet ve Sipariş](sepet-ve-siparis.md) | Yayında | 2026-10-08 | 2026-11-26 | cart-and-checkout, orders |
 | [Ödeme ve Hakediş](odeme-ve-hakedis.md) | Yayında | 2026-10-08 | 2026-10-14 | seller-payout-details |
 | [Kargo ve Teslimat](kargo-ve-teslimat.md) | Yayında | 2026-10-10 | 2026-10-27 | shipments, orders |
 | [Ayıplı Ürün ve İade](ayipli-urun-ve-iade.md) | Yayında | 2026-10-14 | 2026-10-21 | defect-claims, orders |

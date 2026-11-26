@@ -2,7 +2,7 @@
 
 **Durum:** Yayında
 **İlk sürüm:** 2026-10-08
-**Son değişiklik:** 2026-10-21
+**Son değişiklik:** 2026-11-26
 
 | | |
 |---|---|
@@ -39,6 +39,7 @@ Alıcı ürün sayfasında adet seçip ürünü sepete ekler; sepet hesabına ba
 
 ## Tarihçe
 
+- 2026-11-26: Başarılı ödeme aynı transaction'da `outbox_events` tablosuna bir `ORDER_PAID` olayı yazar; zamanlanmış relay olayı `bahceden.order.paid.v1` topic'ine sipariş numarası anahtarıyla gönderir ([ADR-110](../adr/110-transactional-outbox-relay-skip-locked.md), [ADR-111](../adr/111-order-paid-event-contract-versioned-topic-no-pii.md), change `add-redis-cache-and-order-paid-event` Faz 3; changeset `017`). Olay kişisel veri taşımaz; Kafka kapalıyken outbox'ta bekler. Sipariş e-postaları bu fazda değişmedi; hâlâ commit sonrası doğrudan gider (Faz 4'te olaya taşınır).
 - 2026-10-21: `change-deadline-sweeps-and-admin-claim-email` change'i kullanıcı onayıyla archive edildi (`openspec/changes/archive/2026-10-21-change-deadline-sweeps-and-admin-claim-email/`). Ön koşullar: delta spec'ler (`defect-claims`, `cart-and-checkout`) ana spec'lere sync edildi; D1–D2 → ADR-100, ADR-101; dokümanlar güncel; `api` 347 test yeşil.
 - 2026-10-21: Ödenmemiş sipariş işi bir turda süresi dolmuş bütün siparişleri sayfalarla dolaşır; sağlayıcı hatası veren sipariş arkadakileri bekletmez (change `change-deadline-sweeps-and-admin-claim-email`, ADR-100; ADR-096'ya not).
 - 2026-10-20: `add-stale-record-cleanup` change'i kullanıcı onayıyla archive edildi (`openspec/changes/archive/2026-10-20-add-stale-record-cleanup/`). Ön koşullar: delta spec'ler (`cart-and-checkout`, `account-identity`) ana spec'lere sync edildi; D1–D2 → ADR-096, ADR-097; dokümanlar güncel; `api` 338 ve `web` 277 test yeşil.

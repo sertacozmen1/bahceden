@@ -52,6 +52,18 @@ spring:
   kafka:
     # İş olayları (ADR-107, ADR-110). Varsayılan YOKTUR (K10 fail-fast).
     bootstrap-servers: ${BAHCEDEN_KAFKA_BOOTSTRAP}
+    producer:
+      # Olay JSON'u outbox'ta hazır yazılır; anahtar ve değer metindir.
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      # Bütün eşlerin onayı ve tekrar korumalı üretici: yeniden denemede çift kayıt oluşmaz.
+      acks: all
+      properties:
+        enable.idempotence: true
+        # Broker yokken gönderim relay'i uzun bloklamaz (ADR-110); olay outbox'ta bekler.
+        max.block.ms: 5000
+        request.timeout.ms: 5000
+        delivery.timeout.ms: 9000
 
   servlet:
     multipart:
@@ -161,6 +173,16 @@ bahceden:
     # başarısız olursa eski görünüm en çok bu kadar kalır. Stok ve fiyat kararı
     # cache'ten değil ödeme anındaki kilitli okumadan alınır (ADR-066).
     storefront-ttl: PT60S
+  outbox:
+    # İş olaylarının Kafka'ya aktarımı (ADR-110): olay verisiyle aynı transaction'da
+    # outbox'a yazılır, relay bu aralıkla yayınlanmamışları sırayla gönderir.
+    enabled: true
+    interval: PT2S
+    batch-size: 100
+    # Broker onayı bu sürede gelmezse tur biter; olay bekler, kaybolmaz.
+    send-timeout: PT10S
+    # Yayınlanmış satır bu kadar sonra silinir (destek ve yeniden oynatma için iz).
+    retention: P7D
   shipping:
     # Kargo entegratörü (ADR-057). Gerçek entegratör seçilene kadar (KALANLAR A2)
     # tek değer `fake`: ağ çağrısı yapmaz, gönderiyi zamanla ilerletir.

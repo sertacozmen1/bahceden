@@ -33,13 +33,13 @@
 
 ## Faz 3 · Outbox ve relay (D4, D5)
 
-- [ ] 3.1 Changeset `017-outbox-and-processed-events.sql` (`--rollback`, kısmi indeks); master changelog include.
-- [ ] 3.2 `common/outbox/`: `OutboxEvent` entity, `OutboxRepository` (`FOR UPDATE SKIP LOCKED`), `OutboxPublisher.append`, `OutboxRelay.relayOnce`, `OutboxRelaySchedule` (`@ConditionalOnProperty`); topic `NewTopic` bean'leri; producer `acks=all`, idempotent.
-- [ ] 3.3 `order/OrderPaidEvent` record (D5 gövdesi); `CheckoutService.settle` başarılı ödemede `append` çağırır. **Bu fazda `notifier.orderPaid` çağrısı yerinde kalır**; olay yayınlanır ama henüz tüketilmez. Böylece faz tek başına çalışır ve e-posta yolu tektir.
-- [ ] 3.4 Yayınlanmış outbox satırlarının 7 günlük temizliği mevcut temizlik işine adım olarak eklenir.
-- [ ] 3.5 **Test (`critical`):** design.md "Test etkisi · outbox" listesi.
-- [ ] 3.6 ADR-110, ADR-111; `docs/reference/` olay kataloğu sayfası (yeni) + ER diyagramı.
-- [ ] 3.7 **Doğrulama:** `./mvnw -B verify`.
+- [x] 3.1 Changeset `017-outbox-events.sql` (`--rollback`, iki kısmi indeks); master changelog include. (Plandan sapma: `processed_events` bu changeset'te **yok**; tabloyu kullanan tüketici Faz 4'te geldiği için kendi changeset'iyle (`018`) birlikte gelir. Kullanılmayan tablo bırakılmadı. `topic` kolonu eklendi: relay olayı hangi topic'e göndereceğini satırdan okur.)
+- [x] 3.2 `common/outbox/`: `OutboxEvent` entity, `OutboxRepository` (`SKIP LOCKED`, ham SQL yerine JPQL + kilit ipucu `-2`), `OutboxMessage` arayüzü, `OutboxPublisher.append` (`MANDATORY`), `OutboxRelay.relayOnce`, `OutboxRelaySchedule` (`@ConditionalOnProperty`); `order/OrderEventTopics` (`NewTopic`, 3 bölüm); üretici `acks=all`, idempotent, kısa bloklama süreleri; `BahcedenProperties.Outbox`.
+- [x] 3.3 `order/OrderPaidEvent` record (D5 gövdesi); `CheckoutService.settle` başarılı ödemede `append` çağırır. **Bu fazda `notifier.orderPaid` çağrısı yerinde kalır**; olay yayınlanır ama henüz tüketilmez. Böylece faz tek başına çalışır ve e-posta yolu tektir.
+- [x] 3.4 Yayınlanmış outbox satırlarının 7 günlük temizliği. (Plandan sapma: hesap paketindeki temizlik işine adım olarak değil, `OutboxRelay.purgePublished` olarak eklendi ve aynı `bahceden.cleanup.interval` aralığıyla `OutboxRelaySchedule`'dan çağrılır; `account` paketinin outbox'u bilmesi gerekmez.)
+- [x] 3.5 **Test (`critical`):** `OutboxTest` (8): başarılı ödeme tek satır yazar ve gövdenin alan kümesi sabittir (kişisel veri yok); başarısız ve stoksuz ödeme yazmaz; geri alınan transaction satır bırakmaz, transaction dışı yazım reddedilir; relay sipariş numarası anahtarıyla gönderir ve işaretler (gerçek Kafka'dan okunur); Kafka erişilemezken satır bekler, deneme artar, broker dönünce gönderilir; kilitli satırları ikinci relay atlar; saklama temizliği yalnızca yayınlanmışı siler. Test ilk koşuda gerçek bir hata buldu: broker'a hiç ulaşılamazken `KafkaTemplate` eşzamanlı olarak Spring'in `KafkaException`'ını fırlatıyor ve relay yakalamıyordu; düzeltildi. `ListingFixtures.cleanUp` artık `outbox_events`'i de temizler.
+- [x] 3.6 ADR-110, ADR-111; `docs/reference/04-event-catalog.md` (yeni) + `01-domain-model.md` (olay bölgesi, entity eşlemesi).
+- [x] 3.7 **Doğrulama:** `./mvnw -B verify`. (JDK 21; 380 test, 0 hata; `critical` 362 test temiz. `docker compose`: changeset `017` uygulandı, `bahceden.order.paid.v1` topic'i 3 bölümle açılışta oluştu, `api` log'unda hata yok. Ödeme → topic uçtan uca akışı Faz 5.1'de compose üzerinde denenir.)
 
 ## Faz 4 · Tüketici ve e-postanın taşınması (D6)
 

@@ -86,7 +86,7 @@
   - hata durumunda `attempts++` yapar, `WARN` yazar ve o turu bitirir (sıra korunur).
   - `SKIP LOCKED` sayesinde iki örnek aynı satırı göndermez.
 - Zamanlama `PendingPaymentSweepSchedule` deseniyle kurulur: `@ConditionalOnProperty(bahceden.outbox.enabled)`. Testlerde kapalıdır, testler `relayOnce()` metodunu doğrudan çağırır.
-- Yayınlanmış satırlar 7 gün sonra mevcut temizlik işine (`ExpiredTokenCleanup` deseni) eklenen bir adımla silinir.
+- Yayınlanmış satırlar 7 gün sonra `OutboxRelay.purgePublished` ile silinir; temizlik aralığıyla (`bahceden.cleanup.interval`) `OutboxRelaySchedule`'dan çağrılır. (Uygulamada hesap paketindeki temizlik işine eklenmedi: `account` outbox'u bilmemeli.) Tabloya `topic` kolonu eklendi; relay hedefi satırdan okur. `processed_events` changeset `018` ile Faz 4'te gelir.
 - Producer ayarları: `acks=all`, `enable.idempotence=true`.
 
 **Gerekçe:** `KafkaTemplate.send` doğrudan transaction içinde veya `afterCommit` sırasında çağrılırsa dual-write sorunu doğar: DB commit olur ama mesaj gitmez, ya da tersi. Outbox, olayın sipariş durumuyla **atomik** olarak kalıcı olmasını sağlar. Kafka'nın kapalı olması siparişi etkilemez.

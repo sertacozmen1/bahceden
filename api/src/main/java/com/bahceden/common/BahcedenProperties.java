@@ -37,6 +37,7 @@ import org.springframework.validation.annotation.Validated;
  * @param claims    ayıplı ürün talebinin süreleri (ADR-081, ADR-083)
  * @param cleanup   ödenmemiş sipariş ve süresi geçmiş token temizliği (add-stale-record-cleanup)
  * @param cache     vitrin okuma cache'i (ADR-109)
+ * @param outbox    iş olaylarının Kafka'ya aktarımı (ADR-110)
  */
 @Validated
 @ConfigurationProperties(prefix = "bahceden")
@@ -50,7 +51,29 @@ public record BahcedenProperties(
         @NotNull @Valid Shipping shipping,
         @NotNull @Valid Claims claims,
         @NotNull @Valid Cleanup cleanup,
-        @NotNull @Valid Cache cache) {
+        @NotNull @Valid Cache cache,
+        @NotNull @Valid Outbox outbox) {
+
+    /**
+     * Outbox relay'i (ADR-110).
+     *
+     * <p>Sıfır veya negatif süreyle uygulama açılmaz.
+     *
+     * @param enabled     zamanlayıcı açık mı; testlerde kapalı, testler turu doğrudan çağırır
+     * @param interval    iki relay turu arasındaki bekleme; sipariş e-postasının en kötü gecikmesini belirler
+     * @param batchSize   bir turda gönderilen en çok olay
+     * @param sendTimeout tek gönderimde broker onayını bekleme süresi; aşılırsa tur biter, olay bekler
+     * @param retention   yayınlanmış satırın silinmeden önce kaldığı süre (destek ve yeniden oynatma için)
+     */
+    public record Outbox(boolean enabled, @NotNull Duration interval, @Positive int batchSize,
+                         @NotNull Duration sendTimeout, @NotNull Duration retention) {
+
+        public Outbox {
+            Claims.requirePositive(interval, "bahceden.outbox.interval");
+            Claims.requirePositive(sendTimeout, "bahceden.outbox.send-timeout");
+            Claims.requirePositive(retention, "bahceden.outbox.retention");
+        }
+    }
 
     /**
      * Vitrin okuma cache'i (ADR-109).

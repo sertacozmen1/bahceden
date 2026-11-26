@@ -1,5 +1,6 @@
 package com.bahceden.order;
 
+import com.bahceden.common.outbox.OutboxPublisher;
 import com.bahceden.common.cache.StorefrontCache;
 import com.bahceden.account.AccountRepository;
 import com.bahceden.account.domain.Account;
@@ -92,12 +93,14 @@ public class CheckoutService {
     private final BahcedenProperties properties;
     private final Clock clock;
     private final StorefrontCache storefront;
+    private final OutboxPublisher outbox;
     private final SecureRandom random = new SecureRandom();
 
     CheckoutService(OrderRepository orders, AccountRepository accounts, OrderStatusChangeRepository statusChanges, CartService cartService,
                     CartRepository carts, CartItemRepository cartItems, AddressService addressService,
                     ProductRepository products, PaymentService payments, OrderPricing pricing,
-                    OrderService orderService, OrderNotifier notifier, BahcedenProperties properties, Clock clock, StorefrontCache storefront) {
+                    OrderService orderService, OrderNotifier notifier, BahcedenProperties properties, Clock clock, StorefrontCache storefront,
+                    OutboxPublisher outbox) {
         this.orders = orders;
         this.accounts = accounts;
         this.statusChanges = statusChanges;
@@ -113,6 +116,7 @@ public class CheckoutService {
         this.properties = properties;
         this.clock = clock;
         this.storefront = storefront;
+        this.outbox = outbox;
     }
 
     /**
@@ -265,6 +269,8 @@ public class CheckoutService {
             sellerOrder.scheduleDispatch(BusinessDays.endOfBusinessDay(now, sellerOrder.getDispatchDays()));
         }
         carts.findByAccountId(order.getBuyerAccountId()).ifPresent(cart -> cartItems.deleteProducts(cart.getId(), quantities.keySet()));
+        // Olay sipariş durumuyla aynı transaction'da kalıcı olur; Kafka'ya relay gönderir (ADR-110).
+        outbox.append(OrderPaidEvent.of(order, now));
         notifier.orderPaid(order, order.getSellerOrders());
         log.info("Ödeme alındı: sipariş {}", order.getOrderNumber());
     }

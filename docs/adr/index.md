@@ -130,8 +130,10 @@ Architecture Decision Records, projedeki önemli mimari kararları ve bu kararla
 | 107 | [Redis ve Kafka bütçeye bilinçli olarak eklenir: dağıtık hız sınırı, vitrin cache'i ve outbox ile iş olayları](107-redis-and-kafka-added-to-budget.md) | Accepted | 2026-11-26 |
 | 108 | [Hız sınırı sayaçları Redis'te paylaşılır; Redis yoksa süreç içi yedekle fail-open](108-rate-limit-counters-in-redis-fail-open.md) | Accepted | 2026-11-26 |
 | 109 | [Vitrin okumaları Redis'te kısa süre cache'lenir; değişiklikte commit sonrası silinir](109-storefront-read-cache-redis-evict-after-commit.md) | Accepted | 2026-11-26 |
+| 110 | [İş olayları transactional outbox ile yazılır; zamanlanmış relay `SKIP LOCKED` ile Kafka'ya aktarır](110-transactional-outbox-relay-skip-locked.md) | Accepted | 2026-11-26 |
+| 111 | [`ORDER_PAID` olay sözleşmesi: sürümlü topic, kişisel veri yok, anahtar sipariş numarası](111-order-paid-event-contract-versioned-topic-no-pii.md) | Accepted | 2026-11-26 |
 
-**Sıradaki numara: 110.**
+**Sıradaki numara: 112.**
 
 **Durum değerleri:** `Proposed` (öneri, henüz bağlayıcı değil) · `Accepted` (yürürlükte, bağlayıcı) · `Deprecated` (artık geçerli değil, yerine bir şey gelmedi) · `Superseded by [ADR-XXX]` (yerini başka bir karara bıraktı).
 

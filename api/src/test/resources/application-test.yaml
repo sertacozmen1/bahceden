@@ -49,6 +49,9 @@ bahceden:
     sweep-enabled: false
     # Küçük sayfa: bir turun birden fazla sayfayı dolaştığı yol her testte çalışır (ADR-100).
     sweep-batch-size: 2
+  outbox:
+    # Zamanlayıcı kapalı: testler relay turunu doğrudan çağırır (ADR-110).
+    enabled: false
   cleanup:
     # Zamanlayıcı kapalı: testler temizlik işlerini sabit saatle doğrudan çağırır.
     enabled: false

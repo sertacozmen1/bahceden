@@ -56,3 +56,6 @@ databaseChangeLog:
   - include:
       file: 016-pending-payment-index.sql
       relativeToChangelogFile: true
+  - include:
+      file: 017-outbox-events.sql
+      relativeToChangelogFile: true
