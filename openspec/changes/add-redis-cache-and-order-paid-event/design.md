@@ -121,7 +121,7 @@
 
 - `OrderPaidEmailConsumer`: `@KafkaListener(topics = "bahceden.order.paid.v1", groupId = "bahceden-order-mail")`.
 - Olay işlenirken tek transaction'da şu adımlar yürür:
-  1. `processed_events` (`consumer`, `event_id`) PK'sine `INSERT … ON CONFLICT DO NOTHING` yapılır; satır eklenmediyse olay zaten işlenmiştir ve atlanır;
+  1. `processed_events` (`consumer`, `event_id`) birincil anahtarında kayıt aranır; varsa olay zaten işlenmiştir ve atlanır, yoksa kayıt eklenir (`ProcessedEvents.markIfFirst`). (Uygulamada `INSERT … ON CONFLICT DO NOTHING` yerine bu seçildi: uygulama kodunda ham SQL yasak, §11.4; eşzamanlı ikinci ekleme birincil anahtar çakışmasıyla geri alınır ve yeniden denemede atlanır.)
   2. sipariş ve satıcı siparişleri ID ile okunur;
   3. `OrderNotifier.orderPaid(order, sellerOrders)` çağrılır (mevcut kod; K9). E-postalar `afterCommit` ile gider.
 - Offset commit, listener başarıyla döndükten sonra yapılır (`AckMode.RECORD`). DB hatasında `DefaultErrorHandler` 3 kez geri çekilerek dener, sonra olayı `bahceden.order.paid.v1.DLT` topic'ine yollar ve `ERROR` log'u yazar.

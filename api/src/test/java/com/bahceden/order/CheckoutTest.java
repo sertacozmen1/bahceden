@@ -1,12 +1,14 @@
 package com.bahceden.order;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.bahceden.common.outbox.OutboxRelay;
 import com.bahceden.common.security.AccessTokenIssuer;
 import com.bahceden.common.web.ApiErrorCode;
 import com.bahceden.payment.PaymentProvider.PaymentOutcome;
@@ -77,6 +79,9 @@ class CheckoutTest {
 
     @Autowired
     private RecordingMailSender mail;
+
+    @Autowired
+    private OutboxRelay relay;
 
     private ListingFixtures fixtures;
     private long buyer;
@@ -285,7 +290,9 @@ class CheckoutTest {
         assertThat(jdbc.queryForObject("select count(*) from cart_items", Integer.class)).isZero();
         assertThat(jdbc.queryForList("select to_status from order_status_changes order by id", String.class))
                 .containsExactly("PENDING_PAYMENT", "NEW");
-        assertThat(mail.sent()).hasSize(2);
+        // E-postalar ödeme transaction'ından değil olaydan gider (ADR-112): relay gönderir, tüketici işler.
+        assertThat(relay.relayOnce()).isEqualTo(1);
+        await().atMost(Duration.ofSeconds(15)).untilAsserted(() -> assertThat(mail.sent()).hasSize(2));
         assertThat(mail.sent()).anySatisfy(sent -> {
             assertThat(sent.to()).isEqualTo("alici@ornek.test");
             assertThat(sent.subject()).contains("we received your order", number);
@@ -354,6 +361,7 @@ class CheckoutTest {
 
         assertThat(stockOf(tomato)).isEqualTo(10);
         assertThat(jdbc.queryForObject("select count(*) from cart_items", Integer.class)).isEqualTo(1);
+        assertThat(relay.relayOnce()).isZero();
         assertThat(mail.sent()).isEmpty();
     }
 

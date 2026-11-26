@@ -89,7 +89,6 @@ public class CheckoutService {
     private final PaymentService payments;
     private final OrderPricing pricing;
     private final OrderService orderService;
-    private final OrderNotifier notifier;
     private final BahcedenProperties properties;
     private final Clock clock;
     private final StorefrontCache storefront;
@@ -99,7 +98,7 @@ public class CheckoutService {
     CheckoutService(OrderRepository orders, AccountRepository accounts, OrderStatusChangeRepository statusChanges, CartService cartService,
                     CartRepository carts, CartItemRepository cartItems, AddressService addressService,
                     ProductRepository products, PaymentService payments, OrderPricing pricing,
-                    OrderService orderService, OrderNotifier notifier, BahcedenProperties properties, Clock clock, StorefrontCache storefront,
+                    OrderService orderService, BahcedenProperties properties, Clock clock, StorefrontCache storefront,
                     OutboxPublisher outbox) {
         this.orders = orders;
         this.accounts = accounts;
@@ -112,7 +111,6 @@ public class CheckoutService {
         this.payments = payments;
         this.pricing = pricing;
         this.orderService = orderService;
-        this.notifier = notifier;
         this.properties = properties;
         this.clock = clock;
         this.storefront = storefront;
@@ -270,8 +268,8 @@ public class CheckoutService {
         }
         carts.findByAccountId(order.getBuyerAccountId()).ifPresent(cart -> cartItems.deleteProducts(cart.getId(), quantities.keySet()));
         // Olay sipariş durumuyla aynı transaction'da kalıcı olur; Kafka'ya relay gönderir (ADR-110).
+        // Sipariş e-postaları bu olaydan, OrderPaidEmailConsumer ile gider (ADR-112); burada gönderilmez.
         outbox.append(OrderPaidEvent.of(order, now));
-        notifier.orderPaid(order, order.getSellerOrders());
         log.info("Ödeme alındı: sipariş {}", order.getOrderNumber());
     }
 

@@ -64,6 +64,15 @@ spring:
         max.block.ms: 5000
         request.timeout.ms: 5000
         delivery.timeout.ms: 9000
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      # Yeni tüketici grubu topic'teki bekleyen olayları baştan okur; ilk açılışta olay kaçmaz.
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+    listener:
+      # Offset her kayıt başarıyla işlendikten sonra yazılır (ADR-112).
+      ack-mode: record
 
   servlet:
     multipart:

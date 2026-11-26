@@ -59,3 +59,6 @@ databaseChangeLog:
   - include:
       file: 017-outbox-events.sql
       relativeToChangelogFile: true
+  - include:
+      file: 018-processed-events.sql
+      relativeToChangelogFile: true

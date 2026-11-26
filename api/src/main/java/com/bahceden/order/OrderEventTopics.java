@@ -22,4 +22,10 @@ class OrderEventTopics {
     NewTopic orderPaidTopic() {
         return TopicBuilder.name(OrderPaidEvent.TOPIC).partitions(PARTITIONS).build();
     }
+
+    /** İşlenemeyen olaylar (ADR-112); kaynakla aynı bölüm sayısı, çünkü kayıt aynı bölüm numarasına yazılır. */
+    @Bean
+    NewTopic orderPaidDeadLetterTopic() {
+        return TopicBuilder.name(OrderPaidEvent.DEAD_LETTER_TOPIC).partitions(PARTITIONS).build();
+    }
 }

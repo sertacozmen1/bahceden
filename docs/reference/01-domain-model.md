@@ -423,6 +423,8 @@ Süresi geçmiş kimlik kayıtları zamanlanmış işle silinir ([ADR-097](../ad
 
 İndeksler: `outbox_events (id) where published_at is null` (relay taraması), `outbox_events (published_at) where published_at is not null` (saklama temizliği). Yayınlanmış satırlar `bahceden.outbox.retention` (7 gün) sonra silinir; yayınlanmamış satır silinmez.
 
+`processed_events` (`018-processed-events.sql`), tüketicilerin işlediği olayları tutar ([ADR-112](../adr/112-order-paid-emails-from-idempotent-consumer.md)). Birincil anahtar `(consumer, event_id)` tekrar teslim korumasının kendisidir; satır, olayın sonuçlarıyla aynı transaction'da yazılır. Kolonlar: `consumer` (`varchar(64)`, ör. `order-paid-email`), `event_id` (`uuid`), `processed_at`, `created_at`, `updated_at`. `processed_at` indeksli; satırlar outbox ile aynı saklama süresinden sonra silinir.
+
 ---
 
 ## Entity ↔ tablo eşlemesi
@@ -450,5 +452,6 @@ Süresi geçmiş kimlik kayıtları zamanlanmış işle silinir ([ADR-097](../ad
 | `com.bahceden.account.domain.RefreshToken` | `refresh_tokens` | |
 | `com.bahceden.account.domain.LoginChallenge` | `login_challenges` | |
 | `com.bahceden.common.outbox.OutboxEvent` | `outbox_events` | `payload` `@JdbcTypeCode(JSON)` ile metin olarak eşlenir; satır yalnızca `OutboxPublisher` ile yazılır, `OutboxRelay` işaretler ve siler |
+| `com.bahceden.common.outbox.ProcessedEvent` | `processed_events` | `@EmbeddedId` (`Key` record: tüketici + olay kimliği); yalnızca `ProcessedEvents.markIfFirst` yazar |
 
 `spring.jpa.hibernate.ddl-auto` her ortamda `validate`: entity ile şema uyuşmazsa uygulama **ayağa kalkmaz**. Bu koruma, geliştirme sırasında `char(3)` / `varchar(3)` uyumsuzluğunu gerçekten yakaladı.

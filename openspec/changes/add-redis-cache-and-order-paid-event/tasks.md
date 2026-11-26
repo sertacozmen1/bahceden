@@ -43,11 +43,11 @@
 
 ## Faz 4 · Tüketici ve e-postanın taşınması (D6)
 
-- [ ] 4.1 `order/OrderPaidEmailConsumer`: `@KafkaListener`, `processed_events` ile idempotency, `OrderNotifier.orderPaid` çağrısı; `DefaultErrorHandler` (3 deneme + DLT).
-- [ ] 4.2 `CheckoutService.settle` içindeki `notifier.orderPaid(...)` çağrısı **aynı commit'te** kaldırılır (tek e-posta yolu).
-- [ ] 4.3 **Test (`critical`):** design.md "Test etkisi · tüketici" listesi; mevcut "başarılı ödeme e-postası" iddiaları olay yolundan doğrulanacak şekilde güncellenir (gevşetilmez).
-- [ ] 4.4 ADR-112; `sepet-ve-siparis.md` Tarihçe.
-- [ ] 4.5 **Doğrulama:** `./mvnw -B verify`, `-Dgroups=critical`.
+- [x] 4.1 `order/OrderPaidEmailConsumer`: `@KafkaListener` + `@Transactional`, `processed_events` ile idempotency (`common/outbox/ProcessedEvents.markIfFirst`; changeset `018-processed-events.sql`), `OrderNotifier.orderPaid` çağrısı; `common/outbox/KafkaConsumerErrorConfig`: ortak `DefaultErrorHandler` (toplam 3 deneme, okunamayan gövde denenmez) + `<topic>.dlt`; `OrderEventTopics`'e DLT topic'i; tüketici ayarları (`earliest`, `ack-mode: record`). Saklama temizliği `processed_events`'i de siler. (Plandan sapma: `INSERT … ON CONFLICT DO NOTHING` yerine varlık kontrolü + ekleme; uygulama kodunda ham SQL yasak, eşzamanlı ikinci ekleme birincil anahtarla düşer.)
+- [x] 4.2 `CheckoutService.settle` içindeki `notifier.orderPaid(...)` çağrısı **aynı commit'te** kaldırıldı (tek e-posta yolu); kullanılmayan `OrderNotifier` bağımlılığı da `CheckoutService`'ten çıktı.
+- [x] 4.3 **Test (`critical`):** `OrderPaidEmailConsumerTest` (4): ödeme transaction'ı e-posta göndermez, olay işlenince alıcı ve satıcı kendi dilinde e-posta alır; aynı olay Kafka'dan ikinci kez gelince e-posta tekrar gitmez; okunamayan gövde `.dlt`'ye düşer ve arkadaki olay işlenir; siparişi olmayan olay e-posta göndermez ve işlenmiş sayılır. "İşlendi" anı tüketici grubunun offset'iyle beklenir. `CheckoutTest.basarili_odeme` aynı iddiaları (iki e-posta, konu ve alıcılar) relay turu + bekleme ile doğrular; `basarisiz_odeme` relay'in gönderecek olay bulmadığını da doğrular. Veritabanı hatasında üç deneme sonrası DLT yolu ayrıca test edilmedi (bozuk gövde testi DLT yayınını doğrular; deneme sayısı Spring'in `DefaultErrorHandler`'ına bırakıldı).
+- [x] 4.4 ADR-112; ADR-110'a bağlantı; `04-event-catalog.md` (tüketici, DLT); `01-domain-model.md` (`processed_events`); `sepet-ve-siparis.md` Tarihçe.
+- [x] 4.5 **Doğrulama:** `./mvnw -B verify`, `-Dgroups=critical`. (JDK 21; 384 test, 0 hata; `critical` 366 test temiz. `docker compose`: changeset `018` uygulandı, `bahceden.order.paid.v1.dlt` açılışta oluştu, `bahceden-order-mail` grubu üç bölüme atandı, `api` log'unda hata yok. Ödemeden e-postaya uçtan uca akış Faz 5.1'de.)
 
 ## Faz 5 · Uçtan uca doğrulama ve doküman
 

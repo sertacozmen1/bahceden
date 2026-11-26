@@ -11,7 +11,8 @@
 | Kural | Değer |
 |---|---|
 | Yayın yolu | Transactional outbox: olay iş verisiyle aynı transaction'da `outbox_events`'e yazılır, relay sırayla gönderir |
-| Teslim | **En az bir kez.** Tüketici `eventId` ile tekrarı ayıklar |
+| Teslim | **En az bir kez.** Tüketici `eventId` ile tekrarı ayıklar (`processed_events`, [ADR-112](../adr/112-order-paid-emails-from-idempotent-consumer.md)) |
+| Hata | Ortak hata işleyici: 1 sn arayla 3 deneme, sonra `<topic>.dlt`; okunamayan gövde yeniden denenmez |
 | Anahtar | Olayın iş anahtarı; aynı anahtarın olayları aynı bölümde sıralı |
 | Gövde | JSON, `camelCase`; tip bilgisi yok |
 | Kişisel veri | **Yok.** Ad, e-posta, adres, telefon, IBAN, takip numarası olaya girmez (K10) |
@@ -29,7 +30,8 @@ Sipariş ödendi: sağlayıcı ödemeyi doğruladı, stok yetti ve sipariş `PAI
 | Üretici | `CheckoutService.settle()` (ödeme dönüşü ve ödenmemiş sipariş işi) |
 | Anahtar | `orderNumber` |
 | Bölüm | 3 |
-| Tüketiciler | Henüz yok (change `add-redis-cache-and-order-paid-event` Faz 4'te sipariş e-postaları bu olaya taşınır) |
+| Tüketiciler | `OrderPaidEmailConsumer` (grup `bahceden-order-mail`): alıcıya sipariş onayı, her satıcıya yeni sipariş e-postası, hesap dilinde ([ADR-112](../adr/112-order-paid-emails-from-idempotent-consumer.md)) |
+| Ölü mektup | `bahceden.order.paid.v1.dlt` (3 bölüm): üç denemede işlenemeyen veya okunamayan kayıt, aynı bölüm numarasıyla |
 
 ```json
 {

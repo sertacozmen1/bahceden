@@ -27,6 +27,7 @@ public final class ListingFixtures {
      */
     public void cleanUp() {
         jdbc.execute("delete from outbox_events");
+        jdbc.execute("delete from processed_events");
         jdbc.execute("delete from defect_claim_changes");
         jdbc.execute("delete from defect_claim_photos");
         jdbc.execute("delete from defect_claim_lines");

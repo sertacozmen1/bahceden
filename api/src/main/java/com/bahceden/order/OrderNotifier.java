@@ -58,7 +58,11 @@ class OrderNotifier {
     private record Mail(String to, String subject, String body, String orderNumber) {
     }
 
-    /** Ödeme başarılı: alıcıya sipariş onayı, her satıcıya kendi satıcı siparişi. */
+    /**
+     * Ödeme başarılı: alıcıya sipariş onayı, her satıcıya kendi satıcı siparişi.
+     * Ödeme transaction'ından değil, "sipariş ödendi" olayının tüketicisinden
+     * çağrılır ({@code OrderPaidEmailConsumer}, ADR-112).
+     */
     void orderPaid(Order order, List<SellerOrder> sellerOrders) {
         var mails = new ArrayList<Mail>();
         accounts.findById(order.getBuyerAccountId()).ifPresent(buyer -> {

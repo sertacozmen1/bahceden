@@ -35,7 +35,7 @@ Ayrıca Kafka kesintisi ödemeyi durdurmamalıdır. `api` ileride birden fazla �
    - başarılı satır işaretlenir.
    - İlk hatada satırın `attempts` değeri artar ve tur biter: sıra korunur.
    - Bekleme süreleri kısadır (`max.block.ms` 5 sn, gönderim zaman aşımı 10 sn).
-4. **Teslim en az bir kezdir.** Gönderim başarılı olduktan sonra commit'ten önce süreç düşerse olay bir kez daha gider. Tekrarı tüketici `event_id` ile ayıklar (tüketici kararı change'in Faz 4'ünde ADR-112 olarak yazılır).
+4. **Teslim en az bir kezdir.** Gönderim başarılı olduktan sonra commit'ten önce süreç düşerse olay bir kez daha gider. Tekrarı tüketici `event_id` ile ayıklar ([ADR-112](112-order-paid-emails-from-idempotent-consumer.md)).
 5. **Saklama:** yayınlanmış satırlar 7 gün sonra silinir (`purgePublished`, temizlik aralığıyla). Yayınlanmamış satır silinmez.
 6. **Zamanlama** diğer işlerle aynı desendedir: `@ConditionalOnProperty(bahceden.outbox.enabled)`. Testlerde kapalıdır, testler turu doğrudan çağırır.
 

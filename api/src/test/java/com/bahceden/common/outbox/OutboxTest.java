@@ -95,6 +95,9 @@ class OutboxTest {
     private OutboxRepository events;
 
     @Autowired
+    private ProcessedEventRepository processedEvents;
+
+    @Autowired
     private OutboxPublisher publisher;
 
     @Autowired
@@ -215,7 +218,7 @@ class OutboxTest {
         var number = flows().paidOrder(buyer, buyerToken);
         var unreachable = unreachableKafka();
         try {
-            var down = new OutboxRelay(events, unreachable, transactionManager, properties, clock);
+            var down = new OutboxRelay(events, processedEvents, unreachable, transactionManager, properties, clock);
 
             assertThat(down.relayOnce()).isZero();
         } finally {

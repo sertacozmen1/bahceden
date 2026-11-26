@@ -32,14 +32,16 @@ public class OutboxRelay {
     private static final Logger log = LoggerFactory.getLogger(OutboxRelay.class);
 
     private final OutboxRepository events;
+    private final ProcessedEventRepository processedEvents;
     private final KafkaTemplate<String, String> kafka;
     private final TransactionTemplate transactions;
     private final BahcedenProperties.Outbox settings;
     private final Clock clock;
 
-    OutboxRelay(OutboxRepository events, KafkaTemplate<String, String> kafka,
+    OutboxRelay(OutboxRepository events, ProcessedEventRepository processedEvents, KafkaTemplate<String, String> kafka,
                 PlatformTransactionManager transactionManager, BahcedenProperties properties, Clock clock) {
         this.events = events;
+        this.processedEvents = processedEvents;
         this.kafka = kafka;
         this.transactions = new TransactionTemplate(transactionManager);
         this.settings = properties.outbox();
@@ -68,16 +70,19 @@ public class OutboxRelay {
     }
 
     /**
-     * Saklama süresi geçmiş yayınlanmış satırları siler; yayınlanmamış satır kalır.
+     * Saklama süresi geçmiş yayınlanmış outbox satırlarını ve tüketicilerin
+     * işlenmiş olay kayıtlarını siler; yayınlanmamış satır kalır.
      *
-     * @return silinen satır sayısı
+     * @return silinen outbox satırı sayısı
      */
     public int purgePublished() {
         var cutoff = clock.instant().minus(settings.retention());
         Integer deleted = transactions.execute(status -> events.deletePublishedBefore(cutoff));
+        Integer processed = transactions.execute(status -> processedEvents.deleteProcessedBefore(cutoff));
         int count = deleted == null ? 0 : deleted;
-        if (count > 0) {
-            log.info("Yayınlanmış outbox satırları silindi: {}", count);
+        int processedCount = processed == null ? 0 : processed;
+        if (count > 0 || processedCount > 0) {
+            log.info("Saklama süresi geçmiş olay kayıtları silindi: outbox {}, işlenmiş {}", count, processedCount);
         }
         return count;
     }

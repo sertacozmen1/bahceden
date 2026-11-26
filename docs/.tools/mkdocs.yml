@@ -202,6 +202,7 @@ nav:
     - "ADR-109 · Vitrin cache'i": adr/109-storefront-read-cache-redis-evict-after-commit.md
     - "ADR-110 · Transactional outbox": adr/110-transactional-outbox-relay-skip-locked.md
     - "ADR-111 · ORDER_PAID olay sözleşmesi": adr/111-order-paid-event-contract-versioned-topic-no-pii.md
+    - "ADR-112 · Olaydan e-posta tüketicisi": adr/112-order-paid-emails-from-idempotent-consumer.md
   - Nasıl Yapılır (How-to):
     - Genel Bakış: how-to/index.md
     - Yerel Geliştirme Ortamı: how-to/yerel-gelistirme.md

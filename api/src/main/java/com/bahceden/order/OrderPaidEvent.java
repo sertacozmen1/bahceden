@@ -35,6 +35,9 @@ public record OrderPaidEvent(
     public static final String TYPE = "ORDER_PAID";
     public static final String TOPIC = "bahceden.order.paid.v1";
 
+    /** İşlenemeyen olayların topic'i; ad hata işleyicinin son ekiyle aynıdır (ADR-112). */
+    public static final String DEAD_LETTER_TOPIC = TOPIC + ".dlt";
+
     /** Minor unit tutar (ADR-006); HTTP sözleşmesindeki para şekliyle aynıdır. */
     public record Amount(long amount, String currency) {
     }
