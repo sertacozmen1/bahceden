@@ -2,7 +2,7 @@
 
 **Durum:** Yayında
 **İlk sürüm:** 2026-10-06
-**Son değişiklik:** 2026-10-08
+**Son değişiklik:** 2026-11-26
 
 | | |
 |---|---|
@@ -36,6 +36,7 @@ Alıcı, giriş yapmadan vitrine girer ve üreticilerin yayınladığı ürünle
 
 ## Tarihçe
 
+- 2026-11-26: Vitrin listesinin ilk 3 sayfası ve ürün detayı Redis'te 60 sn cache'lenir ([ADR-109](../adr/109-storefront-read-cache-redis-evict-after-commit.md), change `add-redis-cache-and-order-paid-event` Faz 2). İlan, fotoğraf, durum, stok (ödeme ve iptal), satıcı kararı ve ödeme hesabı değişince cache commit sonrası silinir; 404 cache'lenmez; Redis erişilemezse vitrin veritabanından çalışır. Sözleşme ve ekran değişmedi.
 - 2026-10-08: Vitrin listesi ve ürün detayı `purchasable` alanını taşıyor; satın alınamayan ürün görünmeye devam eder, detayda "Tükendi" veya "Satıcı henüz satışa hazır değil" yazar ([ADR-059](../adr/059-payment-and-order-packages-single-purchasability-rule.md)). Ürün detayında kargoya verme süresi, adet seçimi ve "Sepete ekle" (oturumsuz alıcıya giriş bağlantısı); detay yanıtına ürün kimliği eklendi. Change `add-cart-and-checkout`.
 - 2026-10-08: Vitrin kartında kapak fotoğrafı ve ürün detay sayfası (`/products/[slug]`, galeri) eklendi; kart detaya bağlanıyor. Detay ucu vitrinle aynı görünürlük koşulunu taşıyor. Kapaklar tek ek sorguyla geliyor (sorgu sayısı ≤ 3). Fotoğrafsız seed ürünleri yer tutucusuz kalıyor. `REMOVED` ilanlar listede yok ([ADR-052](../adr/052-storefront-cover-second-query-detail-by-slug.md); change `add-product-listings`).
 - 2026-10-08: Vitrin yalnızca satıcısı `APPROVED` olan ürünleri gösteriyor. Bekleyen, reddedilen ve askıdaki satıcının `PUBLISHED` ürünleri listeden ve toplamdan düşer; satıcı askıdan çıkınca ürünleri kendiliğinden geri gelir ([ADR-038](../adr/038-listings-publish-immediately-with-admin-takedown.md) §4, [ADR-041](../adr/041-storefront-filters-seller-status-in-query.md); change `add-seller-onboarding`). Seed satıcıları göçle `APPROVED` oldu. Sayfalama gezintisi ortak `Pagination` bileşenine taşındı (admin listesiyle paylaşılıyor); görünüm değişmedi. Sözleşmede liste şeması `PageResponse` adından `PageResponseProductSummary` adına geçti; JSON gövdesi aynı.

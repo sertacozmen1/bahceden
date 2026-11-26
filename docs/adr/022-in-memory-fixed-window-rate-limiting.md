@@ -1,7 +1,7 @@
 # [ADR-022] Kimlik uçlarında bellek içi sabit pencere hız sınırı
 
 **Tarih:** 2026-10-07
-**Durum:** Accepted
+**Durum:** Superseded by [ADR-108](108-rate-limit-counters-in-redis-fail-open.md) (2026-11-26; sayaç Redis'e taşındı, politikalar ve istemci adresi kuralı aynen geçerli)
 **Kaynak:** `add-account-and-session` design.md D5
 
 ---

@@ -1,6 +1,6 @@
 # Genel: Feature'a Bağlı Olmayan İşler
 
-**Son değişiklik:** 2026-10-21
+**Son değişiklik:** 2026-11-26
 
 Dokümantasyon altyapısı, geliştirme araçları, AI kural dosyaları, CI ve tek bir feature'a bağlanamayan altyapı işleri burada kayıt altına alınır. Bir feature'a ait değişiklik buraya **yazılmaz**; ilgili feature dosyasına gider.
 
@@ -28,6 +28,8 @@ Dokümantasyon altyapısı, geliştirme araçları, AI kural dosyaları, CI ve t
 
 ## Tarihçe
 
+- 2026-11-26: Redis ve Kafka için geliştirme ve test altyapısı belgelendi ([ADR-113](../adr/113-redis-kafka-in-compose-and-real-brokers-in-tests.md), change `add-redis-cache-and-order-paid-event` Faz 5). Yeni how-to: [Kafka olaylarını ve Redis'i yerelde izleme](../how-to/kafka-ve-redis-izleme.md). Yerel geliştirme rehberi ve README güncellendi: servisler, bellek ihtiyacı, gecikmeli sipariş e-postası. `00-current-state.md`'ye L40–L43, KALANLAR B5'e üretimde Redis/Kafka sorusu eklendi. Compose üzerinde uçtan uca denendi: ödeme → olay → iki e-posta; Kafka durdurulunca olay bekledi, broker dönünce e-postalar bir kez gitti; Redis durdurulunca vitrin ve giriş çalıştı.
+- 2026-11-26: Redis ve Kafka bütçeye eklendi ([ADR-107](../adr/107-redis-and-kafka-added-to-budget.md), change `add-redis-cache-and-order-paid-event` Faz 0): `AGENTS.md` §3'e kullanım yerleriyle sınırlı istisna, K7 tablosu ve ADR-002 değişim tablosu güncellendi; `docker-compose.yml`'a `redis` (7.2, kalıcılık kapalı) ve `kafka` (3.9.1, KRaft tek düğüm) servisleri, `api`'ye bağlantı değişkenleri; testler Testcontainers ile gerçek Redis ve Kafka'ya bağlanır. Bu fazda davranış değişmedi.
 - 2026-11-26: README'nin ilk ekranı İngilizce oldu (tanım, stack, çalışan dilimler, mimari diyagramı, doğrulanmış `docker compose` hızlı başlangıcı, test komutları, CI rozeti, `docs/screenshots/` altında dört ekran görüntüsü); Türkçe içerik "Türkçe dokümantasyon" başlığına taşındı. Uygulama kodu yazılmadan önceki döneme ait eskimiş ifadeler (README, yerel geliştirme rehberi, eğitimler, feature sınırları, domain modeli, API referansı, güncel durum rakamları) koda göre düzeltildi. `.gitattributes` eklendi: Windows'ta `core.autocrlf=true` ile alınan klonda `api/mvnw` CRLF'li geldiği için `docker compose up --build` api imajında exit 127 ile düşüyordu.
 - 2026-10-21: Hata düzeltmesi: dar ekranda (375 px) bölüm sekmeleri (`SectionTabs`) ve durum süzgeci (`FilterTabs`) yatay kaydığında etkin sekme görünür alanın dışında kalıyordu (örn. `/admin/claims?status=CLOSED`'da ne "Sorun bildirimleri" ne "Kapandı" görünüyordu). Yeni istemci bileşeni `ScrollingNav` etkin seçeneği şeridi yatay kaydırarak ortalar; masaüstünde taşma olmadığı için davranış değişmez. Change gerektirmeyen küçük iş (`AGENTS.md` §5.1); spec ve sözleşme değişmedi.
 - 2026-10-08: `openspec/KALANLAR.md` A4'ün teslimat bölgesi sorusu ürün sahibinin kararıyla kapandı: başlangıçta İstanbul, İzmir, Ankara ve Manisa ([ADR-063](../adr/063-delivery-provinces-config-address-book.md), change `add-cart-and-checkout`). Mobil uygulama sorusu açık. `AGENTS.md` §15 tablosu güncellendi. Ayrıca `web` başlığında dar ekranda "Çıkış yap" yalnızca ikon oldu; admin listelerindeki durum süzgeci ortak `FilterTabs`'a, admin ve satıcı sekmeleri ortak `SectionTabs`'a çıkarıldı (K9).

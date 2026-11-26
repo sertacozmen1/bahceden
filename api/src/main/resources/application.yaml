@@ -39,6 +39,41 @@ spring:
       mail.smtp.timeout: 5000
       mail.smtp.writetimeout: 5000
 
+  data:
+    redis:
+      # Hız sınırı ve vitrin cache'i (ADR-107). Varsayılan YOKTUR: değişken
+      # tanımsızsa uygulama açılmaz (K10 fail-fast). Bağlantı dizesinde parola
+      # varsa yalnızca ortamdan gelir.
+      url: ${BAHCEDEN_REDIS_URL}
+      # Redis yavaşsa istek beklemez: hız sınırı ve cache fail-open çalışır (ADR-108, ADR-109).
+      timeout: 500ms
+      connect-timeout: 1s
+
+  kafka:
+    # İş olayları (ADR-107, ADR-110). Varsayılan YOKTUR (K10 fail-fast).
+    bootstrap-servers: ${BAHCEDEN_KAFKA_BOOTSTRAP}
+    producer:
+      # Olay JSON'u outbox'ta hazır yazılır; anahtar ve değer metindir.
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      # Bütün eşlerin onayı ve tekrar korumalı üretici: yeniden denemede çift kayıt oluşmaz.
+      acks: all
+      properties:
+        enable.idempotence: true
+        # Broker yokken gönderim relay'i uzun bloklamaz (ADR-110); olay outbox'ta bekler.
+        max.block.ms: 5000
+        request.timeout.ms: 5000
+        delivery.timeout.ms: 9000
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      # Yeni tüketici grubu topic'teki bekleyen olayları baştan okur; ilk açılışta olay kaçmaz.
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+    listener:
+      # Offset her kayıt başarıyla işlendikten sonra yazılır (ADR-112).
+      ack-mode: record
+
   servlet:
     multipart:
       # Belge sınırı (bahceden.storage.max-document-bytes, 10 MB) ile aynı
@@ -142,6 +177,21 @@ bahceden:
     pending-payment-batch-size: 100
     # Süresi dolmuş token satırı bu kadar sonra silinir (destek için kısa iz).
     token-retention: P7D
+  cache:
+    # Vitrin okuma cache'i (ADR-109): değişiklikte commit sonrası silinir; silme
+    # başarısız olursa eski görünüm en çok bu kadar kalır. Stok ve fiyat kararı
+    # cache'ten değil ödeme anındaki kilitli okumadan alınır (ADR-066).
+    storefront-ttl: PT60S
+  outbox:
+    # İş olaylarının Kafka'ya aktarımı (ADR-110): olay verisiyle aynı transaction'da
+    # outbox'a yazılır, relay bu aralıkla yayınlanmamışları sırayla gönderir.
+    enabled: true
+    interval: PT2S
+    batch-size: 100
+    # Broker onayı bu sürede gelmezse tur biter; olay bekler, kaybolmaz.
+    send-timeout: PT10S
+    # Yayınlanmış satır bu kadar sonra silinir (destek ve yeniden oynatma için iz).
+    retention: P7D
   shipping:
     # Kargo entegratörü (ADR-057). Gerçek entegratör seçilene kadar (KALANLAR A2)
     # tek değer `fake`: ağ çağrısı yapmaz, gönderiyi zamanla ilerletir.

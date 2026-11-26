@@ -8,6 +8,7 @@ import com.bahceden.catalog.domain.ProductTransition;
 import com.bahceden.catalog.domain.ProductUnit;
 import com.bahceden.catalog.dto.ListingRequest;
 import com.bahceden.catalog.dto.SellerListingView;
+import com.bahceden.common.cache.StorefrontCache;
 import com.bahceden.common.money.Money;
 import com.bahceden.common.storage.FileStorage;
 import com.bahceden.common.text.Slugs;
@@ -73,6 +74,7 @@ public class ListingService {
     private final PhotoProcessor photoProcessor;
     private final FileStorage storage;
     private final Clock clock;
+    private final StorefrontCache storefront;
 
     ListingService(ProductRepository products,
                    ProductPhotoRepository photos,
@@ -81,7 +83,8 @@ public class ListingService {
                    SellerService sellers,
                    PhotoProcessor photoProcessor,
                    FileStorage storage,
-                   Clock clock) {
+                   Clock clock,
+                   StorefrontCache storefront) {
         this.products = products;
         this.photos = photos;
         this.statusChanges = statusChanges;
@@ -90,6 +93,7 @@ public class ListingService {
         this.photoProcessor = photoProcessor;
         this.storage = storage;
         this.clock = clock;
+        this.storefront = storefront;
     }
 
     /** Yeni ilan {@code DRAFT} açılır; {@code slug} addan üretilir ve sonra değişmez (D2). */
@@ -113,6 +117,7 @@ public class ListingService {
         product.update(request.name().trim(), description(request), ProductUnit.valueOf(request.unit()),
                 Money.of(request.priceAmount(), CURRENCY), request.stockQuantity(),
                 request.dispatchDays() == null ? product.getDispatchDays() : request.dispatchDays(), clock.instant());
+        storefront.evictProducts(List.of(product.getSlug()));
         return view(product);
     }
 
@@ -153,6 +158,7 @@ public class ListingService {
         var now = clock.instant();
         photos.save(ProductPhoto.of(productId, count, cardKey, largeKey, processed.width(), processed.height(), now));
         product.touch(now);
+        storefront.evictProducts(List.of(product.getSlug()));
         log.info("İlana fotoğraf eklendi: ilan {}, sıra {}", productId, count);
         return view(product);
     }
@@ -183,6 +189,7 @@ public class ListingService {
             }
         }
         product.touch(now);
+        storefront.evictProducts(List.of(product.getSlug()));
         deleteAfterCommit(photo.getCardKey());
         deleteAfterCommit(photo.getLargeKey());
         return view(product);
@@ -206,6 +213,7 @@ public class ListingService {
             byId.get(photoIds.get(i)).moveTo(i, now);
         }
         product.touch(now);
+        storefront.evictProducts(List.of(product.getSlug()));
         return view(product);
     }
 
@@ -241,6 +249,7 @@ public class ListingService {
         product.apply(transition, reason, now);
         statusChanges.save(ProductStatusChange.record(product.getId(), previous, product.getStatus(), reason,
                 actorAccountId, now));
+        storefront.evictProducts(List.of(product.getSlug()));
         log.info("İlan geçişi: ilan {}, {} -> {}", product.getId(), previous, product.getStatus());
     }
 

@@ -19,6 +19,13 @@ spring:
       # Sorgu sayısı iddialarını ölçebilmek için (design.md D2).
       hibernate.generate_statistics: true
 
+  # Redis ve Kafka da Testcontainers'tan gelir (@ServiceConnection bu değerleri ezer).
+  data:
+    redis:
+      url: redis://testcontainers-tarafindan-ezilir:6379
+  kafka:
+    bootstrap-servers: testcontainers-tarafindan-ezilir:9092
+
   mail:
     # Testler gerçek SMTP'ye çıkmaz (K10): MailSender taklit edilir, bu değerler
     # yalnızca yer tutucuların çözülmesi için var.
@@ -42,6 +49,9 @@ bahceden:
     sweep-enabled: false
     # Küçük sayfa: bir turun birden fazla sayfayı dolaştığı yol her testte çalışır (ADR-100).
     sweep-batch-size: 2
+  outbox:
+    # Zamanlayıcı kapalı: testler relay turunu doğrudan çağırır (ADR-110).
+    enabled: false
   cleanup:
     # Zamanlayıcı kapalı: testler temizlik işlerini sabit saatle doğrudan çağırır.
     enabled: false

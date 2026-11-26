@@ -1,5 +1,6 @@
 package com.bahceden.payment;
 
+import com.bahceden.common.cache.StorefrontCache;
 import com.bahceden.common.web.ApiErrorCode;
 import com.bahceden.common.web.ApiException;
 import com.bahceden.payment.PaymentProvider.SubMerchantDetails;
@@ -40,13 +41,15 @@ public class PayoutAccountService {
     private final SellerService sellers;
     private final PaymentProvider provider;
     private final Clock clock;
+    private final StorefrontCache storefront;
 
     PayoutAccountService(SellerPayoutAccountRepository accounts, SellerService sellers, PaymentProvider provider,
-                         Clock clock) {
+                         Clock clock, StorefrontCache storefront) {
         this.accounts = accounts;
         this.sellers = sellers;
         this.provider = provider;
         this.clock = clock;
+        this.storefront = storefront;
     }
 
     /**
@@ -101,6 +104,8 @@ public class PayoutAccountService {
             case SubMerchantResult.Rejected rejected -> account.reject(now);
         }
         accounts.save(account);
+        // Etkin ödeme hesabı satıcının ürünlerini satın alınabilir yapar (ADR-109).
+        storefront.evictAll();
         log.info("Ödeme hesabı kaydedildi: satıcı {}, durum {}", seller.getId(), account.getStatus());
         if (!account.isActive()) {
             throw new PayoutRejected();

@@ -5,34 +5,40 @@ import com.bahceden.common.web.ApiException;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicReference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessException;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
 /**
- * Bellek içi sabit pencere sayacı (design.md D5).
+ * Sabit pencere hız sınırı (ADR-022 semantiği), sayaçlar Redis'te (ADR-108).
  *
- * <p>Yeni paket yok: {@link ConcurrentHashMap} ve enjekte edilen {@link Clock}
- * yeterli; saat sabitlenebildiği için pencere davranışı testte doğrulanır.
+ * <p>Sayaç bütün uygulama örneklerinin ortak kullandığı Redis'te tutulur: sınır
+ * örnekler arasında toplamda uygulanır ve yeniden başlatma sayaçları sıfırlamaz.
  *
- * <p><strong>Bilinen sınırlama:</strong> sayaç süreç içindedir. İki örnek
- * çalışırsa sınır örnek başına uygulanır ve yeniden başlatma sayaçları sıfırlar
- * ({@code 00-current-state.md}). Tek sunuculu MVP için bilinçli seçim.
+ * <p><strong>Fail-open:</strong> Redis'e ulaşılamazsa istek bu yüzden reddedilmez;
+ * aynı politika süreç içi yedek sayaçla uygulanır ({@link InMemoryWindowCounter})
+ * ve dakikada en çok bir {@code WARN} yazılır. Redis kesintisi giriş ve kayıt
+ * uçlarını kapatmaz; kesinti boyunca koruma örnek başınadır.
  */
 @Component
 public class RateLimiter {
 
-    /** Bu sayıyı aşınca süresi geçmiş pencereler temizlenir; bellek sınırsız büyümez. */
-    private static final int SWEEP_THRESHOLD = 10_000;
+    private static final Logger log = LoggerFactory.getLogger(RateLimiter.class);
 
-    private record Window(Instant start, int count) {
-    }
+    /** Yedeğe düşüş uyarısının en sık yazılma aralığı; kesintide log dolmaz. */
+    private static final Duration WARN_INTERVAL = Duration.ofMinutes(1);
 
-    private final ConcurrentMap<String, Window> windows = new ConcurrentHashMap<>();
     private final Clock clock;
+    private final WindowCounter shared;
+    private final WindowCounter fallback = new InMemoryWindowCounter();
+    private final AtomicReference<Instant> lastWarning = new AtomicReference<>(Instant.MIN);
 
-    RateLimiter(Clock clock) {
+    RateLimiter(Clock clock, StringRedisTemplate redis) {
         this.clock = clock;
+        this.shared = new RedisWindowCounter(redis);
     }
 
     /**
@@ -45,35 +51,26 @@ public class RateLimiter {
     public void check(RateLimitPolicy policy, String... keyPart) {
         var now = clock.instant();
         var key = policy.name() + '|' + String.join("|", keyPart);
-        var window = windows.compute(key, (ignored, current) ->
-                current == null || expired(current, policy, now)
-                        ? new Window(now, 1)
-                        : new Window(current.start(), current.count() + 1));
-        if (windows.size() > SWEEP_THRESHOLD) {
-            sweep(now);
+        long count;
+        try {
+            count = shared.increment(key, policy.window(), now);
+        } catch (DataAccessException unavailable) {
+            warnFallback(now, unavailable);
+            count = fallback.increment(key, policy.window(), now);
         }
-        if (window.count() > policy.limit()) {
+        if (count > policy.limit()) {
             throw new ApiException(ApiErrorCode.RATE_LIMITED, "error.rateLimited");
         }
     }
 
-    private static boolean expired(Window window, RateLimitPolicy policy, Instant now) {
-        return !now.isBefore(window.start().plus(policy.window()));
-    }
-
-    /** En uzun pencereden eski girişler artık hiçbir politikada sayılmaz. */
-    private void sweep(Instant now) {
-        var oldestRelevant = now.minus(longestWindow());
-        windows.values().removeIf(window -> window.start().isBefore(oldestRelevant));
-    }
-
-    private static Duration longestWindow() {
-        var longest = Duration.ZERO;
-        for (var policy : RateLimitPolicy.values()) {
-            if (policy.window().compareTo(longest) > 0) {
-                longest = policy.window();
-            }
+    private void warnFallback(Instant now, DataAccessException cause) {
+        var last = lastWarning.get();
+        if (now.isBefore(last.plus(WARN_INTERVAL)) && !now.isBefore(last)) {
+            return;
         }
-        return longest;
+        if (lastWarning.compareAndSet(last, now)) {
+            log.warn("Hız sınırı Redis'e ulaşamadı; süreç içi sayaçla devam ediliyor: {}",
+                    cause.getClass().getSimpleName());
+        }
     }
 }

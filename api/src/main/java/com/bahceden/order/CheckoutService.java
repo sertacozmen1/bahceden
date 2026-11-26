@@ -1,5 +1,7 @@
 package com.bahceden.order;
 
+import com.bahceden.common.outbox.OutboxPublisher;
+import com.bahceden.common.cache.StorefrontCache;
 import com.bahceden.account.AccountRepository;
 import com.bahceden.account.domain.Account;
 import com.bahceden.catalog.ProductRepository;
@@ -87,15 +89,17 @@ public class CheckoutService {
     private final PaymentService payments;
     private final OrderPricing pricing;
     private final OrderService orderService;
-    private final OrderNotifier notifier;
     private final BahcedenProperties properties;
     private final Clock clock;
+    private final StorefrontCache storefront;
+    private final OutboxPublisher outbox;
     private final SecureRandom random = new SecureRandom();
 
     CheckoutService(OrderRepository orders, AccountRepository accounts, OrderStatusChangeRepository statusChanges, CartService cartService,
                     CartRepository carts, CartItemRepository cartItems, AddressService addressService,
                     ProductRepository products, PaymentService payments, OrderPricing pricing,
-                    OrderService orderService, OrderNotifier notifier, BahcedenProperties properties, Clock clock) {
+                    OrderService orderService, BahcedenProperties properties, Clock clock, StorefrontCache storefront,
+                    OutboxPublisher outbox) {
         this.orders = orders;
         this.accounts = accounts;
         this.statusChanges = statusChanges;
@@ -107,9 +111,10 @@ public class CheckoutService {
         this.payments = payments;
         this.pricing = pricing;
         this.orderService = orderService;
-        this.notifier = notifier;
         this.properties = properties;
         this.clock = clock;
+        this.storefront = storefront;
+        this.outbox = outbox;
     }
 
     /**
@@ -255,13 +260,16 @@ public class CheckoutService {
         }
 
         quantities.forEach((productId, quantity) -> locked.get(productId).decreaseStock(quantity, now));
+        storefront.evictProducts(locked.values().stream().map(Product::getSlug).toList());
         order.markPaid(now);
         for (var sellerOrder : order.getSellerOrders()) {
             transition(actorAccountId, sellerOrder, SellerOrderTransition.PAY, now);
             sellerOrder.scheduleDispatch(BusinessDays.endOfBusinessDay(now, sellerOrder.getDispatchDays()));
         }
         carts.findByAccountId(order.getBuyerAccountId()).ifPresent(cart -> cartItems.deleteProducts(cart.getId(), quantities.keySet()));
-        notifier.orderPaid(order, order.getSellerOrders());
+        // Olay sipariş durumuyla aynı transaction'da kalıcı olur; Kafka'ya relay gönderir (ADR-110).
+        // Sipariş e-postaları bu olaydan, OrderPaidEmailConsumer ile gider (ADR-112); burada gönderilmez.
+        outbox.append(OrderPaidEvent.of(order, now));
         log.info("Ödeme alındı: sipariş {}", order.getOrderNumber());
     }
 

@@ -1,5 +1,6 @@
 package com.bahceden.order;
 
+import com.bahceden.common.cache.StorefrontCache;
 import com.bahceden.catalog.ProductRepository;
 import com.bahceden.catalog.domain.Product;
 import com.bahceden.common.web.ApiErrorCode;
@@ -72,12 +73,13 @@ public class OrderCancellationService {
     private final ShipmentStatusPoller shipmentStatus;
     private final TransactionTemplate transactions;
     private final Clock clock;
+    private final StorefrontCache storefront;
 
     OrderCancellationService(OrderRepository orders, SellerOrderRepository sellerOrders,
                              OrderStatusChangeRepository statusChanges, ProductRepository products,
                              PaymentService payments, SellerService sellers, OrderService orderService,
                              OrderNotifier notifier, ShipmentService shipments, ShipmentStatusPoller shipmentStatus,
-                             PlatformTransactionManager transactionManager, Clock clock) {
+                             PlatformTransactionManager transactionManager, Clock clock, StorefrontCache storefront) {
         this.orders = orders;
         this.sellerOrders = sellerOrders;
         this.statusChanges = statusChanges;
@@ -90,6 +92,7 @@ public class OrderCancellationService {
         this.shipmentStatus = shipmentStatus;
         this.transactions = new TransactionTemplate(transactionManager);
         this.clock = clock;
+        this.storefront = storefront;
     }
 
     /**
@@ -169,6 +172,7 @@ public class OrderCancellationService {
                 product.increaseStock(quantity, now);
             }
         });
+        storefront.evictProducts(locked.values().stream().map(Product::getSlug).toList());
 
         var previous = sellerOrder.getStatus();
         sellerOrder.cancel(by, reason, now);

@@ -97,6 +97,7 @@ Vitrinde yayınlanmış ürünleri listeler. **Kimlik doğrulaması gerektirmez*
 - Yalnızca `PUBLISHED` ürünler döner; `DRAFT` ve `ARCHIVED` görünmez.
 - Sıralama yayın tarihine göre yeniden eskiye; eşit tarihlerde ikincil ölçüt tanımlayıcıdır (sayfalar arası tutarlılık).
 - Aralık dışı sayfa boş içerik ve doğru toplam döner; hata üretmez.
+- **Cache ([ADR-109](../adr/109-storefront-read-cache-redis-evict-after-commit.md)):** ilk 3 sayfa ve ürün detayı (`GET /api/v1/products/{slug}`) Redis'te 60 sn tutulur. İlan, fotoğraf, durum, stok, satıcı onayı veya ödeme hesabı değişince commit sonrası silinir; değişiklik sonraki okumada görünür. 404 cache'lenmez. Redis erişilemezse yanıt veritabanından gelir; sözleşme değişmez.
 
 **200 yanıtı** — `PageResponseProductSummary`
 

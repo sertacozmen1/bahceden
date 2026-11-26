@@ -41,7 +41,7 @@ Architecture Decision Records, projedeki önemli mimari kararları ve bu kararla
 | 019 | [E-posta SMTP üzerinden, sağlayıcıdan bağımsız, akışı kesmeden](019-email-via-smtp-provider-agnostic.md) | Accepted | 2026-10-07 |
 | 020 | [Tek kullanımlık token'lar: 256 bit, SHA-256 hash'li, süreli](020-verification-tokens-sha256-single-use.md) | Accepted | 2026-10-07 |
 | 021 | [Kimlik yanıtları hesabın varlığını açığa çıkarmaz](021-identity-responses-do-not-reveal-accounts.md) | Accepted | 2026-10-07 |
-| 022 | [Kimlik uçlarında bellek içi sabit pencere hız sınırı](022-in-memory-fixed-window-rate-limiting.md) | Accepted | 2026-10-07 |
+| 022 | [Kimlik uçlarında bellek içi sabit pencere hız sınırı](022-in-memory-fixed-window-rate-limiting.md) | Superseded by [ADR-108](108-rate-limit-counters-in-redis-fail-open.md) | 2026-10-07 |
 | 023 | [`web` BFF: HttpOnly çerezler, başlık tabanlı CSRF, yönlendirmeyle yenileme](023-web-bff-cookies-and-header-csrf.md) | Accepted · yenileme tetikleyicisi [070](070-silent-session-refresh-on-any-page.md) ile genişledi | 2026-10-07 |
 | 024 | [Yetkilendirme JWT iddialarıyla; `/accounts/me` taze okunur](024-roles-in-jwt-claims-fresh-me-endpoint.md) | Accepted | 2026-10-07 |
 | 025 | [İkinci faktör kodu hesaba bağlı; ikinci adım e-posta + kod](025-second-factor-code-bound-to-account.md) | Accepted · son madde [103](103-user-toggles-two-factor-with-current-password.md) ile değişti | 2026-10-07 |
@@ -127,8 +127,15 @@ Architecture Decision Records, projedeki önemli mimari kararları ve bu kararla
 | 104 | [İki adımlı giriş kendi sayfasında: durum, mevcut parola ve tek düğme; doğrulanmamış e-postada önce doğrulama](104-two-factor-page-current-password-single-button.md) | Accepted | 2026-10-26 |
 | 105 | [Entegratör iptali reddedince gönderinin durumu hemen okunur; paket kargoya verilmişse 409 `ORDER_ALREADY_SHIPPED`](105-cancel-refusal-reads-shipment-status-409-when-shipped.md) | Accepted | 2026-10-26 |
 | 106 | [İptal penceresi "kargoya verildi" mesajını gösterir; sayfa pencere kapanınca yenilenir](106-cancel-dialog-keeps-message-refreshes-on-close.md) | Accepted | 2026-10-26 |
+| 107 | [Redis ve Kafka bütçeye bilinçli olarak eklenir: dağıtık hız sınırı, vitrin cache'i ve outbox ile iş olayları](107-redis-and-kafka-added-to-budget.md) | Accepted | 2026-11-26 |
+| 108 | [Hız sınırı sayaçları Redis'te paylaşılır; Redis yoksa süreç içi yedekle fail-open](108-rate-limit-counters-in-redis-fail-open.md) | Accepted | 2026-11-26 |
+| 109 | [Vitrin okumaları Redis'te kısa süre cache'lenir; değişiklikte commit sonrası silinir](109-storefront-read-cache-redis-evict-after-commit.md) | Accepted | 2026-11-26 |
+| 110 | [İş olayları transactional outbox ile yazılır; zamanlanmış relay `SKIP LOCKED` ile Kafka'ya aktarır](110-transactional-outbox-relay-skip-locked.md) | Accepted | 2026-11-26 |
+| 111 | [`ORDER_PAID` olay sözleşmesi: sürümlü topic, kişisel veri yok, anahtar sipariş numarası](111-order-paid-event-contract-versioned-topic-no-pii.md) | Accepted | 2026-11-26 |
+| 112 | [Sipariş ödendi e-postaları olaydan, idempotent bir tüketiciyle gider; işlenemeyen olay `.dlt`'ye düşer](112-order-paid-emails-from-idempotent-consumer.md) | Accepted | 2026-11-26 |
+| 113 | [Redis ve Kafka geliştirmede compose servisidir, testlerde Testcontainers ile gerçek broker'dır](113-redis-kafka-in-compose-and-real-brokers-in-tests.md) | Accepted | 2026-11-26 |
 
-**Sıradaki numara: 107.**
+**Sıradaki numara: 114.**
 
 **Durum değerleri:** `Proposed` (öneri, henüz bağlayıcı değil) · `Accepted` (yürürlükte, bağlayıcı) · `Deprecated` (artık geçerli değil, yerine bir şey gelmedi) · `Superseded by [ADR-XXX]` (yerini başka bir karara bıraktı).
 
