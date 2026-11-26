@@ -55,7 +55,7 @@ Sipariş ödendi: sağlayıcı ödemeyi doğruladı, stok yetti ve sipariş `PAI
 | `sellerOrderIds` | `integer[]` | Siparişin satıcı siparişleri |
 | `grandTotal` | `Money` | Alıcının ödediği toplam (ürünler + kargo) |
 
-Alan kümesi `OutboxTest` ile sabittir.
+Alan kümesi `OutboxTest` ile sabittir. Alan **sırası** garanti değildir: gövde PostgreSQL `jsonb` kolonundan okunur ve normalleştirilir; tüketici alanları adıyla okur.
 
 ## Yerelde izleme
 

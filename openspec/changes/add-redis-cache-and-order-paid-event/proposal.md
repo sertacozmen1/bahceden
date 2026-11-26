@@ -1,6 +1,6 @@
 # add-redis-cache-and-order-paid-event
 
-**Durum:** Önerildi (2026-11-26). Proje sahibinin onayı bekleniyor; onay gelmeden uygulama başlamaz (`AGENTS.md` K1, §5.3).
+**Durum:** Onaylandı (2026-11-26, proje sahibi); Faz 0–5 uygulandı, spec sync yapıldı. Archive proje sahibinin onayını bekliyor (`AGENTS.md` §5.3, §9).
 
 > Bu change **anayasayı bilinçli olarak genişletir**. `AGENTS.md` §3 bugün "event bus, kuyruk" eklemeyi yasaklar; K7 bütçesinde ([ADR-002](../../../docs/adr/002-dependency-budget.md)) Redis ve Kafka yoktur; [ADR-022](../../../docs/adr/022-in-memory-fixed-window-rate-limiting.md) Redis'i "yatay ölçekleme geldiğinde ADR ile gelir" diyerek reddetmiştir. Bu change'in ilk kararı (D1) bu üç kaydı açıkça günceller. Kararın gerekçesi sadece teknik değildir. Proje bir **portföy projesidir** ve Java ekosisteminde yaygın iki altyapıyı, cache ve olay akışını, gerçek bir iş akışı üzerinde ve sorumlu biçimde göstermek bilinçli bir hedeftir. Bu gerekçe ADR'de saklanmadan yazılır.
 

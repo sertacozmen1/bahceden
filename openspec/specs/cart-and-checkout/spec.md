@@ -1,7 +1,7 @@
 # cart-and-checkout Specification
 
 ## Purpose
-Hesaba bağlı sepeti, satıcı başına kargo ücretini, teslimat illerini ve adresleri, sepetten sipariş oluşturmayı (e-posta doğrulaması koşulu, satıcı siparişlerine bölme, tutarların sabitlenmesi, tekrar anahtarı) ödemenin sağlayıcıdan doğrulanıp stoğun ödeme anında düşmesini ve dönüşü gelmeyen ödenmemiş siparişlerin zamanlanmış işle kapatılmasını tanımlar. Kararlar: ADR-054…058, ADR-059, ADR-061…066, ADR-093, ADR-094, ADR-096. Kargo gönderisi ve gerçek ödeme sağlayıcısı bu capability'nin bugünkü kapsamı dışındadır.
+Hesaba bağlı sepeti, satıcı başına kargo ücretini, teslimat illerini ve adresleri, sepetten sipariş oluşturmayı (e-posta doğrulaması koşulu, satıcı siparişlerine bölme, tutarların sabitlenmesi, tekrar anahtarı) ödemenin sağlayıcıdan doğrulanıp stoğun ödeme anında düşmesini ve dönüşü gelmeyen ödenmemiş siparişlerin zamanlanmış işle kapatılmasını tanımlar. Kararlar: ADR-054…058, ADR-059, ADR-061…066, ADR-093, ADR-094, ADR-096, ADR-110…112. Ödenen sipariş bir iş olayı olarak (transactional outbox, Kafka) yayınlanır; sipariş e-postaları bu olaydan gider. Kargo gönderisi ve gerçek ödeme sağlayıcısı bu capability'nin bugünkü kapsamı dışındadır.
 
 ## Requirements
 
@@ -155,7 +155,10 @@ Başarılı ödemede tek transaction'da şunlar olur:
 
 - ürünlerin stoğu kilitlenerek düşer;
 - sipariş ödendi olur, satıcı siparişleri yeni sipariş olur;
-- satın alınan ürünler sepetten silinir.
+- satın alınan ürünler sepetten silinir;
+- bir "sipariş ödendi" olayı kalıcı olarak kaydedilir.
+
+Sipariş ödendi olayı kayıttan sonra iş olayları akışına yayınlanır. Olay yalnızca kimlikleri ve toplam tutarı taşır; ad, e-posta, adres veya telefon taşımaz. Alıcıya ve her satıcıya giden e-postalar bu olay işlenince, alıcının ve satıcının hesap dilinde gönderilir. Olay akışına geçici olarak ulaşılamazsa sipariş etkilenmez; olay bekler ve akış döndüğünde yayınlanır. Aynı olay birden fazla teslim edilse de e-postalar bir kez gönderilir.
 
 Stok yetmezse ödemenin tamamı iade edilir ve sipariş stok yetersizliğiyle iptal olur. Ödeme yapılandırılmış süre (30 dakika) içinde tamamlanmazsa sipariş süresi dolmuş olur. Tamamlama işlemi tekrar çağrılabilir; sonuçlanmış siparişte mevcut sonuç döner.
 
@@ -163,7 +166,19 @@ Alıcının ödeme dönüşü hiç gelmezse, ödeme süresi yapılandırılmış
 
 #### Scenario: Başarılı ödeme
 - **WHEN** sağlayıcı ödemenin başarılı olduğunu doğrular ve stok yeterlidir
-- **THEN** stok düşer, sipariş ödendi ve satıcı siparişleri yeni durumuna geçer, ürünler sepetten silinir, alıcıya ve her satıcıya e-posta gider
+- **THEN** stok düşer, sipariş ödendi ve satıcı siparişleri yeni durumuna geçer, ürünler sepetten silinir, bir sipariş ödendi olayı kaydedilir; olay işlenince alıcıya ve her satıcıya e-posta gider
+
+#### Scenario: Olay akışına ulaşılamıyor
+- **WHEN** ödeme başarılı olur ama olay akışı o anda erişilemezdir
+- **THEN** sipariş yine ödendi olur; olay bekler, akış erişilebilir olunca yayınlanır ve e-postalar o zaman gider
+
+#### Scenario: Olay iki kez teslim edilir
+- **WHEN** aynı sipariş ödendi olayı tüketiciye ikinci kez ulaşır
+- **THEN** ikinci teslim yok sayılır; alıcıya ve satıcılara ikinci e-posta gitmez
+
+#### Scenario: Sonuçlanmayan ödeme olay üretmez
+- **WHEN** ödeme başarısız olur, süresi dolar veya stok yetmediği için iade edilir
+- **THEN** sipariş ödendi olayı kaydedilmez
 
 #### Scenario: Son ürünü iki alıcı öder
 - **WHEN** stoğu 1 olan bir ürünü içeren iki siparişin ödemesi başarılı olur

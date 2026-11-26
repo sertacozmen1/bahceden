@@ -12,7 +12,7 @@
 | **JDK 21 (LTS)** | 21.x | `api/` [ADR-001](../adr/001-spring-api-and-next-web.md) ile Java 21 üzerinde çalışır. 24 gibi LTS olmayan sürümler proje sürümü değildir. |
 | **Maven** | 3.9.x | Derleme. Ayrı kurmak **gerekmez**: IntelliJ IDEA 3.9.x bundle eder ve wrapper üretildikten sonra `./mvnw` yeterlidir. |
 | **Node.js** | 20+ | `web/` ([ADR-002](../adr/002-dependency-budget.md)). |
-| **Docker + Compose** | Engine 24+, Compose v2 | PostgreSQL, `mailpit` ve Testcontainers testleri ([ADR-005](../adr/005-test-strategy.md)). |
+| **Docker + Compose** | Engine 24+, Compose v2 | PostgreSQL, Redis, Kafka, `mailpit` ve Testcontainers testleri ([ADR-005](../adr/005-test-strategy.md), [ADR-113](../adr/113-redis-kafka-in-compose-and-real-brokers-in-tests.md)). Kafka yaklaşık 600 MB bellek ister; Docker'a en az 4 GB verin. |
 | **Git** | 2.40+ | Depo ve hook'lar. |
 
 ---
@@ -123,7 +123,7 @@ Betik ilk çalıştırmada `docs/.tools/.venv` altında bir Python sanal ortamı
 ### 7. Uygulamayı çalıştırma
 
 ```bash
-docker compose up -d --build --wait   # db + api (8080) + web (3000) + mailpit (8025)
+docker compose up -d --build --wait   # db + redis (6379) + kafka (9094) + api (8080) + web (3000) + mailpit (8025)
 ```
 
 - Vitrin: `http://localhost:3000`, e-postalar (mailpit): `http://localhost:8025`.
@@ -138,7 +138,7 @@ docker compose up -d --build --wait   # db + api (8080) + web (3000) + mailpit (
 
 - **Temizlik işleri:** ödeme sayfasından dönmeden bırakılan sipariş, ödeme süresi (30 dakika) ve tolerans (1 saat) geçince iş tarafından kapatılır; dev'de iş dakikada bir döner (`application-dev.yaml`, `bahceden.cleanup.*`). Süresi 7 günden önce dolmuş token satırları aynı turda silinir. Log'da "Ödenmemiş sipariş kapatıldı" ve "Süresi geçmiş kimlik kayıtları silindi" satırları görünür.
 - **Doğrulama kapısı:** yeni bir hesap açın, sepete ürün ekleyip **Siparişe geç**'e basın; ödeme ekranı form yerine doğrulama panelini gösterir. Bağlantı mailpit'tedir; doğruladıktan sonra sayfayı yenileyin.
-- **Sipariş akışı:** `alici@ornek.test` ile `uretici@ornek.test`'in yayındaki bir ürününü sepete ekleyin, **Sepetim → Siparişe geç** ile adresi seçip **Ödemeye geç**'e basın. Ödeme sahte sağlayıcıyla (`bahceden.payment.provider: fake`) anında onaylanır ve dönüş sayfası sonucu gösterir; e-postalar mailpit'te görünür. Satıcı **Ürünlerim → Gelen siparişler**'de siparişi görür; alıcı **Hesabım → Siparişlerim**'den, satıcı sipariş detayından kargodan önce iptal edebilir. Seed satıcılarının hesabı ve ödeme hesabı olmadığı için ürünleri satın alınamaz.
+- **Sipariş akışı:** `alici@ornek.test` ile `uretici@ornek.test`'in yayındaki bir ürününü sepete ekleyin, **Sepetim → Siparişe geç** ile adresi seçip **Ödemeye geç**'e basın. Ödeme sahte sağlayıcıyla (`bahceden.payment.provider: fake`) anında onaylanır ve dönüş sayfası sonucu gösterir. Sipariş e-postaları ödeme anında değil, `ORDER_PAID` olayı Kafka üzerinden işlenince birkaç saniye sonra mailpit'te görünür ([ADR-112](../adr/112-order-paid-emails-from-idempotent-consumer.md)); olayı izlemek için: [Kafka ve Redis izleme](kafka-ve-redis-izleme.md). Satıcı **Ürünlerim → Gelen siparişler**'de siparişi görür; alıcı **Hesabım → Siparişlerim**'den, satıcı sipariş detayından kargodan önce iptal edebilir. Seed satıcılarının hesabı ve ödeme hesabı olmadığı için ürünleri satın alınamaz.
 - **Kargo akışı:** satıcı sipariş detayında koli boyutunu seçip **Gönderi oluştur**'a basar; etiket (sahte PDF) yeni sekmede açılır, gönderi kodu kopyalanabilir. Sahte entegratör (`bahceden.shipping.integrator: fake`) gönderiyi dev profilinde 2 dakikada kargoya verildi, 4 dakikada yolda, 6 dakikada teslim edildi yapar; durum dakikada bir sorgulanır (`application-dev.yaml`'da `bahceden.shipping.*`). Alıcıya "kargoya verildi" ve teslimde "teslim edildi" e-postası (sorun bildirimi için son anla) mailpit'te görünür. "Teslim edilemedi" dev'de üretilemez; admin karar ekranı (`/admin/orders`) testlerde sınanır.
 - **Ayıplı ürün akışı:** sipariş teslim edildikten sonra (yukarıdaki kargo akışı, yaklaşık 6 dakika) alıcı sipariş detayında **Sorun bildir**'e basar, satır ve adet seçip açıklama ve 1–3 fotoğrafla talep açar; üreticiye e-posta gider. `uretici@ornek.test` sipariş detayında tamamını kabul eder, kısmi iade önerir ya da reddeder; alıcı teklifi kabul eder veya **Bahçeden ekibine taşı**'ya basar. `admin@ornek.test` **Yönetim → Sorun bildirimleri** (`/admin/claims`) ekranından karar verir. Bütün e-postalar mailpit'te görünür. Süreler dev'de de 48 saattir (`bahceden.claims.*`); süre işinin kendiliğinden ilerlettiği geçişler testlerde sınanır ([ADR-083](../adr/083-defect-claim-deadlines-by-scheduled-sweep.md)).
 - **İlan ekleme:** `uretici@ornek.test` ile **Ürünlerim → Yeni ilan**; taslağa JPEG/PNG fotoğraf yükleyip yayına alın. Fotoğraflar volume'a yazılır; seed ürünlerinin fotoğrafı yoktur.
@@ -165,6 +165,12 @@ docker compose up -d --build --wait   # db + api (8080) + web (3000) + mailpit (
 - **Hata:** `api` açılmıyor, log'da `Depolama dizini yazılabilir değil: bahceden.storage.dir`
   **Çözüm:** `BAHCEDEN_STORAGE_DIR` var olmayan ya da uygulama kullanıcısının yazamadığı bir dizini gösteriyor. Compose'da değer `/app/uploads`'tır ve imaj dizini hazırlar; IDE'den çalıştırıyorsanız dizini oluşturun.
 
+- **Hata:** `api` açılmıyor, log'da `BAHCEDEN_REDIS_URL` veya `BAHCEDEN_KAFKA_BOOTSTRAP` çözülemiyor
+  **Çözüm:** Değişkenlerin varsayılanı yoktur. Compose kendi değerlerini verir; IDE'den çalıştırıyorsanız `api/.env.example`'daki makine adreslerini (`redis://localhost:6379`, `localhost:9094`) tanımlayın ve `docker compose up -d redis kafka` ile servisleri açın.
+
+- **Hata:** Sipariş e-postası mailpit'e gelmiyor
+  **Çözüm:** E-posta Kafka tüketicisinden gider. `docker compose ps kafka` sağlıklı mı, outbox satırı yayınlandı mı ([Kafka ve Redis izleme](kafka-ve-redis-izleme.md), adım 2–4) kontrol edin.
+
 - **Hata:** `pre-commit` hook'u hiç çalışmıyor
   **Çözüm:** `git config core.hooksPath .githooks` komutu klon başına bir kez çalıştırılmalıdır (adım 1).
 
@@ -176,3 +182,4 @@ docker compose up -d --build --wait   # db + api (8080) + web (3000) + mailpit (
 - [ADR-002](../adr/002-dependency-budget.md) — bağımlılık bütçesi: neden ek araç kurulmuyor
 - [ADR-016](../adr/016-liquibase-for-schema-migrations.md) — PostgreSQL ve Liquibase (ADR-004'ün Flyway kararını superseded eder)
 - [ADR-005](../adr/005-test-strategy.md) — Testcontainers neden Docker gerektiriyor
+- [ADR-107](../adr/107-redis-and-kafka-added-to-budget.md), [ADR-113](../adr/113-redis-kafka-in-compose-and-real-brokers-in-tests.md) — Redis ve Kafka neden ve nasıl çalışıyor

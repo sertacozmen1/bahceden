@@ -4,7 +4,7 @@
 
 **A multi-seller produce marketplace: growers list fruit and vegetables, buyers order from several growers in one checkout, and each grower ships their own parcel.**
 
-**Stack:** Java 21 · Spring Boot 3.5 · Spring Security (JWT) · JPA · Liquibase · PostgreSQL 17 · Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS 4 · shadcn/ui · next-intl · Testcontainers · Vitest · Docker Compose · GitHub Actions
+**Stack:** Java 21 · Spring Boot 3.5 · Spring Security (JWT) · JPA · Liquibase · PostgreSQL 17 · Redis 7.2 · Apache Kafka 3.9 (KRaft) · Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS 4 · shadcn/ui · next-intl · Testcontainers · Vitest · Docker Compose · GitHub Actions
 
 ![Storefront](docs/screenshots/storefront.png)
 
@@ -36,7 +36,7 @@ flowchart LR
     subgraph api ["Spring Boot api"]
         direction TB
         domains["catalog · account · seller<br/>order · payment · shipping"]
-        jobs["@Scheduled jobs<br/>shipment status polling<br/>claim deadlines · unpaid orders"]
+        jobs["@Scheduled jobs<br/>shipment status polling<br/>claim deadlines · unpaid orders<br/>outbox relay"]
         pay[["PaymentProvider port"]]
         ship[["ShippingIntegrator port"]]
     end
@@ -44,12 +44,17 @@ flowchart LR
     pay -.-> fakepay["fake provider"]
     ship -.-> fakeship["fake integrator"]
     api --> smtp["SMTP<br/>(mailpit in dev)"]
+    api --> redis[("Redis<br/>rate limits · storefront cache")]
+    api -- "outbox relay" --> kafka[["Kafka<br/>bahceden.order.paid.v1"]]
+    kafka -- "order-paid email consumer" --> api
 ```
 
 - **One write authority.** Only `api` writes to the database. `web` reaches it server-side through BFF route handlers, so tokens never reach browser JavaScript ([ADR-001](docs/adr/001-spring-api-and-next-web.md), [ADR-023](docs/adr/023-web-bff-cookies-and-header-csrf.md)).
 - **Contract generated from code.** `shared/contracts/openapi.yaml` is generated from the Spring DTOs (springdoc), and a test fails if the committed file is stale. `web` generates its TypeScript types from it ([ADR-009](docs/adr/009-contract-generated-from-spring.md), [ADR-015](docs/adr/015-contract-freshness-enforced-by-test.md)).
 - **Money as integer minor units**, priced on the server ([ADR-006](docs/adr/006-money-as-minor-unit.md), [ADR-065](docs/adr/065-order-pricing-integer-minor-units-half-up.md)).
 - **Seller data isolation at query level**, default deny ([ADR-007](docs/adr/007-query-level-ownership-scoping.md)).
+- **Order-paid event through a transactional outbox.** A successful payment writes `ORDER_PAID` to an outbox table in the same transaction; a scheduled relay publishes it to Kafka with `FOR UPDATE SKIP LOCKED`, and an idempotent consumer sends the buyer and seller emails (dead-letter topic on failure). Kafka being down delays emails but never loses them ([ADR-110](docs/adr/110-transactional-outbox-relay-skip-locked.md)…[ADR-112](docs/adr/112-order-paid-emails-from-idempotent-consumer.md)).
+- **Redis for shared rate limits and a storefront read cache**, both fail-open: an atomic Lua fixed-window counter shared across instances, and a 60-second cache evicted after commit on every change that affects what the storefront shows ([ADR-108](docs/adr/108-rate-limit-counters-in-redis-fail-open.md), [ADR-109](docs/adr/109-storefront-read-cache-redis-evict-after-commit.md)).
 
 ## Quick start
 
@@ -67,6 +72,8 @@ docker compose up -d --build --wait
 | API health | http://localhost:8080/api/v1/health |
 | OpenAPI document (runtime) | http://localhost:8080/v3/api-docs |
 | Mailpit (captured emails) | http://localhost:8025 |
+| Kafka (from the host, e.g. a console consumer) | localhost:9094 |
+| Redis | localhost:6379 |
 
 The `api` container starts with the `dev` profile and loads seed data. All dev accounts use the password `gelistirme-parolasi-1`, which exists only in the local database:
 
@@ -81,7 +88,7 @@ The `api` container starts with the `dev` profile and loads seed data. All dev a
 ## Tests
 
 ```bash
-# api: JUnit 5; integration tests run against real PostgreSQL via Testcontainers (Docker required)
+# api: JUnit 5; integration tests run against real PostgreSQL, Redis and Kafka via Testcontainers (Docker required)
 cd api && ./mvnw -B verify
 
 # web: Vitest + Testing Library
@@ -143,7 +150,7 @@ bahceden/
 ├── api/                   ← Spring Boot 3 REST API (Java 21, Maven)
 ├── web/                   ← Next.js (App Router, TypeScript)
 ├── shared/contracts/      ← openapi.yaml: iki birim arasındaki tek sözleşme (api'den üretilir)
-├── docker-compose.yml     ← db + api + web + mailpit
+├── docker-compose.yml     ← db + redis + kafka + api + web + mailpit
 ├── docs/                  ← Diátaxis dokümantasyon + adr/ + features/ + screenshots/
 ├── openspec/              ← Spec-driven change çalışma alanı + KALANLAR.md
 ├── .claude/               ← /opsx:* komutları ve openspec skill'leri
@@ -157,7 +164,7 @@ bahceden/
 git clone https://github.com/sertacozmen1/bahceden.git
 cd bahceden
 git config core.hooksPath .githooks     # commit öncesi doğrulama (klon başına bir kez)
-docker compose up -d --build --wait     # db + api (8080) + web (3000) + mailpit (8025)
+docker compose up -d --build --wait     # db + redis + kafka + api (8080) + web (3000) + mailpit (8025)
 ```
 
 Araç kurulumu (JDK 21, Maven, Node, Docker), dev hesapları ve akışları elle deneme için: [Yerel geliştirme ortamını kurma](docs/how-to/yerel-gelistirme.md).

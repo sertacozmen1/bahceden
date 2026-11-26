@@ -203,6 +203,7 @@ nav:
     - "ADR-110 · Transactional outbox": adr/110-transactional-outbox-relay-skip-locked.md
     - "ADR-111 · ORDER_PAID olay sözleşmesi": adr/111-order-paid-event-contract-versioned-topic-no-pii.md
     - "ADR-112 · Olaydan e-posta tüketicisi": adr/112-order-paid-emails-from-idempotent-consumer.md
+    - "ADR-113 · Compose ve testlerde Redis/Kafka": adr/113-redis-kafka-in-compose-and-real-brokers-in-tests.md
   - Nasıl Yapılır (How-to):
     - Genel Bakış: how-to/index.md
     - Yerel Geliştirme Ortamı: how-to/yerel-gelistirme.md
@@ -210,6 +211,7 @@ nav:
     - Korunan API Ucu Ekleme: how-to/korunan-uc-ekleme.md
     - UI Bileşeni Ekleme: how-to/ui-bileseni-ekleme.md
     - Admin Yetkisi Verme: how-to/admin-yetkisi-verme.md
+    - Kafka ve Redis İzleme: how-to/kafka-ve-redis-izleme.md
   - Ürün & Strateji:
     - Genel Bakış: product/index.md
     - Satıcı Kaydı ve Onayı: product/satici-kaydi.md

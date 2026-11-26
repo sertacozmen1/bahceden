@@ -133,8 +133,9 @@ Architecture Decision Records, projedeki önemli mimari kararları ve bu kararla
 | 110 | [İş olayları transactional outbox ile yazılır; zamanlanmış relay `SKIP LOCKED` ile Kafka'ya aktarır](110-transactional-outbox-relay-skip-locked.md) | Accepted | 2026-11-26 |
 | 111 | [`ORDER_PAID` olay sözleşmesi: sürümlü topic, kişisel veri yok, anahtar sipariş numarası](111-order-paid-event-contract-versioned-topic-no-pii.md) | Accepted | 2026-11-26 |
 | 112 | [Sipariş ödendi e-postaları olaydan, idempotent bir tüketiciyle gider; işlenemeyen olay `.dlt`'ye düşer](112-order-paid-emails-from-idempotent-consumer.md) | Accepted | 2026-11-26 |
+| 113 | [Redis ve Kafka geliştirmede compose servisidir, testlerde Testcontainers ile gerçek broker'dır](113-redis-kafka-in-compose-and-real-brokers-in-tests.md) | Accepted | 2026-11-26 |
 
-**Sıradaki numara: 113.**
+**Sıradaki numara: 114.**
 
 **Durum değerleri:** `Proposed` (öneri, henüz bağlayıcı değil) · `Accepted` (yürürlükte, bağlayıcı) · `Deprecated` (artık geçerli değil, yerine bir şey gelmedi) · `Superseded by [ADR-XXX]` (yerini başka bir karara bıraktı).
 

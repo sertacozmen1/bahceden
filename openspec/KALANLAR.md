@@ -44,7 +44,7 @@
 **Durum:** UNDECIDED.
 
 ### B5 · Üretim ortamı
-**Soru:** Nerede host edilecek (tek VPS + Docker Compose mi, yönetilen platform mu)? Yedekleme stratejisi ne? Alan adı alındı mı? TLS nasıl sağlanacak?
+**Soru:** Nerede host edilecek (tek VPS + Docker Compose mi, yönetilen platform mu)? Yedekleme stratejisi ne? Alan adı alındı mı? TLS nasıl sağlanacak? Redis ve Kafka üretimde nasıl çalışacak (yönetilen servis mi, aynı sunucuda konteyner mi; Kafka kopya sayısı; yayınlanmamış outbox satırı ve ölü mektup topic'i için izleme/alarm)? ([ADR-107](../docs/adr/107-redis-and-kafka-added-to-budget.md), [ADR-113](../docs/adr/113-redis-kafka-in-compose-and-real-brokers-in-tests.md))
 **Neden bloklayıcı:** CI/CD iş akışları ve `docker-compose` üretim varyantı buna bağlı. MVP'de tek sunucu varsayılıyor (AGENTS.md §3).
 **Durum:** UNDECIDED.
 
