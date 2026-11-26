@@ -24,12 +24,12 @@
 
 ## Faz 2 · Vitrin cache'i (D3)
 
-- [ ] 2.1 `common/cache/CacheConfig`: `@EnableCaching`, `RedisCacheManager` (JSON, TTL ayardan), `CacheErrorHandler` (logla + DB).
-- [ ] 2.2 `ProductService.detail` / `listPublished`: `@Cacheable` (liste için `page < 3`; boş/404 cache'lenmez).
-- [ ] 2.3 `catalog/StorefrontCacheEvictor` (`afterCommit`); çağrı yerleri: `ListingService` (update, photo ekle/sil/sırala, transition), `ProductModerationService` (remove, reinstate), `SellerService.decide`, `CheckoutService.settle` (stok düşmesi), `OrderCancellationService` (stok iadesi).
-- [ ] 2.4 **Test (`critical`):** design.md "Test etkisi · cache" listesi (sorgu sayısı testi dahil).
-- [ ] 2.5 ADR-109; `docs/reference/` mimari sayfası; `vitrin-ve-arama.md` Tarihçe.
-- [ ] 2.6 **Doğrulama:** `./mvnw -B verify`; `OpenApiContractTest` sözleşmenin değişmediğini doğrular.
+- [x] 2.1 Cache yapılandırması: `@EnableCaching`, `RedisCacheManager` (cache başına sabit tipli JSON, TTL `BahcedenProperties.Cache`'ten, `SCAN` ile temizlik, tanımsız cache yok), `CacheErrorHandler` (logla + DB). (Plandan sapma: `common/cache/CacheConfig` yerine `catalog/StorefrontCacheConfig`; DTO tiplerini bildiği için `common` → `catalog` bağımlılığı doğmasın.)
+- [x] 2.2 `ProductService.detail` / `listPublished`: `@Cacheable` (liste için `page < 3`, anahtar sınıra çekilmiş boyutla; 404 cache'lenmez). `MAX_PAGE_SIZE` ve `CACHED_PAGES` SpEL'den okunmak için `public` oldu.
+- [x] 2.3 `common/cache/StorefrontCache` (`afterCommit`); çağrı yerleri: `ListingService` (update, fotoğraf ekle/sil/sırala, ortak geçiş yolu `apply`: satıcı geçişleri ve admin kaldır/geri al), `SellerService.decide`, `PayoutAccountService.save` (plana eklendi: ödeme hesabı `purchasable`'ı etkiler), `CheckoutService.settle` (stok düşmesi), `OrderCancellationService` (stok iadesi). `ProductModerationService` `ListingService.apply` üzerinden kapsanır.
+- [x] 2.4 **Test (`critical`):** `StorefrontCacheTest` (8): ikinci detay okumasında sorgu yok; ilk sayfalar cache'lenir, derin sayfa cache'lenmez; fiyat güncellemesi, admin kaldırma, satıcı askıya alma ve ödemede stok düşmesi sonraki okumada görünür; geri alınan transaction silmez; 404 cache'lenmez. `StorefrontCacheUnavailableTest` (1): Redis kapalı portta, liste, detay ve güncelleme çalışır. Test izolasyonu için `CacheResetListener`.
+- [x] 2.5 ADR-109; `docs/reference/02-api-reference.md` (vitrin uçlarına cache notu; ayrı bir mimari sayfası yok); `vitrin-ve-arama.md` Tarihçe.
+- [x] 2.6 **Doğrulama:** `./mvnw -B verify`; `OpenApiContractTest` sözleşmenin değişmediğini doğrular. (JDK 21; 372 test, 0 hata; `critical` temiz; `shared/` diff yok. İlk koşuda `ListingPhotoTest.urun_detayi` kırıldı: satıcıyı JDBC ile askıya alıp servisi atlıyordu; beklenti değişmedi, test JDBC kısayolundan sonra cache'i siler. `docker compose`: detay ve liste okuması sonrası Redis'te `cache:storefront-product:<slug>` ve `cache:storefront-list:0:1`, TTL 59 sn.)
 
 ## Faz 3 · Outbox ve relay (D4, D5)
 

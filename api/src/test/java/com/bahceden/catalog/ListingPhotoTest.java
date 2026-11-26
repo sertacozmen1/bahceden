@@ -10,6 +10,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.bahceden.common.cache.StorefrontCache;
 import com.bahceden.common.security.AccessTokenIssuer;
 import com.bahceden.common.storage.FileStorage;
 import com.bahceden.common.web.ApiErrorCode;
@@ -79,6 +80,9 @@ class ListingPhotoTest {
 
     @Autowired
     private AccessTokenIssuer accessTokens;
+
+    @Autowired
+    private StorefrontCache storefront;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -344,6 +348,8 @@ class ListingPhotoTest {
                 .andExpect(jsonPath("$.id").value(id));
 
         jdbc.update("update sellers set status = 'SUSPENDED' where account_id is not null");
+        // JDBC servisi atlar; gerçek askıya alma (SellerService.decide) cache'i siler (ADR-109, StorefrontCacheTest).
+        storefront.evictAll();
         mockMvc.perform(get("/api/v1/products/dut"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value(ApiErrorCode.PRODUCT_NOT_FOUND.name()));

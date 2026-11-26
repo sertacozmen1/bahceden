@@ -1,5 +1,6 @@
 package com.bahceden.order;
 
+import com.bahceden.common.cache.StorefrontCache;
 import com.bahceden.account.AccountRepository;
 import com.bahceden.account.domain.Account;
 import com.bahceden.catalog.ProductRepository;
@@ -90,12 +91,13 @@ public class CheckoutService {
     private final OrderNotifier notifier;
     private final BahcedenProperties properties;
     private final Clock clock;
+    private final StorefrontCache storefront;
     private final SecureRandom random = new SecureRandom();
 
     CheckoutService(OrderRepository orders, AccountRepository accounts, OrderStatusChangeRepository statusChanges, CartService cartService,
                     CartRepository carts, CartItemRepository cartItems, AddressService addressService,
                     ProductRepository products, PaymentService payments, OrderPricing pricing,
-                    OrderService orderService, OrderNotifier notifier, BahcedenProperties properties, Clock clock) {
+                    OrderService orderService, OrderNotifier notifier, BahcedenProperties properties, Clock clock, StorefrontCache storefront) {
         this.orders = orders;
         this.accounts = accounts;
         this.statusChanges = statusChanges;
@@ -110,6 +112,7 @@ public class CheckoutService {
         this.notifier = notifier;
         this.properties = properties;
         this.clock = clock;
+        this.storefront = storefront;
     }
 
     /**
@@ -255,6 +258,7 @@ public class CheckoutService {
         }
 
         quantities.forEach((productId, quantity) -> locked.get(productId).decreaseStock(quantity, now));
+        storefront.evictProducts(locked.values().stream().map(Product::getSlug).toList());
         order.markPaid(now);
         for (var sellerOrder : order.getSellerOrders()) {
             transition(actorAccountId, sellerOrder, SellerOrderTransition.PAY, now);

@@ -1,5 +1,6 @@
 package com.bahceden.seller;
 
+import com.bahceden.common.cache.StorefrontCache;
 import com.bahceden.account.AccountRepository;
 import com.bahceden.account.domain.Account;
 import com.bahceden.account.domain.AccountRole;
@@ -85,6 +86,7 @@ public class SellerService {
     private final Messages messages;
     private final BahcedenProperties properties;
     private final Clock clock;
+    private final StorefrontCache storefront;
 
     SellerService(SellerRepository sellers,
                   SellerDocumentRepository documents,
@@ -95,7 +97,7 @@ public class SellerService {
                   MailSender mailSender,
                   Messages messages,
                   BahcedenProperties properties,
-                  Clock clock) {
+                  Clock clock, StorefrontCache storefront) {
         this.sellers = sellers;
         this.documents = documents;
         this.statusChanges = statusChanges;
@@ -106,6 +108,7 @@ public class SellerService {
         this.messages = messages;
         this.properties = properties;
         this.clock = clock;
+        this.storefront = storefront;
     }
 
     /**
@@ -279,6 +282,8 @@ public class SellerService {
         seller.apply(transition, trimmedReason, now);
         statusChanges.save(SellerStatusChange.record(
                 seller.getId(), previous, seller.getStatus(), trimmedReason, adminAccountId, now));
+        // Satıcının onay durumu bütün ürünlerinin vitrinde görünmesini değiştirir (ADR-109).
+        storefront.evictAll();
 
         seller.getAccountId().flatMap(accounts::findById).ifPresent(owner -> {
             if (transition == SellerTransition.APPROVE || transition == SellerTransition.REINSTATE) {

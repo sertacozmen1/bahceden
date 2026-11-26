@@ -156,6 +156,11 @@ bahceden:
     pending-payment-batch-size: 100
     # Süresi dolmuş token satırı bu kadar sonra silinir (destek için kısa iz).
     token-retention: P7D
+  cache:
+    # Vitrin okuma cache'i (ADR-109): değişiklikte commit sonrası silinir; silme
+    # başarısız olursa eski görünüm en çok bu kadar kalır. Stok ve fiyat kararı
+    # cache'ten değil ödeme anındaki kilitli okumadan alınır (ADR-066).
+    storefront-ttl: PT60S
   shipping:
     # Kargo entegratörü (ADR-057). Gerçek entegratör seçilene kadar (KALANLAR A2)
     # tek değer `fake`: ağ çağrısı yapmaz, gönderiyi zamanla ilerletir.

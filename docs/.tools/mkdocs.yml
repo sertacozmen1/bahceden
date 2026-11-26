@@ -198,6 +198,7 @@ nav:
     - "ADR-106 · İptal penceresi ve yenileme": adr/106-cancel-dialog-keeps-message-refreshes-on-close.md
     - "ADR-107 · Redis ve Kafka bütçede": adr/107-redis-and-kafka-added-to-budget.md
     - "ADR-108 · Hız sınırı Redis'te": adr/108-rate-limit-counters-in-redis-fail-open.md
+    - "ADR-109 · Vitrin cache'i": adr/109-storefront-read-cache-redis-evict-after-commit.md
   - Nasıl Yapılır (How-to):
     - Genel Bakış: how-to/index.md
     - Yerel Geliştirme Ortamı: how-to/yerel-gelistirme.md

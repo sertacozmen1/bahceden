@@ -48,11 +48,12 @@
 - Cache adları ve anahtarları:
   - `storefront:product` → anahtar `slug`, değer `ProductDetail`;
   - `storefront:list` → anahtar `page:size`, yalnızca `page < 3` (ilk üç sayfa) cache'lenir (`condition`).
-- TTL 60 sn (`bahceden.cache.storefront-ttl`). Değer JSON (Jackson, tip bilgisiyle) saklanır.
-- **Silme:** yeni `StorefrontCacheEvictor`, transaction `afterCommit` sırasında çalışır. Bu desen `OrderNotifier.sendAfterCommit` ile aynıdır.
-  - Ürüne özgü yazmalarda o ürünün `slug` kaydı ve `storefront:list` içeriği tamamen silinir;
-  - satıcı durum kararı (`SellerService.decide`: onay, red, askıya alma) o satıcının ürünlerinin `slug`'larını ve listeyi siler;
+- TTL 60 sn (`bahceden.cache.storefront-ttl`). Değer cache başına sabit tipli JSON olarak saklanır (`Jackson2JsonRedisSerializer`); tip bilgisi Redis'e yazılmaz. (Uygulamada "tip bilgisiyle" yerine bu seçildi: tip bilgili serializer JDK değiştirilemez listelerini geri okuyamaz.)
+- **Silme:** `common/cache/StorefrontCache`, transaction `afterCommit` sırasında çalışır. Bu desen `OrderNotifier.sendAfterCommit` ile aynıdır. Sınıf `common` altındadır, çünkü `seller` ve `payment` de çağırır ve `catalog`'a bağımlı olmamalıdır. Değer tiplerini bilen yapılandırma `catalog/StorefrontCacheConfig` sınıfındadır.
+  - Ürüne özgü yazmalarda o ürünün `slug` kaydı ve liste cache'inin tamamı silinir;
+  - satıcı düzeyindeki değişiklikte, yani satıcı kararında (`SellerService.decide`) ve ödeme hesabı kaydında (`PayoutAccountService.save`, `purchasable` alanını etkiler; planda yoktu, uygulamada bulundu), iki cache tümden temizlenir;
   - stok değişiminde (`decreaseStock`, `increaseStock`) etkilenen ürünler silinir.
+- Testler veriyi JDBC ile kurduğu için cache'i görmez. Her test metodundan önce bütün cache'leri boşaltan `CacheResetListener` (`spring.factories`) eklenir; bu, veritabanı temizliğinin cache karşılığıdır.
 - Cache hatası okumayı kırmaz: `CacheErrorHandler` hatayı `WARN` ile loglar ve DB'den okur.
 - Cache'lenmez: hesap, sepet, sipariş, satıcı paneli, admin uçları, `Accept-Language`'e bağlı metin üreten yanıtlar. Vitrin DTO'larında dile bağlı alan yok; `ProductDetail` ve `ProductSummary` bu yüzden dilden bağımsız cache'lenebilir. Bu, uygulamada testle sabitlenir.
 

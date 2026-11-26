@@ -5,6 +5,7 @@ import com.bahceden.catalog.domain.ProductPhoto;
 import com.bahceden.catalog.dto.ProductDetail;
 import com.bahceden.catalog.dto.ProductPhotoView;
 import com.bahceden.catalog.dto.ProductSummary;
+import com.bahceden.common.cache.StorefrontCache;
 import com.bahceden.common.web.ApiErrorCode;
 import com.bahceden.common.web.ApiException;
 import com.bahceden.common.web.PageResponse;
@@ -13,6 +14,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,9 +35,12 @@ public class ProductService {
      * reddedilmez, değer sınıra çekilir: bu bir istemci hatası değil kaynak
      * korumasıdır ve vitrinde kullanıcıya hata göstermek doğru olmaz.
      */
-    static final int MAX_PAGE_SIZE = 50;
+    public static final int MAX_PAGE_SIZE = 50;
 
     static final int DEFAULT_PAGE_SIZE = 20;
+
+    /** Cache'lenen ilk sayfa sayısı (ADR-109): derin sayfalar seyrek okunur, cache'i şişirmez. */
+    public static final int CACHED_PAGES = 3;
 
     private final ProductRepository repository;
     private final ProductPhotoRepository photos;
@@ -51,8 +56,14 @@ public class ProductService {
      * Vitrin listesi. Kapaklar sayfadaki ürün kimlikleriyle <strong>tek</strong>
      * ek sorguda gelir (add-product-listings D6): fetch join ile sayfalama
      * bellekte yapılırdı.
+     *
+     * <p>İlk {@value #CACHED_PAGES} sayfa kısa süre cache'lenir (ADR-109); anahtar
+     * sınıra çekilmiş boyutla kurulur, sınır üstü boyutlar ayrı kayıt açmaz.
      */
     @Transactional(readOnly = true)
+    @Cacheable(cacheNames = StorefrontCache.LIST,
+            key = "#page + ':' + T(java.lang.Math).min(#size, T(com.bahceden.catalog.ProductService).MAX_PAGE_SIZE)",
+            condition = "#page >= 0 && #page < T(com.bahceden.catalog.ProductService).CACHED_PAGES")
     public PageResponse<ProductSummary> listPublished(int page, int size) {
         int effectiveSize = Math.min(size, MAX_PAGE_SIZE);
         var products = repository.findPublished(PageRequest.of(page, effectiveSize));
@@ -80,9 +91,13 @@ public class ProductService {
     /**
      * Ürün detayı; vitrinde görünmeyen ürün yokmuş gibi 404 döner.
      *
+     * <p>Kısa süre cache'lenir (ADR-109). 404 istisnayla döndüğü için cache'e
+     * yazılmaz: görünmeyen ürün cache'ten hiçbir zaman dönmez.
+     *
      * @throws ApiException {@code PRODUCT_NOT_FOUND}
      */
     @Transactional(readOnly = true)
+    @Cacheable(cacheNames = StorefrontCache.PRODUCT, key = "#slug")
     public ProductDetail detail(String slug) {
         var product = repository.findVisibleBySlug(slug)
                 .orElseThrow(() -> new ApiException(ApiErrorCode.PRODUCT_NOT_FOUND, "error.productNotFound"));
