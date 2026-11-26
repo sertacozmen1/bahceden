@@ -15,12 +15,12 @@
 
 ## Faz 1 · Dağıtık hız sınırı (D2)
 
-- [ ] 1.1 Bugünkü sayaç `InMemoryWindowCounter`'a taşınır (davranış aynı; mevcut testler bu sınıfa yönelir).
-- [ ] 1.2 `RedisWindowCounter`: tek Lua betiği (`INCR` + ilk istekte `PEXPIRE`), anahtar `rl:{policy}:{sha256}`.
-- [ ] 1.3 `RateLimiter`: önce Redis, hata olursa `WARN` (dakikada bir) + yedek sayaç. İmza değişmez.
-- [ ] 1.4 **Test (`critical`):** design.md "Test etkisi · rate limit" listesi.
-- [ ] 1.5 ADR-108; ADR-022 → *Superseded by ADR-108*; `00-current-state.md` L9 kalkar; `hesap-ve-oturum.md` Tarihçe.
-- [ ] 1.6 **Doğrulama:** `./mvnw -B verify`, `-Dgroups=critical`.
+- [x] 1.1 Bugünkü sayaç `InMemoryWindowCounter`'a taşınır (davranış aynı; mevcut testler bu sınıfa yönelir). (Sayaç arayüzü `WindowCounter`; mevcut testler gerçek Redis'e karşı aynen korunur.)
+- [x] 1.2 `RedisWindowCounter`: tek Lua betiği, anahtar `rl:{policy}:{sha256}`. (Plandan sapma: `INCR` + `PEXPIRE` yerine pencere başı + sayı hash'i, "şimdi" uygulamanın `Clock`'undan; semantik ADR-022 ile aynı kalır ve sabit saatli testler çalışır. design.md D2 güncellendi.)
+- [x] 1.3 `RateLimiter`: önce Redis, hata olursa `WARN` (dakikada bir) + yedek sayaç. İmza değişmez.
+- [x] 1.4 **Test (`critical`):** design.md "Test etkisi · rate limit" listesi. (`RateLimiterTest`: 3 mevcut + 4 yeni test; iki örnek paylaşır, yeniden başlatma sıfırlamaz, anahtarda düz e-posta/IP yok, erişilemeyen Redis'te yedek sayaç sınırı uygular.)
+- [x] 1.5 ADR-108; ADR-022 → *Superseded by ADR-108*; `00-current-state.md` L9 kalkar; `hesap-ve-oturum.md` Tarihçe.
+- [x] 1.6 **Doğrulama:** `./mvnw -B verify`, `-Dgroups=critical`. (JDK 21; `verify` 363 test, 0 hata; `critical` grubu temiz.)
 
 ## Faz 2 · Vitrin cache'i (D3)
 

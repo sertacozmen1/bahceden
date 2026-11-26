@@ -2,7 +2,7 @@
 
 **Durum:** Yayında
 **İlk sürüm:** 2026-10-07
-**Son değişiklik:** 2026-10-26
+**Son değişiklik:** 2026-11-26
 
 | | |
 |---|---|
@@ -36,6 +36,7 @@ Kullanıcı e-posta adresi ve parolayla hesap açar ve hesabını hemen kullanı
 
 ## Tarihçe
 
+- 2026-11-26: Hız sınırı sayaçları Redis'e taşındı ([ADR-108](../adr/108-rate-limit-counters-in-redis-fail-open.md), [ADR-022](../adr/022-in-memory-fixed-window-rate-limiting.md)'yi supersede eder; change `add-redis-cache-and-order-paid-event` Faz 1): sınır uygulama örnekleri arasında paylaşılır ve yeniden başlatmada sıfırlanmaz; Redis anahtarında e-posta ve IP yerine SHA-256 özeti; Redis erişilemezse istek reddedilmez, süreç içi yedek sayaç örnek başına uygular. Politikalar ve uç davranışı değişmedi.
 - 2026-10-26: `add-two-factor-toggle` change'i kullanıcı onayıyla archive edildi (`openspec/changes/archive/2026-10-26-add-two-factor-toggle/`). Ön koşullar: delta spec `account-identity` ana spec'e sync edildi; D1–D2 → ADR-103, ADR-104; dokümanlar güncel; `api` 356 ve `web` 315 test yeşil.
 - 2026-10-26: Kullanıcı iki adımlı girişi Hesabım → Güvenlik → İki adımlı giriş sayfasından mevcut parolasıyla açar veya kapatır (change `add-two-factor-toggle`). Açmak doğrulanmış e-posta ister; değişiklik e-postayla bildirilir; kapatmak açık giriş kodlarını geçersiz kılar, oturumlar sürer. `GET /accounts/me` iki adımın durumunu döner. Kararlar ADR-103, ADR-104; ADR-017 ve ADR-025'e not. L13 kapandı.
 - 2026-10-21: Hata düzeltmesi: oturum yenilenince ya da girişe yönlendirilince sayfanın sorgusu (`?status=`, `?page=`) kayboluyordu; kapı layout'ta çalıştığı için sorguyu göremiyordu. Yeni `web/src/proxy.ts` korunan yollarda isteğin tam adresini bir istek başlığına yazar, kapı dönüş adresini oradan kurar (yalnızca kendi yolunun altındaki iç adres). Karar ADR-102; 15 yeni `web` testi.

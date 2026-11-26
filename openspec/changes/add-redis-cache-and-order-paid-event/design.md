@@ -35,7 +35,7 @@
 
 - `RateLimiter.check(policy, keyPart...)` imzası ve `RATE_LIMITED` hatası değişmez. Çağıran kod değişmez.
 - Anahtar: `rl:{policy}:{sha256(keyParts)}`. Düz e-posta/IP Redis'e yazılmaz (K10).
-- Sayaç tek Lua betiğiyle tutulur: `INCR`; değer 1 ise `PEXPIRE window`; dönüş değeri sayaçtır. Sayaç ve süre atomik olarak ayarlanır; iki örnek aynı pencereyi paylaşır.
+- Sayaç tek Lua betiğiyle tutulur: anahtar bir hash'tir (`s` pencere başı, `c` sayı). Betik "şimdi"yi ve pencere uzunluğunu argüman olarak **uygulamanın `Clock`'undan** alır; pencere yoksa veya `şimdi - s ≥ pencere` ise yeni pencere 1'den başlar, değilse `HINCRBY`. `PEXPIRE` yalnızca çöp toplama içindir. Böylece semantik ADR-022 ile birebir aynıdır (pencere ilk istekle başlar) ve `MutableClock` testleri gerçek bekleme olmadan çalışır. Başlangıç ve sayı atomik ayarlanır; iki örnek aynı pencereyi paylaşır. (Uygulamada `INCR` + `PEXPIRE` yerine bu biçim seçildi: Redis saatine bağlı bir TTL sabit saatle test edilemezdi.)
 - Redis hatası (`RedisConnectionFailureException` vb.) yakalanır ve **açıkça modellenir**: `WARN` log'u yazılır (dakikada en çok bir kez) ve bugünkü bellek içi sayaç (`InMemoryWindowCounter`) aynı politikayla kullanılır. İstek reddedilmez.
 - Bellek içi sayaç bugünkü `RateLimiter` kodudur. Ayrı bir sınıfa taşınır, yeniden yazılmaz (K9).
 

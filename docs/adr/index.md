@@ -41,7 +41,7 @@ Architecture Decision Records, projedeki önemli mimari kararları ve bu kararla
 | 019 | [E-posta SMTP üzerinden, sağlayıcıdan bağımsız, akışı kesmeden](019-email-via-smtp-provider-agnostic.md) | Accepted | 2026-10-07 |
 | 020 | [Tek kullanımlık token'lar: 256 bit, SHA-256 hash'li, süreli](020-verification-tokens-sha256-single-use.md) | Accepted | 2026-10-07 |
 | 021 | [Kimlik yanıtları hesabın varlığını açığa çıkarmaz](021-identity-responses-do-not-reveal-accounts.md) | Accepted | 2026-10-07 |
-| 022 | [Kimlik uçlarında bellek içi sabit pencere hız sınırı](022-in-memory-fixed-window-rate-limiting.md) | Accepted | 2026-10-07 |
+| 022 | [Kimlik uçlarında bellek içi sabit pencere hız sınırı](022-in-memory-fixed-window-rate-limiting.md) | Superseded by [ADR-108](108-rate-limit-counters-in-redis-fail-open.md) | 2026-10-07 |
 | 023 | [`web` BFF: HttpOnly çerezler, başlık tabanlı CSRF, yönlendirmeyle yenileme](023-web-bff-cookies-and-header-csrf.md) | Accepted · yenileme tetikleyicisi [070](070-silent-session-refresh-on-any-page.md) ile genişledi | 2026-10-07 |
 | 024 | [Yetkilendirme JWT iddialarıyla; `/accounts/me` taze okunur](024-roles-in-jwt-claims-fresh-me-endpoint.md) | Accepted | 2026-10-07 |
 | 025 | [İkinci faktör kodu hesaba bağlı; ikinci adım e-posta + kod](025-second-factor-code-bound-to-account.md) | Accepted · son madde [103](103-user-toggles-two-factor-with-current-password.md) ile değişti | 2026-10-07 |
@@ -128,8 +128,9 @@ Architecture Decision Records, projedeki önemli mimari kararları ve bu kararla
 | 105 | [Entegratör iptali reddedince gönderinin durumu hemen okunur; paket kargoya verilmişse 409 `ORDER_ALREADY_SHIPPED`](105-cancel-refusal-reads-shipment-status-409-when-shipped.md) | Accepted | 2026-10-26 |
 | 106 | [İptal penceresi "kargoya verildi" mesajını gösterir; sayfa pencere kapanınca yenilenir](106-cancel-dialog-keeps-message-refreshes-on-close.md) | Accepted | 2026-10-26 |
 | 107 | [Redis ve Kafka bütçeye bilinçli olarak eklenir: dağıtık hız sınırı, vitrin cache'i ve outbox ile iş olayları](107-redis-and-kafka-added-to-budget.md) | Accepted | 2026-11-26 |
+| 108 | [Hız sınırı sayaçları Redis'te paylaşılır; Redis yoksa süreç içi yedekle fail-open](108-rate-limit-counters-in-redis-fail-open.md) | Accepted | 2026-11-26 |
 
-**Sıradaki numara: 108.**
+**Sıradaki numara: 109.**
 
 **Durum değerleri:** `Proposed` (öneri, henüz bağlayıcı değil) · `Accepted` (yürürlükte, bağlayıcı) · `Deprecated` (artık geçerli değil, yerine bir şey gelmedi) · `Superseded by [ADR-XXX]` (yerini başka bir karara bıraktı).
 

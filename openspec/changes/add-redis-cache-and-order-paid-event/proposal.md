@@ -13,7 +13,7 @@
 ## What Changes
 
 - **Anayasa ve bütçe (D1):** `AGENTS.md` §3 ve K7 tablosu güncellenir. ADR-002 bütçesine `spring-boot-starter-data-redis`, `spring-boot-starter-cache`, `spring-kafka` ve test için `org.testcontainers:kafka` eklenir. Sistem satırına `redis:7.2-alpine` ve `apache/kafka` (KRaft, tek düğüm) eklenir. ADR-022 *superseded* olur.
-- **`api`, Redis rate limit (D2):** `RateLimiter` aynı `check(policy, keyPart...)` imzasıyla Redis'te atomik sabit pencere sayacı kullanır (`INCR` + ilk istekte `PEXPIRE`, tek Lua betiği). Politikalar (`RateLimitPolicy`) değişmez. Redis'e ulaşılamazsa istek **reddedilmez**, süreç içi yedek sayaçla devam edilir ve `WARN` log'u yazılır (fail-open, D2).
+- **`api`, Redis rate limit (D2):** `RateLimiter` aynı `check(policy, keyPart...)` imzasıyla Redis'te atomik sabit pencere sayacı kullanır (tek Lua betiği; pencere başı ve sayı bir hash'te, "şimdi" uygulamanın saatinden). Politikalar (`RateLimitPolicy`) değişmez. Redis'e ulaşılamazsa istek **reddedilmez**, süreç içi yedek sayaçla devam edilir ve `WARN` log'u yazılır (fail-open, D2).
 - **`api`, vitrin cache'i (D3):** Spring Cache soyutlaması ve Redis. `ProductService.detail(slug)` ve `listPublished(page, size)` için ilk sayfalar cache'lenir. TTL kısadır (60 sn). Ürünün vitrindeki görünümünü değiştiren her yazma işlemi (ilan güncelleme, fotoğraf, durum geçişi, admin kaldırma/geri alma, stok düşmesi/iadesi, satıcı onayı/askıya alma) commit sonrasında ilgili kayıtları siler. Redis yoksa cache atlanır ve okuma DB'den yapılır.
 - **`api`, `OrderPaid` olayı (D4, D5, D6):**
   - `settle()` başarılı ödemede, aynı transaction'da `outbox_events` tablosuna bir `ORDER_PAID` satırı yazar;
